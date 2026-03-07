@@ -12,7 +12,8 @@ let package = Package(
             name: "CosmereChronicles",
             path: ".",
             exclude: ["GAME_DESIGN.md", "Assets", "TileMaps", "Tests"],
-            sources: ["App", "Core", "Scenes", "Entities", "Systems", "UI", "Data/Models"]
+            sources: ["App", "Core", "Scenes", "Entities", "Systems", "UI", "Data/Models"],
+            resources: [.process("Data/JSON")]
         ),
         .testTarget(
             name: "CosmereChroniclesTests",

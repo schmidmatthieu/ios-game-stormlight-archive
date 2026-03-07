@@ -1,29 +1,20 @@
 import SpriteKit
 
-/// Scène overlay de dialogue — affichée par-dessus la ZoneScene lors d'interactions PNJ
-/// Gère les arbres de dialogue, choix narratifs, et effets de réputation
-class DialogueOverlayNode: SKNode {
+/// Overlay de dialogue — connecte le DialogueSystem au DialogueBoxNode
+/// Affiché par-dessus la ZoneScene lors d'interactions PNJ
+class DialogueOverlayNode: SKNode, DialogueSystemDelegate {
 
     // MARK: - Properties
 
     private let screenSize: CGSize
     private let dialogueSystem = DialogueSystem()
-
-    // Visual elements
-    private var backgroundDim: SKShapeNode?
     private var dialogueBox: DialogueBoxNode?
-    private var portraitNode: SKSpriteNode?
+    private var backgroundDim: SKShapeNode?
 
-    // State
-    private var currentDialogueID: String?
-    private var currentNodeIndex: Int = 0
-    private var isActive: Bool = false
+    private(set) var isActive: Bool = false
 
     // Callbacks
-    var onDialogueComplete: (() -> Void)?
-    var onQuestAccepted: ((String) -> Void)?
-    var onShopRequested: ((String) -> Void)?
-    var onReputationChange: ((WorldID, Int) -> Void)?
+    var onDialogueComplete: ((String) -> Void)?
 
     // MARK: - Init
 
@@ -32,6 +23,7 @@ class DialogueOverlayNode: SKNode {
         super.init()
         self.zPosition = 700
         self.name = "dialogueOverlay"
+        dialogueSystem.delegate = self
     }
 
     required init?(coder: NSCoder) {
@@ -40,156 +32,73 @@ class DialogueOverlayNode: SKNode {
 
     // MARK: - Start Dialogue
 
-    func startDialogue(treeID: String, npcName: String, portraitName: String? = nil) {
+    func startDialogue(treeID: String) {
         guard !isActive else { return }
         isActive = true
-        currentDialogueID = treeID
-        currentNodeIndex = 0
 
         // Dim background
         let dim = SKShapeNode(rectOf: screenSize)
         dim.fillColor = SKColor(white: 0, alpha: 0.3)
         dim.strokeColor = .clear
-        dim.position = .zero
         dim.zPosition = 700
         addChild(dim)
         backgroundDim = dim
 
-        // Portrait
-        if let portrait = portraitName {
-            let sprite = SKSpriteNode(imageNamed: portrait)
-            sprite.size = CGSize(width: 64, height: 64)
-            sprite.position = CGPoint(x: -screenSize.width / 2 + 60, y: -screenSize.height / 2 + 120)
-            sprite.zPosition = 710
-            addChild(sprite)
-            portraitNode = sprite
-        }
-
-        // Dialogue box
-        let box = DialogueBoxNode(size: CGSize(width: screenSize.width - 40, height: 120))
-        box.position = CGPoint(x: 0, y: -screenSize.height / 2 + 80)
+        // Dialogue box (uses existing DialogueBoxNode)
+        let box = DialogueBoxNode(screenSize: screenSize)
+        box.position = CGPoint(x: 0, y: -screenSize.height / 2 + 100)
         box.zPosition = 710
+        box.onContinue = { [weak self] in
+            self?.dialogueSystem.continueDialogue()
+        }
+        box.onChoiceSelected = { [weak self] index in
+            self?.dialogueSystem.selectChoice(index)
+        }
         addChild(box)
         dialogueBox = box
 
-        // Load first node
-        advanceDialogue()
+        // Start the dialogue tree
+        dialogueSystem.startDialogue(treeID: treeID)
     }
 
-    // MARK: - Advance
+    // MARK: - DialogueSystemDelegate
 
-    func advanceDialogue() {
-        guard let treeID = currentDialogueID else { return }
-
-        let nodes = dialogueSystem.getDialogueNodes(for: treeID)
-        guard currentNodeIndex < nodes.count else {
-            endDialogue()
-            return
-        }
-
-        let node = nodes[currentNodeIndex]
-
-        // Show text with typing effect
-        dialogueBox?.showText(
-            speaker: node.speaker,
+    func dialogueSystem(_ system: DialogueSystem, showNode node: DialogueSystem.DialogueNode, availableChoices: [DialogueSystem.DialogueChoice]) {
+        dialogueBox?.showDialogue(
+            speakerName: node.speaker,
             text: node.text,
-            choices: node.choices
+            portrait: node.portrait,
+            emotion: node.emotion
         )
 
-        dialogueBox?.onChoiceSelected = { [weak self] choiceIndex in
-            self?.handleChoice(choiceIndex, for: node)
-        }
-
-        dialogueBox?.onTextComplete = { [weak self] in
-            // Auto-advance if no choices
-            if node.choices.isEmpty {
-                self?.currentNodeIndex += 1
-            }
+        if !availableChoices.isEmpty {
+            dialogueBox?.showChoices(availableChoices)
         }
     }
 
-    // MARK: - Choice Handling
-
-    private func handleChoice(_ index: Int, for node: DialogueSystem.DialogueNode) {
-        guard index < node.choices.count else { return }
-        let choice = node.choices[index]
-
-        // Process choice actions
-        for action in choice.actions {
-            switch action.type {
-            case .giveQuest:
-                if let questID = action.value {
-                    onQuestAccepted?(questID)
-                }
-            case .openShop:
-                if let shopID = action.value {
-                    onShopRequested?(shopID)
-                    endDialogue()
-                    return
-                }
-            case .changeReputation:
-                if let worldID = action.worldID, let amount = action.amount {
-                    onReputationChange?(worldID, amount)
-                }
-            case .gotoNode:
-                if let targetIndex = action.nodeIndex {
-                    currentNodeIndex = targetIndex
-                    advanceDialogue()
-                    return
-                }
-            case .endDialogue:
-                endDialogue()
-                return
-            }
-        }
-
-        currentNodeIndex += 1
-        advanceDialogue()
+    func dialogueSystemDidEnd(_ system: DialogueSystem, treeID: String) {
+        endDialogue(treeID: treeID)
     }
 
     // MARK: - End Dialogue
 
-    func endDialogue() {
+    private func endDialogue(treeID: String) {
         isActive = false
-        currentDialogueID = nil
 
-        // Fade out
         let fadeOut = SKAction.sequence([
             SKAction.fadeOut(withDuration: 0.2),
             SKAction.run { [weak self] in
-                self?.backgroundDim?.removeFromParent()
+                self?.dialogueBox?.hide()
                 self?.dialogueBox?.removeFromParent()
-                self?.portraitNode?.removeFromParent()
-                self?.backgroundDim = nil
+                self?.backgroundDim?.removeFromParent()
                 self?.dialogueBox = nil
-                self?.portraitNode = nil
+                self?.backgroundDim = nil
+                self?.alpha = 1.0
             }
         ])
         run(fadeOut)
 
-        onDialogueComplete?()
-    }
-
-    // MARK: - Touch Handling
-
-    func handleTouch(at point: CGPoint) {
-        guard isActive else { return }
-
-        if let box = dialogueBox {
-            // Check if touch is on a choice
-            let localPoint = box.convert(point, from: self)
-            if box.handleTouch(at: localPoint) {
-                return
-            }
-        }
-
-        // Tap to advance text
-        if dialogueBox?.isTyping == true {
-            dialogueBox?.skipTyping()
-        } else {
-            currentNodeIndex += 1
-            advanceDialogue()
-        }
+        onDialogueComplete?(treeID)
     }
 
     var dialogueActive: Bool { isActive }

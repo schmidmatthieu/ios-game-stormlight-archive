@@ -10,7 +10,7 @@ class EnemyEntity: BaseEntity {
     init(enemy: Enemy, spawn: EnemySpawn) {
         self.enemyData = enemy
         self.spawnData = spawn
-        super.init(id: "\(enemy.id)_\(spawn.gridCol)_\(spawn.gridRow)")
+        super.init(id: "\(enemy.id)_\(spawn.position.col)_\(spawn.position.row)")
 
         // Sprite
         let sprite = SpriteComponent(
@@ -29,7 +29,7 @@ class EnemyEntity: BaseEntity {
         // Mouvement
         let movement = MovementComponent(
             speed: enemy.speed,
-            startPosition: GridPosition(col: spawn.gridCol, row: spawn.gridRow)
+            startPosition: spawn.position
         )
         addComponent(movement)
 

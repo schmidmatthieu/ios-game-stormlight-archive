@@ -135,13 +135,12 @@ class InventoryComponent: GKComponent {
 
             for bonus in item.statBonuses {
                 switch bonus.stat {
-                case "vigor":       stats.vigor += bonus.value
-                case "investiture": stats.investiture += bonus.value
-                case "strength":    stats.strength += bonus.value
-                case "agility":     stats.agility += bonus.value
-                case "spirit":      stats.spirit += bonus.value
-                case "luck":        stats.luck += bonus.value
-                default: break
+                case .vigor:       stats.vigor += bonus.value
+                case .investiture: stats.investiture += bonus.value
+                case .strength:    stats.strength += bonus.value
+                case .agility:     stats.agility += bonus.value
+                case .spirit:      stats.spirit += bonus.value
+                case .luck:        stats.luck += bonus.value
                 }
             }
         }

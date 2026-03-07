@@ -96,6 +96,8 @@ final class GameManager {
             metalReserves: championClass == .mistborn ? defaultMetalReserves() : nil,
             breathCount: championClass == .awakener ? 1 : nil,
             stormlightAmount: championClass == .radiant ? 100.0 : nil,
+            waterReserve: championClass == .sandMaster ? 100.0 : nil,
+            inkReserve: championClass == .nightmarePainter ? 100.0 : nil,
             currentWorldID: championClass.startingWorld,
             currentZoneID: "\(championClass.startingWorld)_hub",
             gridPosition: GridPosition(col: 5, row: 5),
@@ -123,6 +125,28 @@ final class GameManager {
             mutation(&champ)
             _champion = champ
         }
+    }
+
+    // MARK: - Data Accessors
+
+    func item(byID id: String) -> Item? {
+        allItems[id]
+    }
+
+    func skill(byID id: String) -> Skill? {
+        allSkills[id]
+    }
+
+    func enemy(byID id: String) -> Enemy? {
+        allEnemies[id]
+    }
+
+    func zone(byID id: String) -> Zone? {
+        allZones[id]
+    }
+
+    func quest(byID id: String) -> Quest? {
+        allQuests[id]
     }
 
     // MARK: - XP & Level Up
