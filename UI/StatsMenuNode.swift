@@ -309,6 +309,7 @@ class StatsMenuNode: SKNode {
         }
 
         // Afficher la branche sélectionnée
+        guard selectedBranchIndex < tree.branches.count else { return }
         let branch = tree.branches[selectedBranchIndex]
         setupBranchDisplay(branch, champion: champion, startY: treeStartY - 35)
     }

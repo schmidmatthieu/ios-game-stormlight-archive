@@ -24,7 +24,8 @@ class DialogueBoxNode: SKNode {
     private var isTyping: Bool = false
     /// Vitesse de frappe ajustée par les paramètres
     private var typingSpeed: TimeInterval {
-        GameConstants.Dialogue.typingSpeed / Double(SettingsMenuNode.current.textSpeed)
+        let textSpeed = max(0.1, Double(SettingsMenuNode.current.textSpeed))
+        return GameConstants.Dialogue.typingSpeed / textSpeed
     }
 
     var onChoiceSelected: ((Int) -> Void)?
@@ -201,6 +202,9 @@ class DialogueBoxNode: SKNode {
         isTyping = true
         removeAction(forKey: "typing")
 
+        // Cache typing speed at animation start to avoid per-frame settings lookup
+        let cachedSpeed = typingSpeed
+
         let typeAction = SKAction.repeat(SKAction.sequence([
             SKAction.run { [weak self] in
                 guard let self = self else { return }
@@ -213,7 +217,7 @@ class DialogueBoxNode: SKNode {
                     self.removeAction(forKey: "typing")
                 }
             },
-            SKAction.wait(forDuration: typingSpeed)
+            SKAction.wait(forDuration: cachedSpeed)
         ]), count: fullText.count)
 
         run(typeAction, withKey: "typing")

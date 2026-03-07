@@ -25,6 +25,7 @@ enum GameConstants {
         static let abilityButtonRadius: CGFloat = 28
         static let attackButtonRadius: CGFloat = 35
         static let ultimateButtonRadius: CGFloat = 32
+        static let defaultScreenSize = CGSize(width: 390, height: 844)
     }
 
     // MARK: - Fonts
@@ -65,6 +66,8 @@ enum GameConstants {
         static let defaultCritMultiplier: Double = 2.0
         static let defaultAttackRange: Double = 1.5
         static let abilityCooldown: TimeInterval = 5.0
+        static let bossCritChance: Double = 0.15
+        static let luckDropMultiplier: Double = 0.02
     }
 
     // MARK: - Enemy AI

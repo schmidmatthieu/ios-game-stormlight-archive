@@ -11,13 +11,13 @@ final class SceneRouter {
     // MARK: - Navigation principale
 
     func showMainMenu() {
-        let scene = MainMenuScene(size: view?.bounds.size ?? CGSize(width: 390, height: 844))
+        let scene = MainMenuScene(size: view?.bounds.size ?? GameConstants.UI.defaultScreenSize)
         scene.scaleMode = .aspectFill
         view?.presentScene(scene, transition: .fade(withDuration: 0.5))
     }
 
     func showWorldMap() {
-        let scene = WorldMapScene(size: view?.bounds.size ?? CGSize(width: 390, height: 844))
+        let scene = WorldMapScene(size: view?.bounds.size ?? GameConstants.UI.defaultScreenSize)
         scene.scaleMode = .aspectFill
         view?.presentScene(scene, transition: .fade(withDuration: 0.8))
     }
@@ -42,7 +42,7 @@ final class SceneRouter {
         }
 
         // Charger la scène de zone
-        let sceneSize = view?.bounds.size ?? CGSize(width: 390, height: 844)
+        let sceneSize = view?.bounds.size ?? GameConstants.UI.defaultScreenSize
         let scene = ZoneScene(zone: zone, size: sceneSize)
         scene.scaleMode = .aspectFill
 
