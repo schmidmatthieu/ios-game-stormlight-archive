@@ -1,0 +1,354 @@
+[
+  {
+    "id": "scadrial_hub",
+    "name": "Marché de Luthadel",
+    "description": "Le cœur commercial de Luthadel, où les skaa et les nobles se côtoient sous les cendres. Marchands, forgerons et informateurs se trouvent ici.",
+    "worldID": "scadrial",
+    "type": "hub",
+    "gridWidth": 40,
+    "gridHeight": 40,
+    "tileMapFileName": "luthadel_market.sks",
+    "playerSpawnPosition": { "col": 20, "row": 35 },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_ashfields",
+        "entryPointName": "north_gate",
+        "exitPosition": { "col": 20, "row": 0 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_kredik_shaw",
+        "entryPointName": "palace_entrance",
+        "exitPosition": { "col": 38, "row": 20 },
+        "requiredQuestID": "scadrial_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "merchant_yeden",
+        "position": { "col": 15, "row": 25 },
+        "dialogueTreeID": "yeden_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "kelsier_contact",
+        "position": { "col": 25, "row": 20 },
+        "dialogueTreeID": "kelsier_intro",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "skaa_informer",
+        "position": { "col": 10, "row": 30 },
+        "dialogueTreeID": "skaa_rumors",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [
+      {
+        "id": "luthadel_hidden_cache",
+        "position": { "col": 5, "row": 5 },
+        "lootTable": [
+          { "itemID": "steel_vial", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 5 }
+        ],
+        "isHidden": true,
+        "respawns": false
+      }
+    ],
+    "ambientMusicTrack": "scadrial_market_ambient",
+    "weatherEffect": "ashfall",
+    "recommendedLevel": 1
+  },
+  {
+    "id": "scadrial_ashfields",
+    "name": "Champs de Cendres",
+    "description": "Les plaines grises au-delà de Luthadel. Les cendres tombent sans cesse et des créatures rôdent dans la brume.",
+    "worldID": "scadrial",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "ash_fields.sks",
+    "playerSpawnPosition": { "col": 30, "row": 55 },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_hub",
+        "entryPointName": "south_gate",
+        "exitPosition": { "col": 30, "row": 58 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_kredik_shaw",
+        "entryPointName": "back_entrance",
+        "exitPosition": { "col": 55, "row": 5 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "lost_skaa",
+        "position": { "col": 40, "row": 30 },
+        "dialogueTreeID": "lost_skaa_quest",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "corrupted_skaa",
+        "position": { "col": 15, "row": 20 },
+        "patrolPath": [
+          { "col": 15, "row": 20 }, { "col": 20, "row": 20 },
+          { "col": 20, "row": 25 }, { "col": 15, "row": 25 }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "corrupted_skaa",
+        "position": { "col": 35, "row": 15 },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "mist_wraith",
+        "position": { "col": 45, "row": 40 },
+        "patrolPath": [
+          { "col": 45, "row": 40 }, { "col": 50, "row": 35 },
+          { "col": 50, "row": 45 }, { "col": 45, "row": 40 }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "koloss_scout",
+        "position": { "col": 50, "row": 10 },
+        "patrolPath": null,
+        "respawnTime": 300
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "ash_fields_chest_1",
+        "position": { "col": 25, "row": 10 },
+        "lootTable": [
+          { "itemID": "iron_vial", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 3 },
+          { "itemID": "pewter_vial", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 2 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "scadrial_ashfields_ambient",
+    "weatherEffect": "mist",
+    "recommendedLevel": 2
+  },
+  {
+    "id": "scadrial_kredik_shaw",
+    "name": "Kredik Shaw — Le Palais du Lord Législateur",
+    "description": "La forteresse de pics acérés. L'Inquisiteur d'Acier attend dans ses profondeurs.",
+    "worldID": "scadrial",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "kredik_shaw.sks",
+    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_hub",
+        "entryPointName": "palace_exit",
+        "exitPosition": { "col": 25, "row": 49 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "steel_guard",
+        "position": { "col": 20, "row": 30 },
+        "patrolPath": [
+          { "col": 20, "row": 30 }, { "col": 30, "row": 30 }
+        ],
+        "respawnTime": null
+      },
+      {
+        "enemyID": "steel_guard",
+        "position": { "col": 25, "row": 20 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "steel_inquisitor",
+        "position": { "col": 25, "row": 5 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "scadrial_boss_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 5
+  },
+  {
+    "id": "roshar_hub",
+    "name": "Camps de Guerre des Plaines Brisées",
+    "description": "Les campements au bord des Plaines Brisées. Soldats, érudits et ardents s'y rassemblent entre les hauteorages.",
+    "worldID": "roshar",
+    "type": "hub",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "war_camps.sks",
+    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "connections": [
+      {
+        "targetZoneID": "roshar_shattered_plains",
+        "entryPointName": "east_bridge",
+        "exitPosition": { "col": 43, "row": 22 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_urithiru",
+        "entryPointName": "oathgate",
+        "exitPosition": { "col": 5, "row": 5 },
+        "requiredQuestID": "roshar_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "gemstone_merchant",
+        "position": { "col": 18, "row": 30 },
+        "dialogueTreeID": "gem_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "bridge_captain",
+        "position": { "col": 30, "row": 35 },
+        "dialogueTreeID": "bridge_captain_quest",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "ardent_scholar",
+        "position": { "col": 10, "row": 25 },
+        "dialogueTreeID": "ardent_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [],
+    "ambientMusicTrack": "roshar_camp_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 3
+  },
+  {
+    "id": "roshar_shattered_plains",
+    "name": "Les Plaines Brisées",
+    "description": "D'immenses plateaux fracturés séparés par des chasmes profonds. Les Parshendis attendent de l'autre côté.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 70,
+    "gridHeight": 70,
+    "tileMapFileName": "shattered_plains.sks",
+    "playerSpawnPosition": { "col": 5, "row": 35 },
+    "connections": [
+      {
+        "targetZoneID": "roshar_hub",
+        "entryPointName": "west_bridge",
+        "exitPosition": { "col": 0, "row": 35 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_urithiru",
+        "entryPointName": "hidden_path",
+        "exitPosition": { "col": 65, "row": 5 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "parshendi_warrior",
+        "position": { "col": 30, "row": 30 },
+        "patrolPath": [
+          { "col": 30, "row": 30 }, { "col": 35, "row": 25 },
+          { "col": 40, "row": 30 }, { "col": 35, "row": 35 }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "parshendi_warrior",
+        "position": { "col": 50, "row": 20 },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": { "col": 55, "row": 50 },
+        "patrolPath": null,
+        "respawnTime": 600
+      },
+      {
+        "enemyID": "voidbringer_scout",
+        "position": { "col": 60, "row": 10 },
+        "patrolPath": [
+          { "col": 60, "row": 10 }, { "col": 65, "row": 15 }
+        ],
+        "respawnTime": 200
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "plains_gemheart",
+        "position": { "col": 45, "row": 35 },
+        "lootTable": [
+          { "itemID": "stormlight_broam", "dropChance": 0.6, "minQuantity": 1, "maxQuantity": 1 },
+          { "itemID": "stormlight_mark", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 3 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_plains_ambient",
+    "weatherEffect": "highstorm",
+    "recommendedLevel": 4
+  },
+  {
+    "id": "roshar_urithiru",
+    "name": "Urithiru — La Cité des Chevaliers Radieux",
+    "description": "L'ancienne tour des Chevaliers Radieux. Le Néantifère Suprême a corrompu ses profondeurs.",
+    "worldID": "roshar",
+    "type": "boss",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "urithiru.sks",
+    "playerSpawnPosition": { "col": 27, "row": 50 },
+    "connections": [
+      {
+        "targetZoneID": "roshar_hub",
+        "entryPointName": "oathgate_return",
+        "exitPosition": { "col": 27, "row": 52 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "voidbringer_soldier",
+        "position": { "col": 20, "row": 35 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "voidbringer_soldier",
+        "position": { "col": 35, "row": 35 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": { "col": 27, "row": 10 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "roshar_boss_ambient",
+    "weatherEffect": "everstorm",
+    "recommendedLevel": 7
+  }
+]

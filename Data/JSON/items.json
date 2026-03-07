@@ -1,0 +1,334 @@
+[
+  {
+    "id": "steel_vial",
+    "name": "Fiole d'Acier",
+    "description": "Une petite fiole contenant des copeaux d'acier en suspension. Essentiel pour tout Allomancien.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_steel_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "iron_vial",
+    "name": "Fiole de Fer",
+    "description": "Fiole contenant des copeaux de fer. Permet de tirer les métaux vers soi.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_iron_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "tin_vial",
+    "name": "Fiole d'Étain",
+    "description": "Amplifie les sens quand brûlée. Révèle les secrets cachés.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "spirit", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_tin_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "pewter_vial",
+    "name": "Fiole de Pewter",
+    "description": "Confère une force et une endurance surhumaines quand brûlée.",
+    "rarity": "uncommon",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_pewter_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "wraith_bone",
+    "name": "Os de Spectre",
+    "description": "Un os récolté sur un spectre des brumes. Étrangement léger et résistant.",
+    "rarity": "uncommon",
+    "slot": "offhand",
+    "requiredLevel": 2,
+    "statBonuses": [{ "stat": "agility", "value": 2 }, { "stat": "luck", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_wraith_bone",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "koloss_blade_shard",
+    "name": "Éclat de Lame Koloss",
+    "description": "Fragment de l'immense épée grossière d'un koloss. Brut mais puissant.",
+    "rarity": "rare",
+    "slot": "mainWeapon",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "vigor", "value": 2 }, { "stat": "agility", "value": -1 }],
+    "traits": [
+      {
+        "id": "trait_koloss_fury",
+        "name": "Fureur Koloss",
+        "description": "+20% dégâts quand PV < 30%",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.2
+      }
+    ],
+    "spriteName": "item_koloss_blade",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "guard_armor_piece",
+    "name": "Plastron de Garde d'Acier",
+    "description": "Armure portée par les gardes de Kredik Shaw. Bien forgée.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "vigor", "value": 3 }, { "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_guard_armor",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "inquisitor_spike",
+    "name": "Pic d'Inquisiteur",
+    "description": "Un pic hémalurgique arraché à un Inquisiteur d'Acier. Pulse d'un pouvoir sinistre.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "spirit", "value": 5 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "investiture", "value": 4 },
+      { "stat": "vigor", "value": 2 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_hemalurgy",
+        "name": "Pouvoir Hémalurgique",
+        "description": "Vole 5% des stats d'un ennemi tué pendant 30s",
+        "effectType": "lifesteal",
+        "effectValue": 0.05
+      }
+    ],
+    "spriteName": "item_inquisitor_spike",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "atium_bead",
+    "name": "Perle d'Atium",
+    "description": "Le métal le plus rare du Cosmere. Permet de voir le futur en combat.",
+    "rarity": "legendary",
+    "slot": "ring1",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "agility", "value": 5 },
+      { "stat": "luck", "value": 5 },
+      { "stat": "spirit", "value": 3 },
+      { "stat": "investiture", "value": 3 },
+      { "stat": "vigor", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_atium_sight",
+        "name": "Vision d'Atium",
+        "description": "+30% esquive, voit les attaques ennemies 1s avant",
+        "effectType": "critChance",
+        "effectValue": 0.3
+      }
+    ],
+    "spriteName": "item_atium_bead",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "stormlight_chip",
+    "name": "Éclat de Lumière d'Orage",
+    "description": "Un petit éclat de gemme infusé de Lumière d'Orage. Alimente le Surgebinding.",
+    "rarity": "common",
+    "slot": "ring2",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_stormlight_chip",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "stormlight_mark",
+    "name": "Marque de Lumière d'Orage",
+    "description": "Une gemme de taille moyenne brillant de Lumière d'Orage captive.",
+    "rarity": "uncommon",
+    "slot": "ring2",
+    "requiredLevel": 2,
+    "statBonuses": [{ "stat": "investiture", "value": 3 }, { "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_stormlight_mark",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "stormlight_broam",
+    "name": "Broam de Lumière d'Orage",
+    "description": "Une grande gemme précieuse, débordante de Lumière d'Orage.",
+    "rarity": "rare",
+    "slot": "ring2",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "investiture", "value": 5 }, { "stat": "spirit", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_stormlight_regen",
+        "name": "Lumière Captive",
+        "description": "Régénère l'Investiture sous la pluie ou pendant un hauteorages",
+        "effectType": "investitureRegen",
+        "effectValue": 5.0
+      }
+    ],
+    "spriteName": "item_stormlight_broam",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "carapace_armor_piece",
+    "name": "Armure de Carapace Parshendi",
+    "description": "Armure naturelle cultivée par les chanteurs. Légère et résistante.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "agility", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_carapace_armor",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "carapace_plate",
+    "name": "Plaque de Carapace de Grandfossoyeur",
+    "description": "Plaque de la carapace d'un Grandfossoyeur. Incroyablement résistante.",
+    "rarity": "epic",
+    "slot": "chest",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "vigor", "value": 6 },
+      { "stat": "strength", "value": 2 },
+      { "stat": "agility", "value": -1 },
+      { "stat": "investiture", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_chasmfiend_hide",
+        "name": "Cuir de Grandfossoyeur",
+        "description": "Réduit les dégâts physiques reçus de 15%",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": -0.15
+      },
+      {
+        "id": "trait_storm_resistant",
+        "name": "Résistance aux Tempêtes",
+        "description": "Immunité aux effets de hauteorages dans les zones météo",
+        "effectType": "investitureRegen",
+        "effectValue": 2.0
+      }
+    ],
+    "spriteName": "item_carapace_plate",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "gemheart_fragment",
+    "name": "Fragment de Cœur-gemme",
+    "description": "Un fragment du précieux cœur-gemme d'un Grandfossoyeur.",
+    "rarity": "rare",
+    "slot": "amulet",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "investiture", "value": 4 }, { "stat": "spirit", "value": 3 }, { "stat": "luck", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_gemheart_power",
+        "name": "Pouvoir du Cœur-gemme",
+        "description": "Les gemmes rechargent 25% plus de Lumière d'Orage",
+        "effectType": "investitureRegen",
+        "effectValue": 0.25
+      }
+    ],
+    "spriteName": "item_gemheart_fragment",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "voidspren_essence",
+    "name": "Essence de Néantispren",
+    "description": "L'essence cristallisée d'un spren du Vide. Pulse d'une énergie sombre.",
+    "rarity": "rare",
+    "slot": "ring1",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "spirit", "value": 4 }, { "stat": "strength", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_void_touch",
+        "name": "Toucher du Vide",
+        "description": "Les attaques magiques ont 10% de chance d'étourdir",
+        "effectType": "critChance",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_voidspren_essence",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "thunderclast_heart",
+    "name": "Cœur de Tonnerreclaste",
+    "description": "Le cœur de pierre animée d'un Tonnerreclaste. Vibre d'un pouvoir ancien d'Odium.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "vigor", "value": 6 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "spirit", "value": 4 },
+      { "stat": "investiture", "value": 3 },
+      { "stat": "agility", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_thunderclast_power",
+        "name": "Puissance Tellurique",
+        "description": "Les attaques AoE font 25% de dégâts supplémentaires",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": 0.25
+      }
+    ],
+    "spriteName": "item_thunderclast_heart",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "honorblade_shard",
+    "name": "Éclat d'Honorlame",
+    "description": "Un fragment d'une véritable Honorlame, forgée par l'Éclat Honneur lui-même.",
+    "rarity": "cosmeric",
+    "slot": "mainWeapon",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "strength", "value": 8 },
+      { "stat": "spirit", "value": 6 },
+      { "stat": "agility", "value": 4 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_honor_radiance",
+        "name": "Radiance d'Honneur",
+        "description": "Débloque temporairement le Surgebinding même sans être Radieux",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": 0.5
+      },
+      {
+        "id": "trait_cosmeric_resonance",
+        "name": "Résonance Cosmérique",
+        "description": "+15% toutes stats dans n'importe quel monde",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.15
+      }
+    ],
+    "spriteName": "item_honorblade_shard",
+    "worldOrigin": "roshar"
+  }
+]
