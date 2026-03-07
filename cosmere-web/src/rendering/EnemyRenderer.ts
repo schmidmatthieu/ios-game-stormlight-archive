@@ -3,7 +3,7 @@ import type { Enemy } from '../data/types';
 import { lighten, darken } from '../utils/ColorUtils';
 
 // World-specific enemy body colors
-const WORLD_ENEMY_COLORS: Record<string, Record<string, number>> = {
+export const WORLD_ENEMY_COLORS: Record<string, Record<string, number>> = {
   scadrial: { minion: 0x665544, soldier: 0x884433, elite: 0x774455, boss: 0xcc5500 },
   roshar:   { minion: 0x445566, soldier: 0x556688, elite: 0x6644aa, boss: 0x8833cc },
   taldain:  { minion: 0x887755, soldier: 0x996644, elite: 0xaa7733, boss: 0xcc8800 },

@@ -58,9 +58,21 @@ export function createWorldEventBanner(
     name.y = 4;
     container.addChild(name);
 
+    // World tag (for world-specific events)
+    if (event.worlds && event.worlds.length > 0) {
+      const tag = new Text({
+        text: `[${event.worlds[0].toUpperCase()}]`,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(6, layout), fontWeight: 'bold', fill: event.color }),
+      });
+      tag.x = bx + 28 + name.width + 6;
+      tag.y = 6;
+      container.addChild(tag);
+    }
+
     // Description
+    const maxDesc = layout.scale < 1.2 ? 40 : 50;
     const desc = new Text({
-      text: event.description.length > 50 ? event.description.slice(0, 47) + '...' : event.description,
+      text: event.description.length > maxDesc ? event.description.slice(0, maxDesc - 3) + '...' : event.description,
       style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textSecondary }),
     });
     desc.x = bx + 28;

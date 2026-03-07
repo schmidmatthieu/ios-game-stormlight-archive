@@ -19,10 +19,14 @@ import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../ga
 import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
+import { drawEquipmentOverlay } from '../rendering/EquipmentVisuals';
 import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
-import { drawEnemySprite } from '../rendering/EnemyRenderer';
+import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer';
+import { createEnemyAnimState, updateEnemyIdle, triggerEnemyHurt, triggerEnemyDeath, drawBossAura, drawAlertIndicator, setEnemyAlert } from '../rendering/EnemyAnimations';
+import type { EnemyAnimState } from '../rendering/EnemyAnimations';
 import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle } from '../rendering/SpellEffects';
+import { createDirectionalSlash, createCritFlash, createKillBurst, showKillStreakBanner, triggerHitStop, updateHitStop, createGroundCrack } from '../rendering/CombatFeedback';
 import { FloatingDamageManager } from '../rendering/FloatingDamage';
 import type { DamageStyle } from '../rendering/FloatingDamage';
 import { MusicManager } from '../game/MusicSystem';
@@ -38,6 +42,8 @@ import { showBestiaryPanel } from '../ui/BestiaryPanel';
 import { AchievementManager } from '../game/AchievementSystem';
 import { createAchievementToast, showAchievementPanel } from '../ui/AchievementUI';
 import { showSkillTreePanel } from '../ui/SkillTreePanel';
+import { showTalentTreePanel } from '../ui/TalentTreePanel';
+import { createZoneToolbar } from './ZoneToolbar';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
@@ -46,7 +52,10 @@ import { WorldEventManager } from '../game/WorldEvents';
 import type { WorldEventEffect } from '../game/WorldEvents';
 import { createWorldEventBanner } from '../ui/WorldEventBanner';
 import { WorldMapScene } from './WorldMapScene';
+import { NPCScheduleManager } from '../game/NPCScheduleSystem';
+import { moveNPCTo, teleportNPC, updateNPCAnimation, showActivityIndicator, setNPCSleeping, clearNPCAnimations } from '../rendering/NPCAnimator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
+import { renderEnhancedTilemap } from '../rendering/TileRenderer';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
 import { addReputation, createReputationBadge, showRankUpEffect, getBonusXPMultiplier } from '../game/ReputationSystem';
@@ -100,6 +109,9 @@ interface EnemyInstance {
   animTimer: number;
   affixState?: EnemyAffixState;
   affixLabel?: Text;
+  enemyAnim?: EnemyAnimState;
+  bossAuraGfx?: Graphics;
+  statusGfx?: Graphics;
 }
 
 interface NPCInstance {
@@ -294,6 +306,10 @@ export class ZoneScene extends Container implements GameScene {
   private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
   private achievementToast: { update: (dt: number) => void } | null = null;
 
+  // Kill streak tracking
+  private killStreak = 0;
+  private killStreakTimer = 0;
+
   // Companion
   private companionSprite: Graphics | null = null;
   private companionPos = { x: 0, y: 0 };
@@ -446,29 +462,18 @@ export class ZoneScene extends Container implements GameScene {
       }
     }
 
-    // Pause button (top center)
-    this.createPauseButton(w, layout);
-
-    // Inventory button (next to pause)
-    this.createInventoryButton(w, layout);
-
-    // Crafting button (next to inventory)
-    this.createCraftingButton(w, layout);
-
-    // Bestiary button (next to crafting)
-    this.createBestiaryButton(w, layout);
-
-    // Achievements button (next to bestiary)
-    this.createAchievementButton(w, layout);
-
-    // Skill tree button (next to achievements)
-    this.createSkillTreeButton(w, layout);
-
-    // Companion button
-    this.createCompanionButton(w, layout);
-
-    // Quest journal button
-    this.createQuestJournalButton(w, layout);
+    // Toolbar buttons (pause, inventory, crafting, bestiary, etc.)
+    createZoneToolbar(this.uiContainer, w, layout, {
+      togglePause: () => this.togglePause(),
+      toggleInventory: () => this.toggleInventory(),
+      toggleCrafting: () => this.toggleCrafting(),
+      toggleBestiary: () => this.toggleBestiary(),
+      toggleAchievements: () => this.toggleAchievements(),
+      toggleSkillTree: () => this.toggleSkillTree(),
+      toggleTalentTree: () => this.toggleTalentTree(),
+      toggleCompanion: () => this.toggleCompanion(),
+      toggleQuestJournal: () => this.toggleQuestJournal(),
+    });
 
     // Initialize companion
     CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
@@ -495,6 +500,9 @@ export class ZoneScene extends Container implements GameScene {
     // Day/night cycle
     this.dayNightManager = new DayNightManager(this.zone.worldID);
     this.dayNightOverlay = createDayNightOverlay(this.uiContainer, w, h);
+
+    // Initialize NPC schedules based on current time
+    this.initNPCSchedules();
 
     // Dynamic weather
     this.weatherManager = new WeatherManager(this.zone.worldID);
@@ -529,64 +537,11 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Tilemap ─────────────────────────────────────────────────
 
   private renderTilemap(): void {
-    const gw = this.zone.gridWidth;
-    const gh = this.zone.gridHeight;
-    const t = this.theme;
-
-    // Batch tiles in a single Graphics for performance
-    const tileGraphics = new Graphics();
-    tileGraphics.zIndex = -1000;
-
-    for (let col = 0; col < gw; col++) {
-      for (let row = 0; row < gh; row++) {
-        const { x, y } = isoToScreen(col, row);
-        const seed = col * 1000 + row;
-        const rand = seededRandom(seed);
-
-        // Pick tile color with more interesting variation
-        let color: number;
-        if (rand < 0.15) {
-          // Accent tile
-          color = t.tileAlt;
-        } else if (rand < 0.25) {
-          // Slightly darker
-          color = this.darkenColor(t.tileBase, 0.15);
-        } else {
-          // Normal with subtle variation
-          const variation = Math.floor(seededRandom(seed + 7) * 3) * 0x020202;
-          color = t.tileBase + variation;
-        }
-
-        // Is edge tile?
-        const isEdge = col === 0 || row === 0 || col === gw - 1 || row === gh - 1;
-        const alpha = isEdge ? 0.6 : 0.95;
-
-        // Diamond
-        tileGraphics.poly([
-          { x: x, y: y - 16 },
-          { x: x + 32, y: y },
-          { x: x, y: y + 16 },
-          { x: x - 32, y: y },
-        ]).fill({ color, alpha });
-
-        // Subtle grid line
-        tileGraphics.poly([
-          { x: x, y: y - 16 },
-          { x: x + 32, y: y },
-          { x: x, y: y + 16 },
-          { x: x - 32, y: y },
-        ]).stroke({ color: t.tileBorder, width: 0.3, alpha: 0.4 });
-
-        // Add subtle texture patterns on some tiles
-        if (rand > 0.7 && rand < 0.85) {
-          // Small crack/detail
-          const cx = x + (seededRandom(seed + 3) - 0.5) * 20;
-          const cy = y + (seededRandom(seed + 5) - 0.5) * 10;
-          tileGraphics.circle(cx, cy, 1.5).fill({ color: t.tileBorder, alpha: 0.3 });
-        }
-      }
-    }
-
+    const tileGraphics = renderEnhancedTilemap(
+      this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.worldID, this.theme,
+      isoToScreen, this.darkenColor.bind(this),
+    );
     this.worldContainer.addChild(tileGraphics);
   }
 
@@ -1079,6 +1034,10 @@ export class ZoneScene extends Container implements GameScene {
   private drawPlayer(): void {
     const champ = GameManager.shared.champion;
     drawPlayerCharacter(this.playerSprite, champ?.championClass ?? 'mistborn');
+    // Draw equipment visuals on top of base character
+    if (champ) {
+      drawEquipmentOverlay(this.playerSprite, champ.equipment);
+    }
   }
 
   // ─── NPCs ────────────────────────────────────────────────────
@@ -1308,6 +1267,13 @@ export class ZoneScene extends Container implements GameScene {
     const npc = this.npcs.find(n => n.id === spawn.npcID);
     if (!npc) return;
 
+    // Check if NPC is sleeping (unavailable)
+    const schedMgr = NPCScheduleManager.shared;
+    if (schedMgr.hasSchedule(spawn.npcID) && !schedMgr.isAvailable(spawn.npcID)) {
+      this.showFloatingText(npc.position.x, npc.position.y - 50, '💤 Dort...', 0x6677aa);
+      return;
+    }
+
     if (spawn.isShopkeeper) {
       this.showShop(spawn.npcID);
     } else {
@@ -1348,6 +1314,15 @@ export class ZoneScene extends Container implements GameScene {
       `${levelLabel} (${affinity}%)`, levelColor,
     );
 
+    // Show time-based dialogue override from schedule
+    const timeDialogue = NPCScheduleManager.shared.getTimeDialogue(npcID);
+    if (timeDialogue) {
+      const npcInst = this.npcs.find(n => n.id === npcID);
+      if (npcInst) {
+        this.showFloatingText(npcInst.position.x, npcInst.position.y - 60, timeDialogue, 0xddddaa);
+      }
+    }
+
     this.dialoguePanel = showDialoguePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       this.zone.worldID, npcName, () => this.closeDialogue(),
@@ -1374,55 +1349,7 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createPauseButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnSize = toolbarButtonSize(layout);
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    const icon = new Graphics();
-    icon.rect(btnW * 0.3, btnH * 0.2, btnW * 0.1, btnH * 0.6).fill({ color: UI_COLORS.textPrimary, alpha: 0.85 });
-    icon.rect(btnW * 0.55, btnH * 0.2, btnW * 0.1, btnH * 0.6).fill({ color: UI_COLORS.textPrimary, alpha: 0.85 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 - btnW / 2;
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.togglePause(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
-  }
-
-  private createInventoryButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    // Bag icon — proportional
-    const icon = new Graphics();
-    const ix = btnW * 0.28, iy = btnH * 0.3, iw = btnW * 0.44, ih = btnH * 0.5;
-    icon.roundRect(ix, iy, iw, ih, scaled(3, layout)).fill({ color: 0xaa8855, alpha: 0.7 });
-    icon.roundRect(ix, iy, iw, ih, scaled(3, layout)).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
-    icon.arc(btnW * 0.5, iy, iw * 0.3, Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(26, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleInventory(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
-  }
+  // NOTE: Toolbar buttons have been extracted to ZoneToolbar.ts
 
   private toggleInventory(): void {
     if (this.dialoguePanel) return;
@@ -1435,30 +1362,6 @@ export class ZoneScene extends Container implements GameScene {
     this.uiContainer.addChild(this.dialoguePanel);
   }
 
-  private createCraftingButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    // Anvil icon — proportional
-    const icon = new Graphics();
-    icon.poly([{ x: btnW * 0.33, y: btnH * 0.7 }, { x: btnW * 0.5, y: btnH * 0.35 }, { x: btnW * 0.67, y: btnH * 0.7 }]).fill({ color: 0x888899, alpha: 0.7 });
-    icon.rect(btnW * 0.28, btnH * 0.7, btnW * 0.44, btnH * 0.1).fill({ color: 0x666677, alpha: 0.8 });
-    icon.rect(btnW * 0.44, btnH * 0.2, btnW * 0.1, btnH * 0.2).fill({ color: 0xaa8844, alpha: 0.7 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(70, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleCrafting(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
-  }
 
   private toggleCrafting(): void {
     if (this.dialoguePanel) return;
@@ -1471,33 +1374,6 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createBestiaryButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    // Book icon — proportional
-    const icon = new Graphics();
-    icon.roundRect(btnW * 0.28, btnH * 0.22, btnW * 0.44, btnH * 0.56, scaled(2, layout)).fill({ color: 0x557744, alpha: 0.7 });
-    icon.rect(btnW * 0.33, btnH * 0.32, btnW * 0.33, btnH * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.6 });
-    icon.rect(btnW * 0.33, btnH * 0.42, btnW * 0.28, btnH * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.5 });
-    icon.rect(btnW * 0.33, btnH * 0.52, btnW * 0.3, btnH * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.4 });
-    icon.rect(btnW * 0.28, btnH * 0.22, btnW * 0.06, btnH * 0.56).fill({ color: 0x445533, alpha: 0.8 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(114, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleBestiary(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
-  }
-
   private toggleBestiary(): void {
     if (this.dialoguePanel) return;
     this.isPaused = true;
@@ -1505,31 +1381,6 @@ export class ZoneScene extends Container implements GameScene {
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       () => this.closeDialogue(),
     );
-  }
-
-  private createAchievementButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    // Trophy icon — proportional
-    const icon = new Graphics();
-    icon.moveTo(btnW * 0.36, btnH * 0.25).lineTo(btnW * 0.64, btnH * 0.25).lineTo(btnW * 0.6, btnH * 0.55).lineTo(btnW * 0.4, btnH * 0.55).closePath().fill({ color: UI_COLORS.textGold, alpha: 0.7 });
-    icon.rect(btnW * 0.44, btnH * 0.55, btnW * 0.12, btnH * 0.12).fill({ color: 0xccaa44, alpha: 0.7 });
-    icon.rect(btnW * 0.38, btnH * 0.67, btnW * 0.24, btnH * 0.08).fill({ color: 0xccaa44, alpha: 0.6 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(158, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleAchievements(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
   }
 
   private toggleAchievements(): void {
@@ -1541,34 +1392,6 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createSkillTreeButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    // Tree/branch icon — proportional
-    const icon = new Graphics();
-    icon.rect(btnW * 0.47, btnH * 0.3, btnW * 0.06, btnH * 0.5).fill({ color: 0x5588cc, alpha: 0.7 });
-    icon.circle(btnW * 0.5, btnH * 0.3, btnW * 0.1).fill({ color: 0x5588cc, alpha: 0.6 });
-    icon.circle(btnW * 0.33, btnH * 0.55, btnW * 0.08).fill({ color: 0x4477aa, alpha: 0.5 });
-    icon.circle(btnW * 0.67, btnH * 0.55, btnW * 0.08).fill({ color: 0x4477aa, alpha: 0.5 });
-    icon.moveTo(btnW * 0.5, btnH * 0.45).lineTo(btnW * 0.33, btnH * 0.55).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
-    icon.moveTo(btnW * 0.5, btnH * 0.45).lineTo(btnW * 0.67, btnH * 0.55).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 - scaled(64, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleSkillTree(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
-  }
-
   private toggleSkillTree(): void {
     if (this.dialoguePanel) return;
     this.isPaused = true;
@@ -1578,29 +1401,13 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createCompanionButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = touchTarget(36, layout);
-    const btnH = touchTarget(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
-    btn.addChild(bg);
-    // Companion orb icon — proportional
-    const icon = new Graphics();
-    icon.circle(btnW * 0.5, btnH * 0.5, btnW * 0.17).fill({ color: 0x88ccff, alpha: 0.5 });
-    icon.circle(btnW * 0.5, btnH * 0.5, btnW * 0.11).fill({ color: 0xaaddff, alpha: 0.7 });
-    icon.circle(btnW * 0.47, btnH * 0.47, btnW * 0.06).fill({ color: 0xffffff, alpha: 0.4 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 - scaled(108, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleCompanion(); });
-    btn.on('pointerup', () => { btn.alpha = 1; });
-    btn.on('pointerupoutside', () => { btn.alpha = 1; });
-    this.uiContainer.addChild(btn);
+  private toggleTalentTree(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showTalentTreePanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
   }
 
   private toggleCompanion(): void {
@@ -1610,31 +1417,6 @@ export class ZoneScene extends Container implements GameScene {
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       () => { this.closeDialogue(); this.spawnCompanionSprite(); },
     );
-  }
-
-  private createQuestJournalButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
-    const btn = new Container();
-    const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
-    btn.addChild(bg);
-    // Book icon
-    const icon = new Graphics();
-    icon.roundRect(scaled(10, layout), scaled(7, layout), scaled(16, layout), scaled(15, layout), scaled(2, layout)).fill({ color: 0x886633, alpha: 0.7 });
-    icon.rect(scaled(17, layout), scaled(7, layout), scaled(2, layout), scaled(15, layout)).fill({ color: 0x664422, alpha: 0.8 });
-    icon.rect(scaled(12, layout), scaled(10, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
-    icon.rect(scaled(12, layout), scaled(14, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
-    icon.rect(scaled(12, layout), scaled(18, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
-    btn.addChild(icon);
-    btn.x = screenWidth / 2 - scaled(144, layout);
-    btn.y = toolbarY(layout);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleQuestJournal());
-    this.uiContainer.addChild(btn);
   }
 
   private toggleQuestJournal(): void {
@@ -1875,6 +1657,7 @@ export class ZoneScene extends Container implements GameScene {
         respawnTimer: 0,
         animTimer: Math.random() * Math.PI * 2,
         affixState,
+        enemyAnim: createEnemyAnimState(),
       };
 
       // Affix label under name
@@ -2108,6 +1891,13 @@ export class ZoneScene extends Container implements GameScene {
   update(dt: number): void {
     if (this.isPaused || this.isTransitioning) return;
     const delta = dt / 60;
+    // Hit stop: skip frame if active
+    if (updateHitStop(delta)) return;
+    // Kill streak decay
+    if (this.killStreakTimer > 0) {
+      this.killStreakTimer -= delta;
+      if (this.killStreakTimer <= 0) this.killStreak = 0;
+    }
     this.handleMovement(delta);
     this.updateEnemyAI(delta);
     this.updateCombat(delta);
@@ -2262,6 +2052,17 @@ export class ZoneScene extends Container implements GameScene {
         continue;
       }
 
+      // Animate enemy idle (breathing, sway)
+      if (enemy.enemyAnim) {
+        updateEnemyIdle(enemy.sprite, enemy.enemyAnim, dt, enemy.data.tier);
+        // Boss aura animation
+        if (enemy.data.tier === 'boss' && enemy.bossState?.announced) {
+          if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); }
+          const phase = enemy.bossState.currentPhase + 1;
+          enemy.bossAuraGfx = drawBossAura(enemy.sprite, enemy.enemyAnim.timer, WORLD_ENEMY_COLORS[enemy.data.worldID]?.boss ?? 0xcc5500, phase);
+        }
+      }
+
       const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
       const mistMult = this.worldMechanics instanceof ScadrialMechanics
         ? (this.worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
@@ -2364,7 +2165,10 @@ export class ZoneScene extends Container implements GameScene {
         enemy.attackCooldown = 1.5;
         this.enemyAttacksPlayer(enemy);
       } else if (dist < detRange) {
-        if (enemy.state !== 'chasing') BestiaryManager.shared.registerEncounter(enemy.data);
+        if (enemy.state !== 'chasing') {
+          BestiaryManager.shared.registerEncounter(enemy.data);
+          if (enemy.enemyAnim) setEnemyAlert(enemy.enemyAnim);
+        }
         enemy.state = 'chasing';
         const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
         const speed = enemy.data.speed * 30 * dt * speedMult;
@@ -2565,10 +2369,23 @@ export class ZoneScene extends Container implements GameScene {
 
     // Hit flash + shake animation
     animateEnemyHit(closest.sprite);
+    if (closest.enemyAnim) triggerEnemyHurt(closest.enemyAnim);
     createHitImpact(
       this.worldContainer, closest.position.x, closest.position.y,
       champ.championClass, isCrit, this.particles as any,
     );
+
+    // Directional slash mark
+    const hitAngle = Math.atan2(closest.position.y - this.playerScreenPos.y, closest.position.x - this.playerScreenPos.x);
+    createDirectionalSlash(this.worldContainer, closest.position.x, closest.position.y, hitAngle, isCrit, isCrit ? 0xffdd44 : 0xcccccc);
+
+    // Crit flash and hit stop
+    if (isCrit) {
+      createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
+      triggerHitStop(0.05);
+      this.shakeCamera(4, 0.2);
+    }
+
     const innerSprite = closest.sprite.children[1] as Graphics;
     if (innerSprite) {
       innerSprite.tint = 0xff4444;
@@ -2673,7 +2490,25 @@ export class ZoneScene extends Container implements GameScene {
   private killEnemy(enemy: EnemyInstance): void {
     enemy.isDead = true;
     enemy.state = 'dead';
+    if (enemy.enemyAnim) triggerEnemyDeath(enemy.enemyAnim);
+    if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); enemy.bossAuraGfx = undefined; }
     MusicManager.shared.playSFX('death');
+
+    // Kill burst visual
+    const worldColor = WORLD_ENEMY_COLORS[enemy.data.worldID]?.[enemy.data.tier] ?? 0x888888;
+    createKillBurst(this.worldContainer, enemy.position.x, enemy.position.y, enemy.data.tier, worldColor);
+
+    // Ground crack for elite/boss kills
+    if (enemy.data.tier === 'elite' || enemy.data.tier === 'boss') {
+      createGroundCrack(this.worldContainer, enemy.position.x, enemy.position.y, enemy.data.tier === 'boss' ? 30 : 18);
+    }
+
+    // Kill streak tracking
+    this.killStreak++;
+    this.killStreakTimer = 5;
+    if ([3, 5, 7, 10, 15].includes(this.killStreak)) {
+      showKillStreakBanner(this.uiContainer, this.app.screen.width, this.app.screen.height, this.killStreak);
+    }
 
     // Track in bestiary & achievements
     BestiaryManager.shared.registerKill(enemy.data);
@@ -2931,6 +2766,40 @@ export class ZoneScene extends Container implements GameScene {
     }
     if (result.changed && result.message) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, result.message, 0xddddaa);
+      // Update NPC schedules on time change
+      this.updateNPCSchedules();
+    }
+    // Animate NPC movement each frame
+    for (const npc of this.npcs) {
+      updateNPCAnimation(npc, dt);
+    }
+  }
+
+  private initNPCSchedules(): void {
+    const schedMgr = NPCScheduleManager.shared;
+    schedMgr.initialize(this.dayNightManager.currentTime);
+
+    for (const npc of this.npcs) {
+      const entry = schedMgr.getScheduleEntry(npc.id, this.dayNightManager.currentTime);
+      if (entry) {
+        teleportNPC(npc, entry.position);
+        showActivityIndicator(npc, entry.activity);
+        setNPCSleeping(npc, entry.activity === 'sleeping');
+      }
+    }
+  }
+
+  private updateNPCSchedules(): void {
+    const schedMgr = NPCScheduleManager.shared;
+    const movers = schedMgr.onTimeChange(this.dayNightManager.currentTime);
+
+    for (const move of movers) {
+      const npc = this.npcs.find(n => n.id === move.npcID);
+      if (!npc) continue;
+
+      moveNPCTo(npc, move.newPosition);
+      showActivityIndicator(npc, move.activity);
+      setNPCSleeping(npc, move.activity === 'sleeping');
     }
   }
 

@@ -2,6 +2,27 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { getLayoutInfo, fontSize, scaled, hudMargin, hudBarWidth, panelRadius, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
+import { lighten } from '../utils/ColorUtils';
+
+// ─── World-Themed HUD Colors ─────────────────────────────────────
+
+interface WorldHUDTheme {
+  borderColor: number;
+  investitureColor: number;
+  investitureLabel: string;
+  panelTint: number;
+  accentGlow: number;
+}
+
+const WORLD_HUD_THEMES: Record<string, WorldHUDTheme> = {
+  scadrial:  { borderColor: 0x664422, investitureColor: 0x6688cc, investitureLabel: 'MÉT', panelTint: 0x332211, accentGlow: 0x8899aa },
+  roshar:    { borderColor: 0x2255aa, investitureColor: 0x66bbff, investitureLabel: 'LUM', panelTint: 0x112233, accentGlow: 0x88ccff },
+  taldain:   { borderColor: 0x998833, investitureColor: 0xddcc44, investitureLabel: 'HYD', panelTint: 0x222200, accentGlow: 0xffdd66 },
+  nalthis:   { borderColor: 0x44aa44, investitureColor: 0xcc66ff, investitureLabel: 'SOF', panelTint: 0x112211, accentGlow: 0xaa88ff },
+  sel:       { borderColor: 0xaaaa33, investitureColor: 0xffcc44, investitureLabel: 'DOR', panelTint: 0x222200, accentGlow: 0xffdd88 },
+  komashi:   { borderColor: 0x882299, investitureColor: 0xaa66cc, investitureLabel: 'ENC', panelTint: 0x220022, accentGlow: 0xcc88ff },
+  shadesmar: { borderColor: 0x4422aa, investitureColor: 0x8866ff, investitureLabel: 'COG', panelTint: 0x110033, accentGlow: 0xaa88ff },
+};
 
 export class HUD extends Container {
   private hpBar: Graphics;
@@ -32,6 +53,9 @@ export class HUD extends Container {
   private targetXP = 0;
   private prevLevel = 1;
   private levelUpGlow: Graphics;
+  private currentWorldID = '';
+  private worldTheme: WorldHUDTheme = WORLD_HUD_THEMES.scadrial;
+  private borderGlow: Graphics;
 
   constructor(screenWidth: number, screenHeight: number) {
     super();
@@ -65,6 +89,10 @@ export class HUD extends Container {
     this.levelUpGlow = new Graphics();
     this.levelUpGlow.alpha = 0;
     this.addChild(this.levelUpGlow);
+
+    // World-themed border glow
+    this.borderGlow = new Graphics();
+    this.addChild(this.borderGlow);
 
     // HP background
     this.hpBg = new Graphics();
@@ -285,23 +313,37 @@ export class HUD extends Container {
     }
     this.hpText.text = `${Math.ceil(c.currentHP)}/${gm.maxHP}`;
 
-    // Investiture
+    // Update world theme if changed
+    if (c.currentWorldID !== this.currentWorldID) {
+      this.currentWorldID = c.currentWorldID;
+      this.worldTheme = WORLD_HUD_THEMES[c.currentWorldID] ?? WORLD_HUD_THEMES.scadrial;
+      this.invIcon.text = this.worldTheme.investitureLabel;
+      this.invIcon.style.fill = this.worldTheme.investitureColor;
+      this.updateWorldBorder();
+    }
+
+    // Investiture — world-themed color
     const invPct = this.animInv;
     const invY = hpY + barSpacing;
+    const invColor = this.worldTheme.investitureColor;
     this.invBar.clear();
     if (invPct > 0) {
       const fillWidth = Math.max(cornerRadius * 2, this.barWidth * invPct);
       this.invBar.roundRect(barStartX, invY, fillWidth, this.barHeight, cornerRadius)
-        .fill(UI_COLORS.investiture);
+        .fill(invColor);
       // Glossy shine
       this.invBar.roundRect(barStartX + 1, invY + 1, fillWidth - 2, this.barHeight * 0.4, cornerRadius)
         .fill({ color: 0xffffff, alpha: 0.15 });
-      // Shimmer effect when full
+      // Shimmer effect when full — world-colored
       if (invPct > 0.95) {
         const shimmer = 0.05 + Math.sin(performance.now() / 500) * 0.05;
         this.invBar.roundRect(barStartX, invY, fillWidth, this.barHeight, cornerRadius)
-          .fill({ color: 0xffffff, alpha: shimmer });
+          .fill({ color: lighten(invColor, 0.4), alpha: shimmer });
       }
+      // Animated gradient edge glow
+      const edgeGlow = 0.03 + Math.sin(performance.now() / 800) * 0.02;
+      this.invBar.roundRect(barStartX, invY, fillWidth, this.barHeight, cornerRadius)
+        .stroke({ color: this.worldTheme.accentGlow, width: 0.8, alpha: edgeGlow });
     }
     this.invText.text = `${Math.ceil(c.currentInvestiture)}/${gm.maxInvestiture}`;
 
@@ -328,9 +370,48 @@ export class HUD extends Container {
 
   private triggerLevelUpGlow(): void {
     const margins = hudMargin(this.layout);
+    const cx = margins.left + scaled(16, this.layout);
+    const cy = margins.top + scaled(10, this.layout);
     this.levelUpGlow.clear();
-    this.levelUpGlow.circle(margins.left + scaled(16, this.layout), margins.top + scaled(10, this.layout), scaled(25, this.layout))
-      .fill({ color: UI_COLORS.textGold, alpha: 0.3 });
+    // Outer ring burst
+    this.levelUpGlow.circle(cx, cy, scaled(30, this.layout))
+      .stroke({ color: UI_COLORS.textGold, width: 2, alpha: 0.4 });
+    // Inner glow
+    this.levelUpGlow.circle(cx, cy, scaled(20, this.layout))
+      .fill({ color: UI_COLORS.textGold, alpha: 0.25 });
+    // Core flash
+    this.levelUpGlow.circle(cx, cy, scaled(10, this.layout))
+      .fill({ color: 0xffffff, alpha: 0.3 });
     this.levelUpGlow.alpha = 1;
+  }
+
+  private updateWorldBorder(): void {
+    const margins = hudMargin(this.layout);
+    const leftX = margins.left;
+    const topY = margins.top;
+    const panelWidth = scaled(44, this.layout) + this.barWidth + scaled(22, this.layout);
+    const xpBarHeight = scaled(5, this.layout);
+    const panelHeight = this.barHeight * 2 + xpBarHeight + scaled(6, this.layout) * 2 + scaled(10, this.layout);
+    const radius = panelRadius(this.layout);
+
+    this.borderGlow.clear();
+    // World-colored border glow on left panel
+    this.borderGlow.roundRect(
+      leftX - scaled(6, this.layout), topY - scaled(6, this.layout),
+      panelWidth + scaled(4, this.layout), panelHeight + scaled(4, this.layout), radius,
+    ).stroke({ color: this.worldTheme.borderColor, width: 1.5, alpha: 0.35 });
+
+    // Subtle inner tint
+    this.borderGlow.roundRect(
+      leftX - scaled(4, this.layout), topY - scaled(4, this.layout),
+      panelWidth, panelHeight, radius,
+    ).fill({ color: this.worldTheme.panelTint, alpha: 0.15 });
+
+    // Update panel border to match world
+    this.panel.clear();
+    this.panel.roundRect(leftX - scaled(6, this.layout), topY - scaled(6, this.layout), panelWidth + scaled(4, this.layout), panelHeight + scaled(4, this.layout), radius)
+      .fill({ color: UI_COLORS.panelBg, alpha: UI_ALPHA.panelBg });
+    this.panel.roundRect(leftX - scaled(6, this.layout), topY - scaled(6, this.layout), panelWidth + scaled(4, this.layout), panelHeight + scaled(4, this.layout), radius)
+      .stroke({ color: this.worldTheme.borderColor, width: 1, alpha: 0.25 });
   }
 }
