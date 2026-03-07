@@ -1,6 +1,8 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { Skill, MagicSystemType, ChampionClass } from '../data/types';
 
 // ─── Magic System Config ─────────────────────────────────────
@@ -111,6 +113,7 @@ export function showSkillTreePanel(
 ): Container {
   const panel = new Container();
   panel.zIndex = 10000;
+  const layout = getLayoutInfo(screenW, screenH);
 
   const champ = GameManager.shared.champion;
   if (!champ) { onClose(); return panel; }
@@ -120,7 +123,7 @@ export function showSkillTreePanel(
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
@@ -132,8 +135,8 @@ export function showSkillTreePanel(
   const py = (screenH - panelH) / 2;
 
   const panelBg = new Graphics();
-  panelBg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
+  panelBg.roundRect(px, py, panelW, panelH, panelRadius(layout))
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
     .stroke({ color: magicColor, width: 2, alpha: 0.5 });
   panelBg.eventMode = 'static';
   panel.addChild(panelBg);
@@ -141,7 +144,7 @@ export function showSkillTreePanel(
   // Title
   const title = new Text({
     text: `✦ ${MAGIC_NAMES[magic]} - Arbre de Compétences`,
-    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 12, fontWeight: 'bold', fill: magicColor }),
+    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(13, layout), fontWeight: 'bold', fill: magicColor }),
   });
   title.x = px + panelW / 2;
   title.anchor.set(0.5, 0);
@@ -151,7 +154,7 @@ export function showSkillTreePanel(
   // Skill points display
   const spText = new Text({
     text: `Points de compétence: ${champ.skillPoints}`,
-    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: champ.skillPoints > 0 ? 0x66cc44 : 0x888899 }),
+    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: champ.skillPoints > 0 ? UI_COLORS.success : UI_COLORS.textMuted }),
   });
   spText.x = px + panelW / 2;
   spText.anchor.set(0.5, 0);
@@ -198,7 +201,7 @@ export function showSkillTreePanel(
             .lineTo(fromX, (fromY + toY) / 2)
             .lineTo(toX, (fromY + toY) / 2)
             .lineTo(toX, toY)
-            .stroke({ color: node.unlocked ? magicColor : 0x333344, width: 1.5, alpha: node.unlocked ? 0.7 : 0.3 });
+            .stroke({ color: node.unlocked ? magicColor : UI_COLORS.borderSubtle, width: 1.5, alpha: node.unlocked ? 0.7 : UI_ALPHA.subtle });
         }
       }
     }
@@ -230,14 +233,14 @@ export function showSkillTreePanel(
       } else if (node.available) {
         nodeBg.roundRect(nx - nodeW / 2, ny - nodeH / 2, nodeW, nodeH, 8)
           .fill({ color: 0x151220, alpha: 0.9 })
-          .stroke({ color: 0x66cc44, width: 1.5, alpha: 0.6 });
+          .stroke({ color: UI_COLORS.success, width: 1.5, alpha: 0.6 });
         // Pulsing glow for available
         nodeBg.roundRect(nx - nodeW / 2 - 2, ny - nodeH / 2 - 2, nodeW + 4, nodeH + 4, 10)
-          .stroke({ color: 0x66cc44, width: 1, alpha: 0.2 });
+          .stroke({ color: UI_COLORS.success, width: 1, alpha: 0.2 });
       } else {
         nodeBg.roundRect(nx - nodeW / 2, ny - nodeH / 2, nodeW, nodeH, 8)
           .fill({ color: 0x0e0c18, alpha: 0.8 })
-          .stroke({ color: 0x333344, width: 1, alpha: 0.4 });
+          .stroke({ color: UI_COLORS.borderSubtle, width: 1, alpha: 0.4 });
       }
       nodeContainer.addChild(nodeBg);
 
@@ -245,8 +248,8 @@ export function showSkillTreePanel(
       const nameText = new Text({
         text: truncate(node.skill.name, 12),
         style: new TextStyle({
-          fontFamily: 'sans-serif', fontSize: 7, fontWeight: 'bold',
-          fill: node.unlocked ? magicColor : node.available ? 0x66cc44 : 0x666677,
+          fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fontWeight: 'bold',
+          fill: node.unlocked ? magicColor : node.available ? UI_COLORS.success : UI_COLORS.textMuted,
         }),
       });
       nameText.anchor.set(0.5, 0);
@@ -257,7 +260,7 @@ export function showSkillTreePanel(
       // Level requirement
       const lvlText = new Text({
         text: `Nv.${node.skill.requiredLevel}`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 6, fill: 0x888899 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textMuted }),
       });
       lvlText.anchor.set(0.5, 0);
       lvlText.x = nx;
@@ -270,7 +273,7 @@ export function showSkillTreePanel(
         : `💎${node.skill.investitureCost}`;
       const infoText = new Text({
         text: infoStr,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 6, fill: 0x999999 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textSecondary }),
       });
       infoText.anchor.set(0.5, 0);
       infoText.x = nx;
@@ -281,7 +284,7 @@ export function showSkillTreePanel(
       if (node.equipped) {
         const badge = new Text({
           text: 'E',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fontWeight: 'bold', fill: 0xffffff }),
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fontWeight: 'bold', fill: UI_COLORS.textPrimary }),
         });
         badge.x = nx + nodeW / 2 - 10;
         badge.y = ny - nodeH / 2 + 2;
@@ -318,13 +321,13 @@ export function showSkillTreePanel(
 
     const bg = new Graphics();
     bg.roundRect(dx, dy, detailW, detailH, 6)
-      .fill({ color: 0x0e0c1a, alpha: 0.95 })
+      .fill({ color: UI_COLORS.panelBg, alpha: UI_ALPHA.panelBg })
       .stroke({ color: magicColor, width: 1, alpha: 0.5 });
     detailContainer.addChild(bg);
 
     const nameText = new Text({
       text: node.skill.name,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 9, fontWeight: 'bold', fill: magicColor }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(10, layout), fontWeight: 'bold', fill: magicColor }),
     });
     nameText.x = dx + 6;
     nameText.y = dy + 4;
@@ -332,7 +335,7 @@ export function showSkillTreePanel(
 
     const descText = new Text({
       text: node.skill.description,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 6, fill: 0xaaaaaa, wordWrap: true, wordWrapWidth: detailW - 12 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textSecondary, wordWrap: true, wordWrapWidth: detailW - 12 }),
     });
     descText.x = dx + 6;
     descText.y = dy + 18;
@@ -342,7 +345,7 @@ export function showSkillTreePanel(
     const statsStr = `${targeting} · CD: ${node.skill.cooldown}s · Portée: ${node.skill.range}`;
     const statsText = new Text({
       text: statsStr,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 6, fill: 0x777788 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textMuted }),
     });
     statsText.x = dx + 6;
     statsText.y = dy + detailH - 14;
@@ -400,9 +403,9 @@ export function showSkillTreePanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.circle(px + panelW - 16, py + 16, 10)
-    .fill({ color: 0x332222, alpha: 0.8 })
-    .stroke({ color: 0x664444, width: 1.5, alpha: 0.6 });
+  closeBtn.circle(px + panelW - 16, py + 16, buttonHeight(layout) / 2)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1.5, alpha: 0.6 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -410,7 +413,7 @@ export function showSkillTreePanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontSize: fontSize(11, layout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 16;

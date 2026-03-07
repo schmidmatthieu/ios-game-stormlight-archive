@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { CompanionManager, COMPANIONS } from '../game/CompanionSystem';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { CompanionDef } from '../game/CompanionSystem';
 
 // ─── World Labels ────────────────────────────────────────────
@@ -18,12 +20,13 @@ export function showCompanionPanel(
 ): Container {
   const panel = new Container();
   panel.zIndex = 10000;
+  const layout = getLayoutInfo(screenW, screenH);
 
   const cm = CompanionManager.shared;
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
@@ -35,16 +38,16 @@ export function showCompanionPanel(
   const py = (screenH - panelH) / 2;
 
   const panelBg = new Graphics();
-  panelBg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
-    .stroke({ color: 0x554433, width: 2, alpha: 0.7 });
+  panelBg.roundRect(px, py, panelW, panelH, panelRadius(layout))
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
+    .stroke({ color: UI_COLORS.borderAccent, width: 2, alpha: UI_ALPHA.panelBorder });
   panelBg.eventMode = 'static';
   panel.addChild(panelBg);
 
   // Title
   const title = new Text({
     text: '🐾 Compagnons',
-    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 'bold', fill: 0xe6cc66 }),
+    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(15, layout), fontWeight: 'bold', fill: UI_COLORS.textGold }),
   });
   title.x = px + panelW / 2;
   title.anchor.set(0.5, 0);
@@ -74,7 +77,7 @@ export function showCompanionPanel(
     if (active) {
       const text = new Text({
         text: `Actif: ${active.name} (${active.bonusDescription})`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0xaaddaa }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.success }),
       });
       text.x = px + panelW / 2;
       text.anchor.set(0.5, 0);
@@ -82,7 +85,7 @@ export function showCompanionPanel(
 
       const desc = new Text({
         text: active.description.length > 60 ? active.description.slice(0, 57) + '...' : active.description,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x888899, fontStyle: 'italic' }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted, fontStyle: 'italic' }),
       });
       desc.x = px + panelW / 2;
       desc.anchor.set(0.5, 0);
@@ -91,7 +94,7 @@ export function showCompanionPanel(
     } else {
       const text = new Text({
         text: 'Aucun compagnon actif',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x666677 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textMuted }),
       });
       text.x = px + panelW / 2;
       text.anchor.set(0.5, 0);
@@ -128,7 +131,7 @@ export function showCompanionPanel(
     const bg = new Graphics();
     bg.roundRect(x, y, w, 70, 8)
       .fill({ color: isActive ? 0x151a28 : 0x12101e, alpha: 0.9 })
-      .stroke({ color: isActive ? comp.color : unlocked ? 0x555566 : 0x333344, width: isActive ? 2 : 1, alpha: isActive ? 0.8 : 0.4 });
+      .stroke({ color: isActive ? comp.color : unlocked ? 0x555566 : UI_COLORS.borderSubtle, width: isActive ? 2 : 1, alpha: isActive ? 0.8 : 0.4 });
     card.addChild(bg);
 
     // Companion orb icon
@@ -162,7 +165,7 @@ export function showCompanionPanel(
     // Origin world
     const worldText = new Text({
       text: WORLD_NAMES[comp.origin] ?? comp.origin,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x888899 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted }),
     });
     worldText.x = x + w - 6;
     worldText.anchor.set(1, 0);
@@ -174,7 +177,7 @@ export function showCompanionPanel(
       const desc = comp.description.length > 60 ? comp.description.slice(0, 57) + '...' : comp.description;
       const descText = new Text({
         text: desc,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x999999, fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 54 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary, fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 54 }),
       });
       descText.x = x + 44;
       descText.y = y + 20;
@@ -183,7 +186,7 @@ export function showCompanionPanel(
       // Bonus
       const bonusText = new Text({
         text: comp.bonusDescription,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fontWeight: 'bold', fill: 0x66cc44 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fontWeight: 'bold', fill: UI_COLORS.success }),
       });
       bonusText.x = x + 44;
       bonusText.y = y + 52;
@@ -193,7 +196,7 @@ export function showCompanionPanel(
       if (isActive) {
         const badge = new Text({
           text: '✓ Actif',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fontWeight: 'bold', fill: 0x44cc44 }),
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fontWeight: 'bold', fill: UI_COLORS.success }),
         });
         badge.x = x + w - 6;
         badge.anchor.set(1, 0);
@@ -202,7 +205,7 @@ export function showCompanionPanel(
       } else {
         const selectBtn = new Graphics();
         selectBtn.roundRect(x + w - 60, y + 48, 54, 18, 4)
-          .fill({ color: 0x224433, alpha: 0.8 })
+          .fill({ color: UI_COLORS.btnSuccess, alpha: UI_ALPHA.buttonBg })
           .stroke({ color: 0x44aa66, width: 1, alpha: 0.5 });
         selectBtn.eventMode = 'static';
         selectBtn.cursor = 'pointer';
@@ -215,7 +218,7 @@ export function showCompanionPanel(
 
         const selectText = new Text({
           text: 'Sélectionner',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x88dd88 }),
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.success }),
         });
         selectText.x = x + w - 33;
         selectText.anchor.set(0.5, 0);
@@ -226,7 +229,7 @@ export function showCompanionPanel(
       // Lock condition
       const lockText = new Text({
         text: `🔒 ${comp.unlockCondition}`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x666677 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted }),
       });
       lockText.x = x + 44;
       lockText.y = y + 22;
@@ -257,9 +260,9 @@ export function showCompanionPanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.circle(px + panelW - 16, py + 16, 10)
-    .fill({ color: 0x332222, alpha: 0.8 })
-    .stroke({ color: 0x664444, width: 1.5, alpha: 0.6 });
+  closeBtn.circle(px + panelW - 16, py + 16, buttonHeight(layout) / 2)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1.5, alpha: 0.6 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -267,7 +270,7 @@ export function showCompanionPanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontSize: fontSize(11, layout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 16;

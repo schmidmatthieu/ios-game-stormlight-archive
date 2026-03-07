@@ -9,7 +9,7 @@ import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
 import { CLASS_COLORS } from './CharacterPreview';
 import { ORDERS, ORDER_NAMES } from './OrderSelector';
-import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, panelRadius, touchTarget, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import { MusicManager } from '../game/MusicSystem';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 

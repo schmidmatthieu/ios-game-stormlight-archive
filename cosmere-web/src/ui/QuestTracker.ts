@@ -1,7 +1,8 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { QuestManager } from '../game/QuestManager';
 import { gameData } from '../data/DataLoader';
-import { getLayoutInfo, fontSize, scaled, questTrackerPosition, LayoutInfo } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, questTrackerPosition, panelRadius, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 export class QuestTracker extends Container {
   private bg: Graphics;
@@ -10,7 +11,7 @@ export class QuestTracker extends Container {
   private layout: LayoutInfo;
   private panelW: number;
   private panelX: number;
-  private readonly PANEL_Y = 62;
+  private panelY: number;
 
   constructor(screenWidth: number, screenHeight: number) {
     super();
@@ -19,6 +20,7 @@ export class QuestTracker extends Container {
     const pos = questTrackerPosition(this.layout);
     this.panelW = pos.panelWidth;
     this.panelX = pos.x;
+    this.panelY = pos.y;
 
     // Background panel
     this.bg = new Graphics();
@@ -29,15 +31,15 @@ export class QuestTracker extends Container {
       text: '',
       style: new TextStyle({
         fontFamily: 'Georgia, serif',
-        fontSize: fontSize(10, this.layout),
-        fill: 0xe6cc66,
+        fontSize: fontSize(11, this.layout),
+        fill: UI_COLORS.textGold,
         fontWeight: 'bold',
         wordWrap: true,
-        wordWrapWidth: this.panelW - 16,
+        wordWrapWidth: this.panelW - 20,
       }),
     });
-    this.questTitle.x = this.panelX + 8;
-    this.questTitle.y = this.PANEL_Y + 6;
+    this.questTitle.x = this.panelX + 10;
+    this.questTitle.y = this.panelY + 8;
     this.addChild(this.questTitle);
   }
 
@@ -60,59 +62,60 @@ export class QuestTracker extends Container {
     if (!quest) return;
     this.questTitle.text = quest.name;
 
-    let yOffset = this.PANEL_Y + scaled(22, this.layout);
+    let yOffset = this.panelY + scaled(24, this.layout);
 
     const objStyle = new TextStyle({
       fontFamily: 'sans-serif',
-      fontSize: fontSize(8, this.layout),
-      fill: 0xaabbcc,
+      fontSize: fontSize(9, this.layout),
+      fill: UI_COLORS.textSecondary,
       wordWrap: true,
-      wordWrapWidth: this.panelW - 24,
+      wordWrapWidth: this.panelW - 28,
     });
 
     const doneStyle = new TextStyle({
       fontFamily: 'sans-serif',
-      fontSize: fontSize(8, this.layout),
-      fill: 0x66cc44,
+      fontSize: fontSize(9, this.layout),
+      fill: UI_COLORS.success,
       wordWrap: true,
-      wordWrapWidth: this.panelW - 24,
+      wordWrapWidth: this.panelW - 28,
     });
 
     for (const obj of quest.objectives) {
       const progress = state.objectiveProgress[obj.id] ?? 0;
       const done = progress >= obj.requiredCount;
-      const checkmark = done ? '✓' : '○';
+      const checkmark = done ? '\u2713' : '\u25CB';
       const countStr = obj.requiredCount > 1 ? ` (${progress}/${obj.requiredCount})` : '';
 
       const t = new Text({
         text: `${checkmark} ${obj.description}${countStr}`,
         style: done ? doneStyle : objStyle,
       });
-      t.x = this.panelX + 12;
+      t.x = this.panelX + 14;
       t.y = yOffset;
       this.addChild(t);
       this.objectiveTexts.push(t);
-      yOffset += t.height + 3;
+      yOffset += t.height + 4;
     }
 
     // Completion hint
     if (QuestManager.shared.checkQuestCompletion(quest.id)) {
       const completeText = new Text({
-        text: '▶ Quête prête à rendre!',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: 0xffcc44, fontWeight: 'bold' }),
+        text: '\u25B6 Qu\u00eate pr\u00eate \u00e0 rendre!',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: UI_COLORS.warning, fontWeight: 'bold' }),
       });
-      completeText.x = this.panelX + 12;
+      completeText.x = this.panelX + 14;
       completeText.y = yOffset;
       this.addChild(completeText);
       this.objectiveTexts.push(completeText);
-      yOffset += scaled(14, this.layout);
+      yOffset += scaled(16, this.layout);
     }
 
-    // Draw background
-    const panelH = yOffset - this.PANEL_Y + 8;
+    // Draw background with proper styling
+    const panelH = yOffset - this.panelY + 10;
+    const radius = panelRadius(this.layout);
     this.bg.clear();
-    this.bg.roundRect(this.panelX, this.PANEL_Y, this.panelW, panelH, 6)
-      .fill({ color: 0x0a0a1a, alpha: 0.55 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.4 });
+    this.bg.roundRect(this.panelX, this.panelY, this.panelW, panelH, radius)
+      .fill({ color: UI_COLORS.panelBg, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: UI_ALPHA.panelBorder });
   }
 }

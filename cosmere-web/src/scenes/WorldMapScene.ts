@@ -5,7 +5,8 @@ import { GameManager } from '../game/GameManager';
 import { ZoneScene } from './ZoneScene';
 import { getCurrentRank, getReputation } from '../game/ReputationSystem';
 import { gameData } from '../data/DataLoader';
-import { getLayoutInfo, fontSize, scaled, LayoutInfo } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 // ─── World Definitions ──────────────────────────────────────────
 

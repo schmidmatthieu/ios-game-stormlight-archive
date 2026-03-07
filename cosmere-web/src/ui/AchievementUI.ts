@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { AchievementManager } from '../game/AchievementSystem';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { AchievementDef, AchievementCategory } from '../game/AchievementSystem';
 import { MusicManager } from '../game/MusicSystem';
 
@@ -30,6 +32,7 @@ export function createAchievementToast(
   const toastContainer = new Container();
   toastContainer.zIndex = 9999;
   toastContainer.y = -50; // Start off-screen
+  const layout = getLayoutInfo(screenW, screenW); // Approximate layout for toast sizing
   uiContainer.addChild(toastContainer);
 
   let activeToast: Container | null = null;
@@ -51,7 +54,7 @@ export function createAchievementToast(
     // Background
     const bg = new Graphics();
     bg.roundRect(tx, 0, toastW, toastH, 8)
-      .fill({ color: 0x0a0815, alpha: 0.92 })
+      .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
       .stroke({ color: CATEGORY_COLORS[achievement.category] ?? 0xaa8844, width: 2, alpha: 0.8 });
     toast.addChild(bg);
 
@@ -67,7 +70,7 @@ export function createAchievementToast(
     // "Achievement Unlocked" header
     const header = new Text({
       text: 'Succès Débloqué!',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xaaaa55, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.warning, fontWeight: 'bold' }),
     });
     header.x = tx + 38;
     header.y = 6;
@@ -77,8 +80,8 @@ export function createAchievementToast(
     const nameText = new Text({
       text: achievement.name,
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 10, fontWeight: 'bold',
-        fill: CATEGORY_COLORS[achievement.category] ?? 0xe6cc66,
+        fontFamily: 'Georgia, serif', fontSize: fontSize(11, layout), fontWeight: 'bold',
+        fill: CATEGORY_COLORS[achievement.category] ?? UI_COLORS.textGold,
       }),
     });
     nameText.x = tx + 38;
@@ -88,7 +91,7 @@ export function createAchievementToast(
     // Description
     const descText = new Text({
       text: achievement.description,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x999999 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary }),
     });
     descText.x = tx + 38;
     descText.y = 32;
@@ -155,10 +158,11 @@ export function showAchievementPanel(
 ): Container {
   const panel = new Container();
   panel.zIndex = 10000;
+  const panelLayout = getLayoutInfo(screenW, screenH);
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
@@ -170,9 +174,9 @@ export function showAchievementPanel(
   const py = (screenH - panelH) / 2;
 
   const panelBg = new Graphics();
-  panelBg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
-    .stroke({ color: 0x554433, width: 2, alpha: 0.7 });
+  panelBg.roundRect(px, py, panelW, panelH, panelRadius(panelLayout))
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
+    .stroke({ color: UI_COLORS.borderAccent, width: 2, alpha: UI_ALPHA.panelBorder });
   panelBg.eventMode = 'static';
   panel.addChild(panelBg);
 
@@ -180,7 +184,7 @@ export function showAchievementPanel(
   const ach = AchievementManager.shared;
   const title = new Text({
     text: `🏆 Succès (${ach.totalUnlocked}/${ach.totalAchievements})`,
-    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 'bold', fill: 0xe6cc66 }),
+    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(15, panelLayout), fontWeight: 'bold', fill: UI_COLORS.textGold }),
   });
   title.x = px + panelW / 2 - 70;
   title.y = py + 10;
@@ -189,13 +193,13 @@ export function showAchievementPanel(
   // Progress bar
   const barW = panelW - 40;
   const barBg = new Graphics();
-  barBg.roundRect(px + 20, py + 32, barW, 8, 4).fill({ color: 0x222222 });
+  barBg.roundRect(px + 20, py + 32, barW, 8, 4).fill({ color: UI_COLORS.panelBg });
   panel.addChild(barBg);
 
   const fillW = barW * (ach.totalUnlocked / ach.totalAchievements);
   if (fillW > 0) {
     const barFill = new Graphics();
-    barFill.roundRect(px + 20, py + 32, fillW, 8, 4).fill({ color: 0xe6cc66 });
+    barFill.roundRect(px + 20, py + 32, fillW, 8, 4).fill({ color: UI_COLORS.textGold });
     panel.addChild(barFill);
   }
 
@@ -229,8 +233,8 @@ export function showAchievementPanel(
 
       const tabBg = new Graphics();
       tabBg.roundRect(0, 0, tabW, 18, 4)
-        .fill({ color: isActive ? color : 0x1a1528, alpha: isActive ? 0.7 : 0.5 })
-        .stroke({ color: isActive ? 0xddddcc : 0x444455, width: 1, alpha: 0.4 });
+        .fill({ color: isActive ? color : UI_COLORS.btnSecondary, alpha: isActive ? 0.7 : 0.5 })
+        .stroke({ color: isActive ? UI_COLORS.textPrimary : 0x444455, width: 1, alpha: 0.4 });
       tabBg.x = tabX;
       tabBg.eventMode = 'static';
       tabBg.cursor = 'pointer';
@@ -243,7 +247,7 @@ export function showAchievementPanel(
 
       const tabText = new Text({
         text: label,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: isActive ? 0xffffff : 0x999999 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, panelLayout), fill: isActive ? 0xffffff : UI_COLORS.textSecondary }),
       });
       tabText.x = tabX + 7;
       tabText.y = 4;
@@ -270,8 +274,8 @@ export function showAchievementPanel(
       const card = new Container();
       const bg = new Graphics();
       bg.roundRect(px + 8, yPos, panelW - 16, cardH, 6)
-        .fill({ color: unlocked ? 0x151225 : 0x0e0c18, alpha: 0.9 })
-        .stroke({ color: unlocked ? CATEGORY_COLORS[def.category] : 0x333344, width: 1, alpha: unlocked ? 0.6 : 0.3 });
+        .fill({ color: unlocked ? 0x151225 : 0x0e0c18, alpha: UI_ALPHA.barBg })
+        .stroke({ color: unlocked ? CATEGORY_COLORS[def.category] : UI_COLORS.borderSubtle, width: 1, alpha: unlocked ? 0.6 : UI_ALPHA.subtle });
       card.addChild(bg);
 
       // Icon
@@ -287,8 +291,8 @@ export function showAchievementPanel(
       const nameText = new Text({
         text: isHidden ? '???' : def.name,
         style: new TextStyle({
-          fontFamily: 'Georgia, serif', fontSize: 9, fontWeight: 'bold',
-          fill: unlocked ? (CATEGORY_COLORS[def.category] ?? 0xe6cc66) : 0x666666,
+          fontFamily: 'Georgia, serif', fontSize: fontSize(10, panelLayout), fontWeight: 'bold',
+          fill: unlocked ? (CATEGORY_COLORS[def.category] ?? UI_COLORS.textGold) : UI_COLORS.textMuted,
         }),
       });
       nameText.x = px + 44;
@@ -299,8 +303,8 @@ export function showAchievementPanel(
       const descText = new Text({
         text: isHidden ? 'Succès secret - continuez à jouer!' : def.description,
         style: new TextStyle({
-          fontFamily: 'sans-serif', fontSize: 7,
-          fill: unlocked ? 0xaaaaaa : 0x555566,
+          fontFamily: 'sans-serif', fontSize: fontSize(8, panelLayout),
+          fill: unlocked ? UI_COLORS.textSecondary : 0x555566,
           fontStyle: isHidden ? 'italic' : 'normal',
         }),
       });
@@ -312,7 +316,7 @@ export function showAchievementPanel(
       if (unlocked) {
         const check = new Text({
           text: '✓',
-          style: new TextStyle({ fontSize: 12, fontWeight: 'bold', fill: 0x44cc44 }),
+          style: new TextStyle({ fontSize: fontSize(13, panelLayout), fontWeight: 'bold', fill: UI_COLORS.success }),
         });
         check.x = px + panelW - 30;
         check.y = yPos + 14;
@@ -347,9 +351,9 @@ export function showAchievementPanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.circle(px + panelW - 16, py + 16, 10)
-    .fill({ color: 0x332222, alpha: 0.8 })
-    .stroke({ color: 0x664444, width: 1.5, alpha: 0.6 });
+  closeBtn.circle(px + panelW - 16, py + 16, buttonHeight(panelLayout) / 2)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1.5, alpha: 0.6 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -357,7 +361,7 @@ export function showAchievementPanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontSize: fontSize(11, panelLayout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 16;

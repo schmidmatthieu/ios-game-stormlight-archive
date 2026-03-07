@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { WorldEventManager } from '../game/WorldEvents';
+import { getLayoutInfo, fontSize, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { WorldEventDef } from '../game/WorldEvents';
 
 // ─── World Event Banner ──────────────────────────────────────
@@ -13,6 +15,7 @@ export function createWorldEventBanner(
   const banner = new Container();
   banner.zIndex = 980;
   banner.y = -40; // Start off-screen
+  const layout = getLayoutInfo(screenW, screenW); // Approximate layout for banner sizing
   uiContainer.addChild(banner);
 
   let activeBanner: Container | null = null;
@@ -33,7 +36,7 @@ export function createWorldEventBanner(
     // Background
     const bg = new Graphics();
     bg.roundRect(bx, 0, bannerW, bannerH, 6)
-      .fill({ color: 0x0a0815, alpha: 0.9 })
+      .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.barBg })
       .stroke({ color: event.color, width: 2, alpha: 0.8 });
     container.addChild(bg);
 
@@ -49,7 +52,7 @@ export function createWorldEventBanner(
     // Name
     const name = new Text({
       text: event.name,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 9, fontWeight: 'bold', fill: event.color }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(10, layout), fontWeight: 'bold', fill: event.color }),
     });
     name.x = bx + 28;
     name.y = 4;
@@ -58,7 +61,7 @@ export function createWorldEventBanner(
     // Description
     const desc = new Text({
       text: event.description.length > 50 ? event.description.slice(0, 47) + '...' : event.description,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 6, fill: 0x999999 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textSecondary }),
     });
     desc.x = bx + 28;
     desc.y = 18;
@@ -67,7 +70,7 @@ export function createWorldEventBanner(
     // Timer
     const timer = new Text({
       text: '',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xaaaaaa }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary }),
     });
     timer.anchor.set(1, 0);
     timer.x = bx + bannerW - 8;
