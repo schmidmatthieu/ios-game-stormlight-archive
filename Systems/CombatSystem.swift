@@ -11,6 +11,7 @@ final class CombatSystem {
         let mitigatedDamage: Int
         let isCritical: Bool
         let statusEffects: [StatusEffectApplication]
+        let lifestealAmount: Int
     }
 
     func calculateDamage(
@@ -41,22 +42,43 @@ final class CombatSystem {
         let atkBonus = talents.totalBonus(for: .attackDamagePercent)
         let magicBonus = talents.totalBonus(for: .magicDamagePercent)
         let damageBonus = skill != nil ? magicBonus : atkBonus
-        let boostedDamage = max(1, Int(Double(mitigated) * (1.0 + damageBonus)))
 
-        // Critique
+        // Apply item trait damage bonuses
+        var traitDamageBonus = 0.0
+        if let champion = GameManager.shared.champion {
+            if let skill = skill {
+                switch skill.damageType {
+                case .allomantic:
+                    traitDamageBonus += champion.totalTraitBonus(for: .damageBoostAllomancy)
+                case .stormlight:
+                    traitDamageBonus += champion.totalTraitBonus(for: .damageBoostSurgebinding)
+                default: break
+                }
+            }
+        }
+        let totalDamageBonus = damageBonus + traitDamageBonus
+        let boostedDamage = max(1, Int(Double(mitigated) * (1.0 + totalDamageBonus)))
+
+        // Critique — talent + item trait crit chance
         let critRoll = Double.random(in: 0...100)
         let critBonusChance = talents.totalBonus(for: .critChancePercent) * 100
-        let critChance = Double(attacker.luck) * 1.5 + critBonusChance
+        let traitCritBonus = (GameManager.shared.champion?.totalTraitBonus(for: .critChance) ?? 0) * 100
+        let critChance = Double(attacker.luck) * 1.5 + critBonusChance + traitCritBonus
         let isCrit = critRoll <= critChance
         let critDmgBonus = talents.totalBonus(for: .critDamagePercent)
         let critMultiplier = 2.0 + critDmgBonus
         let finalDamage = isCrit ? Int(Double(boostedDamage) * critMultiplier) : boostedDamage
 
+        // Lifesteal from item traits
+        let lifestealPercent = GameManager.shared.champion?.totalTraitBonus(for: .lifesteal) ?? 0
+        let lifestealAmount = lifestealPercent > 0 ? Int(Double(finalDamage) * lifestealPercent) : 0
+
         return DamageResult(
             rawDamage: attackPower,
             mitigatedDamage: finalDamage,
             isCritical: isCrit,
-            statusEffects: skill?.statusEffects ?? []
+            statusEffects: skill?.statusEffects ?? [],
+            lifestealAmount: lifestealAmount
         )
     }
 

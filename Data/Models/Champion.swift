@@ -101,6 +101,7 @@ struct EquipmentLoadout: Codable {
         case .amulet:     return amulet
         case .ring1:      return ring1
         case .ring2:      return ring2
+        case .consumable: return nil
         }
     }
 }
@@ -174,4 +175,18 @@ struct Champion: Codable {
 
     var maxHP: Int { effectiveStats.vigor * 10 + 50 }
     var maxInvestiture: Int { effectiveStats.investiture * 8 + 30 }
+
+    /// Total trait bonus from all equipped items for a given effect type
+    func totalTraitBonus(for effectType: TraitEffectType) -> Double {
+        let slots: [EquipmentSlot] = [.helmet, .shoulders, .chest, .cape, .gloves, .belt, .legs, .boots, .mainWeapon, .offhand, .amulet, .ring1, .ring2]
+        var total = 0.0
+        for slot in slots {
+            guard let itemID = equipment.itemID(for: slot),
+                  let item = GameManager.shared.item(byID: itemID) else { continue }
+            for trait in item.traits where trait.effectType == effectType {
+                total += trait.effectValue
+            }
+        }
+        return total
+    }
 }

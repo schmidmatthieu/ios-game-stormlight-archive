@@ -461,6 +461,9 @@ class InventoryNode: SKNode {
         let itemID = champion.inventoryItemIDs[index]
         guard let item = GameManager.shared.allItems[itemID] else { return }
 
+        // Consumables cannot be equipped
+        if item.isConsumable { return }
+
         // Check level requirement
         if champion.level < item.requiredLevel {
             return
@@ -493,6 +496,7 @@ class InventoryNode: SKNode {
             case .amulet:     champ.equipment.amulet = itemID
             case .ring1:      champ.equipment.ring1 = itemID
             case .ring2:      champ.equipment.ring2 = itemID
+            case .consumable: break
             }
         }
 
@@ -589,6 +593,7 @@ class InventoryNode: SKNode {
             case .amulet:     champ.equipment.amulet = nil
             case .ring1:      champ.equipment.ring1 = nil
             case .ring2:      champ.equipment.ring2 = nil
+            case .consumable: break
             }
         }
 
@@ -625,6 +630,7 @@ class InventoryNode: SKNode {
         case .amulet:     return "AMU"
         case .ring1:      return "AN1"
         case .ring2:      return "AN2"
+        case .consumable: return "CON"
         }
     }
 }

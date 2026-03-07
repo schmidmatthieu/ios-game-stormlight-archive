@@ -63,6 +63,10 @@ class ZoneScene: SKScene {
     private let sandMastery = SandMasterySystem()
     private let painting = PaintingSystem()
 
+    // UI panels
+    private var inventoryNode: InventoryNode?
+    private var skillTreeNode: SkillTreeNode?
+
     // MARK: - Init
 
     init(zone: Zone, size: CGSize) {
@@ -472,6 +476,61 @@ class ZoneScene: SKScene {
 
         configureAbilityIcons()
         cameraNode.addChild(actionButtons)
+
+        setupMenuButtons()
+        setupUIOverlays()
+    }
+
+    private func setupMenuButtons() {
+        let btnSize = CGSize(width: 36, height: 36)
+        let btnX = size.width / 2 - 30
+        let btnBaseY = size.height / 2 - 100
+
+        // Inventory button
+        let invBtn = SKShapeNode(rectOf: btnSize, cornerRadius: 8)
+        invBtn.fillColor = SKColor(red: 0.15, green: 0.12, blue: 0.08, alpha: 0.85)
+        invBtn.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.8)
+        invBtn.lineWidth = 1.5
+        invBtn.position = CGPoint(x: btnX, y: btnBaseY)
+        invBtn.zPosition = 2000
+        invBtn.name = "openInventory"
+        let invLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        invLabel.text = "INV"
+        invLabel.fontSize = 10
+        invLabel.fontColor = SKColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 1)
+        invLabel.verticalAlignmentMode = .center
+        invLabel.name = "openInventory"
+        invBtn.addChild(invLabel)
+        cameraNode.addChild(invBtn)
+
+        // Skills button
+        let skillBtn = SKShapeNode(rectOf: btnSize, cornerRadius: 8)
+        skillBtn.fillColor = SKColor(red: 0.08, green: 0.1, blue: 0.18, alpha: 0.85)
+        skillBtn.strokeColor = SKColor(red: 0.3, green: 0.5, blue: 0.8, alpha: 0.8)
+        skillBtn.lineWidth = 1.5
+        skillBtn.position = CGPoint(x: btnX, y: btnBaseY - 45)
+        skillBtn.zPosition = 2000
+        skillBtn.name = "openSkillTree"
+        let skillLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        skillLabel.text = "CMP"
+        skillLabel.fontSize = 10
+        skillLabel.fontColor = SKColor(red: 0.5, green: 0.7, blue: 1.0, alpha: 1)
+        skillLabel.verticalAlignmentMode = .center
+        skillLabel.name = "openSkillTree"
+        skillBtn.addChild(skillLabel)
+        cameraNode.addChild(skillBtn)
+    }
+
+    private func setupUIOverlays() {
+        let inv = InventoryNode(screenSize: size)
+        inv.onClose = { }
+        cameraNode.addChild(inv)
+        inventoryNode = inv
+
+        let skills = SkillTreeNode(screenSize: size)
+        skills.onClose = { }
+        cameraNode.addChild(skills)
+        skillTreeNode = skills
     }
 
     private func configureAbilityIcons() {
@@ -802,6 +861,15 @@ class ZoneScene: SKScene {
                 enemyInstances[idx].currentHP -= damage
                 let ratio = CGFloat(enemyInstances[idx].currentHP) / CGFloat(enemyInstances[idx].enemyData.maxHP)
                 EntityRenderer.updateEnemyHP(node: target.node, ratio: ratio)
+
+                // Apply lifesteal from item traits
+                if damageResult.lifestealAmount > 0 {
+                    GameManager.shared.mutateChampion { champ in
+                        champ.currentHP = min(champ.maxHP, champ.currentHP + damageResult.lifestealAmount)
+                    }
+                    showFloatingDamage(damageResult.lifestealAmount, at: playerNode.position,
+                                       color: SKColor(red: 0.3, green: 1.0, blue: 0.3, alpha: 1))
+                }
 
                 // Aggro nearby enemies (group aggro)
                 alertNearbyEnemies(aroundIndex: idx)
@@ -1515,6 +1583,14 @@ class ZoneScene: SKScene {
             }
             if node.name == "respawnButton" {
                 handleRespawn()
+                return
+            }
+            if node.name == "openInventory" {
+                inventoryNode?.show()
+                return
+            }
+            if node.name == "openSkillTree" {
+                skillTreeNode?.show()
                 return
             }
         }
