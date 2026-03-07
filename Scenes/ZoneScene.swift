@@ -66,6 +66,7 @@ class ZoneScene: SKScene {
     // UI panels
     private var inventoryNode: InventoryNode?
     private var skillTreeNode: SkillTreeNode?
+    private var shopNode: ShopNode?
 
     // MARK: - Init
 
@@ -743,7 +744,7 @@ class ZoneScene: SKScene {
         GameManager.shared.questSystem.onNPCTalkedTo(npcID: npcID)
 
         if npc.isShopkeeper {
-            showAbilityEffect(description: "Boutique de \(npcID.replacingOccurrences(of: "_", with: " ").capitalized)")
+            openShop(npcID: npcID)
             return
         }
 
@@ -774,6 +775,27 @@ class ZoneScene: SKScene {
             dialogueBox?.zPosition = 5000
             cameraNode.addChild(dialogueBox!)
         }
+    }
+
+    private func openShop(npcID: String) {
+        guard shopNode == nil else { return }
+        let name = npcID.replacingOccurrences(of: "_", with: " ").capitalized
+
+        // Gather shop items: all items matching the zone's level range
+        let zoneLevel = zone.recommendedLevel
+        let shopItemIDs = GameManager.shared.allItems.values
+            .filter { $0.requiredLevel >= max(1, zoneLevel - 3) && $0.requiredLevel <= zoneLevel + 2 && !$0.isConsumable }
+            .prefix(12)
+            .map { $0.id }
+
+        let shop = ShopNode(screenSize: size, shopName: "Boutique de \(name)", shopItemIDs: Array(shopItemIDs))
+        shop.position = .zero
+        shop.onClose = { [weak self] in
+            self?.shopNode?.removeFromParent()
+            self?.shopNode = nil
+        }
+        cameraNode.addChild(shop)
+        shopNode = shop
     }
 
     private func handleEnterZone(zoneID: String) {
@@ -1692,6 +1714,13 @@ class ZoneScene: SKScene {
 
     private func handleRespawn() {
         guard isPlayerDead, let view = self.view else { return }
+
+        // Fail escort quests on death
+        for quest in GameManager.shared.activeQuests {
+            if quest.objectives.contains(where: { $0.type == .escort }) {
+                GameManager.shared.questSystem.failQuest(quest.id)
+            }
+        }
 
         // Restore HP to 50%, keep gold but lose 10%
         GameManager.shared.mutateChampion { champ in

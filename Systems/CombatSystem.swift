@@ -111,8 +111,13 @@ final class CombatSystem {
     // MARK: - Coût de compétence
 
     func canUseSkill(_ skill: Skill, champion: Champion) -> Bool {
-        // Vérifier l'Investiture
-        guard champion.currentInvestiture >= skill.investitureCost else { return false }
+        // Vérifier l'Investiture (with Aon Dor cost reduction)
+        var investitureCost = skill.investitureCost
+        if skill.magicSystem == .aonDor {
+            let reduction = champion.totalTraitBonus(for: .aonDorCostReduction)
+            investitureCost = max(1, Int(Double(investitureCost) * (1.0 - reduction)))
+        }
+        guard champion.currentInvestiture >= investitureCost else { return false }
 
         // Vérifier la ressource additionnelle
         if let cost = skill.resourceCost {
@@ -133,7 +138,15 @@ final class CombatSystem {
     }
 
     func applySkillCost(_ skill: Skill, to champion: inout Champion) {
-        champion.currentInvestiture -= skill.investitureCost
+        var investitureCost = skill.investitureCost
+
+        // Aon Dor cost reduction for aonic skills
+        if skill.magicSystem == .aonDor {
+            let reduction = champion.totalTraitBonus(for: .aonDorCostReduction)
+            investitureCost = Int(Double(investitureCost) * (1.0 - reduction))
+        }
+
+        champion.currentInvestiture -= max(1, investitureCost)
 
         if let cost = skill.resourceCost {
             switch cost.resourceType {
