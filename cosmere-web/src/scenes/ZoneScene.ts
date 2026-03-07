@@ -8,6 +8,7 @@ import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
 import { InventoryPanel } from '../ui/InventoryPanel';
 import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
+import { showCraftingPanel, getRecipeEffect } from '../ui/CraftingPanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
@@ -388,6 +389,9 @@ export class ZoneScene extends Container implements GameScene {
 
     // Inventory button (next to pause)
     this.createInventoryButton(w);
+
+    // Crafting button (next to inventory)
+    this.createCraftingButton(w);
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -1281,6 +1285,84 @@ export class ZoneScene extends Container implements GameScene {
       () => this.closeDialogue(),
     );
     this.uiContainer.addChild(this.dialoguePanel);
+  }
+
+  private createCraftingButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Anvil icon
+    const icon = new Graphics();
+    icon.poly([{ x: 12, y: 20 }, { x: 18, y: 10 }, { x: 24, y: 20 }]).fill({ color: 0x888899, alpha: 0.7 });
+    icon.rect(10, 20, 16, 3).fill({ color: 0x666677, alpha: 0.8 });
+    icon.rect(16, 6, 4, 6).fill({ color: 0xaa8844, alpha: 0.7 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + 66;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleCrafting());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleCrafting(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showCraftingPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      this.zone.worldID,
+      () => this.closeDialogue(),
+      (recipeID) => this.applyCraftResult(recipeID),
+    );
+  }
+
+  private applyCraftResult(recipeID: string): void {
+    const effect = getRecipeEffect(recipeID);
+    if (!effect) return;
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    switch (effect.type) {
+      case 'heal_hp':
+        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + effect.value);
+        break;
+      case 'heal_inv':
+        champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + effect.value);
+        break;
+      case 'buff_strength':
+        this.playerStatusEffects.apply('strengthened', effect.duration, effect.value);
+        break;
+      case 'buff_shield':
+        this.playerStatusEffects.apply('shielded', effect.duration, effect.value);
+        break;
+      case 'buff_haste':
+        this.playerStatusEffects.apply('haste', effect.duration, effect.value);
+        break;
+      case 'buff_regen':
+        this.playerStatusEffects.apply('regenerating', effect.duration, effect.value);
+        break;
+      case 'multi_buff':
+        // World enchantments give multiple buffs
+        if (effect.value === 1) { // Mist
+          this.playerStatusEffects.apply('shielded', effect.duration, 1);
+          this.playerStatusEffects.apply('haste', effect.duration, 1);
+        } else if (effect.value === 2) { // Storm
+          this.playerStatusEffects.apply('strengthened', effect.duration, 1);
+          this.playerStatusEffects.apply('regenerating', effect.duration, 3);
+        } else if (effect.value === 3) { // Breath
+          this.playerStatusEffects.apply('regenerating', effect.duration, 4);
+          this.playerStatusEffects.apply('haste', effect.duration, 1);
+        } else if (effect.value === 4) { // Sand
+          this.playerStatusEffects.apply('strengthened', effect.duration, 1);
+          this.playerStatusEffects.apply('haste', effect.duration, 1);
+        }
+        break;
+    }
+
+    this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, effect.message, 0x66cc88);
   }
 
   private togglePause(): void {
