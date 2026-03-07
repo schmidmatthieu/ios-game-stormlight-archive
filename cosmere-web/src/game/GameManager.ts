@@ -2,6 +2,7 @@ import type { Champion, ChampionClass, ChampionStats, RadiantOrder, MagicSystemT
 import { CLASS_INFO } from '../data/types';
 import { gameData } from '../data/DataLoader';
 import { MagicSystemManager } from './magic/MagicSystemManager';
+import { TalentTreeSystem } from './TalentTreeSystem';
 
 const BASE_STATS: ChampionStats = { vigor: 10, investiture: 10, strength: 10, agility: 10, spirit: 10, luck: 5 };
 
@@ -24,6 +25,7 @@ export class GameManager {
 
   champion: Champion | null = null;
   magicManager: MagicSystemManager | null = null;
+  talentSystem: TalentTreeSystem | null = null;
 
   // MARK: - New Game
 
@@ -58,6 +60,7 @@ export class GameManager {
     };
 
     this.magicManager = new MagicSystemManager(cls, order);
+    this.talentSystem = new TalentTreeSystem(cls);
   }
 
   // Auto-equip available skills based on level and class
@@ -223,6 +226,7 @@ export class GameManager {
         this.champion.championClass,
         this.champion.radiantOrder ?? undefined,
       );
+      this.talentSystem = TalentTreeSystem.load(this.champion.championClass);
     }
     return true;
   }

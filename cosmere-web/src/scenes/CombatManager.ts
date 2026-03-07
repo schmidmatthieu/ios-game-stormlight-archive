@@ -74,9 +74,25 @@ export class CombatManager {
 
     if (!closest) return;
 
-    const damage = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
-    const isCrit = Math.random() < champ.baseStats.luck * 0.01;
-    const totalDmg = isCrit ? damage * 2 : damage;
+    // Apply talent bonuses to attack
+    const talents = GameManager.shared.talentSystem;
+    const atkBonus = 1 + (talents?.getBonus('attackDamagePercent') ?? 0);
+    const critBonus = talents?.getBonus('critChancePercent') ?? 0;
+    const critDmgBonus = 1 + (talents?.getBonus('critDamagePercent') ?? 0);
+    const lifesteal = talents?.getBonus('lifestealPercent') ?? 0;
+
+    const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
+    const damage = Math.floor(baseDmg * atkBonus);
+    const isCrit = Math.random() < (champ.baseStats.luck * 0.01 + critBonus);
+    const totalDmg = isCrit ? Math.floor(damage * (2 * critDmgBonus)) : damage;
+
+    // Lifesteal
+    if (lifesteal > 0) {
+      const heal = Math.floor(totalDmg * lifesteal);
+      if (heal > 0) {
+        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + heal);
+      }
+    }
 
     closest.hp -= totalDmg;
     this.vfx.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit);
