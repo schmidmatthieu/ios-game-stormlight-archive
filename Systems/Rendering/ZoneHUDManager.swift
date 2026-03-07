@@ -131,19 +131,32 @@ final class ZoneHUDManager {
         zoneBg.addChild(zoneLabel)
 
         // XP bar
-        let xpBg = SKShapeNode(rectOf: CGSize(width: GameConstants.HUD.hpBarWidth, height: 10), cornerRadius: 2)
+        let xpBarWidth = GameConstants.HUD.hpBarWidth
+        let xpBg = SKShapeNode(rectOf: CGSize(width: xpBarWidth, height: 10), cornerRadius: 2)
         xpBg.fillColor = SKColor(white: 0.1, alpha: 0.8)
         xpBg.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.4)
         xpBg.lineWidth = 0.5
         xpBg.position = CGPoint(x: -screenSize.width / 2 + 80, y: screenSize.height / 2 - 66)
         xpBg.zPosition = GameConstants.ZOrder.hud
+        xpBg.name = "xpBarBg"
         cameraNode.addChild(xpBg)
+
+        // XP fill bar
+        let xpProgress = champion.experienceProgress
+        let xpFillWidth = CGFloat(xpProgress) * (xpBarWidth - 4)
+        let xpFill = SKShapeNode(rectOf: CGSize(width: max(1, xpFillWidth), height: 6), cornerRadius: 1)
+        xpFill.fillColor = GameConstants.Colors.xpGreen
+        xpFill.strokeColor = .clear
+        xpFill.position = CGPoint(x: -(xpBarWidth - 4 - xpFillWidth) / 2, y: 0)
+        xpFill.name = "xpFill"
+        xpBg.addChild(xpFill)
 
         let xpLabel = SKLabelNode(fontNamed: "Helvetica")
         xpLabel.text = "XP \(champion.currentXP)/\(champion.xpForNextLevel)"
         xpLabel.fontSize = 9
-        xpLabel.fontColor = GameConstants.Colors.xpGreen
+        xpLabel.fontColor = .white
         xpLabel.verticalAlignmentMode = .center
+        xpLabel.name = "xpLabel"
         xpBg.addChild(xpLabel)
 
         // Gold
@@ -184,6 +197,19 @@ final class ZoneHUDManager {
         // Update level label
         if let levelLabel = cameraNode.childNode(withName: "levelLabel") as? SKLabelNode {
             levelLabel.text = "\(champion.level)"
+        }
+
+        // Update XP bar fill
+        if let xpBg = cameraNode.childNode(withName: "xpBarBg"),
+           let xpFill = xpBg.childNode(withName: "xpFill") as? SKShapeNode,
+           let xpLabel = xpBg.childNode(withName: "xpLabel") as? SKLabelNode {
+            let xpBarWidth = GameConstants.HUD.hpBarWidth
+            let progress = CGFloat(champion.experienceProgress)
+            let fillWidth = max(1, progress * (xpBarWidth - 4))
+            let rect = CGRect(x: -fillWidth / 2, y: -3, width: fillWidth, height: 6)
+            xpFill.path = CGPath(roundedRect: rect, cornerWidth: 1, cornerHeight: 1, transform: nil)
+            xpFill.fillColor = progress > 0.8 ? GameConstants.Colors.gold : GameConstants.Colors.xpGreen
+            xpLabel.text = "XP \(champion.currentXP)/\(champion.xpForNextLevel)"
         }
     }
 

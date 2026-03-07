@@ -60,6 +60,25 @@ enum GameConstants {
     enum Combat {
         static let damagePoolSize = 20
         static let comboTimeout: TimeInterval = 3.0
+        static let defaultAttackSpeed: Double = 1.0
+        static let defaultCritChance: Double = 0.05
+        static let defaultCritMultiplier: Double = 2.0
+        static let defaultAttackRange: Double = 1.5
+        static let abilityCooldown: TimeInterval = 5.0
+    }
+
+    // MARK: - Enemy AI
+
+    enum EnemyAI {
+        static let attackCooldown: TimeInterval = 1.5
+        static let abilityChance: Double = 0.2
+        static let retreatHealthThreshold: Double = 0.15
+        static let abilityCooldownDuration: TimeInterval = 10.0
+        static let patrolPauseTime: TimeInterval = 1.5
+        /// Multiplicateur pour convertir les unités de grille en pixels
+        static let gridToPixelScale: CGFloat = 32
+        /// Au-delà de 2x la portée de détection, l'ennemi abandonne la poursuite
+        static let leashMultiplier: CGFloat = 2.0
     }
 
     // MARK: - Dialogue
