@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { ChampionClass } from '../data/types';
+import type { PlayerBodyParts } from './PlayerRenderer';
 
 // ─── Animation State Machine ────────────────────────────────────
 
@@ -200,9 +201,10 @@ export class CharacterAnimator {
 
 export function applyAnimationToPlayer(
   playerContainer: Container,
-  playerSprite: Graphics,
+  playerSprite: Graphics | Container,
   playerShadow: Graphics,
   animator: CharacterAnimator,
+  bodyParts?: PlayerBodyParts | null,
 ): void {
   // Body bob and squash/stretch
   playerSprite.y = -animator.bodyBob;
@@ -224,6 +226,41 @@ export function applyAnimationToPlayer(
   } else {
     playerContainer.alpha = 1;
   }
+
+  // Multi-part limb animation
+  if (bodyParts) {
+    applyLimbAnimation(bodyParts, animator);
+  }
+}
+
+/** Animate individual body parts with the animator's limb offsets */
+function applyLimbAnimation(parts: PlayerBodyParts, anim: CharacterAnimator): void {
+  // Left arm - rotate at shoulder pivot
+  parts.leftArm.rotation = anim.leftArmAngle;
+
+  // Right arm - rotate at shoulder pivot
+  parts.rightArm.rotation = anim.rightArmAngle;
+
+  // Weapon follows right arm + weapon angle
+  parts.weapon.rotation = anim.rightArmAngle + anim.weaponAngle;
+  // Weapon Y tracks arm position
+  parts.weapon.y = Math.sin(anim.rightArmAngle) * 2;
+
+  // Left leg - slide up/down for walk cycle
+  parts.leftLeg.y = anim.leftLegOffset;
+
+  // Right leg - opposite phase
+  parts.rightLeg.y = anim.rightLegOffset;
+
+  // Cape sway - subtle rotation at top attachment
+  parts.cape.rotation = anim.bodyTilt * 0.5;
+  // Cape trails behind during walk (offset bottom)
+  parts.cape.skew.x = -anim.leftLegOffset * 0.015;
+
+  // Head bobs slightly counter to body
+  parts.head.y = -anim.bodyBob * 0.3;
+  // Head tilts slightly opposite to body tilt for natural feel
+  parts.head.rotation = -anim.bodyTilt * 0.3;
 }
 
 // ─── Class Aura Effect ───────────────────────────────────────────

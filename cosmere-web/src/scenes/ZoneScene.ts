@@ -18,7 +18,8 @@ import { QuestManager } from '../game/QuestManager';
 import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../game/WorldMechanics';
 import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
-import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
+import { drawPlayerCharacter, buildPlayerCharacter } from '../rendering/PlayerRenderer';
+import type { PlayerBodyParts } from '../rendering/PlayerRenderer';
 import { drawEquipmentOverlay } from '../rendering/EquipmentVisuals';
 import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
@@ -207,7 +208,7 @@ export class ZoneScene extends Container implements GameScene {
 
   // Player
   private playerContainer!: Container;
-  private playerSprite!: Graphics;
+  private playerSprite!: Container;
   private playerShadow!: Graphics;
   private playerGridPos: GridPosition = { col: 5, row: 5 };
   private playerScreenPos = { x: 0, y: 0 };
@@ -215,6 +216,7 @@ export class ZoneScene extends Container implements GameScene {
   private playerAnimTimer = 0;
   private playerFacing: 'left' | 'right' = 'right';
   private playerAnimator!: CharacterAnimator;
+  private playerBodyParts: PlayerBodyParts | null = null;
   private playerAuraSprite: Graphics | null = null;
 
   // Enemies
@@ -1017,14 +1019,21 @@ export class ZoneScene extends Container implements GameScene {
     this.playerShadow.ellipse(0, 2, 12, 5).fill({ color: 0x000000, alpha: 0.3 });
     this.playerContainer.addChild(this.playerShadow);
 
-    // Sprite
-    this.playerSprite = new Graphics();
-    this.drawPlayer();
+    // Multi-part character sprite container
+    const champ = GameManager.shared.champion;
+    const cls = champ?.championClass ?? 'mistborn';
+
+    // Use Container for multi-part body
+    this.playerSprite = new Container();
+    this.playerBodyParts = buildPlayerCharacter(this.playerSprite, cls);
+    // Equipment overlays on torso
+    if (champ && this.playerBodyParts) {
+      drawEquipmentOverlay(this.playerBodyParts.torso, champ.equipment);
+    }
     this.playerContainer.addChild(this.playerSprite);
 
     // Character animator
-    const champ = GameManager.shared.champion;
-    this.playerAnimator = new CharacterAnimator(champ?.championClass ?? 'mistborn');
+    this.playerAnimator = new CharacterAnimator(cls);
 
     this.playerContainer.x = this.playerScreenPos.x;
     this.playerContainer.y = this.playerScreenPos.y;
@@ -1033,10 +1042,12 @@ export class ZoneScene extends Container implements GameScene {
 
   private drawPlayer(): void {
     const champ = GameManager.shared.champion;
-    drawPlayerCharacter(this.playerSprite, champ?.championClass ?? 'mistborn');
-    // Draw equipment visuals on top of base character
-    if (champ) {
-      drawEquipmentOverlay(this.playerSprite, champ.equipment);
+    const cls = champ?.championClass ?? 'mistborn';
+    // Rebuild multi-part character
+    this.playerBodyParts = buildPlayerCharacter(this.playerSprite, cls);
+    // Draw equipment overlays on torso Graphics
+    if (champ && this.playerBodyParts) {
+      drawEquipmentOverlay(this.playerBodyParts.torso, champ.equipment);
     }
   }
 
@@ -1972,14 +1983,15 @@ export class ZoneScene extends Container implements GameScene {
     this.playerAnimator.facing = this.playerFacing;
     this.playerAnimator.update(dt);
 
-    // Apply animator transforms
-    applyAnimationToPlayer(this.playerContainer, this.playerSprite, this.playerShadow, this.playerAnimator);
+    // Apply animator transforms (with multi-part limb animation)
+    applyAnimationToPlayer(this.playerContainer, this.playerSprite, this.playerShadow, this.playerAnimator, this.playerBodyParts);
 
-    // Hurt flash tint
-    if (this.playerAnimator.hurtFlash > 0) {
-      this.playerSprite.tint = 0xff4444;
-    } else {
-      this.playerSprite.tint = 0xffffff;
+    // Hurt flash tint - apply to all body part Graphics
+    const hurtTint = this.playerAnimator.hurtFlash > 0 ? 0xff4444 : 0xffffff;
+    for (const child of this.playerSprite.children) {
+      if (child instanceof Graphics) {
+        child.tint = hurtTint;
+      }
     }
 
     // Class aura effect
