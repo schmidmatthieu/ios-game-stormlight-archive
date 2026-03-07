@@ -103,6 +103,24 @@ struct EquipmentLoadout: Codable {
         case .ring2:      return ring2
         }
     }
+
+    mutating func setItemID(_ itemID: String?, for slot: EquipmentSlot) {
+        switch slot {
+        case .helmet:     helmet = itemID
+        case .shoulders:  shoulders = itemID
+        case .chest:      chest = itemID
+        case .cape:       cape = itemID
+        case .gloves:     gloves = itemID
+        case .belt:       belt = itemID
+        case .legs:       legs = itemID
+        case .boots:      boots = itemID
+        case .mainWeapon: mainWeapon = itemID
+        case .offhand:    offhand = itemID
+        case .amulet:     amulet = itemID
+        case .ring1:      ring1 = itemID
+        case .ring2:      ring2 = itemID
+        }
+    }
 }
 
 // MARK: - Champion

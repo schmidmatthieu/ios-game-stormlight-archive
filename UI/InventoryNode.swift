@@ -277,6 +277,11 @@ class InventoryNode: SKNode {
                 return
             }
 
+            if node.name == "equipItem" || node.parent?.name == "equipItem" {
+                equipSelectedItem()
+                return
+            }
+
             if let name = node.name, name.hasPrefix("slot_") {
                 let indexStr = name.replacingOccurrences(of: "slot_", with: "")
                 if let index = Int(indexStr) {
@@ -285,6 +290,31 @@ class InventoryNode: SKNode {
                 return
             }
         }
+    }
+
+    private func equipSelectedItem() {
+        guard let index = selectedItemIndex,
+              var champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID] else { return }
+
+        let slot = item.slot
+        let previousItemID = champion.equipment.itemID(for: slot)
+
+        // Équiper le nouvel item
+        champion.equipment.setItemID(itemID, for: slot)
+        champion.inventoryItemIDs.remove(at: index)
+
+        // Remettre l'ancien item dans l'inventaire
+        if let prev = previousItemID {
+            champion.inventoryItemIDs.append(prev)
+        }
+
+        GameManager.shared.champion = champion
+        selectedItemIndex = nil
+        refresh()
     }
 
     private func selectItem(at index: Int) {
@@ -338,6 +368,26 @@ class InventoryNode: SKNode {
             statLabel.position = CGPoint(x: screenSize.width / 6, y: y - 50 - CGFloat(i) * 14)
             detailPanel.addChild(statLabel)
         }
+
+        // Bouton Équiper
+        let equipBtnY = y - 50 - CGFloat(item.statBonuses.count) * 14 - 25
+        let equipBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 36), cornerRadius: 8)
+        equipBtn.fillColor = SKColor(red: 0.2, green: 0.5, blue: 0.3, alpha: 0.9)
+        equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.4, alpha: 1.0)
+        equipBtn.lineWidth = 1.5
+        equipBtn.position = CGPoint(x: screenSize.width / 6, y: equipBtnY)
+        equipBtn.zPosition = 6003
+        equipBtn.name = "equipItem"
+
+        let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        equipLabel.text = "Équiper"
+        equipLabel.fontSize = 13
+        equipLabel.fontColor = .white
+        equipLabel.verticalAlignmentMode = .center
+        equipLabel.name = "equipItem"
+        equipBtn.addChild(equipLabel)
+
+        detailPanel.addChild(equipBtn)
     }
 
     // MARK: - Helpers
