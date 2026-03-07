@@ -22,6 +22,7 @@ import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
+import { addReputation, createReputationBadge, showRankUpEffect, getBonusXPMultiplier } from '../game/ReputationSystem';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
 
@@ -240,6 +241,9 @@ export class ZoneScene extends Container implements GameScene {
   private activeBoss: EnemyInstance | null = null;
   private bossHPBar: { container: Container; update: (hp: number, phase: string) => void; destroy: () => void } | null = null;
 
+  // Reputation badge
+  private repBadge: { container: Container; refresh: () => void } | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -332,6 +336,9 @@ export class ZoneScene extends Container implements GameScene {
     this.hud = new HUD(w, h);
     this.hud.refresh(this.zone.name);
     this.uiContainer.addChild(this.hud);
+
+    // Reputation badge
+    this.repBadge = createReputationBadge(this.uiContainer, w, this.zone.worldID);
 
     // Joystick
     this.joystick = new VirtualJoystick();
@@ -1055,9 +1062,15 @@ export class ZoneScene extends Container implements GameScene {
     const goldReward = 5 + Math.floor(Math.random() * 15);
     const xpReward = 10 + Math.floor(Math.random() * 20);
 
+    const repGain = 3;
     if (champ) {
       champ.gold += goldReward;
       GameManager.shared.grantXP(xpReward);
+      const repResult = addReputation(this.zone.worldID, repGain);
+      if (repResult.rankUp) {
+        showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, repResult.rankName, this.zone.worldID);
+      }
+      if (this.repBadge) this.repBadge.refresh();
     }
 
     const panel = new Container();
@@ -1097,7 +1110,7 @@ export class ZoneScene extends Container implements GameScene {
     panel.addChild(desc);
 
     const reward = new Text({
-      text: `+${xpReward} XP  +${goldReward} or`,
+      text: `+${xpReward} XP  +${goldReward} or  +${repGain} rep`,
       style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
     });
     reward.anchor.set(1, 0);
@@ -1135,6 +1148,11 @@ export class ZoneScene extends Container implements GameScene {
     // Grant rewards
     champ.gold += secret.loot.gold;
     GameManager.shared.grantXP(secret.loot.xp);
+    const secretRepResult = addReputation(this.zone.worldID, 5);
+    if (secretRepResult.rankUp) {
+      showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, secretRepResult.rankName, this.zone.worldID);
+    }
+    if (this.repBadge) this.repBadge.refresh();
 
     if (secret.type === 'shrine') {
       // Shrine: heal and buff
@@ -2078,9 +2096,22 @@ export class ZoneScene extends Container implements GameScene {
 
     const gold = enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1));
     champ.gold += gold;
-    const leveledUp = gm.grantXP(enemy.data.xpReward);
 
-    this.showDamageNumber(enemy.position.x, enemy.position.y - 10, enemy.data.xpReward, false, 0x66cc44);
+    // Apply reputation XP bonus
+    const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
+    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier);
+    const leveledUp = gm.grantXP(finalXP);
+
+    // Grant reputation based on enemy tier
+    const repByTier: Record<string, number> = { minion: 1, soldier: 2, elite: 4, boss: 15 };
+    const repGain = repByTier[enemy.data.tier] ?? 1;
+    const repResult = addReputation(this.zone.worldID, repGain);
+    if (repResult.rankUp) {
+      showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, repResult.rankName, this.zone.worldID);
+    }
+    if (this.repBadge) this.repBadge.refresh();
+
+    this.showDamageNumber(enemy.position.x, enemy.position.y - 10, finalXP, false, 0x66cc44);
     setTimeout(() => {
       this.showDamageNumber(enemy.position.x + 10, enemy.position.y, gold, false, 0xe6cc33);
     }, 200);

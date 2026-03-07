@@ -1,5 +1,6 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
+import { addReputation, showRankUpEffect } from '../game/ReputationSystem';
 
 // ─── Dialogue Tree System ───────────────────────────────────────
 
@@ -275,6 +276,7 @@ export function showDialoguePanel(
         const parts: string[] = [];
         if (choice.reward.xp) parts.push(`+${choice.reward.xp}XP`);
         if (choice.reward.gold) parts.push(`+${choice.reward.gold}or`);
+        if (choice.reward.reputation) parts.push(`+${choice.reward.reputation}rep`);
         if (parts.length > 0) {
           const rewardHint = new Text({
             text: parts.join(' '),
@@ -294,6 +296,12 @@ export function showDialoguePanel(
           if (champ) {
             if (choice.reward.xp) GameManager.shared.grantXP(choice.reward.xp);
             if (choice.reward.gold) champ.gold += choice.reward.gold;
+            if (choice.reward.reputation) {
+              const result = addReputation(worldID, choice.reward.reputation);
+              if (result.rankUp) {
+                showRankUpEffect(uiContainer, screenW, screenH, result.rankName, worldID);
+              }
+            }
           }
         }
 
