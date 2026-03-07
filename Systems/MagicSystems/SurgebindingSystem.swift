@@ -49,7 +49,7 @@ final class SurgebindingSystem {
                                damage: 0, healing: 0, statusEffect: nil, duration: 0, stormlightCost: 0)
         }
 
-        champion.stormlightAmount? -= cost
+        champion.stormlightAmount = stormlight - cost
 
         switch surge {
         case .gravitation:
@@ -78,11 +78,10 @@ final class SurgebindingSystem {
                 success: true,
                 description: "Abrasion — glissement parfait !",
                 damage: 0, healing: 0,
-                statusEffect: nil,
+                statusEffect: .haste,
                 duration: 5.0,
                 stormlightCost: cost
             )
-            // Effet: +100% vitesse de déplacement
 
         case .progression:
             let healAmount = 30 + champion.baseStats.spirit * 2
@@ -102,11 +101,10 @@ final class SurgebindingSystem {
                 success: true,
                 description: "Illumination — illusion créée !",
                 damage: 0, healing: 0,
-                statusEffect: nil,
+                statusEffect: .decoy,
                 duration: 10.0,
                 stormlightCost: cost
             )
-            // Crée un leurre qui attire les ennemis
 
         case .transformation:
             return SurgeResult(

@@ -13,8 +13,8 @@ class HealthComponent: GKComponent {
     var onDamaged: ((Int) -> Void)?
 
     init(maxHP: Int, defense: Int = 0) {
-        self.maxHP = maxHP
-        self.currentHP = maxHP
+        self.maxHP = max(1, maxHP)
+        self.currentHP = self.maxHP
         self.defense = defense
         super.init()
     }
@@ -26,7 +26,8 @@ class HealthComponent: GKComponent {
     // MARK: - Damage & Healing
 
     func takeDamage(_ rawDamage: Int) -> Int {
-        let mitigated = max(1, rawDamage - defense / 2)
+        let reduction = Int(Double(defense) * 0.5)
+        let mitigated = max(1, rawDamage - reduction)
         currentHP = max(0, currentHP - mitigated)
 
         onDamaged?(mitigated)

@@ -8,6 +8,7 @@ import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
 import { InventoryPanel } from '../ui/InventoryPanel';
 import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
+import { showCraftingPanel, getRecipeEffect } from '../ui/CraftingPanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
@@ -17,13 +18,42 @@ import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../ga
 import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
+import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
-import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
+import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle } from '../rendering/SpellEffects';
+import { FloatingDamageManager } from '../rendering/FloatingDamage';
+import type { DamageStyle } from '../rendering/FloatingDamage';
+import { MusicManager } from '../game/MusicSystem';
+import { createMusicIndicator } from '../ui/MusicIndicator';
+import { rollAffixes, createAffixState, updateAffixState, getAffixHPMultiplier, getAffixDamageMultiplier, getAffixSpeedMultiplier, getThornsDamage, getVampiricHeal, hasAffix, getAffixLabel, getAffixColor } from '../game/EliteAffixes';
+import type { EnemyAffixState } from '../game/EliteAffixes';
+import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
+import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
+import { DayNightManager, createDayNightOverlay } from '../rendering/DayNightCycle';
+import type { BlendedTimeConfig } from '../rendering/DayNightCycle';
+import { BestiaryManager } from '../game/BestiarySystem';
+import { showBestiaryPanel } from '../ui/BestiaryPanel';
+import { AchievementManager } from '../game/AchievementSystem';
+import { createAchievementToast, showAchievementPanel } from '../ui/AchievementUI';
+import { showSkillTreePanel } from '../ui/SkillTreePanel';
+import { CompanionManager } from '../game/CompanionSystem';
+import { showCompanionPanel } from '../ui/CompanionPanel';
+import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
+import { ComboManager, createComboDisplay } from '../game/ComboSystem';
+import { WorldEventManager } from '../game/WorldEvents';
+import type { WorldEventEffect } from '../game/WorldEvents';
+import { createWorldEventBanner } from '../ui/WorldEventBanner';
+import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
+import { addReputation, createReputationBadge, showRankUpEffect, getBonusXPMultiplier } from '../game/ReputationSystem';
+import { StatusEffectManager, createStatusBar, spawnStatusParticle } from '../game/StatusEffects';
+import type { ActiveStatusEffect } from '../game/StatusEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
+import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 // ─── Isometric Helpers ─────────────────────────────────────────
 const TILE_W = 64;
@@ -54,6 +84,7 @@ interface EnemyInstance {
   data: Enemy;
   spawn: EnemySpawn;
   hp: number;
+  maxHP: number;
   position: { x: number; y: number };
   gridPos: GridPosition;
   sprite: Container;
@@ -65,6 +96,8 @@ interface EnemyInstance {
   state: 'idle' | 'chasing' | 'attacking' | 'dead';
   respawnTimer: number;
   animTimer: number;
+  affixState?: EnemyAffixState;
+  affixLabel?: Text;
 }
 
 interface NPCInstance {
@@ -167,6 +200,8 @@ export class ZoneScene extends Container implements GameScene {
   private playerSpeed = 120;
   private playerAnimTimer = 0;
   private playerFacing: 'left' | 'right' = 'right';
+  private playerAnimator!: CharacterAnimator;
+  private playerAuraSprite: Graphics | null = null;
 
   // Enemies
   private enemies: EnemyInstance[] = [];
@@ -239,6 +274,42 @@ export class ZoneScene extends Container implements GameScene {
   // Boss fight
   private activeBoss: EnemyInstance | null = null;
   private bossHPBar: { container: Container; update: (hp: number, phase: string) => void; destroy: () => void } | null = null;
+
+  // Reputation badge
+  private repBadge: { container: Container; refresh: () => void } | null = null;
+
+  // Status effects
+  private playerStatusEffects = new StatusEffectManager();
+  private statusBar: { container: Container; update: (effects: ActiveStatusEffect[]) => void } | null = null;
+  private statusParticleTimer = 0;
+
+  // Day/Night cycle
+  private dayNightManager!: DayNightManager;
+  private dayNightOverlay: { overlay: Graphics; stars: Container; timeLabel: Text; update: (config: BlendedTimeConfig) => void } | null = null;
+
+  // Weather
+  private weatherManager!: WeatherManager;
+  private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
+  private achievementToast: { update: (dt: number) => void } | null = null;
+
+  // Companion
+  private companionSprite: Graphics | null = null;
+  private companionPos = { x: 0, y: 0 };
+  private companionAnimTimer = 0;
+
+  // Combo system
+  private comboDisplay: { update: () => void } | null = null;
+
+  // World events
+  private eventBanner: { update: (dt: number) => void } | null = null;
+  private activeEventEffect: WorldEventEffect | null = null;
+  private classAmbientTimer = 0;
+
+  // Floating damage
+  private floatingDmg!: FloatingDamageManager;
+
+  // Music indicator
+  private musicIndicator: { update: (dt: number) => void } | null = null;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -333,16 +404,27 @@ export class ZoneScene extends Container implements GameScene {
     this.hud.refresh(this.zone.name);
     this.uiContainer.addChild(this.hud);
 
+    // Reputation badge
+    this.repBadge = createReputationBadge(this.uiContainer, w, this.zone.worldID);
+
+    // Status effect bar
+    this.statusBar = createStatusBar(this.uiContainer, w);
+
+    // Responsive layout
+    const layout = getLayoutInfo(w, h);
+
     // Joystick
-    this.joystick = new VirtualJoystick();
-    this.joystick.x = 70;
-    this.joystick.y = h - 90;
+    this.joystick = new VirtualJoystick(layout);
+    const joyPos = joystickPosition(layout);
+    this.joystick.x = joyPos.x;
+    this.joystick.y = joyPos.y;
     this.uiContainer.addChild(this.joystick);
 
     // Action buttons
-    this.actionButtons = new ActionButtons();
-    this.actionButtons.x = w - 80;
-    this.actionButtons.y = h - 100;
+    this.actionButtons = new ActionButtons(layout);
+    const actPos = actionButtonsPosition(layout);
+    this.actionButtons.x = actPos.x;
+    this.actionButtons.y = actPos.y;
     this.actionButtons.onAttack = () => this.handleAttack();
     this.actionButtons.onSkill = (i) => this.handleSkill(i);
     this.actionButtons.onInteract = (mode) => this.handleInteraction(mode);
@@ -363,26 +445,75 @@ export class ZoneScene extends Container implements GameScene {
     }
 
     // Pause button (top center)
-    this.createPauseButton(w);
+    this.createPauseButton(w, layout);
 
     // Inventory button (next to pause)
-    this.createInventoryButton(w);
+    this.createInventoryButton(w, layout);
+
+    // Crafting button (next to inventory)
+    this.createCraftingButton(w, layout);
+
+    // Bestiary button (next to crafting)
+    this.createBestiaryButton(w, layout);
+
+    // Achievements button (next to bestiary)
+    this.createAchievementButton(w, layout);
+
+    // Skill tree button (next to achievements)
+    this.createSkillTreeButton(w, layout);
+
+    // Companion button
+    this.createCompanionButton(w, layout);
+
+    // Initialize companion
+    CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
+    this.spawnCompanionSprite();
+
+    // Combo display
+    this.comboDisplay = createComboDisplay(this.uiContainer, w, h);
+    ComboManager.shared.reset();
+
+    // Floating damage manager
+    this.floatingDmg = new FloatingDamageManager(this.worldContainer);
+
+    // Music system
+    MusicManager.shared.setWorld(this.zone.worldID);
+    MusicManager.shared.setWeather(this.zone.weatherEffect ?? 'none');
+    this.musicIndicator = createMusicIndicator(this.uiContainer, w, h);
+
+    // World events banner
+    this.eventBanner = createWorldEventBanner(this.uiContainer, w);
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
+
+    // Day/night cycle
+    this.dayNightManager = new DayNightManager(this.zone.worldID);
+    this.dayNightOverlay = createDayNightOverlay(this.uiContainer, w, h);
+
+    // Dynamic weather
+    this.weatherManager = new WeatherManager(this.zone.worldID);
+    this.weatherOverlay = createWeatherOverlay(this.uiContainer, w, h);
+
+    // Achievement toast
+    this.achievementToast = createAchievementToast(this.uiContainer, w);
+    AchievementManager.shared.recordZoneVisit(this.zone.id, this.zone.worldID);
+    AchievementManager.shared.recordLevel(GameManager.shared.champion?.level ?? 1);
+    AchievementManager.shared.recordCreatureDiscovered(BestiaryManager.shared.totalDiscovered);
+    AchievementManager.shared.check();
 
     // Quest system
     QuestManager.shared.init();
     QuestManager.shared.onZoneEntered(this.zone.id);
 
     // Quest tracker HUD
-    this.questTracker = new QuestTracker(w);
+    this.questTracker = new QuestTracker(w, h);
     this.questTracker.refresh();
     this.uiContainer.addChild(this.questTracker);
 
     // Minimap
     this.minimap = new Minimap(w, h);
-    this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight);
+    this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight, this.zone.worldID, this.zone.id);
     this.uiContainer.addChild(this.minimap);
 
     // Center camera immediately
@@ -931,6 +1062,10 @@ export class ZoneScene extends Container implements GameScene {
     this.drawPlayer();
     this.playerContainer.addChild(this.playerSprite);
 
+    // Character animator
+    const champ = GameManager.shared.champion;
+    this.playerAnimator = new CharacterAnimator(champ?.championClass ?? 'mistborn');
+
     this.playerContainer.x = this.playerScreenPos.x;
     this.playerContainer.y = this.playerScreenPos.y;
     this.worldContainer.addChild(this.playerContainer);
@@ -1055,9 +1190,15 @@ export class ZoneScene extends Container implements GameScene {
     const goldReward = 5 + Math.floor(Math.random() * 15);
     const xpReward = 10 + Math.floor(Math.random() * 20);
 
+    const repGain = 3;
     if (champ) {
       champ.gold += goldReward;
       GameManager.shared.grantXP(xpReward);
+      const repResult = addReputation(this.zone.worldID, repGain);
+      if (repResult.rankUp) {
+        showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, repResult.rankName, this.zone.worldID);
+      }
+      if (this.repBadge) this.repBadge.refresh();
     }
 
     const panel = new Container();
@@ -1097,7 +1238,7 @@ export class ZoneScene extends Container implements GameScene {
     panel.addChild(desc);
 
     const reward = new Text({
-      text: `+${xpReward} XP  +${goldReward} or`,
+      text: `+${xpReward} XP  +${goldReward} or  +${repGain} rep`,
       style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
     });
     reward.anchor.set(1, 0);
@@ -1135,12 +1276,19 @@ export class ZoneScene extends Container implements GameScene {
     // Grant rewards
     champ.gold += secret.loot.gold;
     GameManager.shared.grantXP(secret.loot.xp);
+    const secretRepResult = addReputation(this.zone.worldID, 5);
+    if (secretRepResult.rankUp) {
+      showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, secretRepResult.rankName, this.zone.worldID);
+    }
+    if (this.repBadge) this.repBadge.refresh();
 
     if (secret.type === 'shrine') {
-      // Shrine: heal and buff
+      // Shrine: heal, buff, and grant status effects
       champ.currentHP = GameManager.shared.maxHP;
       champ.currentInvestiture = GameManager.shared.maxInvestiture;
-      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV et Inv restaurés', 0x88ccff);
+      this.playerStatusEffects.apply('regenerating', 15, 3);
+      this.playerStatusEffects.apply('shielded', 20, 1);
+      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV, Inv, Bouclier + Régén!', 0x88ccff);
     } else {
       this.showFloatingText(secret.x, secret.y - 30,
         `${secret.loot.itemHint}! +${secret.loot.xp}XP +${secret.loot.gold}or`, 0xffdd44);
@@ -1166,10 +1314,35 @@ export class ZoneScene extends Container implements GameScene {
     if (this.dialoguePanel) return;
     this.isPaused = true;
 
-    // Track quest progress for NPC interaction
+    // Track quest progress and NPC relationship
     QuestManager.shared.onNPCTalkedTo(npcID);
     this.checkQuestCompletion();
     const npcName = this.formatNPCName(npcID);
+    NPCRelationshipManager.shared.recordTalk(npcID, npcName, this.zone.worldID);
+
+    // Check for relationship level up
+    const levelUp = NPCRelationshipManager.shared.popLevelUp();
+    if (levelUp) {
+      const color = LEVEL_COLORS[levelUp.level] ?? 0xffffff;
+      const label = LEVEL_LABELS[levelUp.level] ?? levelUp.level;
+      setTimeout(() => {
+        this.showFloatingText(
+          this.playerScreenPos.x, this.playerScreenPos.y - 70,
+          `${levelUp.npcName}: ${label}!`, color,
+        );
+      }, 500);
+    }
+
+    // Show relationship info as floating text
+    const level = NPCRelationshipManager.shared.getLevel(npcID);
+    const levelLabel = LEVEL_LABELS[level];
+    const levelColor = LEVEL_COLORS[level];
+    const affinity = NPCRelationshipManager.shared.getAffinityPercent(npcID);
+    this.showFloatingText(
+      this.playerScreenPos.x + 30, this.playerScreenPos.y - 40,
+      `${levelLabel} (${affinity}%)`, levelColor,
+    );
+
     this.dialoguePanel = showDialoguePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       this.zone.worldID, npcName, () => this.closeDialogue(),
@@ -1195,40 +1368,45 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createPauseButton(screenWidth: number): void {
+  private createPauseButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnSize = toolbarButtonSize(layout);
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     const icon = new Graphics();
-    icon.rect(10, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
-    icon.rect(20, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
+    icon.rect(scaled(10, layout), scaled(6, layout), scaled(4, layout), scaled(16, layout)).fill({ color: 0xcccccc, alpha: 0.8 });
+    icon.rect(scaled(20, layout), scaled(6, layout), scaled(4, layout), scaled(16, layout)).fill({ color: 0xcccccc, alpha: 0.8 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 - 18;
-    btn.y = 10;
+    btn.x = screenWidth / 2 - btnW / 2;
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.togglePause());
     this.uiContainer.addChild(btn);
   }
 
-  private createInventoryButton(screenWidth: number): void {
+  private createInventoryButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Bag icon
     const icon = new Graphics();
-    icon.roundRect(10, 8, 16, 14, 3).fill({ color: 0xaa8855, alpha: 0.7 });
-    icon.roundRect(10, 8, 16, 14, 3).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
-    icon.arc(18, 8, 5, Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
+    icon.roundRect(scaled(10, layout), scaled(8, layout), scaled(16, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0xaa8855, alpha: 0.7 });
+    icon.roundRect(scaled(10, layout), scaled(8, layout), scaled(16, layout), scaled(14, layout), scaled(3, layout)).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
+    icon.arc(scaled(18, layout), scaled(8, layout), scaled(5, layout), Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + 24;
-    btn.y = 10;
+    btn.x = screenWidth / 2 + scaled(24, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleInventory());
@@ -1245,6 +1423,219 @@ export class ZoneScene extends Container implements GameScene {
     this.uiContainer.addChild(this.dialoguePanel);
   }
 
+  private createCraftingButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Anvil icon
+    const icon = new Graphics();
+    icon.poly([{ x: scaled(12, layout), y: scaled(20, layout) }, { x: scaled(18, layout), y: scaled(10, layout) }, { x: scaled(24, layout), y: scaled(20, layout) }]).fill({ color: 0x888899, alpha: 0.7 });
+    icon.rect(scaled(10, layout), scaled(20, layout), scaled(16, layout), scaled(3, layout)).fill({ color: 0x666677, alpha: 0.8 });
+    icon.rect(scaled(16, layout), scaled(6, layout), scaled(4, layout), scaled(6, layout)).fill({ color: 0xaa8844, alpha: 0.7 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + scaled(66, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleCrafting());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleCrafting(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showCraftingPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      this.zone.worldID,
+      () => this.closeDialogue(),
+      (recipeID) => this.applyCraftResult(recipeID),
+    );
+  }
+
+  private createBestiaryButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Book icon
+    const icon = new Graphics();
+    icon.roundRect(scaled(10, layout), scaled(7, layout), scaled(16, layout), scaled(16, layout), scaled(2, layout)).fill({ color: 0x557744, alpha: 0.7 });
+    icon.rect(scaled(12, layout), scaled(9, layout), scaled(12, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.6 });
+    icon.rect(scaled(12, layout), scaled(12, layout), scaled(10, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.5 });
+    icon.rect(scaled(12, layout), scaled(15, layout), scaled(11, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.4 });
+    icon.rect(scaled(10, layout), scaled(7, layout), scaled(2, layout), scaled(16, layout)).fill({ color: 0x445533, alpha: 0.8 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + scaled(108, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleBestiary());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleBestiary(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showBestiaryPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
+
+  private createAchievementButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Trophy icon
+    const icon = new Graphics();
+    icon.moveTo(scaled(14, layout), scaled(8, layout)).lineTo(scaled(22, layout), scaled(8, layout)).lineTo(scaled(21, layout), scaled(16, layout)).lineTo(scaled(15, layout), scaled(16, layout)).closePath().fill({ color: 0xe6cc66, alpha: 0.7 });
+    icon.rect(scaled(16, layout), scaled(16, layout), scaled(4, layout), scaled(3, layout)).fill({ color: 0xccaa44, alpha: 0.7 });
+    icon.rect(scaled(14, layout), scaled(19, layout), scaled(8, layout), scaled(2, layout)).fill({ color: 0xccaa44, alpha: 0.6 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + scaled(150, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleAchievements());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleAchievements(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showAchievementPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
+
+  private createSkillTreeButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Tree/branch icon
+    const icon = new Graphics();
+    icon.rect(scaled(17, layout), scaled(8, layout), scaled(2, layout), scaled(14, layout)).fill({ color: 0x5588cc, alpha: 0.7 });
+    icon.circle(scaled(18, layout), scaled(8, layout), scaled(4, layout)).fill({ color: 0x5588cc, alpha: 0.6 });
+    icon.circle(scaled(12, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.circle(scaled(24, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.moveTo(scaled(18, layout), scaled(12, layout)).lineTo(scaled(12, layout), scaled(14, layout)).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    icon.moveTo(scaled(18, layout), scaled(12, layout)).lineTo(scaled(24, layout), scaled(14, layout)).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 - scaled(60, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleSkillTree());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleSkillTree(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showSkillTreePanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
+
+  private createCompanionButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Companion orb icon
+    const icon = new Graphics();
+    icon.circle(scaled(18, layout), scaled(15, layout), scaled(6, layout)).fill({ color: 0x88ccff, alpha: 0.5 });
+    icon.circle(scaled(18, layout), scaled(15, layout), scaled(4, layout)).fill({ color: 0xaaddff, alpha: 0.7 });
+    icon.circle(scaled(17, layout), scaled(14, layout), scaled(2, layout)).fill({ color: 0xffffff, alpha: 0.4 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 - scaled(102, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleCompanion());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleCompanion(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showCompanionPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => { this.closeDialogue(); this.spawnCompanionSprite(); },
+    );
+  }
+
+  private applyCraftResult(recipeID: string): void {
+    const effect = getRecipeEffect(recipeID);
+    if (!effect) return;
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    switch (effect.type) {
+      case 'heal_hp':
+        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + effect.value);
+        break;
+      case 'heal_inv':
+        champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + effect.value);
+        break;
+      case 'buff_strength':
+        this.playerStatusEffects.apply('strengthened', effect.duration, effect.value);
+        break;
+      case 'buff_shield':
+        this.playerStatusEffects.apply('shielded', effect.duration, effect.value);
+        break;
+      case 'buff_haste':
+        this.playerStatusEffects.apply('haste', effect.duration, effect.value);
+        break;
+      case 'buff_regen':
+        this.playerStatusEffects.apply('regenerating', effect.duration, effect.value);
+        break;
+      case 'multi_buff':
+        // World enchantments give multiple buffs
+        if (effect.value === 1) { // Mist
+          this.playerStatusEffects.apply('shielded', effect.duration, 1);
+          this.playerStatusEffects.apply('haste', effect.duration, 1);
+        } else if (effect.value === 2) { // Storm
+          this.playerStatusEffects.apply('strengthened', effect.duration, 1);
+          this.playerStatusEffects.apply('regenerating', effect.duration, 3);
+        } else if (effect.value === 3) { // Breath
+          this.playerStatusEffects.apply('regenerating', effect.duration, 4);
+          this.playerStatusEffects.apply('haste', effect.duration, 1);
+        } else if (effect.value === 4) { // Sand
+          this.playerStatusEffects.apply('strengthened', effect.duration, 1);
+          this.playerStatusEffects.apply('haste', effect.duration, 1);
+        }
+        break;
+    }
+
+    this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, effect.message, 0x66cc88);
+  }
+
   private togglePause(): void {
     if (this.pauseMenu) {
       this.pauseMenu.destroy({ children: true });
@@ -1258,6 +1649,14 @@ export class ZoneScene extends Container implements GameScene {
       () => this.togglePause(),
       (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
       this.playerScreenPos,
+      () => {
+        GameManager.shared.save();
+        BestiaryManager.shared.save();
+        AchievementManager.shared.save();
+        CompanionManager.shared.save();
+        NPCRelationshipManager.shared.save();
+        this.router.goto(WorldMapScene);
+      },
     );
   }
 
@@ -1399,9 +1798,16 @@ export class ZoneScene extends Container implements GameScene {
       container.y = pos.y;
       this.worldContainer.addChild(container);
 
+      // Roll affixes for elite/boss enemies
+      const affixes = rollAffixes(data.tier);
+      const affixState = affixes.length > 0 ? createAffixState(affixes) : undefined;
+      const hpMult = affixState ? getAffixHPMultiplier(affixState) : 1;
+      const finalMaxHP = Math.floor(data.maxHP * hpMult);
+
       const enemy: EnemyInstance = {
         data, spawn,
-        hp: data.maxHP,
+        hp: finalMaxHP,
+        maxHP: finalMaxHP,
         position: { ...pos },
         gridPos: { ...spawn.position },
         sprite: container,
@@ -1412,7 +1818,24 @@ export class ZoneScene extends Container implements GameScene {
         state: 'idle',
         respawnTimer: 0,
         animTimer: Math.random() * Math.PI * 2,
+        affixState,
       };
+
+      // Affix label under name
+      if (affixState && affixes.length > 0) {
+        const affixText = new Text({
+          text: getAffixLabel(affixState),
+          style: new TextStyle({
+            fontFamily: 'sans-serif', fontSize: 5,
+            fill: getAffixColor(affixState),
+            dropShadow: { color: 0x000000, blur: 2, distance: 1 },
+          }),
+        });
+        affixText.anchor.set(0.5);
+        affixText.y = -size * 2 - 30;
+        container.addChild(affixText);
+        enemy.affixLabel = affixText;
+      }
 
       // Initialize boss state for boss enemies
       if (data.tier === 'boss') {
@@ -1581,6 +2004,22 @@ export class ZoneScene extends Container implements GameScene {
         this.particles.splice(i, 1);
       }
     }
+
+    // Class-specific ambient particles
+    this.classAmbientTimer += dt;
+    if (this.classAmbientTimer >= 0.4) {
+      this.classAmbientTimer = 0;
+      const cls = GameManager.shared.champion?.championClass;
+      if (cls) {
+        const ox = (Math.random() - 0.5) * 30;
+        const oy = (Math.random() - 0.5) * 20;
+        spawnClassAmbientParticle(
+          this.worldContainer,
+          this.playerScreenPos.x + ox, this.playerScreenPos.y + oy,
+          cls, this.particles as any,
+        );
+      }
+    }
   }
 
   private updateFog(): void {
@@ -1616,10 +2055,19 @@ export class ZoneScene extends Container implements GameScene {
     this.handleMovement(delta);
     this.updateEnemyAI(delta);
     this.updateCombat(delta);
+    this.updateStatusEffects(delta);
     this.updateCamera();
     this.updateAnimations(delta);
     this.spawnAmbientParticles(delta);
     this.updateWorldMechanics(delta);
+    this.updateDayNight(delta);
+    this.updateWeather(delta);
+    this.updateAchievements(delta);
+    this.updateCompanion(delta);
+    this.updateWorldEvents(delta);
+    this.floatingDmg.update(delta);
+    MusicManager.shared.update(delta);
+    if (this.musicIndicator) this.musicIndicator.update(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -1634,8 +2082,9 @@ export class ZoneScene extends Container implements GameScene {
   private handleMovement(dt: number): void {
     if (!this.joystick.active || this.joystick.magnitude === 0) return;
 
-    const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude;
-    const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude;
+    const speedMult = this.playerStatusEffects.getSpeedMultiplier() * this.getCompanionSpeedBonus();
+    const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
+    const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
 
     // Track facing
     if (dx > 0.5) this.playerFacing = 'right';
@@ -1668,15 +2117,43 @@ export class ZoneScene extends Container implements GameScene {
   private updateAnimations(dt: number): void {
     this.playerAnimTimer += dt * 4;
 
-    // Player bob when moving
-    if (this.joystick.active && this.joystick.magnitude > 0) {
-      this.playerSprite.y = Math.sin(this.playerAnimTimer) * 1.5;
+    // Update character animator state based on movement
+    const isMoving = this.joystick.active && this.joystick.magnitude > 0;
+    if (this.playerAnimator.state !== 'attack' && this.playerAnimator.state !== 'hurt'
+        && this.playerAnimator.state !== 'cast' && this.playerAnimator.state !== 'death') {
+      this.playerAnimator.setState(isMoving ? 'walk' : 'idle');
+    }
+    this.playerAnimator.facing = this.playerFacing;
+    this.playerAnimator.update(dt);
+
+    // Apply animator transforms
+    applyAnimationToPlayer(this.playerContainer, this.playerSprite, this.playerShadow, this.playerAnimator);
+
+    // Hurt flash tint
+    if (this.playerAnimator.hurtFlash > 0) {
+      this.playerSprite.tint = 0xff4444;
     } else {
-      this.playerSprite.y = Math.sin(this.playerAnimTimer * 0.5) * 0.5;
+      this.playerSprite.tint = 0xffffff;
     }
 
-    // Player facing
-    this.playerSprite.scale.x = this.playerFacing === 'left' ? -1 : 1;
+    // Class aura effect
+    if (this.playerAuraSprite) {
+      this.playerAuraSprite.destroy();
+      this.playerAuraSprite = null;
+    }
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      const aura = drawClassAura(
+        this.worldContainer,
+        this.playerScreenPos.x, this.playerScreenPos.y,
+        champ.championClass, this.playerAnimator,
+      );
+      if (aura) {
+        aura.zIndex = this.playerContainer.zIndex - 1;
+        this.worldContainer.addChild(aura);
+        this.playerAuraSprite = aura;
+      }
+    }
 
     // Enemy idle bob
     for (const enemy of this.enemies) {
@@ -1716,7 +2193,7 @@ export class ZoneScene extends Container implements GameScene {
       if (enemy.isDead) {
         enemy.respawnTimer -= dt;
         if (enemy.respawnTimer <= 0 && enemy.spawn.respawnTime) {
-          enemy.hp = enemy.data.maxHP;
+          enemy.hp = enemy.maxHP;
           enemy.isDead = false;
           enemy.state = 'idle';
           enemy.sprite.visible = true;
@@ -1732,7 +2209,9 @@ export class ZoneScene extends Container implements GameScene {
       const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
       const mistMult = this.worldMechanics instanceof ScadrialMechanics
         ? (this.worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
-      const detRange = enemy.data.detectionRange * 32 * mistMult;
+      // Night: ambush enemies detect further, others detect shorter
+      const nightMult = enemy.data.behavior === 'ambush' ? (2 - this.dayNightManager.lightLevel) : this.dayNightManager.lightLevel;
+      const detRange = enemy.data.detectionRange * 32 * mistMult * Math.max(0.5, nightMult);
       const atkRange = enemy.data.attackRange * 32;
 
       enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
@@ -1748,7 +2227,7 @@ export class ZoneScene extends Container implements GameScene {
           this.shakeCamera(5, 0.3);
         }
 
-        const hpPct = enemy.hp / enemy.data.maxHP;
+        const hpPct = enemy.hp / enemy.maxHP;
         const result = enemy.bossState.update(dt, hpPct);
 
         if (result.phaseChanged && result.message) {
@@ -1764,12 +2243,30 @@ export class ZoneScene extends Container implements GameScene {
           );
           const champ = GameManager.shared.champion;
           if (champ) {
-            const dmg = Math.floor(effect.damage * phase.damageMultiplier);
+            const shieldReduct = 1 - this.playerStatusEffects.getDamageReduction();
+            const dmg = Math.max(1, Math.floor(effect.damage * phase.damageMultiplier * shieldReduct));
             champ.currentHP -= dmg;
             this.showDamageNumber(playerPos.x, playerPos.y - 40, dmg, false, 0xff4444);
             this.shakeCamera(3, 0.15);
+            this.playerAnimator.setState('hurt');
+
+            // Boss attacks can inflict status effects
+            const statusByAttack: Record<string, { type: 'poison' | 'burning' | 'frozen' | 'weakened' | 'blinded'; dur: number; mag: number }> = {
+              spike_barrage: { type: 'poison', dur: 8, mag: 5 },
+              dark_sand: { type: 'blinded', dur: 5, mag: 1 },
+              void_consume: { type: 'weakened', dur: 10, mag: 1 },
+              stomp_wave: { type: 'frozen', dur: 2, mag: 1 },
+              fear_pulse: { type: 'weakened', dur: 6, mag: 1 },
+            };
+            const statusInfo = statusByAttack[phase.specialAttack];
+            if (statusInfo) {
+              const msg = this.playerStatusEffects.apply(statusInfo.type, statusInfo.dur, statusInfo.mag);
+              if (msg) this.showFloatingText(playerPos.x, playerPos.y - 55, msg, 0xff8844);
+            }
+
             if (champ.currentHP <= 0) {
               champ.currentHP = 0;
+              this.playerAnimator.setState('death');
               this.handlePlayerDeath();
             }
           }
@@ -1778,15 +2275,40 @@ export class ZoneScene extends Container implements GameScene {
         this.bossHPBar?.update(hpPct, enemy.bossState.config.phases[enemy.bossState.currentPhase].name);
       }
 
-      // Speed multiplier for boss phases
-      const speedMult = enemy.bossState
-        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).speedMultiplier : 1;
+      // Affix mechanics update
+      if (enemy.affixState) {
+        const affixResult = updateAffixState(enemy.affixState, dt, enemy.maxHP, enemy.hp);
+        if (affixResult.regenHP > 0 && enemy.hp < enemy.maxHP) {
+          enemy.hp = Math.min(enemy.maxHP, enemy.hp + affixResult.regenHP);
+          this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
+        }
+        if (affixResult.shouldTeleport && dist < detRange) {
+          const ox = (Math.random() - 0.5) * 80;
+          const oy = (Math.random() - 0.5) * 80;
+          enemy.position.x += ox;
+          enemy.position.y += oy;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+        }
+        // Shield visual
+        if (affixResult.shieldChanged) {
+          const gfx = enemy.sprite.children[1] as Graphics;
+          if (gfx) gfx.alpha = enemy.affixState.shieldActive ? 0.4 : 1.0;
+        }
+      }
+
+      // Speed multiplier for boss phases and affixes
+      const bossSpeedMult = enemy.bossState
+        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).speedMultiplier : 1;
+      const affixSpeedMult = enemy.affixState ? getAffixSpeedMultiplier(enemy.affixState) : 1;
+      const speedMult = bossSpeedMult * affixSpeedMult;
 
       if (dist < atkRange && enemy.attackCooldown <= 0) {
         enemy.state = 'attacking';
         enemy.attackCooldown = 1.5;
         this.enemyAttacksPlayer(enemy);
       } else if (dist < detRange) {
+        if (enemy.state !== 'chasing') BestiaryManager.shared.registerEncounter(enemy.data);
         enemy.state = 'chasing';
         const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
         const speed = enemy.data.speed * 30 * dt * speedMult;
@@ -1928,6 +2450,10 @@ export class ZoneScene extends Container implements GameScene {
     const champ = GameManager.shared.champion;
     if (!champ) return;
 
+    // Attack animation
+    this.playerAnimator.setState('attack');
+    MusicManager.shared.enterCombat();
+
     // Attack visual
     this.showAttackEffect();
 
@@ -1946,15 +2472,45 @@ export class ZoneScene extends Container implements GameScene {
 
     if (!closest) return;
 
-    const damage = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
+    // Shield check (affix)
+    if (closest.affixState?.shieldActive) {
+      this.showDamageNumber(closest.position.x, closest.position.y - 30, 0, false, 0x4488ff, 'block');
+      return;
+    }
+
+    const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
+    const statusDmgMult = this.playerStatusEffects.getDamageMultiplier();
+    const comboResult = ComboManager.shared.registerHit();
+    const damage = Math.floor(baseDmg * statusDmgMult * comboResult.multiplier * this.getCompanionDamageBonus());
     const isCrit = Math.random() < champ.baseStats.luck * 0.01;
     const totalDmg = isCrit ? damage * 2 : damage;
 
     closest.hp -= totalDmg;
-    this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit);
-    this.drawEnemyHP(closest.hpBar, closest.hp / closest.data.maxHP);
+    const dmgStyle: DamageStyle = isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'normal';
+    this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit, undefined, dmgStyle, comboResult.combo);
+    this.drawEnemyHP(closest.hpBar, closest.hp / closest.maxHP);
 
-    // Hit flash
+    // Thorns affix: reflect damage back to player
+    if (closest.affixState) {
+      const thornsDmg = getThornsDamage(closest.affixState, totalDmg);
+      if (thornsDmg > 0) {
+        champ.currentHP = Math.max(0, champ.currentHP - thornsDmg);
+        this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, thornsDmg, false, 0x88aa44, 'poison');
+      }
+      // Vampiric affix: enemy heals from being hit (on their turn, simulated)
+      const vampHeal = getVampiricHeal(closest.affixState, totalDmg);
+      if (vampHeal > 0) {
+        closest.hp = Math.min(closest.maxHP, closest.hp + vampHeal);
+        this.showDamageNumber(closest.position.x, closest.position.y - 20, vampHeal, false, 0xcc2244, 'heal');
+      }
+    }
+
+    // Hit flash + shake animation
+    animateEnemyHit(closest.sprite);
+    createHitImpact(
+      this.worldContainer, closest.position.x, closest.position.y,
+      champ.championClass, isCrit, this.particles as any,
+    );
     const innerSprite = closest.sprite.children[1] as Graphics;
     if (innerSprite) {
       innerSprite.tint = 0xff4444;
@@ -1987,6 +2543,9 @@ export class ZoneScene extends Container implements GameScene {
     champ.currentInvestiture -= skill.investitureCost;
     this.actionButtons.startCooldown(index, skill.cooldown);
 
+    // Cast animation
+    this.playerAnimator.setState('cast');
+
     // Skill visual effect
     this.showSkillEffect(skill.range * 32);
 
@@ -1998,7 +2557,7 @@ export class ZoneScene extends Container implements GameScene {
         const damage = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
         enemy.hp -= damage;
         this.showDamageNumber(enemy.position.x, enemy.position.y - 30, damage, false);
-        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.data.maxHP);
+        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
         if (enemy.hp <= 0) this.killEnemy(enemy);
       }
     }
@@ -2022,17 +2581,24 @@ export class ZoneScene extends Container implements GameScene {
     const nightmareMult = this.worldMechanics instanceof KomashiMechanics
       ? (this.worldMechanics as KomashiMechanics).getDamageMultiplier() : 1;
     const bossMult = enemy.bossState
-      ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).damageMultiplier : 1;
-    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult));
+      ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).damageMultiplier : 1;
+    const affixDmgMult = enemy.affixState
+      ? getAffixDamageMultiplier(enemy.affixState, enemy.hp / enemy.maxHP) : 1;
+    const shieldReduction = 1 - this.playerStatusEffects.getDamageReduction();
+    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * affixDmgMult * shieldReduction));
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
+
+    // Hurt animation
+    this.playerAnimator.setState('hurt');
 
     // Screen shake effect
     this.shakeCamera(3, 0.15);
 
     if (champ.currentHP <= 0) {
       champ.currentHP = 0;
+      this.playerAnimator.setState('death');
       this.handlePlayerDeath();
     }
   }
@@ -2040,7 +2606,15 @@ export class ZoneScene extends Container implements GameScene {
   private killEnemy(enemy: EnemyInstance): void {
     enemy.isDead = true;
     enemy.state = 'dead';
-    enemy.sprite.visible = false;
+
+    // Track in bestiary & achievements
+    BestiaryManager.shared.registerKill(enemy.data);
+    AchievementManager.shared.recordKill(enemy.data.tier);
+    AchievementManager.shared.recordCreatureDiscovered(BestiaryManager.shared.totalDiscovered);
+
+    // Animated death instead of instant hide
+    animateEnemyDeath(enemy.sprite, this.worldContainer, enemy.position.x, enemy.position.y);
+    setTimeout(() => { enemy.sprite.visible = false; }, 500);
     enemy.respawnTimer = enemy.spawn.respawnTime ?? 999;
 
     // Boss defeat
@@ -2076,22 +2650,56 @@ export class ZoneScene extends Container implements GameScene {
     const champ = gm.champion;
     if (!champ) return;
 
-    const gold = enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1));
+    const baseGold = enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1));
+    const gold = Math.floor(baseGold * this.getEventGoldBonus());
     champ.gold += gold;
-    const leveledUp = gm.grantXP(enemy.data.xpReward);
 
-    this.showDamageNumber(enemy.position.x, enemy.position.y - 10, enemy.data.xpReward, false, 0x66cc44);
+    // Apply reputation XP bonus + event bonus
+    const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
+    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
+    const leveledUp = gm.grantXP(finalXP);
+
+    // Grant reputation based on enemy tier
+    const repByTier: Record<string, number> = { minion: 1, soldier: 2, elite: 4, boss: 15 };
+    const repGain = repByTier[enemy.data.tier] ?? 1;
+    const repResult = addReputation(this.zone.worldID, repGain);
+    if (repResult.rankUp) {
+      showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, repResult.rankName, this.zone.worldID);
+    }
+    if (this.repBadge) this.repBadge.refresh();
+
+    this.showDamageNumber(enemy.position.x, enemy.position.y - 10, finalXP, false, 0x66cc44);
     setTimeout(() => {
       this.showDamageNumber(enemy.position.x + 10, enemy.position.y, gold, false, 0xe6cc33);
     }, 200);
 
+    // Track achievements
+    AchievementManager.shared.recordGold(gold);
+    AchievementManager.shared.recordXP(finalXP);
+    if (leveledUp) AchievementManager.shared.recordLevel(champ.level);
+    AchievementManager.shared.check();
+
+    // Animated gold burst and XP orbs
+    spawnGoldBurst(this.worldContainer, enemy.position.x, enemy.position.y, gold);
+    spawnXPOrbs(this.worldContainer, enemy.position.x, enemy.position.y,
+      this.playerScreenPos.x, this.playerScreenPos.y, finalXP);
+
     // Drop loot from loot table
+    let dropIndex = 0;
     for (const lootEntry of enemy.data.lootTable) {
       if (Math.random() < lootEntry.dropChance) {
         const item = gameData.item(lootEntry.itemID);
         if (item && champ) {
           champ.inventoryItemIDs.push(lootEntry.itemID);
           QuestManager.shared.onItemCollected(lootEntry.itemID);
+          BestiaryManager.shared.registerDrop(enemy.data.id, lootEntry.itemID);
+          AchievementManager.shared.recordItemCollect();
+
+          // Animated loot drop
+          spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
+            item.name, item.rarity, dropIndex);
+          dropIndex++;
+
           setTimeout(() => {
             this.showFloatingText(
               enemy.position.x, enemy.position.y - 30,
@@ -2129,35 +2737,72 @@ export class ZoneScene extends Container implements GameScene {
 
   private updateCombat(dt: number): void {
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+    const comboBroke = ComboManager.shared.update(dt);
+    if (comboBroke && ComboManager.shared.highestCombo >= 5) {
+      this.showFloatingText(
+        this.playerScreenPos.x, this.playerScreenPos.y - 60,
+        `Combo terminé: ${ComboManager.shared.highestCombo}×`, 0xff8844,
+      );
+    }
+    if (this.comboDisplay) this.comboDisplay.update();
+  }
+
+  private updateStatusEffects(dt: number): void {
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    const result = this.playerStatusEffects.update(dt);
+
+    // Apply periodic damage/heal
+    if (result.damagePerTick > 0) {
+      champ.currentHP -= result.damagePerTick;
+      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.damagePerTick), false, 0x44cc44);
+      if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
+    }
+    if (result.healPerTick > 0) {
+      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + result.healPerTick);
+      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.healPerTick), false, 0x44ff66);
+    }
+
+    // Show expired messages
+    for (const type of result.expired) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, `${type} dissipé`, 0x999999);
+    }
+
+    // Spawn visual particles for active effects
+    this.statusParticleTimer += dt;
+    if (this.statusParticleTimer > 0.3) {
+      this.statusParticleTimer = 0;
+      for (const effect of this.playerStatusEffects.effects) {
+        if (Math.random() < 0.5) {
+          spawnStatusParticle(this.worldContainer, this.playerScreenPos.x, this.playerScreenPos.y - 15, effect.type);
+        }
+      }
+    }
+
+    // Update HUD status bar
+    if (this.statusBar) {
+      this.statusBar.update(this.playerStatusEffects.effects);
+    }
   }
 
   // ─── Visual Effects ──────────────────────────────────────────
 
-  private showDamageNumber(x: number, y: number, amount: number, isCrit: boolean, color = 0xffffff): void {
-    const style = new TextStyle({
-      fontFamily: 'sans-serif',
-      fontSize: isCrit ? 18 : 13,
-      fill: isCrit ? 0xffee44 : color,
-      fontWeight: 'bold',
-      dropShadow: { color: 0x000000, blur: 2, distance: 1 },
-    });
-    const txt = new Text({ text: isCrit ? `${amount}!` : `${amount}`, style });
-    txt.anchor.set(0.5);
-    txt.x = x + (Math.random() - 0.5) * 20;
-    txt.y = y;
-    txt.zIndex = 100001;
-    this.worldContainer.addChild(txt);
-
-    const startY = txt.y;
-    let elapsed = 0;
-    const anim = () => {
-      elapsed += 1 / 60;
-      txt.y = startY - elapsed * 50;
-      txt.alpha = Math.max(0, 1 - elapsed / 0.8);
-      if (elapsed < 0.8) requestAnimationFrame(anim);
-      else txt.destroy();
-    };
-    requestAnimationFrame(anim);
+  private showDamageNumber(
+    x: number, y: number, amount: number, isCrit: boolean,
+    color?: number, dmgStyle?: DamageStyle, comboCount = 0,
+  ): void {
+    // Determine style from params if not explicitly set
+    let style: DamageStyle = dmgStyle ?? 'normal';
+    if (!dmgStyle) {
+      if (isCrit) style = 'crit';
+      else if (color === 0xff4444) style = 'normal'; // enemy damage to player
+      else if (color === 0x44cc44 || color === 0x44ff66) style = 'heal';
+      else if (color === 0x66cc44) style = 'xp';
+      else if (color === 0xe6cc33) style = 'gold';
+      else if (color === 0x8866ff) style = 'investiture';
+    }
+    this.floatingDmg.spawn(x, y, amount, style, comboCount);
   }
 
   private updateWorldMechanics(dt: number): void {
@@ -2167,9 +2812,164 @@ export class ZoneScene extends Container implements GameScene {
     }
   }
 
+  private updateWorldEvents(dt: number): void {
+    const result = WorldEventManager.shared.update(dt, this.zone.worldID);
+    this.activeEventEffect = result.effect;
+
+    if (this.eventBanner) this.eventBanner.update(dt);
+
+    // Apply healing/investiture effects from events
+    if (result.effect) {
+      const champ = GameManager.shared.champion;
+      if (champ) {
+        if (result.effect.healPerTick) {
+          champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + result.effect.healPerTick * dt);
+        }
+        if (result.effect.investiturePerTick) {
+          champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + result.effect.investiturePerTick * dt);
+        }
+      }
+    }
+
+    if (result.ended) {
+      this.showFloatingText(
+        this.playerScreenPos.x, this.playerScreenPos.y - 50,
+        'Événement terminé', 0xaaaaaa,
+      );
+    }
+  }
+
+  private getEventXPBonus(): number {
+    return this.activeEventEffect?.xpBonus ? 1 + this.activeEventEffect.xpBonus / 100 : 1;
+  }
+
+  private getEventGoldBonus(): number {
+    return this.activeEventEffect?.goldBonus ? 1 + this.activeEventEffect.goldBonus / 100 : 1;
+  }
+
+  private updateDayNight(dt: number): void {
+    const result = this.dayNightManager.update(dt);
+    if (this.dayNightOverlay) {
+      this.dayNightOverlay.update(result.blendedConfig);
+    }
+    if (result.changed && result.message) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, result.message, 0xddddaa);
+    }
+  }
+
+  private updateWeather(dt: number): void {
+    const result = this.weatherManager.update(dt);
+    if (result.changed && result.message) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, result.message, 0xaaddff);
+    }
+    // Track surviving a highstorm
+    if (result.changed && this.weatherManager.currentWeather !== 'highstorm' && result.config.name !== 'Haute Tempête') {
+      const champ = GameManager.shared.champion;
+      if (champ && champ.currentHP > 0) {
+        AchievementManager.shared.recordHighstormSurvived();
+        AchievementManager.shared.check();
+      }
+    }
+    if (this.weatherOverlay) {
+      this.weatherOverlay.update(result.config, this.weatherManager.lightningFlash);
+    }
+    // Weather damage (highstorm, sandstorm, nightmare)
+    if (result.config.damagePerTick > 0) {
+      const champ = GameManager.shared.champion;
+      if (champ) {
+        champ.currentHP -= result.config.damagePerTick * dt;
+        if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
+      }
+    }
+  }
+
+  private updateAchievements(dt: number): void {
+    AchievementManager.shared.updateCombo(dt);
+    if (this.achievementToast) this.achievementToast.update(dt);
+  }
+
+  private spawnCompanionSprite(): void {
+    if (this.companionSprite) {
+      this.worldContainer.removeChild(this.companionSprite);
+      this.companionSprite.destroy();
+      this.companionSprite = null;
+    }
+    const comp = CompanionManager.shared.getActive();
+    if (!comp) return;
+
+    const sprite = new Graphics();
+    sprite.circle(0, 0, comp.size + 3).fill({ color: comp.glowColor, alpha: 0.15 });
+    sprite.circle(0, 0, comp.size).fill({ color: comp.color, alpha: 0.8 });
+    sprite.circle(0, -1, comp.size * 0.5).fill({ color: 0xffffff, alpha: 0.3 });
+    sprite.zIndex = 999;
+
+    this.companionPos.x = this.playerScreenPos.x + 20;
+    this.companionPos.y = this.playerScreenPos.y - 15;
+    sprite.x = this.companionPos.x;
+    sprite.y = this.companionPos.y;
+
+    this.worldContainer.addChild(sprite);
+    this.companionSprite = sprite;
+  }
+
+  private updateCompanion(dt: number): void {
+    if (!this.companionSprite) return;
+    const comp = CompanionManager.shared.getActive();
+    if (!comp) return;
+
+    this.companionAnimTimer += dt * 2.5;
+
+    // Smooth follow with orbit
+    const targetX = this.playerScreenPos.x + Math.cos(this.companionAnimTimer) * 22;
+    const targetY = this.playerScreenPos.y - 18 + Math.sin(this.companionAnimTimer * 1.3) * 6;
+
+    this.companionPos.x += (targetX - this.companionPos.x) * dt * 3;
+    this.companionPos.y += (targetY - this.companionPos.y) * dt * 3;
+
+    this.companionSprite.x = this.companionPos.x;
+    this.companionSprite.y = this.companionPos.y;
+
+    // Pulsing glow
+    this.companionSprite.alpha = 0.8 + Math.sin(this.companionAnimTimer * 2) * 0.15;
+
+    // Companion passive healing
+    if (comp.bonusType === 'heal') {
+      const champ = GameManager.shared.champion;
+      if (champ && champ.currentHP < GameManager.shared.maxHP) {
+        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + comp.bonusValue * dt);
+      }
+    }
+  }
+
+  private getCompanionDamageBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'damage') return 1 + bonus.value / 100;
+    return 1;
+  }
+
+  private getCompanionDefenseBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'defense') return 1 - bonus.value / 100;
+    return 1;
+  }
+
+  private getCompanionSpeedBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'speed') return 1 + bonus.value / 100;
+    return 1;
+  }
+
+  private getCompanionXPBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'xp') return 1 + bonus.value / 100;
+    return 1;
+  }
+
   private handlePlayerDeath(): void {
     if (this.deathScreen) return;
     this.isPaused = true;
+    AchievementManager.shared.recordDeath();
+    AchievementManager.shared.check();
 
     this.deathScreen = showDeathScreen(
       this.uiContainer,
@@ -2292,6 +3092,12 @@ export class ZoneScene extends Container implements GameScene {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
 
+    // Level up aura burst in world space
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      animateLevelUpBurst(this.worldContainer, this.playerScreenPos.x, this.playerScreenPos.y, champ.championClass);
+    }
+
     // Background flash
     const flash = new Graphics();
     flash.rect(0, 0, w, h).fill({ color: 0xe6cc66, alpha: 0.15 });
@@ -2390,6 +3196,10 @@ export class ZoneScene extends Container implements GameScene {
               champ.currentZoneID = conn.targetZoneID;
               champ.gridPosition = { ...targetZone.playerSpawnPosition };
               GameManager.shared.save();
+              BestiaryManager.shared.save();
+              AchievementManager.shared.save();
+              CompanionManager.shared.save();
+              NPCRelationshipManager.shared.save();
               this.router.goto(ZoneScene);
             }
           };
@@ -2416,4 +3226,26 @@ export class ZoneScene extends Container implements GameScene {
 
   private darkenColor(color: number, amount: number): number { return darken(color, amount); }
   private lightenColor(color: number, amount: number): number { return lighten(color, amount); }
+
+  // ─── Responsive Resize ──────────────────────────────────────────
+  onResize(layout: LayoutInfo): void {
+    const w = layout.width;
+    const h = layout.height;
+
+    if (this.joystick) {
+      const joyPos = joystickPosition(layout);
+      this.joystick.x = joyPos.x;
+      this.joystick.y = joyPos.y;
+    }
+    if (this.actionButtons) {
+      const actPos = actionButtonsPosition(layout);
+      this.actionButtons.x = actPos.x;
+      this.actionButtons.y = actPos.y;
+    }
+    // Recenter camera
+    if (this.worldContainer) {
+      this.worldContainer.x = w / 2 - this.playerScreenPos.x;
+      this.worldContainer.y = h / 2 - this.playerScreenPos.y;
+    }
+  }
 }

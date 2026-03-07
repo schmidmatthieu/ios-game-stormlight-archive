@@ -38,9 +38,9 @@ final class EnemyAISystem {
 
     // MARK: - Configuration
 
-    private let attackCooldown: TimeInterval = 1.5
-    private let abilityChance: Double = 0.2  // 20% chance d'utiliser une compétence spéciale
-    private let retreatHealthThreshold: Double = 0.15  // Fuit à 15% PV
+    private let attackCooldown = GameConstants.EnemyAI.attackCooldown
+    private let abilityChance = GameConstants.EnemyAI.abilityChance
+    private let retreatHealthThreshold = GameConstants.EnemyAI.retreatHealthThreshold
 
     // MARK: - Update
 
@@ -54,8 +54,8 @@ final class EnemyAISystem {
             enemy.position.x - playerPosition.x,
             enemy.position.y - playerPosition.y
         )
-        let detectionRange = CGFloat(enemy.enemyData.detectionRange) * 32
-        let attackRange = CGFloat(enemy.enemyData.attackRange) * 32
+        let detectionRange = CGFloat(enemy.enemyData.detectionRange) * GameConstants.EnemyAI.gridToPixelScale
+        let attackRange = CGFloat(enemy.enemyData.attackRange) * GameConstants.EnemyAI.gridToPixelScale
 
         // Update ability cooldowns
         for i in 0..<enemy.abilityCooldowns.count {
@@ -152,8 +152,8 @@ final class EnemyAISystem {
                              distToPlayer: CGFloat, attackRange: CGFloat, deltaTime: TimeInterval) {
         if distToPlayer <= attackRange {
             enemy.state = .attacking(cooldown: 0)
-        } else if distToPlayer > CGFloat(enemy.enemyData.detectionRange) * 64 {
-            // Joueur trop loin, retourner à la patrouille
+        } else if distToPlayer > CGFloat(enemy.enemyData.detectionRange) * GameConstants.EnemyAI.gridToPixelScale * GameConstants.EnemyAI.leashMultiplier {
+            // Joueur trop loin (2x portée de détection), retourner à la patrouille
             enemy.state = .idle
         } else {
             // Se déplacer vers le joueur
@@ -216,7 +216,7 @@ final class EnemyAISystem {
 
         // Si assez loin, idle
         let dist = hypot(enemy.position.x - playerPosition.x, enemy.position.y - playerPosition.y)
-        if dist > CGFloat(enemy.enemyData.detectionRange) * 64 {
+        if dist > CGFloat(enemy.enemyData.detectionRange) * GameConstants.EnemyAI.gridToPixelScale * GameConstants.EnemyAI.leashMultiplier {
             enemy.state = .idle
         }
     }
@@ -238,7 +238,7 @@ final class EnemyAISystem {
             // Exécuter la compétence
             performAbility(enemy: &enemy, abilityIndex: abilityIndex)
             if abilityIndex < enemy.abilityCooldowns.count {
-                enemy.abilityCooldowns[abilityIndex] = 10.0  // Cooldown de la compétence
+                enemy.abilityCooldowns[abilityIndex] = GameConstants.EnemyAI.abilityCooldownDuration
             }
             enemy.state = .attacking(cooldown: attackCooldown)
         } else {
@@ -282,14 +282,14 @@ final class EnemyAISystem {
         ])
         sprite.run(attackAnim)
 
-        // Appliquer les dégâts au champion
-        if var champion = GameManager.shared.champion {
+        // Appliquer les dégâts au champion (thread-safe)
+        let enemyData = enemy.enemyData
+        GameManager.shared.mutateChampion { champ in
             let damage = GameManager.shared.combatSystem.calculateEnemyDamage(
-                enemy: enemy.enemyData,
-                defenderStats: champion.baseStats
+                enemy: enemyData,
+                defenderStats: champ.baseStats
             )
-            champion.currentHP = max(0, champion.currentHP - damage)
-            GameManager.shared.champion = champion
+            champ.currentHP = max(0, champ.currentHP - damage)
         }
     }
 
@@ -305,11 +305,10 @@ final class EnemyAISystem {
             duration: 0.5
         )
 
-        // Dégâts augmentés pour les compétences
-        if var champion = GameManager.shared.champion {
-            let damage = Int(Double(enemy.enemyData.damage) * 1.5)
-            champion.currentHP = max(0, champion.currentHP - damage)
-            GameManager.shared.champion = champion
+        // Dégâts augmentés pour les compétences (thread-safe)
+        let abilityDamage = Int(Double(enemy.enemyData.damage) * 1.5)
+        GameManager.shared.mutateChampion { champ in
+            champ.currentHP = max(0, champ.currentHP - abilityDamage)
         }
     }
 
@@ -355,15 +354,17 @@ final class EnemyAISystem {
             SKAction.run { sprite.isHidden = true }
         ]))
 
-        // Distribuer XP et loot
+        // Distribuer XP et loot (thread-safe)
         GameManager.shared.grantXP(enemy.enemyData.xpReward)
 
         let goldDrop = Int.random(in: enemy.enemyData.goldReward)
-        GameManager.shared.champion?.gold += goldDrop
-
         let loot = GameManager.shared.lootSystem.generateLoot(from: enemy.enemyData)
-        for item in loot {
-            GameManager.shared.champion?.inventoryItemIDs.append(item.id)
+
+        GameManager.shared.mutateChampion { champ in
+            champ.gold += goldDrop
+            for item in loot {
+                champ.inventoryItemIDs.append(item.id)
+            }
         }
 
         // Notifications quêtes

@@ -3,6 +3,8 @@ import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
 import type { Item, EquipmentSlot } from '../data/types';
 import { RARITY_COLORS } from '../data/types';
+import { getLayoutInfo, fontSize, scaled, panelSize } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const SLOT_LABELS: Record<string, string> = {
   helmet: 'Casque', shoulders: 'Épaulières', chest: 'Torse', cape: 'Cape',
@@ -31,6 +33,8 @@ export class InventoryPanel extends Container {
     this.onClose = onClose;
     this.zIndex = 10000;
 
+    const layout = getLayoutInfo(screenW, screenH);
+
     // Overlay
     const overlay = new Graphics();
     overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
@@ -38,8 +42,9 @@ export class InventoryPanel extends Container {
     this.addChild(overlay);
 
     // Main panel
-    const panelW = Math.min(340, screenW - 20);
-    const panelH = Math.min(420, screenH - 40);
+    const ps = panelSize(layout);
+    const panelW = ps.width;
+    const panelH = ps.height;
     const px = (screenW - panelW) / 2;
     const py = (screenH - panelH) / 2;
 
@@ -53,11 +58,11 @@ export class InventoryPanel extends Container {
     // Title
     const title = new Text({
       text: 'INVENTAIRE',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 16, fill: 0xe6cc66, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(16, layout), fill: 0xe6cc66, fontWeight: 'bold' }),
     });
     title.anchor.set(0.5);
     title.x = screenW / 2;
-    title.y = py + 18;
+    title.y = py + scaled(18, layout);
     this.addChild(title);
 
     // Tabs
@@ -67,39 +72,42 @@ export class InventoryPanel extends Container {
       { label: 'Compétences', tab: 'skills' },
     ];
     const tabWidth = (panelW - 20) / 3;
+    const tabH = scaled(22, layout);
     tabs.forEach((t, i) => {
       const tx = px + 10 + i * tabWidth;
-      const ty = py + 36;
+      const ty = py + scaled(36, layout);
       const bg = new Graphics();
-      bg.roundRect(tx, ty, tabWidth - 4, 22, 4)
+      bg.roundRect(tx, ty, tabWidth - 4, tabH, 4)
         .fill({ color: this.currentTab === t.tab ? 0x332244 : 0x1a1528, alpha: 0.8 })
         .stroke({ color: 0x443355, width: 1, alpha: 0.4 });
       bg.eventMode = 'static';
       bg.cursor = 'pointer';
       bg.on('pointerdown', () => {
         this.currentTab = t.tab;
-        this.refreshContent(px, py + 64, panelW, panelH - 100);
+        this.refreshContent(px, py + scaled(64, layout), panelW, panelH - scaled(100, layout));
       });
       this.addChild(bg);
 
       const label = new Text({
         text: t.label,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: this.currentTab === t.tab ? 0xeeddcc : 0x888888 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: this.currentTab === t.tab ? 0xeeddcc : 0x888888 }),
       });
       label.anchor.set(0.5);
       label.x = tx + (tabWidth - 4) / 2;
-      label.y = ty + 11;
+      label.y = ty + tabH / 2;
       this.addChild(label);
     });
 
     // Content area
     this.contentContainer = new Container();
     this.addChild(this.contentContainer);
-    this.refreshContent(px, py + 64, panelW, panelH - 100);
+    this.refreshContent(px, py + scaled(64, layout), panelW, panelH - scaled(100, layout));
 
     // Close button
+    const closeBtnW = scaled(80, layout);
+    const closeBtnH = scaled(24, layout);
     const closeBg = new Graphics();
-    closeBg.roundRect(px + panelW / 2 - 40, py + panelH - 32, 80, 24, 6)
+    closeBg.roundRect(px + panelW / 2 - closeBtnW / 2, py + panelH - scaled(32, layout), closeBtnW, closeBtnH, 6)
       .fill({ color: 0x553322, alpha: 0.8 })
       .stroke({ color: 0x886644, width: 1 });
     closeBg.eventMode = 'static';
@@ -109,11 +117,11 @@ export class InventoryPanel extends Container {
 
     const closeLabel = new Text({
       text: 'Fermer',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xeeddcc }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: 0xeeddcc }),
     });
     closeLabel.anchor.set(0.5);
     closeLabel.x = px + panelW / 2;
-    closeLabel.y = py + panelH - 20;
+    closeLabel.y = py + panelH - scaled(20, layout);
     this.addChild(closeLabel);
   }
 

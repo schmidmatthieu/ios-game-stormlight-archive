@@ -7,6 +7,8 @@ import { MainMenuScene } from './MainMenuScene';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
+import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
 const ORDERS: RadiantOrder[] = ['windrunner', 'lightweaver', 'bondsmith', 'edgedancer'];
@@ -47,6 +49,8 @@ export class CharacterCreationScene extends Container implements GameScene {
   private classButtons: Container[] = [];
   private orderContainer: Container | null = null;
   private previewContainer!: Container;
+  private layout!: LayoutInfo;
+  private btnSize = 48;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -55,8 +59,22 @@ export class CharacterCreationScene extends Container implements GameScene {
   }
 
   onEnter(): void {
+    this.buildUI();
+  }
+
+  onResize(): void {
+    this.removeChildren();
+    this.classButtons = [];
+    this.orderContainer = null;
+    this.buildUI();
+  }
+
+  private buildUI(): void {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
+    this.layout = getLayoutInfo(w, h);
+    const layout = this.layout;
+    const isLandscape = layout.orientation === 'landscape';
 
     // Background
     const bg = new Graphics();
@@ -76,23 +94,26 @@ export class CharacterCreationScene extends Container implements GameScene {
     const title = new Text({
       text: 'Créer votre Salteur',
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 20, fill: 0xe6cc66, fontWeight: 'bold',
+        fontFamily: 'Georgia, serif',
+        fontSize: fontSize(20, layout),
+        fill: 0xe6cc66,
+        fontWeight: 'bold',
         dropShadow: { color: 0x000000, blur: 4, distance: 1 },
       }),
     });
     title.anchor.set(0.5);
     title.x = w / 2;
-    title.y = 30;
+    title.y = scaled(30, layout);
     this.addChild(title);
 
     // Name
     this.nameText = new Text({
       text: `Nom: ${this.playerName}`,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xffffff }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(14, layout), fill: 0xffffff }),
     });
     this.nameText.anchor.set(0.5);
     this.nameText.x = w / 2;
-    this.nameText.y = 60;
+    this.nameText.y = scaled(60, layout);
     this.nameText.eventMode = 'static';
     this.nameText.cursor = 'pointer';
     this.nameText.on('pointerdown', () => this.promptName());
@@ -100,68 +121,36 @@ export class CharacterCreationScene extends Container implements GameScene {
 
     const hint = new Text({
       text: '(touchez pour modifier)',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x555555 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: 0x555555 }),
     });
     hint.anchor.set(0.5);
     hint.x = w / 2;
-    hint.y = 76;
+    hint.y = scaled(76, layout);
     this.addChild(hint);
 
-    // Character preview (left side)
-    this.previewContainer = new Container();
-    this.previewContainer.x = w * 0.22;
-    this.previewContainer.y = 155;
-    this.addChild(this.previewContainer);
+    // Determine top of content area (below title/name)
+    const contentTop = scaled(95, layout);
 
-    // Preview background
-    const previewBg = new Graphics();
-    previewBg.roundRect(-40, -55, 80, 90, 8)
-      .fill({ color: 0x0a0a1a, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
-    this.previewContainer.addChild(previewBg);
+    // Action buttons always at the bottom
+    const actionBottomMargin = Math.max(layout.safeArea.bottom, scaled(10, layout));
+    const backBtnY = h - actionBottomMargin - scaled(12, layout);
+    const startBtnY = backBtnY - scaled(38, layout);
 
-    // Class buttons (right side, 2 columns x 3 rows)
-    const btnSize = 48;
-    const gap = 8;
-    const startX = w * 0.48;
-    const startY = 100;
+    // Available content height between header and action buttons
+    const contentBottom = startBtnY - scaled(15, layout);
 
-    CLASSES.forEach((cls, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const x = startX + col * (btnSize + gap + 40);
-      const y = startY + row * (btnSize + gap + 4);
-      const btn = this.createClassBtn(cls, x, y, btnSize);
-      this.classButtons.push(btn);
-      this.addChild(btn);
-    });
+    this.btnSize = Math.round(scaled(48, layout));
+    const gap = Math.round(scaled(8, layout));
 
-    // Description area below
-    const descY = startY + 3 * (btnSize + gap + 4) + 5;
-
-    this.descText = new Text({
-      text: '',
-      style: new TextStyle({
-        fontFamily: 'sans-serif', fontSize: 10, fill: 0xaaaacc,
-        wordWrap: true, wordWrapWidth: w - 30, align: 'center',
-      }),
-    });
-    this.descText.anchor.set(0.5, 0);
-    this.descText.x = w / 2;
-    this.descText.y = descY;
-    this.addChild(this.descText);
-
-    this.worldText = new Text({
-      text: '',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x6699cc }),
-    });
-    this.worldText.anchor.set(0.5, 0);
-    this.worldText.x = w / 2;
-    this.worldText.y = descY + 30;
-    this.addChild(this.worldText);
+    if (isLandscape) {
+      this.buildLandscapeLayout(w, h, contentTop, contentBottom, gap);
+    } else {
+      this.buildPortraitLayout(w, h, contentTop, contentBottom, gap);
+    }
 
     // Start button
-    this.createActionBtn('Commencer l\'aventure', w / 2, h - 60, 0x224422, () => {
+    const actionBtnW = Math.min(scaled(200, layout), w - scaled(40, layout));
+    this.createActionBtn('Commencer l\'aventure', w / 2, startBtnY, 0x224422, actionBtnW, () => {
       GameManager.shared.startNewGame(
         this.playerName,
         this.selectedClass,
@@ -171,18 +160,177 @@ export class CharacterCreationScene extends Container implements GameScene {
     });
 
     // Back button
-    this.createActionBtn('Retour', w / 2, h - 22, 0x332222, () => {
+    this.createActionBtn('Retour', w / 2, backBtnY, 0x332222, actionBtnW, () => {
       this.router.goto(MainMenuScene);
     });
 
     this.updateSelection();
   }
 
+  // ─── Landscape: preview left (30%), class buttons center (40%), description right (30%) ───
+
+  private buildLandscapeLayout(
+    w: number, h: number,
+    contentTop: number, contentBottom: number,
+    gap: number,
+  ): void {
+    const layout = this.layout;
+    const btnSize = this.btnSize;
+
+    // Column boundaries
+    const leftW = w * 0.30;
+    const centerW = w * 0.40;
+    const rightX = w * 0.70;
+    const rightW = w * 0.30;
+
+    // ── Preview (left 30%) ──
+    const previewCenterX = leftW / 2;
+    const previewCenterY = (contentTop + contentBottom) / 2;
+
+    this.previewContainer = new Container();
+    this.previewContainer.x = previewCenterX;
+    this.previewContainer.y = previewCenterY;
+    this.addChild(this.previewContainer);
+
+    const previewScale = Math.max(0.8, layout.scale);
+    const previewBg = new Graphics();
+    previewBg.roundRect(-40 * previewScale, -55 * previewScale, 80 * previewScale, 90 * previewScale, 8)
+      .fill({ color: 0x0a0a1a, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    this.previewContainer.addChild(previewBg);
+
+    // ── Class buttons (center 40%, 3 columns x 2 rows) ──
+    const cols = 3;
+    const rows = 2;
+    const gridW = cols * btnSize + (cols - 1) * (gap + scaled(40, layout));
+    const gridH = rows * btnSize + (rows - 1) * (gap + scaled(4, layout));
+    const gridStartX = leftW + (centerW - gridW) / 2 + btnSize / 2;
+    const gridStartY = contentTop + ((contentBottom - contentTop) - gridH) / 2 + btnSize / 2;
+
+    CLASSES.forEach((cls, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = gridStartX + col * (btnSize + gap + scaled(40, layout));
+      const y = gridStartY + row * (btnSize + gap + scaled(4, layout));
+      const btn = this.createClassBtn(cls, x, y, btnSize);
+      this.classButtons.push(btn);
+      this.addChild(btn);
+    });
+
+    // ── Description (right 30%) ──
+    const descCenterX = rightX + rightW / 2;
+    const descWrapWidth = rightW - scaled(20, layout);
+
+    this.descText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0xaaaacc,
+        wordWrap: true,
+        wordWrapWidth: descWrapWidth,
+        align: 'center',
+      }),
+    });
+    this.descText.anchor.set(0.5, 0);
+    this.descText.x = descCenterX;
+    this.descText.y = contentTop + scaled(10, layout);
+    this.addChild(this.descText);
+
+    this.worldText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0x6699cc,
+        wordWrap: true,
+        wordWrapWidth: descWrapWidth,
+        align: 'center',
+      }),
+    });
+    this.worldText.anchor.set(0.5, 0);
+    this.worldText.x = descCenterX;
+    this.worldText.y = contentTop + scaled(50, layout);
+    this.addChild(this.worldText);
+  }
+
+  // ─── Portrait: stacked layout (original flow, scaled) ───
+
+  private buildPortraitLayout(
+    w: number, h: number,
+    contentTop: number, contentBottom: number,
+    gap: number,
+  ): void {
+    const layout = this.layout;
+    const btnSize = this.btnSize;
+
+    // Character preview (left-ish)
+    this.previewContainer = new Container();
+    this.previewContainer.x = w * 0.22;
+    this.previewContainer.y = contentTop + scaled(60, layout);
+    this.addChild(this.previewContainer);
+
+    const previewBg = new Graphics();
+    previewBg.roundRect(-40, -55, 80, 90, 8)
+      .fill({ color: 0x0a0a1a, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    this.previewContainer.addChild(previewBg);
+
+    // Class buttons (2 columns x 3 rows, right side)
+    const cols = 2;
+    const startX = w * 0.48;
+    const startY = contentTop + scaled(5, layout);
+
+    CLASSES.forEach((cls, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = startX + col * (btnSize + gap + scaled(40, layout));
+      const y = startY + row * (btnSize + gap + scaled(4, layout));
+      const btn = this.createClassBtn(cls, x, y, btnSize);
+      this.classButtons.push(btn);
+      this.addChild(btn);
+    });
+
+    // Description area below the buttons
+    const descY = startY + 3 * (btnSize + gap + scaled(4, layout)) + scaled(5, layout);
+
+    this.descText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0xaaaacc,
+        wordWrap: true,
+        wordWrapWidth: w - scaled(30, layout),
+        align: 'center',
+      }),
+    });
+    this.descText.anchor.set(0.5, 0);
+    this.descText.x = w / 2;
+    this.descText.y = descY;
+    this.addChild(this.descText);
+
+    this.worldText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0x6699cc,
+      }),
+    });
+    this.worldText.anchor.set(0.5, 0);
+    this.worldText.x = w / 2;
+    this.worldText.y = descY + scaled(30, layout);
+    this.addChild(this.worldText);
+  }
+
   private createClassBtn(cls: ChampionClass, x: number, y: number, size: number): Container {
+    const layout = this.layout;
     const container = new Container();
     container.x = x;
     container.y = y;
     (container as any)._cls = cls;
+    (container as any)._size = size;
 
     const bg = new Graphics();
     bg.roundRect(-size / 2, -size / 2, size, size, 6)
@@ -193,17 +341,21 @@ export class CharacterCreationScene extends Container implements GameScene {
     // Mini character preview in button
     const miniChar = new Graphics();
     drawPlayerCharacter(miniChar, cls);
-    miniChar.scale.set(1.2);
+    miniChar.scale.set(Math.max(1, layout.scale * 1.2));
     miniChar.y = -3;
     container.addChild(miniChar);
 
     // Label below button
     const lbl = new Text({
       text: CLASS_INFO[cls].name,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: CLASS_COLORS[cls] }),
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(7, layout),
+        fill: CLASS_COLORS[cls],
+      }),
     });
     lbl.anchor.set(0.5);
-    lbl.y = size / 2 + 6;
+    lbl.y = size / 2 + scaled(6, layout);
     container.addChild(lbl);
 
     container.eventMode = 'static';
@@ -216,9 +368,12 @@ export class CharacterCreationScene extends Container implements GameScene {
     return container;
   }
 
-  private createActionBtn(label: string, x: number, y: number, color: number, onClick: () => void): void {
-    const bw = 200;
-    const bh = 32;
+  private createActionBtn(
+    label: string, x: number, y: number,
+    color: number, bw: number, onClick: () => void,
+  ): void {
+    const layout = this.layout;
+    const bh = scaled(32, layout);
     const btn = new Container();
     btn.x = x;
     btn.y = y;
@@ -231,7 +386,11 @@ export class CharacterCreationScene extends Container implements GameScene {
 
     const txt = new Text({
       text: label,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 13, fill: 0xeeddcc }),
+      style: new TextStyle({
+        fontFamily: 'Georgia, serif',
+        fontSize: fontSize(13, layout),
+        fill: 0xeeddcc,
+      }),
     });
     txt.anchor.set(0.5);
     btn.addChild(txt);
@@ -246,6 +405,7 @@ export class CharacterCreationScene extends Container implements GameScene {
   }
 
   private updateSelection(): void {
+    const layout = this.layout;
     const info = CLASS_INFO[this.selectedClass];
     this.descText.text = info.description;
     this.worldText.text = WORLD_NAMES[info.startingWorld] ?? info.startingWorld;
@@ -257,21 +417,21 @@ export class CharacterCreationScene extends Container implements GameScene {
     }
     const charSprite = new Graphics();
     drawPlayerCharacter(charSprite, this.selectedClass);
-    charSprite.scale.set(3);
+    charSprite.scale.set(3 * Math.max(0.8, layout.scale));
     charSprite.y = -5;
     this.previewContainer.addChild(charSprite);
 
     // Glow ring
     const glow = new Graphics();
-    glow.circle(0, 10, 20).fill({ color: CLASS_COLORS[this.selectedClass], alpha: 0.08 });
+    glow.circle(0, 10, scaled(20, layout)).fill({ color: CLASS_COLORS[this.selectedClass], alpha: 0.08 });
     this.previewContainer.addChild(glow);
 
     // Highlight selected class button
     for (const btn of this.classButtons) {
       const cls = (btn as any)._cls as ChampionClass;
+      const size = (btn as any)._size as number;
       const bg = btn.children[0] as Graphics;
       bg.clear();
-      const size = 48;
       const selected = cls === this.selectedClass;
       bg.roundRect(-size / 2, -size / 2, size, size, 6)
         .fill({ color: selected ? 0x1a1a30 : 0x111120, alpha: 0.9 })
@@ -284,31 +444,35 @@ export class CharacterCreationScene extends Container implements GameScene {
 
     if (this.selectedClass === 'radiant') {
       const w = this.app.screen.width;
+      const isLandscape = layout.orientation === 'landscape';
       const oc = new Container();
-      oc.y = this.worldText.y + 20;
+      oc.y = this.worldText.y + scaled(20, layout);
 
       const label = new Text({
         text: 'Ordre Radieux:',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x777777 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: 0x777777 }),
       });
       label.anchor.set(0.5, 0);
-      label.x = w / 2;
+      label.x = isLandscape ? this.worldText.x : w / 2;
       oc.addChild(label);
 
+      const orderSpacing = scaled(70, layout);
       ORDERS.forEach((order, i) => {
-        const ox = w / 2 + (i - 1.5) * 70;
+        const anchorX = isLandscape ? this.worldText.x : w / 2;
+        const ox = anchorX + (i - 1.5) * orderSpacing;
         const selected = this.selectedOrder === order;
         const txt = new Text({
           text: ORDER_NAMES[order],
           style: new TextStyle({
-            fontFamily: 'sans-serif', fontSize: 8,
+            fontFamily: 'sans-serif',
+            fontSize: fontSize(8, layout),
             fill: selected ? 0x66aaff : 0x555555,
             fontWeight: selected ? 'bold' : 'normal',
           }),
         });
         txt.anchor.set(0.5, 0);
         txt.x = ox;
-        txt.y = 14;
+        txt.y = scaled(14, layout);
         txt.eventMode = 'static';
         txt.cursor = 'pointer';
         txt.on('pointerdown', () => {

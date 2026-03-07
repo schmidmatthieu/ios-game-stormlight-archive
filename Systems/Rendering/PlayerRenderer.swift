@@ -1322,6 +1322,17 @@ final class PlayerRenderer {
         return weapon
     }
 
+    // MARK: - Cleanup
+
+    /// Stop all running actions on player node and children before removal
+    static func cleanupPlayerNode(_ playerNode: SKNode) {
+        playerNode.removeAllActions()
+        playerNode.children.forEach { child in
+            child.removeAllActions()
+            child.children.forEach { $0.removeAllActions() }
+        }
+    }
+
     // MARK: - Attack Animation
 
     static func playAttackAnimation(on playerNode: SKNode, in worldNode: SKNode) {

@@ -11,13 +11,13 @@ final class SceneRouter {
     // MARK: - Navigation principale
 
     func showMainMenu() {
-        let scene = MainMenuScene(size: view?.bounds.size ?? CGSize(width: 390, height: 844))
+        let scene = MainMenuScene(size: view?.bounds.size ?? GameConstants.UI.defaultScreenSize)
         scene.scaleMode = .aspectFill
         view?.presentScene(scene, transition: .fade(withDuration: 0.5))
     }
 
     func showWorldMap() {
-        let scene = WorldMapScene(size: view?.bounds.size ?? CGSize(width: 390, height: 844))
+        let scene = WorldMapScene(size: view?.bounds.size ?? GameConstants.UI.defaultScreenSize)
         scene.scaleMode = .aspectFill
         view?.presentScene(scene, transition: .fade(withDuration: 0.8))
     }
@@ -42,10 +42,46 @@ final class SceneRouter {
         }
 
         // Charger la scène de zone
-        let scene = ZoneScene(zone: zone, size: view?.bounds.size ?? CGSize(width: 390, height: 844))
+        let sceneSize = view?.bounds.size ?? GameConstants.UI.defaultScreenSize
+        let scene = ZoneScene(zone: zone, size: sceneSize)
         scene.scaleMode = .aspectFill
 
-        let transition = SKTransition.fade(with: .black, duration: 1.0)
+        // Transition améliorée : fondu noir + affichage du nom de zone
+        let transition = SKTransition.fade(with: .black, duration: GameConstants.Animation.zoneTransitionDuration)
+        transition.pausesIncomingScene = false
         view?.presentScene(scene, transition: transition)
+
+        // Afficher le nom de la zone en entrée
+        showZoneNameOverlay(zoneName: zone.name, in: scene, screenSize: sceneSize)
+    }
+
+    private func showZoneNameOverlay(zoneName: String, in scene: SKScene, screenSize: CGSize) {
+        let overlay = SKNode()
+        overlay.zPosition = 10000
+
+        let bg = SKShapeNode(rectOf: CGSize(width: screenSize.width, height: 60))
+        bg.fillColor = SKColor(white: 0, alpha: 0.6)
+        bg.strokeColor = .clear
+        bg.position = CGPoint(x: screenSize.width / 2, y: screenSize.height / 2)
+        overlay.addChild(bg)
+
+        let label = SKLabelNode(fontNamed: "Copperplate-Bold")
+        label.text = zoneName
+        label.fontSize = 24
+        label.fontColor = GameConstants.Colors.gold
+        label.position = CGPoint(x: screenSize.width / 2, y: screenSize.height / 2)
+        label.verticalAlignmentMode = .center
+        overlay.addChild(label)
+
+        overlay.alpha = 0
+        scene.addChild(overlay)
+
+        overlay.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.5),
+            SKAction.fadeIn(withDuration: 0.5),
+            SKAction.wait(forDuration: 1.5),
+            SKAction.fadeOut(withDuration: 0.8),
+            SKAction.removeFromParent()
+        ]))
     }
 }

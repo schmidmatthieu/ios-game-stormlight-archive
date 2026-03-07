@@ -185,6 +185,8 @@ final class CompanionSystem {
 
     func dismissCompanion() {
         activeCompanion = nil
+        companionSprite?.removeAllActions()
+        companionSprite?.children.forEach { $0.removeAllActions() }
         companionSprite?.removeFromParent()
         companionSprite = nil
     }
@@ -204,9 +206,10 @@ final class CompanionSystem {
             specialAbilityCooldownTimer -= deltaTime
         }
 
-        // Follow player (stay within 2 tiles)
+        // Follow player (stay within ~2.5 tiles)
+        let followDistance = GameConstants.EnemyAI.gridToPixelScale * 2.5
         let distToPlayer = hypot(sprite.position.x - playerPosition.x, sprite.position.y - playerPosition.y)
-        if distToPlayer > 80 {
+        if distToPlayer > followDistance {
             let angle = atan2(playerPosition.y - sprite.position.y, playerPosition.x - sprite.position.x)
             let speed: CGFloat = 100 * CGFloat(deltaTime)
             sprite.position.x += cos(angle) * speed
@@ -223,8 +226,8 @@ final class CompanionSystem {
                     performAttack(companion: companion, targetPosition: closestEnemy.position)
                 }
             case .defensive:
-                // Stay near player, only attack if enemy is close
-                if distToEnemy <= 60 {
+                // Stay near player, only attack if enemy is close (~2 tiles)
+                if distToEnemy <= GameConstants.EnemyAI.gridToPixelScale * 2 {
                     performAttack(companion: companion, targetPosition: closestEnemy.position)
                 }
             case .support:
@@ -275,10 +278,10 @@ final class CompanionSystem {
     }
 
     private func performHeal(companion: inout Companion) {
-        guard var champ = GameManager.shared.champion else { return }
         let healAmount = companion.baseDamage
-        champ.currentHP = min(champ.maxHP, champ.currentHP + healAmount)
-        GameManager.shared.champion = champ
+        GameManager.shared.mutateChampion { champ in
+            champ.currentHP = min(champ.maxHP, champ.currentHP + healAmount)
+        }
     }
 
     func useSpecialAbility() -> Bool {

@@ -3,6 +3,11 @@ import SpriteKit
 /// Rendu des ennemis et PNJ — sprites détaillés avec designs uniques par rôle/tier
 final class EntityRenderer {
 
+    // Cached HP bar colors to avoid per-frame allocation
+    private static let hpColorHealthy: SKColor = .green
+    private static let hpColorWarning: SKColor = .yellow
+    private static let hpColorCritical: SKColor = .red
+
     // MARK: - Enemy Rendering (Enhanced)
 
     static func createEnemyNode(enemy: Enemy, spawn: EnemySpawn) -> SKNode {
@@ -490,7 +495,7 @@ final class EntityRenderer {
 
         let clampedRatio = max(0, min(1, ratio))
         hpFill.xScale = clampedRatio
-        hpFill.fillColor = clampedRatio > 0.5 ? .green : (clampedRatio > 0.25 ? .yellow : .red)
+        hpFill.fillColor = clampedRatio > 0.5 ? hpColorHealthy : (clampedRatio > 0.25 ? hpColorWarning : hpColorCritical)
     }
 
     static func playHitEffect(on enemyNode: SKNode) {

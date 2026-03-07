@@ -202,6 +202,10 @@ class MainMenuScene: SKScene {
             addChild(continueButton)
         }
 
+        // Bouton Paramètres
+        let settingsButton = createMenuButton(text: "Paramètres", position: CGPoint(x: size.width / 2, y: size.height * 0.34), name: "settings", primary: false)
+        addChild(settingsButton)
+
         // Version text
         let version = SKLabelNode(fontNamed: "Helvetica")
         version.text = "v0.1 Alpha"
@@ -317,6 +321,9 @@ class MainMenuScene: SKScene {
                     }
                 }
 
+            case "settings":
+                showSettings()
+
             default:
                 break
             }
@@ -330,5 +337,16 @@ class MainMenuScene: SKScene {
             SKAction.scale(to: 1.0, duration: 0.08),
             SKAction.run(completion)
         ]))
+    }
+
+    private func showSettings() {
+        guard childNode(withName: "settingsMenu") == nil else { return }
+        let settings = SettingsMenuNode(screenSize: size)
+        settings.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        settings.name = "settingsMenu"
+        settings.onClose = { [weak settings] in
+            settings?.removeFromParent()
+        }
+        addChild(settings)
     }
 }

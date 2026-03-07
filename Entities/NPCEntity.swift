@@ -42,8 +42,8 @@ class NPCEntity: BaseEntity {
         let movement = MovementComponent(speed: 0.5, startPosition: position)
         addComponent(movement)
 
-        // Santé (les PNJ sont invulnérables, maxHP très élevé)
-        let health = HealthComponent(maxHP: 99999, defense: 9999)
+        // Santé (les PNJ sont invulnérables)
+        let health = HealthComponent(maxHP: GameConstants.NPC.invulnerableHP, defense: GameConstants.NPC.invulnerableDefense)
         addComponent(health)
 
         // Idle animation

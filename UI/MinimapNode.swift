@@ -81,6 +81,7 @@ class MinimapNode: SKNode {
 
         // Corner ornaments
         setupCornerOrnaments()
+        setupLegend()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -110,6 +111,38 @@ class MinimapNode: SKNode {
         mapLabel.position = CGPoint(x: -mapSize.width / 2 + 4, y: mapSize.height / 2 - 12)
         mapLabel.zPosition = 4020
         addChild(mapLabel)
+    }
+
+    // MARK: - Legend
+
+    private func setupLegend() {
+        let legendItems: [(color: SKColor, label: String)] = [
+            (.cyan,   "Vous"),
+            (.red,    "Ennemi"),
+            (.yellow, "PNJ"),
+            (.green,  "Sortie"),
+        ]
+
+        for (i, item) in legendItems.enumerated() {
+            let y = -mapSize.height / 2 - 10 - CGFloat(i) * 11
+
+            let dot = SKShapeNode(circleOfRadius: 2.5)
+            dot.fillColor = item.color
+            dot.strokeColor = .clear
+            dot.position = CGPoint(x: -mapSize.width / 2 + 6, y: y)
+            dot.zPosition = 4001
+            addChild(dot)
+
+            let label = SKLabelNode(fontNamed: "Helvetica")
+            label.text = item.label
+            label.fontSize = 7
+            label.fontColor = SKColor(white: 0.7, alpha: 1.0)
+            label.horizontalAlignmentMode = .left
+            label.verticalAlignmentMode = .center
+            label.position = CGPoint(x: -mapSize.width / 2 + 12, y: y)
+            label.zPosition = 4001
+            addChild(label)
+        }
     }
 
     // MARK: - Setup
