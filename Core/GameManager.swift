@@ -134,6 +134,11 @@ final class GameManager {
         allItems[id]
     }
 
+    /// Register a dynamically generated item so it can be looked up by ID
+    func registerItem(_ item: Item) {
+        allItems[item.id] = item
+    }
+
     func skill(byID id: String) -> Skill? {
         allSkills[id]
     }

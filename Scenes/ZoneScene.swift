@@ -807,10 +807,15 @@ class ZoneScene: SKScene {
                 alertNearbyEnemies(aroundIndex: idx)
 
                 if enemyInstances[idx].currentHP <= 0 {
-                    let xp = enemyInstances[idx].enemyData.xpReward
-                    let gold = Int.random(in: enemyInstances[idx].enemyData.goldReward)
+                    let enemyData = enemyInstances[idx].enemyData
+                    let xp = enemyData.xpReward
+                    let gold = Int.random(in: enemyData.goldReward)
                     GameManager.shared.grantXP(xp)
                     GameManager.shared.mutateChampion { $0.gold += gold }
+                    GameManager.shared.questSystem.onEnemyKilled(enemyID: enemyData.id)
+
+                    // Loot drops
+                    handleEnemyLootDrop(enemy: enemyData, at: target.node.position)
 
                     // Floating XP label
                     showFloatingDamage(xp, at: CGPoint(x: target.node.position.x, y: target.node.position.y + 20),
@@ -1208,12 +1213,15 @@ class ZoneScene: SKScene {
         alertNearbyEnemies(aroundIndex: idx)
 
         if enemyInstances[idx].currentHP <= 0 {
-            let enemyID = enemyInstances[idx].enemyData.id
-            let xp = enemyInstances[idx].enemyData.xpReward
-            let gold = Int.random(in: enemyInstances[idx].enemyData.goldReward)
+            let enemyData = enemyInstances[idx].enemyData
+            let xp = enemyData.xpReward
+            let gold = Int.random(in: enemyData.goldReward)
             GameManager.shared.grantXP(xp)
             GameManager.shared.mutateChampion { $0.gold += gold }
-            GameManager.shared.questSystem.onEnemyKilled(enemyID: enemyID)
+            GameManager.shared.questSystem.onEnemyKilled(enemyID: enemyData.id)
+
+            // Loot drops
+            handleEnemyLootDrop(enemy: enemyData, at: enemyInstances[idx].position)
 
             showFloatingDamage(xp, at: CGPoint(x: enemyInstances[idx].position.x, y: enemyInstances[idx].position.y + 20),
                                color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
@@ -1226,6 +1234,51 @@ class ZoneScene: SKScene {
                     self?.enemyNodes.removeValue(forKey: spriteName)
                 }
             }
+        }
+    }
+
+    // MARK: - Enemy Loot Drops
+
+    private func handleEnemyLootDrop(enemy: Enemy, at position: CGPoint) {
+        let loot = GameManager.shared.lootSystem.generateLoot(from: enemy)
+        guard !loot.isEmpty else { return }
+
+        for (i, item) in loot.enumerated() {
+            // Register generated items so they can be looked up by ID
+            GameManager.shared.registerItem(item)
+            GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(item.id) }
+            GameManager.shared.questSystem.onItemCollected(itemID: item.id)
+
+            // Show floating item name with rarity color
+            let label = SKLabelNode(fontNamed: "Copperplate-Bold")
+            label.text = item.name
+            label.fontSize = 11
+            label.fontColor = lootRarityColor(item.rarity)
+            label.position = CGPoint(x: position.x, y: position.y + 35 + CGFloat(i) * 18)
+            label.zPosition = 500
+            worldNode.addChild(label)
+
+            label.run(SKAction.sequence([
+                SKAction.group([
+                    SKAction.moveBy(x: CGFloat.random(in: -20...20), y: 45, duration: 1.2),
+                    SKAction.sequence([
+                        SKAction.wait(forDuration: 0.6),
+                        SKAction.fadeOut(withDuration: 0.6)
+                    ])
+                ]),
+                SKAction.removeFromParent()
+            ]))
+        }
+    }
+
+    private func lootRarityColor(_ rarity: ItemRarity) -> SKColor {
+        switch rarity {
+        case .common:    return SKColor(white: 0.7, alpha: 1)
+        case .uncommon:  return SKColor(red: 0.3, green: 0.85, blue: 0.3, alpha: 1)
+        case .rare:      return SKColor(red: 0.3, green: 0.5, blue: 1.0, alpha: 1)
+        case .epic:      return SKColor(red: 0.7, green: 0.3, blue: 0.9, alpha: 1)
+        case .legendary: return SKColor(red: 1.0, green: 0.6, blue: 0.1, alpha: 1)
+        case .cosmeric:  return SKColor(red: 0.9, green: 0.1, blue: 0.2, alpha: 1)
         }
     }
 

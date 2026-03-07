@@ -7,10 +7,12 @@ final class LootSystem {
 
     func generateLoot(from enemy: Enemy) -> [Item] {
         var droppedItems: [Item] = []
+        let luck = GameManager.shared.champion?.effectiveStats.luck ?? 0
 
         for entry in enemy.lootTable {
             let roll = Double.random(in: 0...1)
-            if roll <= entry.dropChance {
+            let adjustedChance = adjustDropChance(baseChance: entry.dropChance, luck: luck)
+            if roll <= adjustedChance {
                 let quantity = Int.random(in: entry.minQuantity...entry.maxQuantity)
                 for _ in 0..<quantity {
                     if let item = GameManager.shared.allItems[entry.itemID] {

@@ -168,17 +168,19 @@ class InventoryNode: SKNode {
     private func setupStatsDisplay() {
         guard let champion = GameManager.shared.champion else { return }
 
+        let effective = champion.effectiveStats
+        let base = champion.baseStats
         let statsOrigin = CGPoint(x: 0, y: -screenSize.height / 3)
-        let stats: [(String, Int)] = [
-            ("VIG", champion.baseStats.vigor),
-            ("INV", champion.baseStats.investiture),
-            ("FOR", champion.baseStats.strength),
-            ("AGI", champion.baseStats.agility),
-            ("ESP", champion.baseStats.spirit),
-            ("CHA", champion.baseStats.luck)
+        let stats: [(String, Int, Int)] = [
+            ("VIG", effective.vigor, effective.vigor - base.vigor),
+            ("INV", effective.investiture, effective.investiture - base.investiture),
+            ("FOR", effective.strength, effective.strength - base.strength),
+            ("AGI", effective.agility, effective.agility - base.agility),
+            ("ESP", effective.spirit, effective.spirit - base.spirit),
+            ("CHA", effective.luck, effective.luck - base.luck)
         ]
 
-        for (i, (name, value)) in stats.enumerated() {
+        for (i, (name, value, bonus)) in stats.enumerated() {
             let x = CGFloat(i - 3) * 55 + 27
 
             let label = SKLabelNode(fontNamed: "Helvetica-Bold")
@@ -190,9 +192,9 @@ class InventoryNode: SKNode {
             statsPanel.addChild(label)
 
             let valueLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
-            valueLabel.text = "\(value)"
-            valueLabel.fontSize = 14
-            valueLabel.fontColor = .white
+            valueLabel.text = bonus > 0 ? "\(value) (+\(bonus))" : "\(value)"
+            valueLabel.fontSize = bonus > 0 ? 12 : 14
+            valueLabel.fontColor = bonus > 0 ? SKColor(red: 0.4, green: 0.9, blue: 0.4, alpha: 1) : .white
             valueLabel.position = CGPoint(x: x, y: statsOrigin.y - 8)
             valueLabel.zPosition = 6002
             valueLabel.name = "stat_\(name)"
@@ -206,6 +208,7 @@ class InventoryNode: SKNode {
         goldLabel.fontColor = SKColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0)
         goldLabel.position = CGPoint(x: 0, y: statsOrigin.y - 30)
         goldLabel.zPosition = 6002
+        goldLabel.name = "stat_gold"
         statsPanel.addChild(goldLabel)
     }
 
@@ -242,7 +245,39 @@ class InventoryNode: SKNode {
                let item = GameManager.shared.allItems[itemID] {
                 node.fillColor = rarityColor(item.rarity).withAlphaComponent(0.2)
                 node.strokeColor = rarityColor(item.rarity)
+            } else {
+                node.fillColor = SKColor(white: 0.12, alpha: 1.0)
+                node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
             }
+        }
+
+        // Refresh stats display
+        refreshStats()
+    }
+
+    private func refreshStats() {
+        guard let champion = GameManager.shared.champion else { return }
+        let effective = champion.effectiveStats
+        let base = champion.baseStats
+
+        let statUpdates: [(String, Int, Int)] = [
+            ("VIG", effective.vigor, effective.vigor - base.vigor),
+            ("INV", effective.investiture, effective.investiture - base.investiture),
+            ("FOR", effective.strength, effective.strength - base.strength),
+            ("AGI", effective.agility, effective.agility - base.agility),
+            ("ESP", effective.spirit, effective.spirit - base.spirit),
+            ("CHA", effective.luck, effective.luck - base.luck)
+        ]
+
+        for (name, value, bonus) in statUpdates {
+            if let label = statsPanel.childNode(withName: "stat_\(name)") as? SKLabelNode {
+                label.text = bonus > 0 ? "\(value) (+\(bonus))" : "\(value)"
+                label.fontColor = bonus > 0 ? SKColor(red: 0.4, green: 0.9, blue: 0.4, alpha: 1) : .white
+            }
+        }
+
+        if let goldLabel = statsPanel.childNode(withName: "stat_gold") as? SKLabelNode {
+            goldLabel.text = "\(champion.gold) or"
         }
     }
 
@@ -274,6 +309,19 @@ class InventoryNode: SKNode {
             if node.name == "closeInventory" || node.parent?.name == "closeInventory" {
                 hide()
                 onClose?()
+                return
+            }
+
+            if node.name == "equipButton" || node.parent?.name == "equipButton" {
+                equipSelectedItem()
+                return
+            }
+
+            if let name = node.name, name.hasPrefix("equip_") {
+                let slotRaw = name.replacingOccurrences(of: "equip_", with: "")
+                if let slot = EquipmentSlot(rawValue: slotRaw) {
+                    unequipSlot(slot)
+                }
                 return
             }
 
@@ -338,6 +386,107 @@ class InventoryNode: SKNode {
             statLabel.position = CGPoint(x: screenSize.width / 6, y: y - 50 - CGFloat(i) * 14)
             detailPanel.addChild(statLabel)
         }
+
+        // Equip button
+        let equipBtnY = y - 55 - CGFloat(item.statBonuses.count) * 14
+        let equipBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 28), cornerRadius: 6)
+        equipBtn.fillColor = SKColor(red: 0.15, green: 0.4, blue: 0.15, alpha: 0.9)
+        equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.3, alpha: 1)
+        equipBtn.position = CGPoint(x: screenSize.width / 6, y: equipBtnY)
+        equipBtn.name = "equipButton"
+        detailPanel.addChild(equipBtn)
+
+        let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        equipLabel.text = "Équiper"
+        equipLabel.fontSize = 12
+        equipLabel.fontColor = .white
+        equipLabel.verticalAlignmentMode = .center
+        equipLabel.name = "equipButton"
+        equipBtn.addChild(equipLabel)
+    }
+
+    // MARK: - Equip/Unequip
+
+    private func equipSelectedItem() {
+        guard let index = selectedItemIndex,
+              let champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID] else { return }
+
+        // Check level requirement
+        if champion.level < item.requiredLevel {
+            return
+        }
+
+        let slot = item.slot
+        GameManager.shared.mutateChampion { champ in
+            // Unequip existing item to inventory
+            if let existingID = champ.equipment.itemID(for: slot) {
+                champ.inventoryItemIDs.append(existingID)
+            }
+
+            // Remove new item from inventory
+            if let removeIdx = champ.inventoryItemIDs.firstIndex(of: itemID) {
+                champ.inventoryItemIDs.remove(at: removeIdx)
+            }
+
+            // Equip
+            switch slot {
+            case .helmet:     champ.equipment.helmet = itemID
+            case .shoulders:  champ.equipment.shoulders = itemID
+            case .chest:      champ.equipment.chest = itemID
+            case .cape:       champ.equipment.cape = itemID
+            case .gloves:     champ.equipment.gloves = itemID
+            case .belt:       champ.equipment.belt = itemID
+            case .legs:       champ.equipment.legs = itemID
+            case .boots:      champ.equipment.boots = itemID
+            case .mainWeapon: champ.equipment.mainWeapon = itemID
+            case .offhand:    champ.equipment.offhand = itemID
+            case .amulet:     champ.equipment.amulet = itemID
+            case .ring1:      champ.equipment.ring1 = itemID
+            case .ring2:      champ.equipment.ring2 = itemID
+            }
+        }
+
+        selectedItemIndex = nil
+        detailPanel.removeAllChildren()
+        refresh()
+    }
+
+    private func unequipSlot(_ slot: EquipmentSlot) {
+        guard let champion = GameManager.shared.champion,
+              let itemID = champion.equipment.itemID(for: slot) else { return }
+
+        // Check inventory space
+        guard champion.inventoryItemIDs.count < 30 else { return }
+
+        GameManager.shared.mutateChampion { champ in
+            // Move item to inventory
+            champ.inventoryItemIDs.append(itemID)
+
+            // Clear slot
+            switch slot {
+            case .helmet:     champ.equipment.helmet = nil
+            case .shoulders:  champ.equipment.shoulders = nil
+            case .chest:      champ.equipment.chest = nil
+            case .cape:       champ.equipment.cape = nil
+            case .gloves:     champ.equipment.gloves = nil
+            case .belt:       champ.equipment.belt = nil
+            case .legs:       champ.equipment.legs = nil
+            case .boots:      champ.equipment.boots = nil
+            case .mainWeapon: champ.equipment.mainWeapon = nil
+            case .offhand:    champ.equipment.offhand = nil
+            case .amulet:     champ.equipment.amulet = nil
+            case .ring1:      champ.equipment.ring1 = nil
+            case .ring2:      champ.equipment.ring2 = nil
+            }
+        }
+
+        // Show unequipped item detail
+        showItemDetail(itemID)
+        refresh()
     }
 
     // MARK: - Helpers
