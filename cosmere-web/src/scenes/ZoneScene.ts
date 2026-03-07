@@ -6,6 +6,13 @@ import { gameData } from '../data/DataLoader';
 import { VirtualJoystick } from '../ui/VirtualJoystick';
 import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
+import { InventoryPanel } from '../ui/InventoryPanel';
+import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
+import { showPauseMenu } from '../ui/PauseMenu';
+import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
+import { drawEnemySprite } from '../rendering/EnemyRenderer';
+import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
+import type { SpellParticle } from '../rendering/SpellEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
 
@@ -289,8 +296,25 @@ export class ZoneScene extends Container implements GameScene {
     this.actionButtons.onInteract = (mode) => this.handleInteraction(mode);
     this.uiContainer.addChild(this.actionButtons);
 
+    // Auto-equip skills for class
+    GameManager.shared.autoEquipSkills(gameData.skills);
+
+    // Set skill button labels from equipped skills
+    if (champ.equippedSkillIDs.length > 0) {
+      for (let i = 0; i < champ.equippedSkillIDs.length && i < 4; i++) {
+        const skill = gameData.skill(champ.equippedSkillIDs[i]);
+        if (skill) {
+          const shortName = skill.name.length > 5 ? skill.name.substring(0, 5) : skill.name;
+          this.actionButtons.setSkill(i, skill.id, shortName);
+        }
+      }
+    }
+
     // Pause button (top center)
     this.createPauseButton(w);
+
+    // Inventory button (next to pause)
+    this.createInventoryButton(w);
 
     // Center camera immediately
     this.worldContainer.x = w / 2 - this.playerScreenPos.x;
@@ -844,158 +868,8 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private drawPlayer(): void {
-    this.playerSprite.clear();
     const champ = GameManager.shared.champion;
-    const cls = champ?.championClass ?? 'mistborn';
-
-    const classColors: Record<string, number> = {
-      mistborn: 0x3366cc, radiant: 0x3399dd, awakener: 0x9933cc,
-      elantrian: 0xdd8833, sandMaster: 0xcc9933, nightmarePainter: 0x663399,
-    };
-    const capeColors: Record<string, number> = {
-      mistborn: 0x222233, radiant: 0x224466, awakener: 0x552288,
-      elantrian: 0x885522, sandMaster: 0x665522, nightmarePainter: 0x331155,
-    };
-    const weaponColors: Record<string, number> = {
-      mistborn: 0x8899aa, radiant: 0x88ccff, awakener: 0xcc88ff,
-      elantrian: 0xffcc66, sandMaster: 0xddcc88, nightmarePainter: 0x8866cc,
-    };
-
-    const bodyColor = classColors[cls];
-    const capeColor = capeColors[cls];
-    const weaponColor = weaponColors[cls];
-
-    const g = this.playerSprite;
-
-    // Cape (behind body)
-    g.poly([
-      { x: -7, y: -18 }, { x: -12, y: 4 }, { x: -8, y: 6 },
-      { x: 0, y: 4 },
-      { x: 8, y: 6 }, { x: 12, y: 4 }, { x: 7, y: -18 },
-    ]).fill({ color: capeColor, alpha: 0.85 });
-    // Cape detail stripe
-    g.poly([
-      { x: -5, y: -16 }, { x: -9, y: 4 },
-      { x: -6, y: 4 }, { x: -3, y: -16 },
-    ]).fill({ color: this.lightenColor(capeColor, 0.3), alpha: 0.3 });
-
-    // Boots
-    g.roundRect(-6, -3, 5, 5, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
-    g.roundRect(1, -3, 5, 5, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
-    // Boot highlight
-    g.roundRect(-5, -3, 2, 3, 1).fill({ color: 0x4a3a2a, alpha: 0.5 });
-
-    // Legs
-    g.rect(-5, -10, 4, 8).fill({ color: 0x333344, alpha: 0.9 });
-    g.rect(1, -10, 4, 8).fill({ color: 0x333344, alpha: 0.9 });
-
-    // Belt
-    g.rect(-7, -12, 14, 3).fill({ color: 0x554422, alpha: 0.9 });
-    // Belt buckle
-    g.rect(-1.5, -12, 3, 3).fill({ color: 0xddaa33, alpha: 0.8 });
-
-    // Chest/torso
-    g.poly([
-      { x: -8, y: -12 }, { x: -9, y: -24 },
-      { x: 0, y: -26 },
-      { x: 9, y: -24 }, { x: 8, y: -12 },
-    ]).fill({ color: bodyColor, alpha: 0.9 });
-    // Chest highlight
-    g.poly([
-      { x: -4, y: -14 }, { x: -5, y: -22 },
-      { x: 0, y: -24 }, { x: 3, y: -22 }, { x: 2, y: -14 },
-    ]).fill({ color: this.lightenColor(bodyColor, 0.25), alpha: 0.4 });
-
-    // Shoulder pads
-    g.ellipse(-10, -23, 5, 3).fill({ color: this.lightenColor(bodyColor, 0.1), alpha: 0.9 });
-    g.ellipse(10, -23, 5, 3).fill({ color: this.lightenColor(bodyColor, 0.1), alpha: 0.9 });
-    // Shoulder rivets
-    g.circle(-10, -23, 1).fill({ color: 0xddaa33, alpha: 0.7 });
-    g.circle(10, -23, 1).fill({ color: 0xddaa33, alpha: 0.7 });
-
-    // Arms
-    g.rect(-13, -22, 4, 12).fill({ color: bodyColor, alpha: 0.85 });
-    g.rect(9, -22, 4, 12).fill({ color: bodyColor, alpha: 0.85 });
-    // Gloves
-    g.rect(-13, -11, 4, 3).fill({ color: 0x443322, alpha: 0.9 });
-    g.rect(9, -11, 4, 3).fill({ color: 0x443322, alpha: 0.9 });
-
-    // Weapon (right hand) - varies by class
-    if (cls === 'mistborn') {
-      // Obsidian daggers
-      g.poly([
-        { x: 14, y: -14 }, { x: 15, y: -28 }, { x: 16, y: -14 },
-      ]).fill({ color: 0x445566, alpha: 0.8 });
-      g.poly([
-        { x: 14, y: -14 }, { x: 15, y: -28 }, { x: 16, y: -14 },
-      ]).stroke({ color: 0x88aacc, width: 0.5, alpha: 0.5 });
-    } else if (cls === 'radiant') {
-      // Shardblade (glowing)
-      g.poly([
-        { x: 14, y: -12 }, { x: 14.5, y: -34 }, { x: 16, y: -34 }, { x: 16.5, y: -12 },
-      ]).fill({ color: 0xaaddff, alpha: 0.7 });
-      g.poly([
-        { x: 14, y: -12 }, { x: 14.5, y: -34 }, { x: 16, y: -34 }, { x: 16.5, y: -12 },
-      ]).stroke({ color: 0xcceeFF, width: 0.5, alpha: 0.8 });
-      // Blade glow
-      g.rect(13, -32, 5, 20).fill({ color: 0x88ccff, alpha: 0.06 });
-    } else if (cls === 'awakener') {
-      // Staff with colored ribbons
-      g.rect(14, -32, 2, 28).fill({ color: 0x664422, alpha: 0.8 });
-      g.circle(15, -33, 3).fill({ color: 0xcc66ff, alpha: 0.6 });
-    } else if (cls === 'elantrian') {
-      // Aon rod
-      g.rect(14, -30, 2, 24).fill({ color: 0xddbb66, alpha: 0.8 });
-      g.circle(15, -31, 4).fill({ color: 0xffcc44, alpha: 0.4 });
-      g.circle(15, -31, 4).stroke({ color: 0xffdd66, width: 1, alpha: 0.6 });
-    } else if (cls === 'sandMaster') {
-      // Sand pouch + ribbon
-      g.ellipse(14, -14, 4, 5).fill({ color: 0xccbb88, alpha: 0.7 });
-    } else {
-      // Painter brush
-      g.rect(14, -28, 1.5, 22).fill({ color: 0x443322, alpha: 0.8 });
-      g.rect(13, -30, 4, 4).fill({ color: 0x222222, alpha: 0.7 });
-    }
-
-    // Neck
-    g.rect(-2, -28, 4, 3).fill({ color: 0xddaa88, alpha: 0.9 });
-
-    // Head
-    g.circle(0, -32, 6.5).fill({ color: 0xeebb99, alpha: 0.95 });
-    // Hair (varies slightly by class)
-    const hairColor = cls === 'nightmarePainter' ? 0x111122 : cls === 'elantrian' ? 0xcccccc : 0x443322;
-    g.poly([
-      { x: -6, y: -33 }, { x: -7, y: -38 }, { x: -3, y: -40 },
-      { x: 2, y: -40 }, { x: 6, y: -39 }, { x: 7, y: -34 },
-      { x: 5, y: -33 },
-    ]).fill({ color: hairColor, alpha: 0.9 });
-
-    // Eyes
-    g.circle(-2.5, -32, 1.2).fill(0x222244);
-    g.circle(2.5, -32, 1.2).fill(0x222244);
-    // Eye glow (class-specific)
-    g.circle(-2.5, -32, 0.6).fill({ color: weaponColor, alpha: 0.6 });
-    g.circle(2.5, -32, 0.6).fill({ color: weaponColor, alpha: 0.6 });
-
-    // Helmet/headgear (varies by class)
-    if (cls === 'radiant') {
-      // Helm visor
-      g.poly([
-        { x: -5, y: -35 }, { x: 0, y: -36 }, { x: 5, y: -35 },
-        { x: 6, y: -31 }, { x: -6, y: -31 },
-      ]).fill({ color: 0x556688, alpha: 0.4 });
-    } else if (cls === 'mistborn') {
-      // Mistcloak hood outline
-      g.poly([
-        { x: -7, y: -30 }, { x: -8, y: -38 },
-        { x: 0, y: -42 },
-        { x: 8, y: -38 }, { x: 7, y: -30 },
-      ]).stroke({ color: 0x334455, width: 1.5, alpha: 0.6 });
-    }
-
-    // Class-specific aura glow
-    g.circle(0, -20, 18).fill({ color: bodyColor, alpha: 0.05 });
-    g.circle(0, -20, 12).fill({ color: weaponColor, alpha: 0.04 });
+    drawPlayerCharacter(this.playerSprite, champ?.championClass ?? 'mistborn');
   }
 
   // ─── NPCs ────────────────────────────────────────────────────
@@ -1104,143 +978,20 @@ export class ZoneScene extends Container implements GameScene {
     if (!npc) return;
 
     if (spawn.isShopkeeper) {
-      this.showShopPanel(spawn.npcID);
+      this.showShop(spawn.npcID);
     } else {
       this.showDialogue(spawn.npcID, spawn.dialogueTreeID);
     }
   }
 
-  private showDialogue(npcID: string, dialogueTreeID: string | null): void {
+  private showDialogue(npcID: string, _dialogueTreeID: string | null): void {
     if (this.dialoguePanel) return;
     this.isPaused = true;
-
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
     const npcName = this.formatNPCName(npcID);
-
-    // Dialogue lines based on world
-    const worldDialogues: Record<string, string[]> = {
-      scadrial: [
-        'Les brumes sont plus denses ces derniers temps...',
-        'Méfie-toi des Inquisiteurs qui rôdent dans la nuit.',
-        'Le Seigneur Dirigeant surveille tout. Sois prudent.',
-        'J\'ai entendu parler d\'un groupe de skaa rebelles...',
-      ],
-      roshar: [
-        'La Tempête Éternelle approche, prépare-toi!',
-        'Les sprens sont agités aujourd\'hui...',
-        'Que la Lumière d\'Orage te protège, Radieux.',
-        'Les Néantifères se rassemblent aux frontières.',
-      ],
-      nalthis: [
-        'Les couleurs semblent s\'estomper dans ce quartier.',
-        'Combien de Souffles possèdes-tu, étranger?',
-        'Le Dieu-Roi ne reçoit plus de visiteurs.',
-        'La vie est belle à Hallandren, n\'est-ce pas?',
-      ],
-      taldain: [
-        'Le sable blanc est rare par ici.',
-        'L\'énergie solaire alimente mes pouvoirs.',
-        'Les tempêtes de sable sont de plus en plus fréquentes.',
-        'Attention aux créatures qui vivent sous le sable.',
-      ],
-      sel: [
-        'Les Aons brillent d\'un éclat particulier ce soir.',
-        'Elantris retrouve peu à peu sa splendeur.',
-        'Le Dor coule en abondance ici.',
-        'Les Seons dansent dans la lumière.',
-      ],
-      komashi: [
-        'Les cauchemars sont de plus en plus vivaces...',
-        'Tes peintures ont un pouvoir remarquable.',
-        'Les pierres empilées nous protègent la nuit.',
-        'Méfie-toi des ombres qui bougent.',
-      ],
-      shadesmar: [
-        'Les billes sont la monnaie ici, ne l\'oublie pas.',
-        'Les flamespren éclairent notre chemin.',
-        'Le Royaume Cognitif est vaste et dangereux.',
-        'Chaque pensée prend forme dans ce monde.',
-      ],
-    };
-
-    const lines = worldDialogues[this.zone.worldID] ?? worldDialogues.scadrial;
-    const chosenLine = lines[Math.floor(Math.random() * lines.length)];
-
-    this.dialoguePanel = new Container();
-    this.dialoguePanel.zIndex = 10000;
-
-    // Dark overlay
-    const overlay = new Graphics();
-    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.4 });
-    overlay.eventMode = 'static';
-    this.dialoguePanel.addChild(overlay);
-
-    // Panel background
-    const panelH = 120;
-    const panelY = h - panelH - 20;
-    const panel = new Graphics();
-    panel.roundRect(20, panelY, w - 40, panelH, 12)
-      .fill({ color: 0x0a0815, alpha: 0.92 });
-    panel.roundRect(20, panelY, w - 40, panelH, 12)
-      .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
-    this.dialoguePanel.addChild(panel);
-
-    // NPC name label
-    const nameLabel = new Text({
-      text: npcName,
-      style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xe6cc66, fontWeight: 'bold',
-      }),
-    });
-    nameLabel.x = 36;
-    nameLabel.y = panelY + 10;
-    this.dialoguePanel.addChild(nameLabel);
-
-    // Dialogue text
-    const dialogueText = new Text({
-      text: chosenLine,
-      style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 12, fill: 0xddddcc,
-        wordWrap: true, wordWrapWidth: w - 80,
-      }),
-    });
-    dialogueText.x = 36;
-    dialogueText.y = panelY + 32;
-    this.dialoguePanel.addChild(dialogueText);
-
-    // Close hint
-    const closeHint = new Text({
-      text: 'Toucher pour fermer',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x888888 }),
-    });
-    closeHint.anchor.set(0.5);
-    closeHint.x = w / 2;
-    closeHint.y = panelY + panelH - 14;
-    this.dialoguePanel.addChild(closeHint);
-
-    // Quest reward hint
-    const champ = GameManager.shared.champion;
-    if (champ) {
-      const xpReward = 10 + Math.floor(Math.random() * 15);
-      const goldReward = 5 + Math.floor(Math.random() * 10);
-      champ.gold += goldReward;
-      GameManager.shared.grantXP(xpReward);
-      const rewardText = new Text({
-        text: `+${xpReward} XP  +${goldReward} or`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
-      });
-      rewardText.anchor.set(1, 0);
-      rewardText.x = w - 36;
-      rewardText.y = panelY + 10;
-      this.dialoguePanel.addChild(rewardText);
-    }
-
-    overlay.on('pointerdown', () => this.closeDialogue());
-    panel.eventMode = 'static';
-    panel.on('pointerdown', () => this.closeDialogue());
-
-    this.uiContainer.addChild(this.dialoguePanel);
+    this.dialoguePanel = showDialoguePanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      this.zone.worldID, npcName, () => this.closeDialogue(),
+    );
   }
 
   private closeDialogue(): void {
@@ -1251,136 +1002,15 @@ export class ZoneScene extends Container implements GameScene {
     this.isPaused = false;
   }
 
-  private showShopPanel(npcID: string): void {
+  private showShop(npcID: string): void {
     if (this.dialoguePanel) return;
     this.isPaused = true;
-
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    this.dialoguePanel = new Container();
-    this.dialoguePanel.zIndex = 10000;
-
-    const overlay = new Graphics();
-    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.5 });
-    overlay.eventMode = 'static';
-    this.dialoguePanel.addChild(overlay);
-
-    // Shop panel
-    const panelW = Math.min(300, w - 40);
-    const panelH = 240;
-    const panelX = (w - panelW) / 2;
-    const panelY = (h - panelH) / 2;
-
-    const panel = new Graphics();
-    panel.roundRect(panelX, panelY, panelW, panelH, 12)
-      .fill({ color: 0x0a0815, alpha: 0.95 });
-    panel.roundRect(panelX, panelY, panelW, panelH, 12)
-      .stroke({ color: 0x886633, width: 2, alpha: 0.8 });
-    panel.eventMode = 'static';
-    this.dialoguePanel.addChild(panel);
-
-    // Title
-    const title = new Text({
-      text: 'BOUTIQUE',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 16, fill: 0xe6cc66, fontWeight: 'bold' }),
-    });
-    title.anchor.set(0.5);
-    title.x = w / 2;
-    title.y = panelY + 18;
-    this.dialoguePanel.addChild(title);
-
-    // Gold display
-    const goldLabel = new Text({
-      text: `Or: ${champ.gold}`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 12, fill: 0xe6cc33 }),
-    });
-    goldLabel.anchor.set(0.5);
-    goldLabel.x = w / 2;
-    goldLabel.y = panelY + 38;
-    this.dialoguePanel.addChild(goldLabel);
-
-    // Shop items
-    const shopItems = [
-      { name: 'Potion de soin', cost: 20, effect: 'hp', value: 50 },
-      { name: 'Potion d\'investiture', cost: 25, effect: 'inv', value: 40 },
-      { name: 'Élixir de force', cost: 40, effect: 'str', value: 2 },
-    ];
-
-    shopItems.forEach((item, i) => {
-      const itemY = panelY + 60 + i * 45;
-      const itemBg = new Graphics();
-      itemBg.roundRect(panelX + 10, itemY, panelW - 20, 38, 6)
-        .fill({ color: 0x1a1528, alpha: 0.8 })
-        .stroke({ color: 0x443322, width: 1, alpha: 0.5 });
-      itemBg.eventMode = 'static';
-      itemBg.cursor = 'pointer';
-      this.dialoguePanel!.addChild(itemBg);
-
-      const itemName = new Text({
-        text: item.name,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xddddcc }),
-      });
-      itemName.x = panelX + 18;
-      itemName.y = itemY + 5;
-      this.dialoguePanel!.addChild(itemName);
-
-      const costText = new Text({
-        text: `${item.cost} or`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: champ.gold >= item.cost ? 0xe6cc33 : 0x884444 }),
-      });
-      costText.anchor.set(1, 0);
-      costText.x = panelX + panelW - 18;
-      costText.y = itemY + 5;
-      this.dialoguePanel!.addChild(costText);
-
-      const buyLabel = new Text({
-        text: champ.gold >= item.cost ? 'Acheter' : 'Pas assez d\'or',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: champ.gold >= item.cost ? 0x66cc44 : 0x666666 }),
-      });
-      buyLabel.x = panelX + 18;
-      buyLabel.y = itemY + 20;
-      this.dialoguePanel!.addChild(buyLabel);
-
-      if (champ.gold >= item.cost) {
-        itemBg.on('pointerdown', () => {
-          champ.gold -= item.cost;
-          if (item.effect === 'hp') {
-            champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + item.value);
-          } else if (item.effect === 'inv') {
-            champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + item.value);
-          } else if (item.effect === 'str') {
-            champ.baseStats.strength += item.value;
-          }
-          this.closeDialogue();
-          this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, `${item.name} acheté!`, 0x66cc44);
-        });
-      }
-    });
-
-    // Close button
-    const closeBtnBg = new Graphics();
-    closeBtnBg.roundRect(panelX + panelW / 2 - 40, panelY + panelH - 32, 80, 24, 6)
-      .fill({ color: 0x553322, alpha: 0.8 })
-      .stroke({ color: 0x886644, width: 1 });
-    closeBtnBg.eventMode = 'static';
-    closeBtnBg.cursor = 'pointer';
-    closeBtnBg.on('pointerdown', () => this.closeDialogue());
-    this.dialoguePanel.addChild(closeBtnBg);
-
-    const closeLabel = new Text({
-      text: 'Fermer',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xeeddcc }),
-    });
-    closeLabel.anchor.set(0.5);
-    closeLabel.x = panelX + panelW / 2;
-    closeLabel.y = panelY + panelH - 20;
-    this.dialoguePanel.addChild(closeLabel);
-
-    overlay.on('pointerdown', () => this.closeDialogue());
-    this.uiContainer.addChild(this.dialoguePanel);
+    this.dialoguePanel = showShopPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+      (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
+      this.playerScreenPos,
+    );
   }
 
   private createPauseButton(screenWidth: number): void {
@@ -1390,19 +1020,47 @@ export class ZoneScene extends Container implements GameScene {
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
-
-    // Pause icon (two bars)
     const icon = new Graphics();
     icon.rect(10, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
     icon.rect(20, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
     btn.addChild(icon);
-
     btn.x = screenWidth / 2 - 18;
     btn.y = 10;
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.togglePause());
     this.uiContainer.addChild(btn);
+  }
+
+  private createInventoryButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Bag icon
+    const icon = new Graphics();
+    icon.roundRect(10, 8, 16, 14, 3).fill({ color: 0xaa8855, alpha: 0.7 });
+    icon.roundRect(10, 8, 16, 14, 3).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
+    icon.arc(18, 8, 5, Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + 24;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleInventory());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleInventory(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = new InventoryPanel(
+      this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+    this.uiContainer.addChild(this.dialoguePanel);
   }
 
   private togglePause(): void {
@@ -1412,76 +1070,13 @@ export class ZoneScene extends Container implements GameScene {
       this.isPaused = false;
       return;
     }
-
     this.isPaused = true;
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-
-    this.pauseMenu = new Container();
-    this.pauseMenu.zIndex = 10000;
-
-    const overlay = new Graphics();
-    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.6 });
-    overlay.eventMode = 'static';
-    this.pauseMenu.addChild(overlay);
-
-    // Panel
-    const panelW = 200;
-    const panelH = 220;
-    const px = (w - panelW) / 2;
-    const py = (h - panelH) / 2;
-
-    const panel = new Graphics();
-    panel.roundRect(px, py, panelW, panelH, 12)
-      .fill({ color: 0x0a0815, alpha: 0.95 })
-      .stroke({ color: 0x554433, width: 2, alpha: 0.7 });
-    panel.eventMode = 'static';
-    this.pauseMenu.addChild(panel);
-
-    const title = new Text({
-      text: 'PAUSE',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 20, fill: 0xe6cc66, fontWeight: 'bold' }),
-    });
-    title.anchor.set(0.5);
-    title.x = w / 2;
-    title.y = py + 24;
-    this.pauseMenu.addChild(title);
-
-    const buttons = [
-      { label: 'Reprendre', y: py + 60, action: () => this.togglePause() },
-      { label: 'Sauvegarder', y: py + 105, action: () => {
-        GameManager.shared.save();
-        this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, 'Partie sauvegardée!', 0x66cc44);
-        this.togglePause();
-      }},
-      { label: 'Quitter', y: py + 150, action: () => {
-        GameManager.shared.save();
-        // Return to title (just reload page for now)
-        window.location.reload();
-      }, color: 0x552222 },
-    ];
-
-    for (const b of buttons) {
-      const btnBg = new Graphics();
-      btnBg.roundRect(px + 20, b.y, panelW - 40, 34, 8)
-        .fill({ color: b.color ?? 0x1a1528, alpha: 0.8 })
-        .stroke({ color: 0x554433, width: 1, alpha: 0.5 });
-      btnBg.eventMode = 'static';
-      btnBg.cursor = 'pointer';
-      btnBg.on('pointerdown', b.action);
-      this.pauseMenu.addChild(btnBg);
-
-      const btnLabel = new Text({
-        text: b.label,
-        style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xeeddcc }),
-      });
-      btnLabel.anchor.set(0.5);
-      btnLabel.x = w / 2;
-      btnLabel.y = b.y + 17;
-      this.pauseMenu.addChild(btnLabel);
-    }
-
-    this.uiContainer.addChild(this.pauseMenu);
+    this.pauseMenu = showPauseMenu(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.togglePause(),
+      (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
+      this.playerScreenPos,
+    );
   }
 
   // ─── Loot Points ─────────────────────────────────────────────
@@ -1593,7 +1188,7 @@ export class ZoneScene extends Container implements GameScene {
       container.addChild(shadow);
 
       const sprite = new Graphics();
-      this.drawEnemySprite(sprite, data, size);
+      drawEnemySprite(sprite, data, size);
       container.addChild(sprite);
 
       // HP bar
@@ -1637,42 +1232,7 @@ export class ZoneScene extends Container implements GameScene {
     }
   }
 
-  private drawEnemySprite(g: Graphics, data: Enemy, size: number): void {
-    const tierBodyColors: Record<string, number> = {
-      minion: 0x774444, soldier: 0x993333, elite: 0x993399, boss: 0xcc5500,
-    };
-    const bodyColor = tierBodyColors[data.tier] ?? 0x774444;
-
-    // Body
-    g.poly([
-      { x: -size, y: 0 }, { x: -size * 0.7, y: -size * 1.5 },
-      { x: 0, y: -size * 1.8 },
-      { x: size * 0.7, y: -size * 1.5 }, { x: size, y: 0 },
-    ]).fill({ color: bodyColor, alpha: 0.9 });
-
-    // Head
-    const headSize = size * 0.5;
-    g.circle(0, -size * 1.8 - headSize, headSize).fill({ color: 0xbb8866, alpha: 0.9 });
-
-    // Eyes (red, menacing)
-    g.circle(-headSize * 0.4, -size * 1.8 - headSize, 1.2).fill(0xff3333);
-    g.circle(headSize * 0.4, -size * 1.8 - headSize, 1.2).fill(0xff3333);
-
-    // Boss crown
-    if (data.tier === 'boss') {
-      g.poly([
-        { x: -6, y: -size * 2.6 }, { x: -4, y: -size * 2.2 },
-        { x: -2, y: -size * 2.5 }, { x: 0, y: -size * 2.2 },
-        { x: 2, y: -size * 2.5 }, { x: 4, y: -size * 2.2 },
-        { x: 6, y: -size * 2.6 }, { x: 6, y: -size * 2 }, { x: -6, y: -size * 2 },
-      ]).fill({ color: 0xeebb33, alpha: 0.8 });
-    }
-
-    // Elite aura
-    if (data.tier === 'elite') {
-      g.circle(0, -size, size * 1.5).fill({ color: 0xcc33cc, alpha: 0.08 });
-    }
-  }
+  // Enemy sprite drawing delegated to EnemyRenderer module
 
   private drawEnemyHP(bar: Graphics, pct: number): void {
     bar.clear();
@@ -2127,64 +1687,12 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private showAttackEffect(): void {
-    const cls = GameManager.shared.champion?.championClass ?? 'mistborn';
-    const dir = this.playerFacing === 'right' ? 1 : -1;
-    const px = this.playerScreenPos.x;
-    const py = this.playerScreenPos.y;
-
-    // Main slash/swing arc
-    const g = new Graphics();
-    const slashColor = cls === 'radiant' ? 0x88ccff : cls === 'mistborn' ? 0xaabbcc :
-                       cls === 'awakener' ? 0xcc88ff : cls === 'elantrian' ? 0xffcc44 :
-                       cls === 'sandMaster' ? 0xddcc88 : 0x8866cc;
-
-    // Weapon swing arc
-    const startAngle = dir > 0 ? -Math.PI * 0.6 : Math.PI * 0.4;
-    const endAngle = dir > 0 ? Math.PI * 0.3 : Math.PI * 1.3;
-    g.arc(0, 0, 28, startAngle, endAngle).stroke({ color: slashColor, width: 3, alpha: 0.7 });
-    g.arc(0, 0, 22, startAngle, endAngle).stroke({ color: 0xffffff, width: 1.5, alpha: 0.4 });
-
-    // Slash trail particles
-    for (let i = 0; i < 5; i++) {
-      const angle = startAngle + (endAngle - startAngle) * (i / 5);
-      const r = 25 + Math.random() * 5;
-      g.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1.5).fill({ color: slashColor, alpha: 0.5 });
-    }
-
-    g.x = px + dir * 18;
-    g.y = py - 14;
-    g.zIndex = 100000;
-    this.worldContainer.addChild(g);
-
-    // Arm/weapon swing motion on player
-    const armSwing = new Graphics();
-    if (cls === 'radiant') {
-      // Shardblade trail
-      armSwing.poly([
-        { x: dir * 4, y: -8 }, { x: dir * 30, y: -24 }, { x: dir * 32, y: -20 }, { x: dir * 6, y: -4 },
-      ]).fill({ color: 0x88ccff, alpha: 0.3 });
-    } else {
-      armSwing.poly([
-        { x: dir * 4, y: -8 }, { x: dir * 22, y: -18 }, { x: dir * 24, y: -14 }, { x: dir * 6, y: -4 },
-      ]).fill({ color: slashColor, alpha: 0.2 });
-    }
-    armSwing.x = px;
-    armSwing.y = py;
-    armSwing.zIndex = 100001;
-    this.worldContainer.addChild(armSwing);
-
-    let elapsed = 0;
-    const anim = () => {
-      elapsed += 1 / 60;
-      const progress = elapsed / 0.25;
-      g.alpha = Math.max(0, 1 - progress);
-      g.scale.set(1 + elapsed * 2);
-      g.rotation = dir * elapsed * 2;
-      armSwing.alpha = Math.max(0, 1 - progress * 1.5);
-      if (elapsed < 0.25) requestAnimationFrame(anim);
-      else { g.destroy(); armSwing.destroy(); }
-    };
-    requestAnimationFrame(anim);
+    createAttackEffect(
+      this.worldContainer,
+      this.playerScreenPos.x, this.playerScreenPos.y,
+      this.playerFacing,
+      GameManager.shared.champion?.championClass ?? 'mistborn',
+    );
   }
 
   private handleSkill(index: number): void {
@@ -2217,107 +1725,13 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private showSkillEffect(range: number): void {
-    const cls = GameManager.shared.champion?.championClass ?? 'mistborn';
-    const px = this.playerScreenPos.x;
-    const py = this.playerScreenPos.y;
-
-    // Class-specific colors and effects
-    const skillConfigs: Record<string, { color1: number; color2: number; particleColor: number }> = {
-      mistborn:         { color1: 0x4488ff, color2: 0x6699cc, particleColor: 0x88aacc },
-      radiant:          { color1: 0x44aaff, color2: 0x88ccff, particleColor: 0xaaddff },
-      awakener:         { color1: 0xaa44ff, color2: 0xcc88ff, particleColor: 0xdd99ff },
-      elantrian:        { color1: 0xffaa33, color2: 0xffcc66, particleColor: 0xffdd88 },
-      sandMaster:       { color1: 0xddaa33, color2: 0xeecc66, particleColor: 0xddcc88 },
-      nightmarePainter: { color1: 0x6633aa, color2: 0x8855cc, particleColor: 0xaa77ee },
-    };
-
-    const cfg = skillConfigs[cls] ?? skillConfigs.mistborn;
-
-    // Main AOE ring
-    const g = new Graphics();
-    g.circle(0, 0, range).fill({ color: cfg.color1, alpha: 0.12 });
-    g.circle(0, 0, range).stroke({ color: cfg.color2, width: 2.5, alpha: 0.6 });
-    g.circle(0, 0, range * 0.7).stroke({ color: cfg.color1, width: 1.5, alpha: 0.3 });
-    g.x = px;
-    g.y = py;
-    g.zIndex = 100000;
-    this.worldContainer.addChild(g);
-
-    // Inner burst effect
-    const burst = new Graphics();
-    if (cls === 'mistborn') {
-      // Blue metal lines radiating out
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        burst.moveTo(0, 0).lineTo(Math.cos(angle) * range * 0.8, Math.sin(angle) * range * 0.8)
-          .stroke({ color: 0x4488ff, width: 1, alpha: 0.4 });
-      }
-    } else if (cls === 'radiant') {
-      // Stormlight burst glow
-      burst.circle(0, 0, range * 0.5).fill({ color: 0x88ccff, alpha: 0.15 });
-      burst.circle(0, 0, range * 0.3).fill({ color: 0xaaddff, alpha: 0.1 });
-    } else if (cls === 'elantrian') {
-      // Aon glyph pattern
-      burst.circle(0, 0, range * 0.6).stroke({ color: 0xffcc44, width: 1.5, alpha: 0.4 });
-      burst.moveTo(-range * 0.4, 0).lineTo(range * 0.4, 0).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
-      burst.moveTo(0, -range * 0.4).lineTo(0, range * 0.4).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
-    } else if (cls === 'awakener') {
-      // Color wave
-      const colors = [0xff4466, 0x44aaff, 0xffaa22, 0x44ff66, 0xaa44ff];
-      for (let i = 0; i < 5; i++) {
-        const r = range * (0.3 + i * 0.12);
-        burst.circle(0, 0, r).stroke({ color: colors[i], width: 1.5, alpha: 0.2 });
-      }
-    } else if (cls === 'sandMaster') {
-      // Sand spiral
-      for (let i = 0; i < 20; i++) {
-        const angle = (i / 20) * Math.PI * 4;
-        const r = (i / 20) * range * 0.8;
-        burst.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1.5).fill({ color: 0xddcc88, alpha: 0.4 });
-      }
-    } else {
-      // Nightmare ink splash
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const r = range * 0.5;
-        burst.ellipse(Math.cos(angle) * r, Math.sin(angle) * r, 4, 6).fill({ color: 0x222233, alpha: 0.3 });
-      }
-    }
-    burst.x = px;
-    burst.y = py;
-    burst.zIndex = 100001;
-    this.worldContainer.addChild(burst);
-
-    // Particle burst
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.3;
-      const speed = 40 + Math.random() * 30;
-      const p = new Graphics();
-      p.circle(0, 0, 1.5 + Math.random()).fill({ color: cfg.particleColor, alpha: 0.6 });
-      p.x = px;
-      p.y = py;
-      p.zIndex = 100002;
-      this.worldContainer.addChild(p);
-      this.particles.push({
-        sprite: p, x: px, y: py,
-        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 10,
-        life: 0.5 + Math.random() * 0.3, maxLife: 0.8, size: 2,
-      });
-    }
-
-    let elapsed = 0;
-    const anim = () => {
-      elapsed += 1 / 60;
-      const progress = elapsed / 0.5;
-      g.alpha = Math.max(0, 1 - progress);
-      g.scale.set(0.3 + progress * 0.8);
-      burst.alpha = Math.max(0, 1 - progress * 1.2);
-      burst.scale.set(0.5 + progress * 0.6);
-      burst.rotation = elapsed * 2;
-      if (elapsed < 0.5) requestAnimationFrame(anim);
-      else { g.destroy(); burst.destroy(); }
-    };
-    requestAnimationFrame(anim);
+    createSkillEffect(
+      this.worldContainer,
+      this.playerScreenPos.x, this.playerScreenPos.y,
+      range,
+      GameManager.shared.champion?.championClass ?? 'mistborn',
+      this.particles,
+    );
   }
 
   private enemyAttacksPlayer(enemy: EnemyInstance): void {
@@ -2378,8 +1792,34 @@ export class ZoneScene extends Container implements GameScene {
       this.showDamageNumber(enemy.position.x + 10, enemy.position.y, gold, false, 0xe6cc33);
     }, 200);
 
+    // Drop loot from loot table
+    for (const lootEntry of enemy.data.lootTable) {
+      if (Math.random() < lootEntry.dropChance) {
+        const item = gameData.item(lootEntry.itemID);
+        if (item && champ) {
+          champ.inventoryItemIDs.push(lootEntry.itemID);
+          setTimeout(() => {
+            this.showFloatingText(
+              enemy.position.x, enemy.position.y - 30,
+              `${item.name} obtenu!`, 0xaa88ff,
+            );
+          }, 400);
+        }
+      }
+    }
+
     if (leveledUp) {
       this.showLevelUp();
+      // Auto-equip new skills on level up
+      GameManager.shared.autoEquipSkills(gameData.skills);
+      // Refresh skill button labels
+      for (let i = 0; i < champ.equippedSkillIDs.length && i < 4; i++) {
+        const skill = gameData.skill(champ.equippedSkillIDs[i]);
+        if (skill) {
+          const shortName = skill.name.length > 5 ? skill.name.substring(0, 5) : skill.name;
+          this.actionButtons.setSkill(i, skill.id, shortName);
+        }
+      }
     }
   }
 
@@ -2565,17 +2005,6 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── Utilities ───────────────────────────────────────────────
 
-  private darkenColor(color: number, amount: number): number {
-    const r = Math.max(0, ((color >> 16) & 0xff) * (1 - amount));
-    const g = Math.max(0, ((color >> 8) & 0xff) * (1 - amount));
-    const b = Math.max(0, (color & 0xff) * (1 - amount));
-    return (Math.floor(r) << 16) | (Math.floor(g) << 8) | Math.floor(b);
-  }
-
-  private lightenColor(color: number, amount: number): number {
-    const r = Math.min(255, ((color >> 16) & 0xff) * (1 + amount));
-    const g = Math.min(255, ((color >> 8) & 0xff) * (1 + amount));
-    const b = Math.min(255, (color & 0xff) * (1 + amount));
-    return (Math.floor(r) << 16) | (Math.floor(g) << 8) | Math.floor(b);
-  }
+  private darkenColor(color: number, amount: number): number { return darken(color, amount); }
+  private lightenColor(color: number, amount: number): number { return lighten(color, amount); }
 }
