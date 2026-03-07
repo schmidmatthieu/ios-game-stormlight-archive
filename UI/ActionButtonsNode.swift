@@ -276,6 +276,15 @@ class ActionButtonsNode: SKNode {
                 if cooldownOverlays[i]?.isHidden == true {
                     pressAnimation(button)
                     onAbilityPressed?(i)
+                } else {
+                    // Feedback visuel : shake quand en cooldown
+                    let shake = SKAction.sequence([
+                        SKAction.moveBy(x: -3, y: 0, duration: 0.03),
+                        SKAction.moveBy(x: 6, y: 0, duration: 0.03),
+                        SKAction.moveBy(x: -6, y: 0, duration: 0.03),
+                        SKAction.moveBy(x: 3, y: 0, duration: 0.03),
+                    ])
+                    button.run(shake)
                 }
                 return
             }
