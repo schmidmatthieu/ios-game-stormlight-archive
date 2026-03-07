@@ -7,8 +7,12 @@ export interface SkillSlotData {
   maxCooldown: number;
 }
 
+export type ActionMode = 'attack' | 'talk' | 'enter' | 'loot';
+
 export class ActionButtons extends Container {
   private atkButton: Container;
+  private atkBg!: Graphics;
+  private atkText!: Text;
   private skillButtons: Container[] = [];
   private ultButton: Container;
   private slots: SkillSlotData[] = [];
@@ -17,31 +21,83 @@ export class ActionButtons extends Container {
   onAttack: (() => void) | null = null;
   onSkill: ((index: number) => void) | null = null;
   onUltimate: (() => void) | null = null;
+  onInteract: ((mode: ActionMode) => void) | null = null;
+
+  // State
+  private _currentMode: ActionMode = 'attack';
+
+  get currentMode(): ActionMode { return this._currentMode; }
 
   constructor() {
     super();
 
     // Attack button (big, center)
-    this.atkButton = this.createCircleBtn(0, 0, 30, 0xcc2222, 0xdd3333, 'ATK', () => this.onAttack?.());
+    this.atkButton = this.createCircleBtn(0, 0, 32, 0xcc2222, 0xdd3333, 'ATK', () => this.handleMainButton());
     this.addChild(this.atkButton);
 
     // 4 Skill buttons in arc
     const positions = [
-      { x: -58, y: -22 },
-      { x: -28, y: -52 },
-      { x: 28, y: -52 },
-      { x: 58, y: -22 },
+      { x: -60, y: -24 },
+      { x: -30, y: -56 },
+      { x: 26, y: -56 },
+      { x: 56, y: -24 },
     ];
+    const skillColors = [0x2244aa, 0x22aa44, 0xaa8822, 0x8822aa];
 
     for (let i = 0; i < 4; i++) {
-      const btn = this.createCircleBtn(positions[i].x, positions[i].y, 21, 0x222244, 0x333366, `${i + 1}`, () => this.onSkill?.(i));
+      const btn = this.createCircleBtn(positions[i].x, positions[i].y, 22, skillColors[i], skillColors[i] + 0x222222, `${i + 1}`, () => this.onSkill?.(i));
       this.skillButtons.push(btn);
       this.addChild(btn);
     }
 
     // Ultimate button
-    this.ultButton = this.createCircleBtn(0, -78, 24, 0x554400, 0x776611, 'ULT', () => this.onUltimate?.());
+    this.ultButton = this.createCircleBtn(0, -82, 26, 0x997711, 0xbbaa33, 'ULT', () => this.onUltimate?.());
     this.addChild(this.ultButton);
+  }
+
+  private handleMainButton(): void {
+    if (this._currentMode === 'attack') {
+      this.onAttack?.();
+    } else {
+      this.onInteract?.(this._currentMode);
+    }
+  }
+
+  setMode(mode: ActionMode): void {
+    if (mode === this._currentMode) return;
+    this._currentMode = mode;
+
+    const configs: Record<ActionMode, { label: string; bg: number; border: number; fontSize: number }> = {
+      attack: { label: 'ATK', bg: 0xcc2222, border: 0xdd3333, fontSize: 15 },
+      talk:   { label: 'Parler', bg: 0x2277aa, border: 0x33aadd, fontSize: 11 },
+      enter:  { label: 'Entrer', bg: 0x22aa55, border: 0x33dd66, fontSize: 11 },
+      loot:   { label: 'Prendre', bg: 0xaa8822, border: 0xddbb33, fontSize: 10 },
+    };
+
+    const cfg = configs[mode];
+    if (this.atkText) {
+      this.atkText.text = cfg.label;
+      this.atkText.style.fontSize = cfg.fontSize;
+    }
+
+    // Redraw the attack button bg
+    if (this.atkBg) {
+      this.atkBg.clear();
+      const radius = 32;
+      this.atkBg.circle(0, 0, radius).fill({ color: cfg.bg, alpha: 0.85 });
+      this.atkBg.circle(0, 0, radius).stroke({ color: cfg.border, width: 2.5, alpha: 0.8 });
+      this.atkBg.ellipse(0, -radius * 0.25, radius * 0.7, radius * 0.4).fill({ color: 0xffffff, alpha: 0.12 });
+    }
+
+    // Bounce animation
+    this.atkButton.scale.set(1.15);
+    const bounceBack = () => {
+      this.atkButton.scale.x += (1 - this.atkButton.scale.x) * 0.3;
+      this.atkButton.scale.y += (1 - this.atkButton.scale.y) * 0.3;
+      if (Math.abs(1 - this.atkButton.scale.x) > 0.01) requestAnimationFrame(bounceBack);
+      else this.atkButton.scale.set(1);
+    };
+    requestAnimationFrame(bounceBack);
   }
 
   private createCircleBtn(
@@ -60,24 +116,21 @@ export class ActionButtons extends Container {
 
     // Main circle
     const bg = new Graphics();
-    bg.circle(0, 0, radius)
-      .fill({ color: bgColor, alpha: 0.75 });
-
-    // Border
-    bg.circle(0, 0, radius)
-      .stroke({ color: 0xaa8833, width: 2, alpha: 0.6 });
-
-    // Inner highlight (top half shine)
-    bg.ellipse(0, -radius * 0.25, radius * 0.7, radius * 0.4)
-      .fill({ color: highlightColor, alpha: 0.2 });
-
+    bg.circle(0, 0, radius).fill({ color: bgColor, alpha: 0.85 });
+    bg.circle(0, 0, radius).stroke({ color: highlightColor, width: 2.5, alpha: 0.8 });
+    bg.ellipse(0, -radius * 0.25, radius * 0.7, radius * 0.4).fill({ color: 0xffffff, alpha: 0.12 });
     container.addChild(bg);
+
+    // Track attack button bg for mode switching
+    if (label === 'ATK') {
+      this.atkBg = bg;
+    }
 
     const txt = new Text({
       text: label,
       style: new TextStyle({
         fontFamily: 'sans-serif',
-        fontSize: radius * 0.55,
+        fontSize: label === 'ATK' ? 15 : radius * 0.55,
         fill: 0xffeedd,
         fontWeight: 'bold',
       }),
@@ -85,20 +138,17 @@ export class ActionButtons extends Container {
     txt.anchor.set(0.5);
     container.addChild(txt);
 
+    if (label === 'ATK') {
+      this.atkText = txt;
+    }
+
     container.eventMode = 'static';
     container.on('pointerdown', () => {
       container.scale.set(0.88);
-      bg.tint = 0xffffff;
       onClick();
     });
-    container.on('pointerup', () => {
-      container.scale.set(1);
-      bg.tint = 0xffffff;
-    });
-    container.on('pointerupoutside', () => {
-      container.scale.set(1);
-      bg.tint = 0xffffff;
-    });
+    container.on('pointerup', () => { container.scale.set(1); });
+    container.on('pointerupoutside', () => { container.scale.set(1); });
 
     return container;
   }

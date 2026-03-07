@@ -6,7 +6,8 @@ import { gameData } from '../data/DataLoader';
 import { VirtualJoystick } from '../ui/VirtualJoystick';
 import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
-import type { Zone, Enemy, EnemySpawn, GridPosition } from '../data/types';
+import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
+import type { ActionMode } from '../ui/ActionButtons';
 
 // ─── Isometric Helpers ─────────────────────────────────────────
 const TILE_W = 64;
@@ -182,8 +183,22 @@ export class ZoneScene extends Container implements GameScene {
   private attackCooldown = 0;
   private readonly ATTACK_COOLDOWN = 0.5;
 
+  // Zone transition guard
+  private isTransitioning = false;
+
   // Interaction
   private interactPrompt: Text | null = null;
+  private nearbyNPC: NPCInstance | null = null;
+  private nearbyExit: ZoneConnection | null = null;
+  private nearbyLoot: LootInstance | null = null;
+
+  // Dialogue
+  private dialoguePanel: Container | null = null;
+  private dialogueTexts: Text[] = [];
+
+  // Pause
+  private pauseMenu: Container | null = null;
+  private isPaused = false;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -271,7 +286,11 @@ export class ZoneScene extends Container implements GameScene {
     this.actionButtons.y = h - 100;
     this.actionButtons.onAttack = () => this.handleAttack();
     this.actionButtons.onSkill = (i) => this.handleSkill(i);
+    this.actionButtons.onInteract = (mode) => this.handleInteraction(mode);
     this.uiContainer.addChild(this.actionButtons);
+
+    // Pause button (top center)
+    this.createPauseButton(w);
 
     // Center camera immediately
     this.worldContainer.x = w / 2 - this.playerScreenPos.x;
@@ -372,7 +391,7 @@ export class ZoneScene extends Container implements GameScene {
   private spawnDecorations(): void {
     const gw = this.zone.gridWidth;
     const gh = this.zone.gridHeight;
-    const density = this.zone.type === 'hub' ? 0.08 : 0.05;
+    const density = this.zone.type === 'hub' ? 0.14 : 0.10;
 
     for (let col = 0; col < gw; col++) {
       for (let row = 0; row < gh; row++) {
@@ -384,19 +403,168 @@ export class ZoneScene extends Container implements GameScene {
         const spawnDist = Math.hypot(col - this.zone.playerSpawnPosition.col, row - this.zone.playerSpawnPosition.row);
         if (spawnDist < 3) continue;
 
-        // Don't place on NPCs or enemies
+        // Don't place on NPCs or enemies or exits
         const occupiedByNPC = this.zone.npcSpawns.some(n => Math.abs(n.position.col - col) < 2 && Math.abs(n.position.row - row) < 2);
         const occupiedByEnemy = this.zone.enemySpawns.some(e => Math.abs(e.position.col - col) < 2 && Math.abs(e.position.row - row) < 2);
-        if (occupiedByNPC || occupiedByEnemy) continue;
+        const occupiedByExit = this.zone.connections.some(c => Math.abs(c.exitPosition.col - col) < 2 && Math.abs(c.exitPosition.row - row) < 2);
+        if (occupiedByNPC || occupiedByEnemy || occupiedByExit) continue;
 
         const pos = isoToScreen(col, row);
-        const decoType = Math.floor(seededRandom(seed + 42) * 5);
+        const decoType = Math.floor(seededRandom(seed + 42) * 8);
         const deco = this.createDecoration(decoType, pos, seed);
         if (deco) {
           deco.zIndex = pos.y;
           this.worldContainer.addChild(deco);
         }
       }
+    }
+
+    // Spawn buildings in hub zones
+    if (this.zone.type === 'hub') {
+      this.spawnBuildings();
+    }
+
+    // Spawn terrain relief
+    this.spawnTerrainRelief();
+  }
+
+  private spawnBuildings(): void {
+    const gw = this.zone.gridWidth;
+    const gh = this.zone.gridHeight;
+
+    // Place 3-5 buildings deterministically
+    const buildingCount = 3 + Math.floor(seededRandom(gw * gh) * 3);
+    for (let i = 0; i < buildingCount; i++) {
+      const seed = i * 3571 + gw * 97;
+      const col = 2 + Math.floor(seededRandom(seed) * (gw - 4));
+      const row = 2 + Math.floor(seededRandom(seed + 1) * (gh - 4));
+
+      // Don't place on spawn, NPCs, enemies
+      const spawnDist = Math.hypot(col - this.zone.playerSpawnPosition.col, row - this.zone.playerSpawnPosition.row);
+      if (spawnDist < 4) continue;
+      const occupied = this.zone.npcSpawns.some(n => Math.abs(n.position.col - col) < 3 && Math.abs(n.position.row - row) < 3) ||
+                       this.zone.enemySpawns.some(e => Math.abs(e.position.col - col) < 3 && Math.abs(e.position.row - row) < 3);
+      if (occupied) continue;
+
+      const pos = isoToScreen(col, row);
+      const buildingType = Math.floor(seededRandom(seed + 7) * 4);
+      const building = this.createBuilding(buildingType, pos, seed);
+      building.zIndex = pos.y;
+      this.worldContainer.addChild(building);
+    }
+  }
+
+  private createBuilding(type: number, pos: { x: number; y: number }, seed: number): Graphics {
+    const g = new Graphics();
+    const worldID = this.zone.worldID;
+    const wallColor = worldID === 'scadrial' ? 0x3a3028 : worldID === 'roshar' ? 0x445566 :
+                      worldID === 'nalthis' ? 0x446644 : worldID === 'taldain' ? 0x554433 :
+                      worldID === 'shadesmar' ? 0x222244 : 0x443344;
+    const roofColor = worldID === 'scadrial' ? 0x554433 : worldID === 'roshar' ? 0x556688 :
+                      worldID === 'nalthis' ? 0x338844 : worldID === 'taldain' ? 0x887755 :
+                      worldID === 'shadesmar' ? 0x443366 : 0x554455;
+
+    switch (type) {
+      case 0: // Small house
+        // Wall
+        g.poly([
+          { x: pos.x - 16, y: pos.y }, { x: pos.x, y: pos.y - 8 },
+          { x: pos.x + 16, y: pos.y }, { x: pos.x + 16, y: pos.y - 24 },
+          { x: pos.x, y: pos.y - 32 }, { x: pos.x - 16, y: pos.y - 24 },
+        ]).fill({ color: wallColor, alpha: 0.85 });
+        // Front face
+        g.poly([
+          { x: pos.x - 16, y: pos.y }, { x: pos.x, y: pos.y - 8 },
+          { x: pos.x, y: pos.y - 32 }, { x: pos.x - 16, y: pos.y - 24 },
+        ]).fill({ color: this.darkenColor(wallColor, 0.15), alpha: 0.85 });
+        // Roof
+        g.poly([
+          { x: pos.x - 18, y: pos.y - 24 }, { x: pos.x, y: pos.y - 38 },
+          { x: pos.x + 18, y: pos.y - 24 }, { x: pos.x, y: pos.y - 32 },
+        ]).fill({ color: roofColor, alpha: 0.9 });
+        // Door
+        g.roundRect(pos.x - 10, pos.y - 12, 5, 8, 1).fill({ color: 0x332211, alpha: 0.8 });
+        // Window
+        g.rect(pos.x + 2, pos.y - 24, 4, 4).fill({ color: 0xeebb44, alpha: 0.4 });
+        break;
+
+      case 1: // Tower
+        g.rect(pos.x - 8, pos.y - 40, 16, 40).fill({ color: wallColor, alpha: 0.85 });
+        g.rect(pos.x - 8, pos.y - 40, 8, 40).fill({ color: this.darkenColor(wallColor, 0.1), alpha: 0.85 });
+        // Battlement
+        for (let b = 0; b < 4; b++) {
+          g.rect(pos.x - 9 + b * 5, pos.y - 46, 4, 6).fill({ color: wallColor, alpha: 0.8 });
+        }
+        // Window slits
+        g.rect(pos.x - 2, pos.y - 30, 2, 5).fill({ color: 0xeebb44, alpha: 0.3 });
+        g.rect(pos.x - 2, pos.y - 18, 2, 5).fill({ color: 0xeebb44, alpha: 0.3 });
+        break;
+
+      case 2: // Market stall
+        // Posts
+        g.rect(pos.x - 14, pos.y - 16, 2, 16).fill({ color: 0x553322, alpha: 0.8 });
+        g.rect(pos.x + 12, pos.y - 16, 2, 16).fill({ color: 0x553322, alpha: 0.8 });
+        // Canopy
+        g.poly([
+          { x: pos.x - 16, y: pos.y - 16 }, { x: pos.x, y: pos.y - 22 },
+          { x: pos.x + 16, y: pos.y - 16 },
+        ]).fill({ color: 0xcc7733, alpha: 0.7 });
+        // Table
+        g.rect(pos.x - 10, pos.y - 6, 20, 4).fill({ color: 0x664422, alpha: 0.8 });
+        // Items on table
+        g.circle(pos.x - 4, pos.y - 8, 2).fill({ color: 0xee4444, alpha: 0.6 });
+        g.circle(pos.x + 2, pos.y - 8, 2).fill({ color: 0x44ee44, alpha: 0.6 });
+        g.circle(pos.x + 6, pos.y - 8, 1.5).fill({ color: 0xeeee44, alpha: 0.6 });
+        break;
+
+      case 3: // Ruins/broken wall
+        g.poly([
+          { x: pos.x - 18, y: pos.y }, { x: pos.x - 18, y: pos.y - 20 },
+          { x: pos.x - 12, y: pos.y - 26 }, { x: pos.x - 6, y: pos.y - 18 },
+          { x: pos.x, y: pos.y - 22 }, { x: pos.x + 6, y: pos.y - 14 },
+          { x: pos.x + 10, y: pos.y },
+        ]).fill({ color: this.darkenColor(wallColor, 0.2), alpha: 0.7 });
+        // Rubble
+        g.circle(pos.x + 8, pos.y - 2, 3).fill({ color: this.darkenColor(wallColor, 0.3), alpha: 0.5 });
+        g.circle(pos.x + 12, pos.y - 1, 2).fill({ color: this.darkenColor(wallColor, 0.25), alpha: 0.5 });
+        break;
+    }
+
+    return g;
+  }
+
+  private spawnTerrainRelief(): void {
+    const gw = this.zone.gridWidth;
+    const gh = this.zone.gridHeight;
+
+    // Place elevated terrain patches
+    const patchCount = 3 + Math.floor(seededRandom(gw + gh * 13) * 4);
+    for (let i = 0; i < patchCount; i++) {
+      const seed = i * 4517 + gw * 31;
+      const col = 1 + Math.floor(seededRandom(seed) * (gw - 2));
+      const row = 1 + Math.floor(seededRandom(seed + 1) * (gh - 2));
+      const spawnDist = Math.hypot(col - this.zone.playerSpawnPosition.col, row - this.zone.playerSpawnPosition.row);
+      if (spawnDist < 3) continue;
+
+      const pos = isoToScreen(col, row);
+      const size = 10 + seededRandom(seed + 2) * 18;
+      const height = 3 + seededRandom(seed + 3) * 6;
+
+      const g = new Graphics();
+      const t = this.theme;
+
+      // Elevated terrain (darker shade)
+      g.ellipse(pos.x, pos.y, size, size * 0.5)
+        .fill({ color: this.darkenColor(t.tileBase, 0.25), alpha: 0.5 });
+      // Height indicator (shadow beneath)
+      g.ellipse(pos.x, pos.y + height, size * 0.9, size * 0.45)
+        .fill({ color: 0x000000, alpha: 0.15 });
+      // Top surface
+      g.ellipse(pos.x, pos.y - height, size * 0.8, size * 0.4)
+        .fill({ color: this.lightenColor(t.tileBase, 0.15), alpha: 0.4 });
+
+      g.zIndex = pos.y - 100;
+      this.worldContainer.addChild(g);
     }
   }
 
@@ -408,30 +576,55 @@ export class ZoneScene extends Container implements GameScene {
       switch (type) {
         case 0: // Ash pile
           g.ellipse(pos.x, pos.y, 8 + seededRandom(seed + 1) * 6, 4).fill({ color: 0x444038, alpha: 0.6 });
+          g.ellipse(pos.x + 3, pos.y - 1, 4, 2.5).fill({ color: 0x555048, alpha: 0.4 });
           break;
         case 1: // Dead tree
           g.rect(pos.x - 1.5, pos.y - 22, 3, 22).fill({ color: 0x3a2a1a, alpha: 0.8 });
-          // Branches
           g.moveTo(pos.x, pos.y - 18).lineTo(pos.x - 8, pos.y - 26).stroke({ color: 0x3a2a1a, width: 1.5, alpha: 0.7 });
           g.moveTo(pos.x, pos.y - 14).lineTo(pos.x + 6, pos.y - 22).stroke({ color: 0x3a2a1a, width: 1.5, alpha: 0.7 });
+          g.moveTo(pos.x, pos.y - 10).lineTo(pos.x - 5, pos.y - 16).stroke({ color: 0x3a2a1a, width: 1, alpha: 0.5 });
           break;
         case 2: // Metal shard
           g.poly([
-            { x: pos.x, y: pos.y - 10 },
+            { x: pos.x, y: pos.y - 12 },
             { x: pos.x + 4, y: pos.y - 2 },
             { x: pos.x + 2, y: pos.y },
             { x: pos.x - 2, y: pos.y },
             { x: pos.x - 3, y: pos.y - 4 },
           ]).fill({ color: 0x667788, alpha: 0.6 });
+          g.poly([
+            { x: pos.x, y: pos.y - 12 },
+            { x: pos.x + 1, y: pos.y - 3 },
+            { x: pos.x - 1, y: pos.y - 2 },
+          ]).fill({ color: 0x8899aa, alpha: 0.3 }); // Shine
           break;
         case 3: // Ruined wall
-          g.rect(pos.x - 10, pos.y - 12, 20, 12).fill({ color: 0x3a3030, alpha: 0.7 });
-          g.rect(pos.x - 8, pos.y - 16, 6, 4).fill({ color: 0x3a3030, alpha: 0.5 });
+          g.rect(pos.x - 10, pos.y - 14, 20, 14).fill({ color: 0x3a3030, alpha: 0.7 });
+          g.rect(pos.x - 8, pos.y - 18, 6, 4).fill({ color: 0x3a3030, alpha: 0.5 });
+          g.rect(pos.x + 2, pos.y - 16, 4, 2).fill({ color: 0x3a3030, alpha: 0.4 });
           break;
         case 4: // Barrel
           g.ellipse(pos.x, pos.y - 3, 6, 4).fill({ color: 0x443322, alpha: 0.8 });
           g.rect(pos.x - 6, pos.y - 12, 12, 9).fill({ color: 0x553322, alpha: 0.8 });
           g.ellipse(pos.x, pos.y - 12, 6, 4).fill({ color: 0x664433, alpha: 0.8 });
+          g.rect(pos.x - 6, pos.y - 7, 12, 1).fill({ color: 0x443322, alpha: 0.5 }); // Ring
+          break;
+        case 5: // Lantern post
+          g.rect(pos.x - 1, pos.y - 20, 2, 20).fill({ color: 0x444444, alpha: 0.7 });
+          g.rect(pos.x - 3, pos.y - 22, 6, 4).fill({ color: 0x555555, alpha: 0.7 });
+          g.circle(pos.x, pos.y - 22, 3).fill({ color: 0xffaa33, alpha: 0.4 });
+          g.circle(pos.x, pos.y - 22, 6).fill({ color: 0xffaa33, alpha: 0.08 }); // Light glow
+          break;
+        case 6: // Crate stack
+          g.rect(pos.x - 7, pos.y - 8, 14, 8).fill({ color: 0x554422, alpha: 0.8 });
+          g.rect(pos.x - 5, pos.y - 14, 10, 6).fill({ color: 0x665533, alpha: 0.8 });
+          g.rect(pos.x - 7, pos.y - 4, 14, 0.8).fill({ color: 0x443311, alpha: 0.5 });
+          break;
+        case 7: // Broken cart
+          g.rect(pos.x - 12, pos.y - 6, 24, 6).fill({ color: 0x443322, alpha: 0.7 });
+          g.circle(pos.x - 10, pos.y, 4).stroke({ color: 0x553322, width: 1.5, alpha: 0.6 });
+          g.circle(pos.x + 10, pos.y, 4).stroke({ color: 0x553322, width: 1.5, alpha: 0.6 });
+          g.rect(pos.x - 4, pos.y - 10, 2, 6).fill({ color: 0x443322, alpha: 0.6 });
           break;
       }
     } else if (worldID === 'roshar') {
@@ -439,18 +632,169 @@ export class ZoneScene extends Container implements GameScene {
         case 0: // Rock formation
           g.poly([
             { x: pos.x - 8, y: pos.y },
-            { x: pos.x - 5, y: pos.y - 14 },
-            { x: pos.x + 2, y: pos.y - 18 },
-            { x: pos.x + 8, y: pos.y - 8 },
+            { x: pos.x - 5, y: pos.y - 16 },
+            { x: pos.x + 2, y: pos.y - 20 },
+            { x: pos.x + 8, y: pos.y - 10 },
             { x: pos.x + 6, y: pos.y },
           ]).fill({ color: 0x556677, alpha: 0.7 });
+          // Crem buildup
+          g.ellipse(pos.x, pos.y, 10, 4).fill({ color: 0x445566, alpha: 0.3 });
           break;
         case 1: // Storm post
           g.rect(pos.x - 2, pos.y - 28, 4, 28).fill({ color: 0x445566, alpha: 0.8 });
           g.circle(pos.x, pos.y - 30, 4).fill({ color: 0x66aaff, alpha: 0.5 });
+          g.circle(pos.x, pos.y - 30, 8).fill({ color: 0x66aaff, alpha: 0.08 });
           break;
-        default: // Cremling shelter (small rock)
+        case 2: // Chull shell
+          g.ellipse(pos.x, pos.y - 4, 8, 5).fill({ color: 0x667755, alpha: 0.6 });
+          g.ellipse(pos.x, pos.y - 6, 6, 3).fill({ color: 0x778866, alpha: 0.4 });
+          break;
+        case 3: // Stormlight sphere cluster
+          for (let i = 0; i < 3; i++) {
+            const sx = pos.x + (seededRandom(seed + i * 3) - 0.5) * 10;
+            const sy = pos.y - 2 + (seededRandom(seed + i * 3 + 1) - 0.5) * 6;
+            g.circle(sx, sy, 2).fill({ color: 0x66aaff, alpha: 0.5 });
+            g.circle(sx, sy, 4).fill({ color: 0x88ccff, alpha: 0.1 });
+          }
+          break;
+        case 4: // Vine cluster
+          for (let i = 0; i < 4; i++) {
+            const vx = pos.x + (seededRandom(seed + i * 5) - 0.5) * 12;
+            g.moveTo(vx, pos.y).lineTo(vx + (seededRandom(seed + i * 5 + 2) - 0.5) * 6, pos.y - 8 - seededRandom(seed + i * 5 + 1) * 10)
+              .stroke({ color: 0x446644, width: 1.2, alpha: 0.5 });
+          }
+          break;
+        case 5: // Highstorm shelter (stone arch)
+          g.rect(pos.x - 10, pos.y - 16, 3, 16).fill({ color: 0x556677, alpha: 0.7 });
+          g.rect(pos.x + 7, pos.y - 16, 3, 16).fill({ color: 0x556677, alpha: 0.7 });
+          g.roundRect(pos.x - 11, pos.y - 18, 22, 4, 2).fill({ color: 0x667788, alpha: 0.7 });
+          break;
+        default: // Cremling shelter
           g.ellipse(pos.x, pos.y - 3, 6 + seededRandom(seed) * 4, 4).fill({ color: 0x445566, alpha: 0.6 });
+          break;
+      }
+    } else if (worldID === 'nalthis') {
+      switch (type) {
+        case 0: // Colored flower
+          const petalColor = [0xff4466, 0x44aaff, 0xffaa22, 0xaa44ff, 0x44ff66][Math.floor(seededRandom(seed + 1) * 5)];
+          g.circle(pos.x, pos.y - 6, 4).fill({ color: petalColor, alpha: 0.6 });
+          g.circle(pos.x - 3, pos.y - 4, 3).fill({ color: petalColor, alpha: 0.4 });
+          g.circle(pos.x + 3, pos.y - 4, 3).fill({ color: petalColor, alpha: 0.4 });
+          g.rect(pos.x - 0.5, pos.y - 4, 1, 4).fill({ color: 0x336622, alpha: 0.6 });
+          break;
+        case 1: // Garden bush
+          g.circle(pos.x, pos.y - 6, 7).fill({ color: 0x336633, alpha: 0.6 });
+          g.circle(pos.x - 4, pos.y - 4, 5).fill({ color: 0x448844, alpha: 0.5 });
+          g.circle(pos.x + 3, pos.y - 8, 5).fill({ color: 0x44aa44, alpha: 0.4 });
+          break;
+        case 2: // Statue
+          g.rect(pos.x - 4, pos.y - 18, 8, 18).fill({ color: 0x888888, alpha: 0.6 });
+          g.circle(pos.x, pos.y - 22, 4).fill({ color: 0x999999, alpha: 0.6 });
+          g.rect(pos.x - 6, pos.y - 2, 12, 3).fill({ color: 0x777777, alpha: 0.7 });
+          break;
+        case 3: // Fountain
+          g.ellipse(pos.x, pos.y, 10, 5).fill({ color: 0x556677, alpha: 0.6 });
+          g.ellipse(pos.x, pos.y - 1, 8, 4).fill({ color: 0x4488bb, alpha: 0.4 });
+          g.rect(pos.x - 1, pos.y - 10, 2, 10).fill({ color: 0x667788, alpha: 0.7 });
+          g.circle(pos.x, pos.y - 10, 3).fill({ color: 0x66aacc, alpha: 0.4 });
+          break;
+        default:
+          g.circle(pos.x, pos.y - 3, 4 + seededRandom(seed) * 3).fill({ color: 0x447744, alpha: 0.4 });
+          break;
+      }
+    } else if (worldID === 'taldain') {
+      switch (type) {
+        case 0: // Sand dune
+          g.ellipse(pos.x, pos.y - 2, 14 + seededRandom(seed + 1) * 8, 5).fill({ color: 0x554422, alpha: 0.4 });
+          g.ellipse(pos.x + 2, pos.y - 4, 8, 3).fill({ color: 0x665533, alpha: 0.3 });
+          break;
+        case 1: // Cactus
+          g.rect(pos.x - 2, pos.y - 16, 4, 16).fill({ color: 0x448833, alpha: 0.7 });
+          g.rect(pos.x - 8, pos.y - 12, 6, 3).fill({ color: 0x448833, alpha: 0.6 });
+          g.rect(pos.x - 8, pos.y - 16, 3, 7).fill({ color: 0x448833, alpha: 0.6 });
+          g.rect(pos.x + 4, pos.y - 10, 5, 3).fill({ color: 0x448833, alpha: 0.6 });
+          g.rect(pos.x + 6, pos.y - 14, 3, 7).fill({ color: 0x448833, alpha: 0.6 });
+          break;
+        case 2: // Sand rock
+          g.poly([
+            { x: pos.x - 6, y: pos.y }, { x: pos.x - 4, y: pos.y - 10 },
+            { x: pos.x + 3, y: pos.y - 8 }, { x: pos.x + 6, y: pos.y },
+          ]).fill({ color: 0x887755, alpha: 0.6 });
+          break;
+        default:
+          g.ellipse(pos.x, pos.y - 1, 6, 3).fill({ color: 0x554422, alpha: 0.3 });
+          break;
+      }
+    } else if (worldID === 'shadesmar') {
+      switch (type) {
+        case 0: // Bead pile
+          for (let i = 0; i < 5; i++) {
+            const bx = pos.x + (seededRandom(seed + i * 2) - 0.5) * 10;
+            const by = pos.y - 1 + (seededRandom(seed + i * 2 + 1) - 0.5) * 5;
+            g.circle(bx, by, 1.5 + seededRandom(seed + i) * 1).fill({ color: 0x8877cc, alpha: 0.5 });
+          }
+          break;
+        case 1: // Flamespren
+          g.circle(pos.x, pos.y - 8, 3).fill({ color: 0xff6633, alpha: 0.5 });
+          g.circle(pos.x, pos.y - 8, 6).fill({ color: 0xff4422, alpha: 0.1 });
+          g.poly([
+            { x: pos.x - 2, y: pos.y - 8 }, { x: pos.x, y: pos.y - 16 }, { x: pos.x + 2, y: pos.y - 8 },
+          ]).fill({ color: 0xff8844, alpha: 0.3 });
+          break;
+        case 2: // Glass tree
+          g.rect(pos.x - 1, pos.y - 20, 2, 20).fill({ color: 0x6655aa, alpha: 0.5 });
+          g.poly([
+            { x: pos.x - 8, y: pos.y - 16 }, { x: pos.x, y: pos.y - 28 }, { x: pos.x + 8, y: pos.y - 16 },
+          ]).fill({ color: 0x8877cc, alpha: 0.3 });
+          g.poly([
+            { x: pos.x - 6, y: pos.y - 20 }, { x: pos.x, y: pos.y - 30 }, { x: pos.x + 6, y: pos.y - 20 },
+          ]).fill({ color: 0xaa99dd, alpha: 0.2 });
+          break;
+        default:
+          g.circle(pos.x, pos.y - 3, 3).fill({ color: 0x7766bb, alpha: 0.3 });
+          break;
+      }
+    } else if (worldID === 'sel') {
+      switch (type) {
+        case 0: // Aon glyph on ground
+          g.circle(pos.x, pos.y - 2, 6).stroke({ color: 0xddaa44, width: 1, alpha: 0.3 });
+          g.moveTo(pos.x - 3, pos.y - 4).lineTo(pos.x + 3, pos.y).stroke({ color: 0xddaa44, width: 0.8, alpha: 0.25 });
+          g.moveTo(pos.x - 3, pos.y).lineTo(pos.x + 3, pos.y - 4).stroke({ color: 0xddaa44, width: 0.8, alpha: 0.25 });
+          break;
+        case 1: // Stone column
+          g.rect(pos.x - 4, pos.y - 22, 8, 22).fill({ color: 0x888877, alpha: 0.7 });
+          g.rect(pos.x - 5, pos.y - 24, 10, 3).fill({ color: 0x999988, alpha: 0.7 });
+          g.rect(pos.x - 5, pos.y - 1, 10, 2).fill({ color: 0x777766, alpha: 0.7 });
+          break;
+        case 2: // Shrine
+          g.rect(pos.x - 8, pos.y - 4, 16, 4).fill({ color: 0x888877, alpha: 0.7 });
+          g.poly([
+            { x: pos.x - 6, y: pos.y - 4 }, { x: pos.x, y: pos.y - 14 }, { x: pos.x + 6, y: pos.y - 4 },
+          ]).fill({ color: 0x999988, alpha: 0.6 });
+          g.circle(pos.x, pos.y - 8, 2).fill({ color: 0xddaa44, alpha: 0.5 });
+          break;
+        default:
+          g.ellipse(pos.x, pos.y - 1, 5, 3).fill({ color: 0x667755, alpha: 0.4 });
+          break;
+      }
+    } else if (worldID === 'komashi') {
+      switch (type) {
+        case 0: // Ink blot
+          g.ellipse(pos.x, pos.y, 6 + seededRandom(seed) * 5, 3 + seededRandom(seed + 1) * 3).fill({ color: 0x111122, alpha: 0.5 });
+          break;
+        case 1: // Paper lantern
+          g.rect(pos.x - 1, pos.y - 16, 2, 14).fill({ color: 0x554422, alpha: 0.6 });
+          g.ellipse(pos.x, pos.y - 18, 4, 5).fill({ color: 0xee8844, alpha: 0.5 });
+          g.ellipse(pos.x, pos.y - 18, 6, 7).fill({ color: 0xffaa44, alpha: 0.1 });
+          break;
+        case 2: // Stone cairn
+          g.ellipse(pos.x, pos.y - 1, 5, 3).fill({ color: 0x555555, alpha: 0.6 });
+          g.ellipse(pos.x, pos.y - 4, 4, 2.5).fill({ color: 0x666666, alpha: 0.6 });
+          g.ellipse(pos.x, pos.y - 7, 3, 2).fill({ color: 0x777777, alpha: 0.6 });
+          g.circle(pos.x, pos.y - 9.5, 1.5).fill({ color: 0x888888, alpha: 0.6 });
+          break;
+        default:
+          g.rect(pos.x - 3, pos.y - 5, 6, 5).fill({ color: 0x332233, alpha: 0.3 });
           break;
       }
     } else {
@@ -462,6 +806,13 @@ export class ZoneScene extends Container implements GameScene {
         case 1: // Bush
           g.circle(pos.x, pos.y - 5, 6).fill({ color: 0x335533, alpha: 0.5 });
           g.circle(pos.x + 3, pos.y - 7, 5).fill({ color: 0x336633, alpha: 0.4 });
+          break;
+        case 2: // Grass tuft
+          for (let i = 0; i < 4; i++) {
+            const gx = pos.x + (seededRandom(seed + i) - 0.5) * 8;
+            g.moveTo(gx, pos.y).lineTo(gx + (seededRandom(seed + i + 10) - 0.5) * 3, pos.y - 5 - seededRandom(seed + i + 5) * 4)
+              .stroke({ color: 0x557744, width: 1, alpha: 0.5 });
+          }
           break;
         default:
           return null;
@@ -495,38 +846,156 @@ export class ZoneScene extends Container implements GameScene {
   private drawPlayer(): void {
     this.playerSprite.clear();
     const champ = GameManager.shared.champion;
+    const cls = champ?.championClass ?? 'mistborn';
+
     const classColors: Record<string, number> = {
-      mistborn: 0x4488ff, radiant: 0x44aaff, awakener: 0xaa44ff,
-      elantrian: 0xffaa44, sandMaster: 0xddaa44, nightmarePainter: 0x8844aa,
+      mistborn: 0x3366cc, radiant: 0x3399dd, awakener: 0x9933cc,
+      elantrian: 0xdd8833, sandMaster: 0xcc9933, nightmarePainter: 0x663399,
     };
-    const bodyColor = classColors[champ?.championClass ?? 'mistborn'] ?? 0x4488ff;
+    const capeColors: Record<string, number> = {
+      mistborn: 0x222233, radiant: 0x224466, awakener: 0x552288,
+      elantrian: 0x885522, sandMaster: 0x665522, nightmarePainter: 0x331155,
+    };
+    const weaponColors: Record<string, number> = {
+      mistborn: 0x8899aa, radiant: 0x88ccff, awakener: 0xcc88ff,
+      elantrian: 0xffcc66, sandMaster: 0xddcc88, nightmarePainter: 0x8866cc,
+    };
 
-    // Feet
-    this.playerSprite.ellipse(-3, -2, 3, 2).fill({ color: 0x332222, alpha: 0.9 });
-    this.playerSprite.ellipse(3, -2, 3, 2).fill({ color: 0x332222, alpha: 0.9 });
+    const bodyColor = classColors[cls];
+    const capeColor = capeColors[cls];
+    const weaponColor = weaponColors[cls];
 
-    // Body (cloak/robe)
-    this.playerSprite.poly([
-      { x: -10, y: -4 }, { x: -8, y: -20 },
-      { x: 0, y: -24 },
-      { x: 8, y: -20 }, { x: 10, y: -4 },
+    const g = this.playerSprite;
+
+    // Cape (behind body)
+    g.poly([
+      { x: -7, y: -18 }, { x: -12, y: 4 }, { x: -8, y: 6 },
+      { x: 0, y: 4 },
+      { x: 8, y: 6 }, { x: 12, y: 4 }, { x: 7, y: -18 },
+    ]).fill({ color: capeColor, alpha: 0.85 });
+    // Cape detail stripe
+    g.poly([
+      { x: -5, y: -16 }, { x: -9, y: 4 },
+      { x: -6, y: 4 }, { x: -3, y: -16 },
+    ]).fill({ color: this.lightenColor(capeColor, 0.3), alpha: 0.3 });
+
+    // Boots
+    g.roundRect(-6, -3, 5, 5, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
+    g.roundRect(1, -3, 5, 5, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
+    // Boot highlight
+    g.roundRect(-5, -3, 2, 3, 1).fill({ color: 0x4a3a2a, alpha: 0.5 });
+
+    // Legs
+    g.rect(-5, -10, 4, 8).fill({ color: 0x333344, alpha: 0.9 });
+    g.rect(1, -10, 4, 8).fill({ color: 0x333344, alpha: 0.9 });
+
+    // Belt
+    g.rect(-7, -12, 14, 3).fill({ color: 0x554422, alpha: 0.9 });
+    // Belt buckle
+    g.rect(-1.5, -12, 3, 3).fill({ color: 0xddaa33, alpha: 0.8 });
+
+    // Chest/torso
+    g.poly([
+      { x: -8, y: -12 }, { x: -9, y: -24 },
+      { x: 0, y: -26 },
+      { x: 9, y: -24 }, { x: 8, y: -12 },
     ]).fill({ color: bodyColor, alpha: 0.9 });
+    // Chest highlight
+    g.poly([
+      { x: -4, y: -14 }, { x: -5, y: -22 },
+      { x: 0, y: -24 }, { x: 3, y: -22 }, { x: 2, y: -14 },
+    ]).fill({ color: this.lightenColor(bodyColor, 0.25), alpha: 0.4 });
 
-    // Body highlight
-    this.playerSprite.poly([
-      { x: -5, y: -6 }, { x: -4, y: -18 },
-      { x: 0, y: -22 }, { x: 2, y: -18 }, { x: 3, y: -6 },
-    ]).fill({ color: this.lightenColor(bodyColor, 0.2), alpha: 0.5 });
+    // Shoulder pads
+    g.ellipse(-10, -23, 5, 3).fill({ color: this.lightenColor(bodyColor, 0.1), alpha: 0.9 });
+    g.ellipse(10, -23, 5, 3).fill({ color: this.lightenColor(bodyColor, 0.1), alpha: 0.9 });
+    // Shoulder rivets
+    g.circle(-10, -23, 1).fill({ color: 0xddaa33, alpha: 0.7 });
+    g.circle(10, -23, 1).fill({ color: 0xddaa33, alpha: 0.7 });
+
+    // Arms
+    g.rect(-13, -22, 4, 12).fill({ color: bodyColor, alpha: 0.85 });
+    g.rect(9, -22, 4, 12).fill({ color: bodyColor, alpha: 0.85 });
+    // Gloves
+    g.rect(-13, -11, 4, 3).fill({ color: 0x443322, alpha: 0.9 });
+    g.rect(9, -11, 4, 3).fill({ color: 0x443322, alpha: 0.9 });
+
+    // Weapon (right hand) - varies by class
+    if (cls === 'mistborn') {
+      // Obsidian daggers
+      g.poly([
+        { x: 14, y: -14 }, { x: 15, y: -28 }, { x: 16, y: -14 },
+      ]).fill({ color: 0x445566, alpha: 0.8 });
+      g.poly([
+        { x: 14, y: -14 }, { x: 15, y: -28 }, { x: 16, y: -14 },
+      ]).stroke({ color: 0x88aacc, width: 0.5, alpha: 0.5 });
+    } else if (cls === 'radiant') {
+      // Shardblade (glowing)
+      g.poly([
+        { x: 14, y: -12 }, { x: 14.5, y: -34 }, { x: 16, y: -34 }, { x: 16.5, y: -12 },
+      ]).fill({ color: 0xaaddff, alpha: 0.7 });
+      g.poly([
+        { x: 14, y: -12 }, { x: 14.5, y: -34 }, { x: 16, y: -34 }, { x: 16.5, y: -12 },
+      ]).stroke({ color: 0xcceeFF, width: 0.5, alpha: 0.8 });
+      // Blade glow
+      g.rect(13, -32, 5, 20).fill({ color: 0x88ccff, alpha: 0.06 });
+    } else if (cls === 'awakener') {
+      // Staff with colored ribbons
+      g.rect(14, -32, 2, 28).fill({ color: 0x664422, alpha: 0.8 });
+      g.circle(15, -33, 3).fill({ color: 0xcc66ff, alpha: 0.6 });
+    } else if (cls === 'elantrian') {
+      // Aon rod
+      g.rect(14, -30, 2, 24).fill({ color: 0xddbb66, alpha: 0.8 });
+      g.circle(15, -31, 4).fill({ color: 0xffcc44, alpha: 0.4 });
+      g.circle(15, -31, 4).stroke({ color: 0xffdd66, width: 1, alpha: 0.6 });
+    } else if (cls === 'sandMaster') {
+      // Sand pouch + ribbon
+      g.ellipse(14, -14, 4, 5).fill({ color: 0xccbb88, alpha: 0.7 });
+    } else {
+      // Painter brush
+      g.rect(14, -28, 1.5, 22).fill({ color: 0x443322, alpha: 0.8 });
+      g.rect(13, -30, 4, 4).fill({ color: 0x222222, alpha: 0.7 });
+    }
+
+    // Neck
+    g.rect(-2, -28, 4, 3).fill({ color: 0xddaa88, alpha: 0.9 });
 
     // Head
-    this.playerSprite.circle(0, -28, 6).fill({ color: 0xeebb99, alpha: 0.95 });
+    g.circle(0, -32, 6.5).fill({ color: 0xeebb99, alpha: 0.95 });
+    // Hair (varies slightly by class)
+    const hairColor = cls === 'nightmarePainter' ? 0x111122 : cls === 'elantrian' ? 0xcccccc : 0x443322;
+    g.poly([
+      { x: -6, y: -33 }, { x: -7, y: -38 }, { x: -3, y: -40 },
+      { x: 2, y: -40 }, { x: 6, y: -39 }, { x: 7, y: -34 },
+      { x: 5, y: -33 },
+    ]).fill({ color: hairColor, alpha: 0.9 });
 
     // Eyes
-    this.playerSprite.circle(-2, -29, 1).fill(0x222244);
-    this.playerSprite.circle(2, -29, 1).fill(0x222244);
+    g.circle(-2.5, -32, 1.2).fill(0x222244);
+    g.circle(2.5, -32, 1.2).fill(0x222244);
+    // Eye glow (class-specific)
+    g.circle(-2.5, -32, 0.6).fill({ color: weaponColor, alpha: 0.6 });
+    g.circle(2.5, -32, 0.6).fill({ color: weaponColor, alpha: 0.6 });
 
-    // Class glow effect
-    this.playerSprite.circle(0, -16, 14).fill({ color: bodyColor, alpha: 0.08 });
+    // Helmet/headgear (varies by class)
+    if (cls === 'radiant') {
+      // Helm visor
+      g.poly([
+        { x: -5, y: -35 }, { x: 0, y: -36 }, { x: 5, y: -35 },
+        { x: 6, y: -31 }, { x: -6, y: -31 },
+      ]).fill({ color: 0x556688, alpha: 0.4 });
+    } else if (cls === 'mistborn') {
+      // Mistcloak hood outline
+      g.poly([
+        { x: -7, y: -30 }, { x: -8, y: -38 },
+        { x: 0, y: -42 },
+        { x: 8, y: -38 }, { x: 7, y: -30 },
+      ]).stroke({ color: 0x334455, width: 1.5, alpha: 0.6 });
+    }
+
+    // Class-specific aura glow
+    g.circle(0, -20, 18).fill({ color: bodyColor, alpha: 0.05 });
+    g.circle(0, -20, 12).fill({ color: weaponColor, alpha: 0.04 });
   }
 
   // ─── NPCs ────────────────────────────────────────────────────
@@ -611,13 +1080,408 @@ export class ZoneScene extends Container implements GameScene {
     return npcID.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
 
-  private interactWithNPC(spawn: { npcID: string; isShopkeeper: boolean; dialogueTreeID: string | null }): void {
-    // Show a simple interaction feedback
-    const pos = this.npcs.find(n => n.id === spawn.npcID)?.position;
-    if (!pos) return;
+  private handleInteraction(mode: ActionMode): void {
+    switch (mode) {
+      case 'talk':
+        if (this.nearbyNPC) {
+          const spawn = this.zone.npcSpawns.find(s => s.npcID === this.nearbyNPC!.id);
+          if (spawn) this.interactWithNPC(spawn);
+        }
+        break;
+      case 'enter':
+        // Zone exit handled by checkZoneExit
+        break;
+      case 'loot':
+        if (this.nearbyLoot) {
+          this.collectLoot(this.nearbyLoot.id);
+        }
+        break;
+    }
+  }
 
-    const msg = spawn.isShopkeeper ? 'Boutique bientôt disponible...' : 'Dialogue bientôt disponible...';
-    this.showFloatingText(pos.x, pos.y - 50, msg, 0xeedd88);
+  private interactWithNPC(spawn: { npcID: string; isShopkeeper: boolean; dialogueTreeID: string | null }): void {
+    const npc = this.npcs.find(n => n.id === spawn.npcID);
+    if (!npc) return;
+
+    if (spawn.isShopkeeper) {
+      this.showShopPanel(spawn.npcID);
+    } else {
+      this.showDialogue(spawn.npcID, spawn.dialogueTreeID);
+    }
+  }
+
+  private showDialogue(npcID: string, dialogueTreeID: string | null): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+    const npcName = this.formatNPCName(npcID);
+
+    // Dialogue lines based on world
+    const worldDialogues: Record<string, string[]> = {
+      scadrial: [
+        'Les brumes sont plus denses ces derniers temps...',
+        'Méfie-toi des Inquisiteurs qui rôdent dans la nuit.',
+        'Le Seigneur Dirigeant surveille tout. Sois prudent.',
+        'J\'ai entendu parler d\'un groupe de skaa rebelles...',
+      ],
+      roshar: [
+        'La Tempête Éternelle approche, prépare-toi!',
+        'Les sprens sont agités aujourd\'hui...',
+        'Que la Lumière d\'Orage te protège, Radieux.',
+        'Les Néantifères se rassemblent aux frontières.',
+      ],
+      nalthis: [
+        'Les couleurs semblent s\'estomper dans ce quartier.',
+        'Combien de Souffles possèdes-tu, étranger?',
+        'Le Dieu-Roi ne reçoit plus de visiteurs.',
+        'La vie est belle à Hallandren, n\'est-ce pas?',
+      ],
+      taldain: [
+        'Le sable blanc est rare par ici.',
+        'L\'énergie solaire alimente mes pouvoirs.',
+        'Les tempêtes de sable sont de plus en plus fréquentes.',
+        'Attention aux créatures qui vivent sous le sable.',
+      ],
+      sel: [
+        'Les Aons brillent d\'un éclat particulier ce soir.',
+        'Elantris retrouve peu à peu sa splendeur.',
+        'Le Dor coule en abondance ici.',
+        'Les Seons dansent dans la lumière.',
+      ],
+      komashi: [
+        'Les cauchemars sont de plus en plus vivaces...',
+        'Tes peintures ont un pouvoir remarquable.',
+        'Les pierres empilées nous protègent la nuit.',
+        'Méfie-toi des ombres qui bougent.',
+      ],
+      shadesmar: [
+        'Les billes sont la monnaie ici, ne l\'oublie pas.',
+        'Les flamespren éclairent notre chemin.',
+        'Le Royaume Cognitif est vaste et dangereux.',
+        'Chaque pensée prend forme dans ce monde.',
+      ],
+    };
+
+    const lines = worldDialogues[this.zone.worldID] ?? worldDialogues.scadrial;
+    const chosenLine = lines[Math.floor(Math.random() * lines.length)];
+
+    this.dialoguePanel = new Container();
+    this.dialoguePanel.zIndex = 10000;
+
+    // Dark overlay
+    const overlay = new Graphics();
+    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.4 });
+    overlay.eventMode = 'static';
+    this.dialoguePanel.addChild(overlay);
+
+    // Panel background
+    const panelH = 120;
+    const panelY = h - panelH - 20;
+    const panel = new Graphics();
+    panel.roundRect(20, panelY, w - 40, panelH, 12)
+      .fill({ color: 0x0a0815, alpha: 0.92 });
+    panel.roundRect(20, panelY, w - 40, panelH, 12)
+      .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
+    this.dialoguePanel.addChild(panel);
+
+    // NPC name label
+    const nameLabel = new Text({
+      text: npcName,
+      style: new TextStyle({
+        fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xe6cc66, fontWeight: 'bold',
+      }),
+    });
+    nameLabel.x = 36;
+    nameLabel.y = panelY + 10;
+    this.dialoguePanel.addChild(nameLabel);
+
+    // Dialogue text
+    const dialogueText = new Text({
+      text: chosenLine,
+      style: new TextStyle({
+        fontFamily: 'Georgia, serif', fontSize: 12, fill: 0xddddcc,
+        wordWrap: true, wordWrapWidth: w - 80,
+      }),
+    });
+    dialogueText.x = 36;
+    dialogueText.y = panelY + 32;
+    this.dialoguePanel.addChild(dialogueText);
+
+    // Close hint
+    const closeHint = new Text({
+      text: 'Toucher pour fermer',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x888888 }),
+    });
+    closeHint.anchor.set(0.5);
+    closeHint.x = w / 2;
+    closeHint.y = panelY + panelH - 14;
+    this.dialoguePanel.addChild(closeHint);
+
+    // Quest reward hint
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      const xpReward = 10 + Math.floor(Math.random() * 15);
+      const goldReward = 5 + Math.floor(Math.random() * 10);
+      champ.gold += goldReward;
+      GameManager.shared.grantXP(xpReward);
+      const rewardText = new Text({
+        text: `+${xpReward} XP  +${goldReward} or`,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
+      });
+      rewardText.anchor.set(1, 0);
+      rewardText.x = w - 36;
+      rewardText.y = panelY + 10;
+      this.dialoguePanel.addChild(rewardText);
+    }
+
+    overlay.on('pointerdown', () => this.closeDialogue());
+    panel.eventMode = 'static';
+    panel.on('pointerdown', () => this.closeDialogue());
+
+    this.uiContainer.addChild(this.dialoguePanel);
+  }
+
+  private closeDialogue(): void {
+    if (this.dialoguePanel) {
+      this.dialoguePanel.destroy({ children: true });
+      this.dialoguePanel = null;
+    }
+    this.isPaused = false;
+  }
+
+  private showShopPanel(npcID: string): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    this.dialoguePanel = new Container();
+    this.dialoguePanel.zIndex = 10000;
+
+    const overlay = new Graphics();
+    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.5 });
+    overlay.eventMode = 'static';
+    this.dialoguePanel.addChild(overlay);
+
+    // Shop panel
+    const panelW = Math.min(300, w - 40);
+    const panelH = 240;
+    const panelX = (w - panelW) / 2;
+    const panelY = (h - panelH) / 2;
+
+    const panel = new Graphics();
+    panel.roundRect(panelX, panelY, panelW, panelH, 12)
+      .fill({ color: 0x0a0815, alpha: 0.95 });
+    panel.roundRect(panelX, panelY, panelW, panelH, 12)
+      .stroke({ color: 0x886633, width: 2, alpha: 0.8 });
+    panel.eventMode = 'static';
+    this.dialoguePanel.addChild(panel);
+
+    // Title
+    const title = new Text({
+      text: 'BOUTIQUE',
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 16, fill: 0xe6cc66, fontWeight: 'bold' }),
+    });
+    title.anchor.set(0.5);
+    title.x = w / 2;
+    title.y = panelY + 18;
+    this.dialoguePanel.addChild(title);
+
+    // Gold display
+    const goldLabel = new Text({
+      text: `Or: ${champ.gold}`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 12, fill: 0xe6cc33 }),
+    });
+    goldLabel.anchor.set(0.5);
+    goldLabel.x = w / 2;
+    goldLabel.y = panelY + 38;
+    this.dialoguePanel.addChild(goldLabel);
+
+    // Shop items
+    const shopItems = [
+      { name: 'Potion de soin', cost: 20, effect: 'hp', value: 50 },
+      { name: 'Potion d\'investiture', cost: 25, effect: 'inv', value: 40 },
+      { name: 'Élixir de force', cost: 40, effect: 'str', value: 2 },
+    ];
+
+    shopItems.forEach((item, i) => {
+      const itemY = panelY + 60 + i * 45;
+      const itemBg = new Graphics();
+      itemBg.roundRect(panelX + 10, itemY, panelW - 20, 38, 6)
+        .fill({ color: 0x1a1528, alpha: 0.8 })
+        .stroke({ color: 0x443322, width: 1, alpha: 0.5 });
+      itemBg.eventMode = 'static';
+      itemBg.cursor = 'pointer';
+      this.dialoguePanel!.addChild(itemBg);
+
+      const itemName = new Text({
+        text: item.name,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xddddcc }),
+      });
+      itemName.x = panelX + 18;
+      itemName.y = itemY + 5;
+      this.dialoguePanel!.addChild(itemName);
+
+      const costText = new Text({
+        text: `${item.cost} or`,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: champ.gold >= item.cost ? 0xe6cc33 : 0x884444 }),
+      });
+      costText.anchor.set(1, 0);
+      costText.x = panelX + panelW - 18;
+      costText.y = itemY + 5;
+      this.dialoguePanel!.addChild(costText);
+
+      const buyLabel = new Text({
+        text: champ.gold >= item.cost ? 'Acheter' : 'Pas assez d\'or',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: champ.gold >= item.cost ? 0x66cc44 : 0x666666 }),
+      });
+      buyLabel.x = panelX + 18;
+      buyLabel.y = itemY + 20;
+      this.dialoguePanel!.addChild(buyLabel);
+
+      if (champ.gold >= item.cost) {
+        itemBg.on('pointerdown', () => {
+          champ.gold -= item.cost;
+          if (item.effect === 'hp') {
+            champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + item.value);
+          } else if (item.effect === 'inv') {
+            champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + item.value);
+          } else if (item.effect === 'str') {
+            champ.baseStats.strength += item.value;
+          }
+          this.closeDialogue();
+          this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, `${item.name} acheté!`, 0x66cc44);
+        });
+      }
+    });
+
+    // Close button
+    const closeBtnBg = new Graphics();
+    closeBtnBg.roundRect(panelX + panelW / 2 - 40, panelY + panelH - 32, 80, 24, 6)
+      .fill({ color: 0x553322, alpha: 0.8 })
+      .stroke({ color: 0x886644, width: 1 });
+    closeBtnBg.eventMode = 'static';
+    closeBtnBg.cursor = 'pointer';
+    closeBtnBg.on('pointerdown', () => this.closeDialogue());
+    this.dialoguePanel.addChild(closeBtnBg);
+
+    const closeLabel = new Text({
+      text: 'Fermer',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xeeddcc }),
+    });
+    closeLabel.anchor.set(0.5);
+    closeLabel.x = panelX + panelW / 2;
+    closeLabel.y = panelY + panelH - 20;
+    this.dialoguePanel.addChild(closeLabel);
+
+    overlay.on('pointerdown', () => this.closeDialogue());
+    this.uiContainer.addChild(this.dialoguePanel);
+  }
+
+  private createPauseButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+
+    // Pause icon (two bars)
+    const icon = new Graphics();
+    icon.rect(10, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
+    icon.rect(20, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
+    btn.addChild(icon);
+
+    btn.x = screenWidth / 2 - 18;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.togglePause());
+    this.uiContainer.addChild(btn);
+  }
+
+  private togglePause(): void {
+    if (this.pauseMenu) {
+      this.pauseMenu.destroy({ children: true });
+      this.pauseMenu = null;
+      this.isPaused = false;
+      return;
+    }
+
+    this.isPaused = true;
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+
+    this.pauseMenu = new Container();
+    this.pauseMenu.zIndex = 10000;
+
+    const overlay = new Graphics();
+    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.6 });
+    overlay.eventMode = 'static';
+    this.pauseMenu.addChild(overlay);
+
+    // Panel
+    const panelW = 200;
+    const panelH = 220;
+    const px = (w - panelW) / 2;
+    const py = (h - panelH) / 2;
+
+    const panel = new Graphics();
+    panel.roundRect(px, py, panelW, panelH, 12)
+      .fill({ color: 0x0a0815, alpha: 0.95 })
+      .stroke({ color: 0x554433, width: 2, alpha: 0.7 });
+    panel.eventMode = 'static';
+    this.pauseMenu.addChild(panel);
+
+    const title = new Text({
+      text: 'PAUSE',
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 20, fill: 0xe6cc66, fontWeight: 'bold' }),
+    });
+    title.anchor.set(0.5);
+    title.x = w / 2;
+    title.y = py + 24;
+    this.pauseMenu.addChild(title);
+
+    const buttons = [
+      { label: 'Reprendre', y: py + 60, action: () => this.togglePause() },
+      { label: 'Sauvegarder', y: py + 105, action: () => {
+        GameManager.shared.save();
+        this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, 'Partie sauvegardée!', 0x66cc44);
+        this.togglePause();
+      }},
+      { label: 'Quitter', y: py + 150, action: () => {
+        GameManager.shared.save();
+        // Return to title (just reload page for now)
+        window.location.reload();
+      }, color: 0x552222 },
+    ];
+
+    for (const b of buttons) {
+      const btnBg = new Graphics();
+      btnBg.roundRect(px + 20, b.y, panelW - 40, 34, 8)
+        .fill({ color: b.color ?? 0x1a1528, alpha: 0.8 })
+        .stroke({ color: 0x554433, width: 1, alpha: 0.5 });
+      btnBg.eventMode = 'static';
+      btnBg.cursor = 'pointer';
+      btnBg.on('pointerdown', b.action);
+      this.pauseMenu.addChild(btnBg);
+
+      const btnLabel = new Text({
+        text: b.label,
+        style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xeeddcc }),
+      });
+      btnLabel.anchor.set(0.5);
+      btnLabel.x = w / 2;
+      btnLabel.y = b.y + 17;
+      this.pauseMenu.addChild(btnLabel);
+    }
+
+    this.uiContainer.addChild(this.pauseMenu);
   }
 
   // ─── Loot Points ─────────────────────────────────────────────
@@ -996,6 +1860,7 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Update Loop ─────────────────────────────────────────────
 
   update(dt: number): void {
+    if (this.isPaused || this.isTransitioning) return;
     const delta = dt / 60;
     this.handleMovement(delta);
     this.updateEnemyAI(delta);
@@ -1006,7 +1871,7 @@ export class ZoneScene extends Container implements GameScene {
     this.hud.refresh(this.zone.name);
     this.actionButtons.update(dt);
     this.checkZoneExit();
-    this.checkNPCProximity();
+    this.checkProximity();
     this.sortZOrder();
   }
 
@@ -1136,30 +2001,79 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── NPC Proximity ───────────────────────────────────────────
 
-  private checkNPCProximity(): void {
-    let nearNPC = false;
+  private checkProximity(): void {
+    this.nearbyNPC = null;
+    this.nearbyExit = null;
+    this.nearbyLoot = null;
+
+    // Check NPCs
+    let minNPCDist = Infinity;
     for (const npc of this.npcs) {
       const dist = Math.hypot(npc.position.x - this.playerScreenPos.x, npc.position.y - this.playerScreenPos.y);
-      if (dist < 50) {
-        nearNPC = true;
-        if (!this.interactPrompt) {
-          this.interactPrompt = new Text({
-            text: 'Toucher pour parler',
-            style: new TextStyle({
-              fontFamily: 'Georgia, serif', fontSize: 10, fill: 0xeedd88,
-              dropShadow: { color: 0x000000, blur: 3, distance: 1 },
-            }),
-          });
-          this.interactPrompt.anchor.set(0.5);
-          this.interactPrompt.x = this.app.screen.width / 2;
-          this.interactPrompt.y = this.app.screen.height * 0.7;
-          this.uiContainer.addChild(this.interactPrompt);
-        }
-        break;
+      if (dist < 55 && dist < minNPCDist) {
+        minNPCDist = dist;
+        this.nearbyNPC = npc;
       }
     }
 
-    if (!nearNPC && this.interactPrompt) {
+    // Check zone exits
+    let minExitDist = Infinity;
+    for (const conn of this.zone.connections) {
+      const exitPos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
+      const dist = Math.hypot(exitPos.x - this.playerScreenPos.x, exitPos.y - this.playerScreenPos.y);
+      if (dist < 55 && dist < minExitDist) {
+        minExitDist = dist;
+        this.nearbyExit = conn;
+      }
+    }
+
+    // Check loot
+    let minLootDist = Infinity;
+    for (const loot of this.lootPoints) {
+      if (loot.collected) continue;
+      const dist = Math.hypot(loot.position.x - this.playerScreenPos.x, loot.position.y - this.playerScreenPos.y);
+      if (dist < 55 && dist < minLootDist) {
+        minLootDist = dist;
+        this.nearbyLoot = loot;
+      }
+    }
+
+    // Determine mode (priority: NPC > Exit > Loot > Attack)
+    let newMode: ActionMode = 'attack';
+    let promptText = '';
+    if (this.nearbyNPC && minNPCDist < minExitDist && minNPCDist < minLootDist) {
+      newMode = 'talk';
+      promptText = this.nearbyNPC.isShopkeeper ? 'Ouvrir la boutique' : 'Parler';
+    } else if (this.nearbyExit && minExitDist < minLootDist) {
+      newMode = 'enter';
+      const targetZone = gameData.zone(this.nearbyExit.targetZoneID);
+      promptText = `→ ${targetZone?.name ?? this.nearbyExit.targetZoneID}`;
+    } else if (this.nearbyLoot) {
+      newMode = 'loot';
+      promptText = 'Ramasser';
+    }
+
+    this.actionButtons.setMode(newMode);
+
+    // Show/hide prompt
+    if (promptText) {
+      if (!this.interactPrompt) {
+        this.interactPrompt = new Text({
+          text: promptText,
+          style: new TextStyle({
+            fontFamily: 'Georgia, serif', fontSize: 11, fill: 0xeedd88,
+            fontWeight: 'bold',
+            dropShadow: { color: 0x000000, blur: 3, distance: 1 },
+          }),
+        });
+        this.interactPrompt.anchor.set(0.5);
+        this.interactPrompt.x = this.app.screen.width / 2;
+        this.interactPrompt.y = this.app.screen.height * 0.68;
+        this.uiContainer.addChild(this.interactPrompt);
+      } else {
+        this.interactPrompt.text = promptText;
+      }
+    } else if (this.interactPrompt) {
       this.interactPrompt.destroy();
       this.interactPrompt = null;
     }
@@ -1213,22 +2127,62 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private showAttackEffect(): void {
-    const g = new Graphics();
+    const cls = GameManager.shared.champion?.championClass ?? 'mistborn';
     const dir = this.playerFacing === 'right' ? 1 : -1;
-    g.arc(0, 0, 30, -Math.PI / 3 * dir, Math.PI / 3 * dir)
-      .stroke({ color: 0xffffff, width: 2, alpha: 0.6 });
-    g.x = this.playerScreenPos.x + dir * 15;
-    g.y = this.playerScreenPos.y - 10;
+    const px = this.playerScreenPos.x;
+    const py = this.playerScreenPos.y;
+
+    // Main slash/swing arc
+    const g = new Graphics();
+    const slashColor = cls === 'radiant' ? 0x88ccff : cls === 'mistborn' ? 0xaabbcc :
+                       cls === 'awakener' ? 0xcc88ff : cls === 'elantrian' ? 0xffcc44 :
+                       cls === 'sandMaster' ? 0xddcc88 : 0x8866cc;
+
+    // Weapon swing arc
+    const startAngle = dir > 0 ? -Math.PI * 0.6 : Math.PI * 0.4;
+    const endAngle = dir > 0 ? Math.PI * 0.3 : Math.PI * 1.3;
+    g.arc(0, 0, 28, startAngle, endAngle).stroke({ color: slashColor, width: 3, alpha: 0.7 });
+    g.arc(0, 0, 22, startAngle, endAngle).stroke({ color: 0xffffff, width: 1.5, alpha: 0.4 });
+
+    // Slash trail particles
+    for (let i = 0; i < 5; i++) {
+      const angle = startAngle + (endAngle - startAngle) * (i / 5);
+      const r = 25 + Math.random() * 5;
+      g.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1.5).fill({ color: slashColor, alpha: 0.5 });
+    }
+
+    g.x = px + dir * 18;
+    g.y = py - 14;
     g.zIndex = 100000;
     this.worldContainer.addChild(g);
+
+    // Arm/weapon swing motion on player
+    const armSwing = new Graphics();
+    if (cls === 'radiant') {
+      // Shardblade trail
+      armSwing.poly([
+        { x: dir * 4, y: -8 }, { x: dir * 30, y: -24 }, { x: dir * 32, y: -20 }, { x: dir * 6, y: -4 },
+      ]).fill({ color: 0x88ccff, alpha: 0.3 });
+    } else {
+      armSwing.poly([
+        { x: dir * 4, y: -8 }, { x: dir * 22, y: -18 }, { x: dir * 24, y: -14 }, { x: dir * 6, y: -4 },
+      ]).fill({ color: slashColor, alpha: 0.2 });
+    }
+    armSwing.x = px;
+    armSwing.y = py;
+    armSwing.zIndex = 100001;
+    this.worldContainer.addChild(armSwing);
 
     let elapsed = 0;
     const anim = () => {
       elapsed += 1 / 60;
-      g.alpha = Math.max(0, 1 - elapsed / 0.2);
-      g.scale.set(1 + elapsed * 3);
-      if (elapsed < 0.2) requestAnimationFrame(anim);
-      else g.destroy();
+      const progress = elapsed / 0.25;
+      g.alpha = Math.max(0, 1 - progress);
+      g.scale.set(1 + elapsed * 2);
+      g.rotation = dir * elapsed * 2;
+      armSwing.alpha = Math.max(0, 1 - progress * 1.5);
+      if (elapsed < 0.25) requestAnimationFrame(anim);
+      else { g.destroy(); armSwing.destroy(); }
     };
     requestAnimationFrame(anim);
   }
@@ -1263,21 +2217,105 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private showSkillEffect(range: number): void {
+    const cls = GameManager.shared.champion?.championClass ?? 'mistborn';
+    const px = this.playerScreenPos.x;
+    const py = this.playerScreenPos.y;
+
+    // Class-specific colors and effects
+    const skillConfigs: Record<string, { color1: number; color2: number; particleColor: number }> = {
+      mistborn:         { color1: 0x4488ff, color2: 0x6699cc, particleColor: 0x88aacc },
+      radiant:          { color1: 0x44aaff, color2: 0x88ccff, particleColor: 0xaaddff },
+      awakener:         { color1: 0xaa44ff, color2: 0xcc88ff, particleColor: 0xdd99ff },
+      elantrian:        { color1: 0xffaa33, color2: 0xffcc66, particleColor: 0xffdd88 },
+      sandMaster:       { color1: 0xddaa33, color2: 0xeecc66, particleColor: 0xddcc88 },
+      nightmarePainter: { color1: 0x6633aa, color2: 0x8855cc, particleColor: 0xaa77ee },
+    };
+
+    const cfg = skillConfigs[cls] ?? skillConfigs.mistborn;
+
+    // Main AOE ring
     const g = new Graphics();
-    g.circle(0, 0, range).fill({ color: 0x4488ff, alpha: 0.15 })
-      .stroke({ color: 0x66aaff, width: 2, alpha: 0.5 });
-    g.x = this.playerScreenPos.x;
-    g.y = this.playerScreenPos.y;
+    g.circle(0, 0, range).fill({ color: cfg.color1, alpha: 0.12 });
+    g.circle(0, 0, range).stroke({ color: cfg.color2, width: 2.5, alpha: 0.6 });
+    g.circle(0, 0, range * 0.7).stroke({ color: cfg.color1, width: 1.5, alpha: 0.3 });
+    g.x = px;
+    g.y = py;
     g.zIndex = 100000;
     this.worldContainer.addChild(g);
+
+    // Inner burst effect
+    const burst = new Graphics();
+    if (cls === 'mistborn') {
+      // Blue metal lines radiating out
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        burst.moveTo(0, 0).lineTo(Math.cos(angle) * range * 0.8, Math.sin(angle) * range * 0.8)
+          .stroke({ color: 0x4488ff, width: 1, alpha: 0.4 });
+      }
+    } else if (cls === 'radiant') {
+      // Stormlight burst glow
+      burst.circle(0, 0, range * 0.5).fill({ color: 0x88ccff, alpha: 0.15 });
+      burst.circle(0, 0, range * 0.3).fill({ color: 0xaaddff, alpha: 0.1 });
+    } else if (cls === 'elantrian') {
+      // Aon glyph pattern
+      burst.circle(0, 0, range * 0.6).stroke({ color: 0xffcc44, width: 1.5, alpha: 0.4 });
+      burst.moveTo(-range * 0.4, 0).lineTo(range * 0.4, 0).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
+      burst.moveTo(0, -range * 0.4).lineTo(0, range * 0.4).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
+    } else if (cls === 'awakener') {
+      // Color wave
+      const colors = [0xff4466, 0x44aaff, 0xffaa22, 0x44ff66, 0xaa44ff];
+      for (let i = 0; i < 5; i++) {
+        const r = range * (0.3 + i * 0.12);
+        burst.circle(0, 0, r).stroke({ color: colors[i], width: 1.5, alpha: 0.2 });
+      }
+    } else if (cls === 'sandMaster') {
+      // Sand spiral
+      for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 4;
+        const r = (i / 20) * range * 0.8;
+        burst.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1.5).fill({ color: 0xddcc88, alpha: 0.4 });
+      }
+    } else {
+      // Nightmare ink splash
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const r = range * 0.5;
+        burst.ellipse(Math.cos(angle) * r, Math.sin(angle) * r, 4, 6).fill({ color: 0x222233, alpha: 0.3 });
+      }
+    }
+    burst.x = px;
+    burst.y = py;
+    burst.zIndex = 100001;
+    this.worldContainer.addChild(burst);
+
+    // Particle burst
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.3;
+      const speed = 40 + Math.random() * 30;
+      const p = new Graphics();
+      p.circle(0, 0, 1.5 + Math.random()).fill({ color: cfg.particleColor, alpha: 0.6 });
+      p.x = px;
+      p.y = py;
+      p.zIndex = 100002;
+      this.worldContainer.addChild(p);
+      this.particles.push({
+        sprite: p, x: px, y: py,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 10,
+        life: 0.5 + Math.random() * 0.3, maxLife: 0.8, size: 2,
+      });
+    }
 
     let elapsed = 0;
     const anim = () => {
       elapsed += 1 / 60;
-      g.alpha = Math.max(0, 1 - elapsed / 0.4);
-      g.scale.set(0.5 + elapsed * 2);
-      if (elapsed < 0.4) requestAnimationFrame(anim);
-      else g.destroy();
+      const progress = elapsed / 0.5;
+      g.alpha = Math.max(0, 1 - progress);
+      g.scale.set(0.3 + progress * 0.8);
+      burst.alpha = Math.max(0, 1 - progress * 1.2);
+      burst.scale.set(0.5 + progress * 0.6);
+      burst.rotation = elapsed * 2;
+      if (elapsed < 0.5) requestAnimationFrame(anim);
+      else { g.destroy(); burst.destroy(); }
     };
     requestAnimationFrame(anim);
   }
@@ -1467,6 +2505,8 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Zone Transitions ────────────────────────────────────────
 
   private checkZoneExit(): void {
+    if (this.isTransitioning) return;
+
     for (const conn of this.zone.connections) {
       const exitPos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
       const dist = Math.hypot(exitPos.x - this.playerScreenPos.x, exitPos.y - this.playerScreenPos.y);
@@ -1482,10 +2522,29 @@ export class ZoneScene extends Container implements GameScene {
 
         const champ = GameManager.shared.champion;
         if (champ) {
-          champ.currentZoneID = conn.targetZoneID;
-          champ.gridPosition = { ...targetZone.playerSpawnPosition };
-          GameManager.shared.save();
-          this.router.goto(ZoneScene);
+          this.isTransitioning = true;
+
+          // Transition effect
+          const flash = new Graphics();
+          flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: 0 });
+          flash.zIndex = 99999;
+          this.uiContainer.addChild(flash);
+
+          let elapsed = 0;
+          const fadeOut = () => {
+            elapsed += 1 / 60;
+            flash.clear();
+            flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: Math.min(1, elapsed / 0.4) });
+            if (elapsed < 0.4) {
+              requestAnimationFrame(fadeOut);
+            } else {
+              champ.currentZoneID = conn.targetZoneID;
+              champ.gridPosition = { ...targetZone.playerSpawnPosition };
+              GameManager.shared.save();
+              this.router.goto(ZoneScene);
+            }
+          };
+          requestAnimationFrame(fadeOut);
         }
         return;
       }

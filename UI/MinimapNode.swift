@@ -121,7 +121,7 @@ class MinimapNode: SKNode {
     }
 
     func updateEnemyPosition(index: Int, gridPos: GridPosition, isAlive: Bool) {
-        guard index < enemyDots.count else { return }
+        guard index >= 0, index < enemyDots.count else { return }
         enemyDots[index].position = gridToMinimap(gridPos)
         enemyDots[index].isHidden = !isAlive
     }

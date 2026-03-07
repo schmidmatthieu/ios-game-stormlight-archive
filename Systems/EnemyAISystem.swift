@@ -26,7 +26,7 @@ final class EnemyAISystem {
         var position: CGPoint
         var gridPosition: GridPosition
         var state: AIState
-        var sprite: SKSpriteNode?
+        var sprite: SKNode?
         var lastAttackTime: TimeInterval
         var respawnTimer: TimeInterval?
         var abilityCooldowns: [TimeInterval]
@@ -225,7 +225,7 @@ final class EnemyAISystem {
         let newRemaining = remaining - deltaTime
         if newRemaining <= 0 {
             enemy.state = .idle
-            enemy.sprite?.colorBlendFactor = 0
+            enemy.sprite?.alpha = 1.0
         } else {
             enemy.state = .stunned(remaining: newRemaining)
         }
@@ -259,6 +259,7 @@ final class EnemyAISystem {
                 enemy.sprite?.isHidden = false
                 enemy.sprite?.position = enemy.position
                 enemy.sprite?.alpha = 1.0
+                enemy.sprite?.setScale(1.0)
             }
         }
     }
@@ -268,10 +269,16 @@ final class EnemyAISystem {
     private func performBasicAttack(enemy: inout EnemyInstance, targetPosition: CGPoint) {
         guard let sprite = enemy.sprite else { return }
 
-        // Animation d'attaque
+        // Animation d'attaque (lunge toward player)
+        let dx = targetPosition.x - sprite.position.x
+        let dy = targetPosition.y - sprite.position.y
+        let dist = hypot(dx, dy)
+        let lungeX = dist > 0 ? dx / dist * 5 : 0
+        let lungeY = dist > 0 ? dy / dist * 5 : 0
+
         let attackAnim = SKAction.sequence([
-            SKAction.scale(to: 1.2, duration: 0.05),
-            SKAction.scale(to: 1.0, duration: 0.1)
+            SKAction.moveBy(x: lungeX, y: lungeY, duration: 0.05),
+            SKAction.moveBy(x: -lungeX, y: -lungeY, duration: 0.1)
         ])
         sprite.run(attackAnim)
 
@@ -290,21 +297,13 @@ final class EnemyAISystem {
         guard let sprite = enemy.sprite else { return }
 
         // Effet visuel de compétence spéciale
-        let abilityEffect = SKShapeNode(circleOfRadius: 30)
-        abilityEffect.fillColor = .clear
-        abilityEffect.strokeColor = enemyTierColor(enemy.enemyData.tier)
-        abilityEffect.lineWidth = 3
-        abilityEffect.position = sprite.position
-        abilityEffect.zPosition = 200
-        sprite.parent?.addChild(abilityEffect)
-
-        abilityEffect.run(SKAction.sequence([
-            SKAction.group([
-                SKAction.scale(to: 3.0, duration: 0.5),
-                SKAction.fadeOut(withDuration: 0.5)
-            ]),
-            SKAction.removeFromParent()
-        ]))
+        SpellEffectsSystem.spawnAOE(
+            at: sprite.position,
+            color: enemyTierColor(enemy.enemyData.tier),
+            radius: 40,
+            in: sprite.parent ?? sprite,
+            duration: 0.5
+        )
 
         // Dégâts augmentés pour les compétences
         if var champion = GameManager.shared.champion {
@@ -319,11 +318,12 @@ final class EnemyAISystem {
     func takeDamage(enemy: inout EnemyInstance, amount: Int) -> Bool {
         enemy.currentHP -= amount
 
-        // Flash damage
-        enemy.sprite?.run(SKAction.sequence([
-            SKAction.colorize(with: .red, colorBlendFactor: 0.8, duration: 0.05),
-            SKAction.colorize(withColorBlendFactor: 0, duration: 0.15)
-        ]))
+        // Flash damage via EntityRenderer
+        if let node = enemy.sprite {
+            EntityRenderer.playHitEffect(on: node)
+            let ratio = CGFloat(enemy.currentHP) / CGFloat(enemy.enemyData.maxHP)
+            EntityRenderer.updateEnemyHP(node: node, ratio: ratio)
+        }
 
         if enemy.currentHP <= 0 {
             kill(enemy: &enemy)
@@ -334,7 +334,11 @@ final class EnemyAISystem {
 
     func stun(enemy: inout EnemyInstance, duration: TimeInterval) {
         enemy.state = .stunned(remaining: duration)
-        enemy.sprite?.run(SKAction.colorize(with: .yellow, colorBlendFactor: 0.5, duration: 0.1))
+        // Yellow tint via alpha pulse
+        enemy.sprite?.run(SKAction.sequence([
+            SKAction.fadeAlpha(to: 0.5, duration: 0.1),
+            SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+        ]))
     }
 
     private func kill(enemy: inout EnemyInstance) {
@@ -346,8 +350,7 @@ final class EnemyAISystem {
         sprite.run(SKAction.sequence([
             SKAction.group([
                 SKAction.fadeOut(withDuration: 0.5),
-                SKAction.scale(to: 0.5, duration: 0.5),
-                SKAction.colorize(with: .red, colorBlendFactor: 0.8, duration: 0.3)
+                SKAction.scale(to: 0.5, duration: 0.5)
             ]),
             SKAction.run { sprite.isHidden = true }
         ]))
