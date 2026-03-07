@@ -103,6 +103,24 @@ struct EquipmentLoadout: Codable {
         case .ring2:      return ring2
         }
     }
+
+    mutating func setItemID(_ itemID: String?, for slot: EquipmentSlot) {
+        switch slot {
+        case .helmet:     helmet = itemID
+        case .shoulders:  shoulders = itemID
+        case .chest:      chest = itemID
+        case .cape:       cape = itemID
+        case .gloves:     gloves = itemID
+        case .belt:       belt = itemID
+        case .legs:       legs = itemID
+        case .boots:      boots = itemID
+        case .mainWeapon: mainWeapon = itemID
+        case .offhand:    offhand = itemID
+        case .amulet:     amulet = itemID
+        case .ring1:      ring1 = itemID
+        case .ring2:      ring2 = itemID
+        }
+    }
 }
 
 // MARK: - Champion
@@ -152,4 +170,26 @@ struct Champion: Codable {
     var xpForNextLevel: Int { level * 100 + 50 }
     var maxHP: Int { baseStats.vigor * 10 + 50 }
     var maxInvestiture: Int { baseStats.investiture * 8 + 30 }
+
+    /// Progression XP normalisée (0.0–1.0)
+    var experienceProgress: Double {
+        let needed = xpForNextLevel
+        guard needed > 0 else { return 1.0 }
+        return min(1.0, Double(currentXP) / Double(needed))
+    }
+
+    /// Le champion a atteint le niveau maximum (50)
+    var isMaxLevel: Bool { level >= 50 }
+
+    /// Ratio PV actuel (0.0–1.0)
+    var hpRatio: Double {
+        guard maxHP > 0 else { return 0 }
+        return Double(currentHP) / Double(maxHP)
+    }
+
+    /// Ratio Investiture actuel (0.0–1.0)
+    var investitureRatio: Double {
+        guard maxInvestiture > 0 else { return 0 }
+        return Double(currentInvestiture) / Double(maxInvestiture)
+    }
 }

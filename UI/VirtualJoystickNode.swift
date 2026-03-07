@@ -12,6 +12,7 @@ class VirtualJoystickNode: SKNode {
         var thumbColor: SKColor = SKColor(white: 0.8, alpha: 0.8)
         var borderColor: SKColor = SKColor(white: 0.5, alpha: 0.4)
         var deadZone: CGFloat = 0.1  // Zone morte au centre (0-1)
+        var sensitivity: CGFloat = 1.0  // Multiplicateur de sensibilité (0.3–2.0)
     }
 
     // MARK: - State
@@ -145,8 +146,11 @@ class VirtualJoystickNode: SKNode {
         } else {
             // Remapper la magnitude sans la zone morte
             let remapped = (magnitude - config.deadZone) / (1.0 - config.deadZone)
-            magnitude = remapped
-            direction = CGVector(dx: cos(angle) * remapped, dy: sin(angle) * remapped)
+            // Appliquer la sensibilité depuis les paramètres
+            let sensitivity = CGFloat(SettingsMenuNode.current.joystickSensitivity)
+            let adjusted = min(remapped * sensitivity, 1.0)
+            magnitude = adjusted
+            direction = CGVector(dx: cos(angle) * adjusted, dy: sin(angle) * adjusted)
         }
 
         // Tourner l'indicateur directionnel

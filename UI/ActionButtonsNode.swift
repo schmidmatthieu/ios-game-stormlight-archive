@@ -15,9 +15,9 @@ class ActionButtonsNode: SKNode {
 
     // MARK: - Configuration
 
-    private let attackButtonRadius: CGFloat = 35
-    private let abilityButtonRadius: CGFloat = 28
-    private let ultimateButtonRadius: CGFloat = 32
+    private let attackButtonRadius = GameConstants.UI.attackButtonRadius
+    private let abilityButtonRadius = GameConstants.UI.abilityButtonRadius
+    private let ultimateButtonRadius = GameConstants.UI.ultimateButtonRadius
 
     // MARK: - Nodes
 
@@ -276,6 +276,15 @@ class ActionButtonsNode: SKNode {
                 if cooldownOverlays[i]?.isHidden == true {
                     pressAnimation(button)
                     onAbilityPressed?(i)
+                } else {
+                    // Feedback visuel : shake quand en cooldown
+                    let shake = SKAction.sequence([
+                        SKAction.moveBy(x: -3, y: 0, duration: 0.03),
+                        SKAction.moveBy(x: 6, y: 0, duration: 0.03),
+                        SKAction.moveBy(x: -6, y: 0, duration: 0.03),
+                        SKAction.moveBy(x: 3, y: 0, duration: 0.03),
+                    ])
+                    button.run(shake)
                 }
                 return
             }
@@ -299,31 +308,34 @@ class ActionButtonsNode: SKNode {
         overlay?.isHidden = false
         label?.isHidden = false
 
-        var remaining = duration
         let key = "cooldown_\(abilityIndex)"
-
         removeAction(forKey: key)
-        removeAction(forKey: "\(key)_stop")
 
-        let countdown = SKAction.repeatForever(SKAction.sequence([
-            SKAction.run { [weak label] in
-                remaining -= 0.1
-                label?.text = String(format: "%.1f", max(0, remaining))
-            },
-            SKAction.wait(forDuration: 0.1)
-        ]))
+        let startTime = CACurrentMediaTime()
+        let endTime = startTime + duration
 
-        let stop = SKAction.sequence([
-            SKAction.wait(forDuration: duration),
-            SKAction.run { [weak self] in
-                self?.removeAction(forKey: key)
+        let countdown = SKAction.sequence([
+            SKAction.repeatForever(SKAction.sequence([
+                SKAction.run { [weak label] in
+                    let remaining = max(0, endTime - CACurrentMediaTime())
+                    label?.text = String(format: "%.1f", remaining)
+                },
+                SKAction.wait(forDuration: 0.1)
+            ])),
+        ])
+
+        let fullSequence = SKAction.sequence([
+            SKAction.group([
+                countdown,
+                SKAction.wait(forDuration: duration)
+            ]),
+            SKAction.run {
                 overlay?.isHidden = true
                 label?.isHidden = true
             }
         ])
 
-        run(countdown, withKey: key)
-        run(stop, withKey: "\(key)_stop")
+        run(fullSequence, withKey: key)
     }
 
     // MARK: - Update Ability Icons
@@ -340,6 +352,25 @@ class ActionButtonsNode: SKNode {
 
     func setUltimateAvailable(_ available: Bool) {
         ultimateButton.alpha = available ? 1.0 : 0.4
+    }
+
+    /// Affiche le nom complet de la compétence sous le bouton
+    func setAbilityName(index: Int, name: String) {
+        guard index < abilityButtons.count else { return }
+        let button = abilityButtons[index]
+
+        // Supprimer l'ancien label de nom s'il existe
+        button.children.filter { $0.name == "abilityName" }.forEach { $0.removeFromParent() }
+
+        let nameLabel = SKLabelNode(fontNamed: "Helvetica")
+        nameLabel.text = String(name.prefix(6))
+        nameLabel.fontSize = 7
+        nameLabel.fontColor = SKColor(white: 0.8, alpha: 0.8)
+        nameLabel.verticalAlignmentMode = .top
+        nameLabel.position = CGPoint(x: 0, y: -abilityButtonRadius - 3)
+        nameLabel.zPosition = 1001
+        nameLabel.name = "abilityName"
+        button.addChild(nameLabel)
     }
 
     // MARK: - Helpers

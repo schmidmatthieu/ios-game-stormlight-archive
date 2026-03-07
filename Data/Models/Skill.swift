@@ -104,4 +104,6 @@ enum StatusEffectType: String, Codable {
     case flying     // Gravitation — vol
     case healing    // Progression — soin over time
     case shielded   // Adhésion — bouclier
+    case haste      // Abrasion — vitesse de déplacement augmentée
+    case decoy      // Illumination — leurre qui attire les ennemis
 }

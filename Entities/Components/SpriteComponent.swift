@@ -5,7 +5,7 @@ import GameplayKit
 class SpriteComponent: GKComponent {
 
     let node: SKSpriteNode
-    private var animations: [String: [SKTexture]] = [:]
+    private var animations: [String: (textures: [SKTexture], timePerFrame: TimeInterval)] = [:]
     private var currentAnimation: String?
 
     init(textureName: String, size: CGSize = CGSize(width: 32, height: 48)) {
@@ -21,17 +21,18 @@ class SpriteComponent: GKComponent {
     // MARK: - Animations
 
     func registerAnimation(name: String, textureNames: [String], timePerFrame: TimeInterval = 0.15) {
-        animations[name] = textureNames.map { SKTexture(imageNamed: $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        animations[name] = (textures: textures, timePerFrame: timePerFrame)
     }
 
     func playAnimation(_ name: String, repeatForever: Bool = true) {
-        guard let textures = animations[name],
+        guard let anim = animations[name],
               currentAnimation != name else { return }
 
         currentAnimation = name
         node.removeAction(forKey: "animation")
 
-        let animate = SKAction.animate(with: textures, timePerFrame: 0.15)
+        let animate = SKAction.animate(with: anim.textures, timePerFrame: anim.timePerFrame)
         let action = repeatForever ? SKAction.repeatForever(animate) : animate
         node.run(action, withKey: "animation")
     }

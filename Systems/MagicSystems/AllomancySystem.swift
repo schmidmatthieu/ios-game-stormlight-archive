@@ -28,8 +28,10 @@ final class AllomancySystem {
         }
 
         // Consommer le métal
-        champion.metalReserves?[metal]? -= 1
-        champion.currentInvestiture -= 5
+        if let current = champion.metalReserves?[metal] {
+            champion.metalReserves?[metal] = current - 1
+        }
+        champion.currentInvestiture = max(0, champion.currentInvestiture - 5)
 
         // Appliquer l'effet
         switch metal {
@@ -107,6 +109,9 @@ final class AllomancySystem {
     // MARK: - Recharger les réserves (acheter/looter des fioles de métaux)
 
     func refillMetal(_ metal: SkillResourceType, amount: Int, champion: inout Champion) {
+        if champion.metalReserves == nil {
+            champion.metalReserves = [:]
+        }
         champion.metalReserves?[metal, default: 0] += amount
     }
 

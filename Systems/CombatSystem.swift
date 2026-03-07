@@ -32,13 +32,14 @@ final class CombatSystem {
             attackPower = baseDmg + attacker.strength
         }
 
-        // Défense
+        // Défense (Double pour éviter troncature entière sur valeurs impaires)
         let defense = defender.defense
-        let mitigated = max(1, attackPower - defense / 2)
+        let reduction = Int(round(Double(defense) / 2.0))
+        let mitigated = max(1, attackPower - reduction)
 
-        // Critique
+        // Critique (cap à 75%)
         let critRoll = Double.random(in: 0...100)
-        let critChance = Double(attacker.luck) * 1.5
+        let critChance = min(75.0, Double(attacker.luck) * 1.5)
         let isCrit = critRoll <= critChance
         let finalDamage = isCrit ? mitigated * 2 : mitigated
 
@@ -102,11 +103,17 @@ final class CombatSystem {
         if let cost = skill.resourceCost {
             switch cost.resourceType {
             case .stormlight:
-                champion.stormlightAmount? -= Double(cost.amount)
+                if let current = champion.stormlightAmount {
+                    champion.stormlightAmount = current - Double(cost.amount)
+                }
             case .breath:
-                champion.breathCount? -= cost.amount
+                if let current = champion.breathCount {
+                    champion.breathCount = current - cost.amount
+                }
             default:
-                champion.metalReserves?[cost.resourceType]? -= cost.amount
+                if let current = champion.metalReserves?[cost.resourceType] {
+                    champion.metalReserves?[cost.resourceType] = current - cost.amount
+                }
             }
         }
     }
