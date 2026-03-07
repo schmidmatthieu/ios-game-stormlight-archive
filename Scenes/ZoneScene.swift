@@ -32,21 +32,21 @@ class ZoneScene: SKScene {
 
     // Movement
     private var lastUpdateTime: TimeInterval = 0
-    private let playerSpeed: CGFloat = 120
-    private let tileSize = CGSize(width: 64, height: 32)
+    private let playerSpeed = GameConstants.Player.speed
+    private let tileSize = GameConstants.Tiles.size
 
     // Damage label pooling
     private var damageNodePool: [SKLabelNode] = []
-    private let maxPoolSize = 20
+    private let maxPoolSize = GameConstants.Combat.damagePoolSize
 
     // Zone transition safety
     private var isTransitioning = false
 
     // Regen
     private var regenAccumulator: TimeInterval = 0
-    private let regenInterval: TimeInterval = 1.0
-    private let hpRegenBase: Int = 1
-    private let investitureRegenBase: Int = 2
+    private let regenInterval = GameConstants.Regen.interval
+    private let hpRegenBase = GameConstants.Regen.hpPerSecond
+    private let investitureRegenBase = GameConstants.Regen.investiturePerSecond
 
     // Level up tracking
     private var previousLevel: Int = 1
@@ -857,17 +857,25 @@ class ZoneScene: SKScene {
             }
 
         case .radiant:
-            let surges: [SurgebindingSystem.Surge] = [.gravitation, .adhesion, .abrasion, .progression]
-            let surge = index < surges.count ? surges[index] : .gravitation
+            let orderSurges: [SurgebindingSystem.Surge]
+            if let order = champion.radiantOrder {
+                let (s1, s2) = surgebinding.surgesForOrder(order)
+                orderSurges = [s1, s2, .illumination, .transformation]
+            } else {
+                orderSurges = [.gravitation, .adhesion, .abrasion, .progression]
+            }
+            let surge = index < orderSurges.count ? orderSurges[index] : orderSurges[0]
             let result = surgebinding.useSurge(surge, champion: &champion, targetPosition: nil)
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 5.0)
+                actionButtons.startCooldown(abilityIndex: index, duration: GameConstants.Combat.abilityCooldown)
                 switch surge {
                 case .gravitation: SpellEffectsSystem.gravitationLash(from: playerNode.position, in: worldNode)
                 case .adhesion: SpellEffectsSystem.adhesionField(at: playerNode.position, in: worldNode)
                 case .progression: SpellEffectsSystem.progressionHeal(on: playerNode, in: worldNode)
+                case .abrasion: SpellEffectsSystem.spawnBuffAura(on: playerNode, color: .cyan, duration: result.duration)
+                case .illumination: SpellEffectsSystem.spawnAOE(at: playerNode.position, color: .white, radius: 30, in: worldNode, duration: result.duration)
                 default:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: .cyan, radius: 40, in: worldNode)
                 }

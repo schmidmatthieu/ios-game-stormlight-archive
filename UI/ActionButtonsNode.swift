@@ -15,9 +15,9 @@ class ActionButtonsNode: SKNode {
 
     // MARK: - Configuration
 
-    private let attackButtonRadius: CGFloat = 35
-    private let abilityButtonRadius: CGFloat = 28
-    private let ultimateButtonRadius: CGFloat = 32
+    private let attackButtonRadius = GameConstants.UI.attackButtonRadius
+    private let abilityButtonRadius = GameConstants.UI.abilityButtonRadius
+    private let ultimateButtonRadius = GameConstants.UI.ultimateButtonRadius
 
     // MARK: - Nodes
 
@@ -308,31 +308,34 @@ class ActionButtonsNode: SKNode {
         overlay?.isHidden = false
         label?.isHidden = false
 
-        var remaining = duration
         let key = "cooldown_\(abilityIndex)"
-
         removeAction(forKey: key)
-        removeAction(forKey: "\(key)_stop")
 
-        let countdown = SKAction.repeatForever(SKAction.sequence([
-            SKAction.run { [weak label] in
-                remaining -= 0.1
-                label?.text = String(format: "%.1f", max(0, remaining))
-            },
-            SKAction.wait(forDuration: 0.1)
-        ]))
+        let startTime = CACurrentMediaTime()
+        let endTime = startTime + duration
 
-        let stop = SKAction.sequence([
-            SKAction.wait(forDuration: duration),
-            SKAction.run { [weak self] in
-                self?.removeAction(forKey: key)
+        let countdown = SKAction.sequence([
+            SKAction.repeatForever(SKAction.sequence([
+                SKAction.run { [weak label] in
+                    let remaining = max(0, endTime - CACurrentMediaTime())
+                    label?.text = String(format: "%.1f", remaining)
+                },
+                SKAction.wait(forDuration: 0.1)
+            ])),
+        ])
+
+        let fullSequence = SKAction.sequence([
+            SKAction.group([
+                countdown,
+                SKAction.wait(forDuration: duration)
+            ]),
+            SKAction.run {
                 overlay?.isHidden = true
                 label?.isHidden = true
             }
         ])
 
-        run(countdown, withKey: key)
-        run(stop, withKey: "\(key)_stop")
+        run(fullSequence, withKey: key)
     }
 
     // MARK: - Update Ability Icons
