@@ -13,6 +13,8 @@ import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
 import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
+import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../game/WorldMechanics';
+import type { WorldEffect } from '../game/WorldMechanics';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
@@ -220,6 +222,9 @@ export class ZoneScene extends Container implements GameScene {
   // Death screen
   private deathScreen: Container | null = null;
 
+  // World mechanics
+  private worldMechanics!: WorldEffect;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -328,6 +333,9 @@ export class ZoneScene extends Container implements GameScene {
 
     // Inventory button (next to pause)
     this.createInventoryButton(w);
+
+    // World mechanics
+    this.worldMechanics = createWorldMechanics(this.zone.worldID);
 
     // Quest system
     QuestManager.shared.init();
@@ -1461,6 +1469,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateCamera();
     this.updateAnimations(delta);
     this.spawnAmbientParticles(delta);
+    this.updateWorldMechanics(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -1571,7 +1580,9 @@ export class ZoneScene extends Container implements GameScene {
       }
 
       const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
-      const detRange = enemy.data.detectionRange * 32;
+      const mistMult = this.worldMechanics instanceof ScadrialMechanics
+        ? (this.worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
+      const detRange = enemy.data.detectionRange * 32 * mistMult;
       const atkRange = enemy.data.attackRange * 32;
 
       enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
@@ -1774,7 +1785,9 @@ export class ZoneScene extends Container implements GameScene {
     if (!champ) return;
 
     const defense = champ.baseStats.vigor / 2;
-    const damage = Math.max(1, enemy.data.damage - defense);
+    const nightmareMult = this.worldMechanics instanceof KomashiMechanics
+      ? (this.worldMechanics as KomashiMechanics).getDamageMultiplier() : 1;
+    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult));
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
@@ -1845,6 +1858,12 @@ export class ZoneScene extends Container implements GameScene {
     QuestManager.shared.onEnemyKilled(enemy.data.id);
     this.checkQuestCompletion();
 
+    // Komashi: killing enemies reduces nightmare aura
+    if (this.worldMechanics instanceof KomashiMechanics) {
+      const msg = (this.worldMechanics as KomashiMechanics).onEnemyKilled();
+      if (msg) this.showFloatingText(enemy.position.x, enemy.position.y - 40, msg, 0xaa77ee);
+    }
+
     if (leveledUp) {
       this.showLevelUp();
       // Auto-equip new skills on level up
@@ -1891,6 +1910,13 @@ export class ZoneScene extends Container implements GameScene {
       else txt.destroy();
     };
     requestAnimationFrame(anim);
+  }
+
+  private updateWorldMechanics(dt: number): void {
+    const msg = this.worldMechanics.tick(dt);
+    if (msg) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, msg, 0xaaddff);
+    }
   }
 
   private handlePlayerDeath(): void {
