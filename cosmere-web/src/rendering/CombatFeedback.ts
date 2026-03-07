@@ -1,8 +1,40 @@
 // ─── Combat Feedback Effects ─────────────────────────────────────
-// Visual feedback for hits, crits, kills, and combat events
+// Visual feedback for hits, crits, kills, and combat events.
+// All animations use performance.now() for frame-rate-independent timing
+// and check for destroyed state to prevent orphan callbacks.
 
 import { Graphics, Container, Text, TextStyle } from 'pixi.js';
 import { lighten } from '../utils/ColorUtils';
+
+// ─── Safe Animation Helper ──────────────────────────────────────
+
+function animateEffect(
+  g: Graphics | Container,
+  parent: Container,
+  duration: number,
+  onTick: (t: number, dt: number) => void,
+  onDone?: () => void,
+): void {
+  let elapsed = 0;
+  let last = performance.now();
+  const tick = () => {
+    if (g.destroyed) return; // Scene changed — stop silently
+    const now = performance.now();
+    const dt = (now - last) / 1000;
+    last = now;
+    elapsed += dt;
+    const t = Math.min(elapsed / duration, 1);
+    onTick(t, dt);
+    if (elapsed < duration) {
+      requestAnimationFrame(tick);
+    } else {
+      parent.removeChild(g);
+      g.destroy(g instanceof Container ? { children: true } : undefined);
+      onDone?.();
+    }
+  };
+  requestAnimationFrame(tick);
+}
 
 // ─── Hit Directional Slash ───────────────────────────────────────
 
@@ -32,36 +64,23 @@ export function createDirectionalSlash(
   g.moveTo(x1 + 1, y1 - 1).lineTo(x2 + 1, y2 - 1).stroke({ color: 0xffffff, width: width * 0.4, alpha: 0.4 });
 
   if (isCrit) {
-    // Crit star burst
     for (let i = 0; i < 4; i++) {
       const a = angle + (i / 4) * Math.PI * 2;
       const r = 8 + Math.random() * 6;
       g.moveTo(x, y).lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.6)
         .stroke({ color: 0xffdd44, width: 1.2, alpha: 0.5 });
     }
-    // Crit flash circle
     g.circle(x, y, 15).fill({ color: 0xffdd44, alpha: 0.15 });
   }
 
   container.addChild(g);
 
-  // Animate fade
-  let life = 0;
   const maxLife = isCrit ? 0.4 : 0.25;
-  const animate = () => {
-    life += 1 / 60;
-    const progress = life / maxLife;
-    g.alpha = 1 - progress;
-    g.scale.x = 1 + progress * 0.3;
-    g.scale.y = 1 + progress * 0.2;
-    if (life < maxLife) {
-      requestAnimationFrame(animate);
-    } else {
-      container.removeChild(g);
-      g.destroy();
-    }
-  };
-  requestAnimationFrame(animate);
+  animateEffect(g, container, maxLife, (t) => {
+    g.alpha = 1 - t;
+    g.scale.x = 1 + t * 0.3;
+    g.scale.y = 1 + t * 0.2;
+  });
 }
 
 // ─── Crit Flash Overlay ──────────────────────────────────────────
@@ -73,18 +92,9 @@ export function createCritFlash(uiContainer: Container, w: number, h: number): v
   flash.zIndex = 9999;
   uiContainer.addChild(flash);
 
-  let life = 0;
-  const animate = () => {
-    life += 1 / 60;
-    flash.alpha = Math.max(0, 0.2 - life * 1.2);
-    if (life < 0.2) {
-      requestAnimationFrame(animate);
-    } else {
-      uiContainer.removeChild(flash);
-      flash.destroy();
-    }
-  };
-  requestAnimationFrame(animate);
+  animateEffect(flash, uiContainer, 0.2, (t) => {
+    flash.alpha = Math.max(0, 0.2 - t * 0.2 * 6);
+  });
 }
 
 // ─── Kill Burst ──────────────────────────────────────────────────
@@ -101,15 +111,11 @@ export function createKillBurst(
 
   const ringCount = tier === 'boss' ? 3 : tier === 'elite' ? 2 : 1;
   const baseRadius = tier === 'boss' ? 30 : tier === 'elite' ? 22 : 14;
+  const maxLife = tier === 'boss' ? 0.8 : tier === 'elite' ? 0.6 : 0.35;
 
   container.addChild(g);
 
-  let life = 0;
-  const maxLife = tier === 'boss' ? 0.8 : tier === 'elite' ? 0.6 : 0.35;
-
-  const animate = () => {
-    life += 1 / 60;
-    const t = life / maxLife;
+  animateEffect(g, container, maxLife, (t) => {
     g.clear();
 
     // Expanding ring(s)
@@ -128,10 +134,10 @@ export function createKillBurst(
       g.circle(x, y, baseRadius * 0.5 * (1 + t * 2)).fill({ color: 0xffffff, alpha: flashAlpha });
     }
 
-    // Particle shards flying out
+    // Particle shards
     if (t < 0.7) {
       for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + life * 2;
+        const angle = (i / 6) * Math.PI * 2 + t * maxLife * 2;
         const dist = baseRadius * t * 1.5;
         const px = x + Math.cos(angle) * dist;
         const py = y + Math.sin(angle) * dist * 0.6;
@@ -139,15 +145,7 @@ export function createKillBurst(
         g.circle(px, py, Math.max(0.3, sz)).fill({ color: lighten(worldColor, 0.3), alpha: 0.5 * (1 - t) });
       }
     }
-
-    if (life < maxLife) {
-      requestAnimationFrame(animate);
-    } else {
-      container.removeChild(g);
-      g.destroy();
-    }
-  };
-  requestAnimationFrame(animate);
+  });
 }
 
 // ─── Kill Streak Banner ──────────────────────────────────────────
@@ -172,12 +170,10 @@ export function showKillStreakBanner(
   const container = new Container();
   container.zIndex = 9990;
 
-  // Background band
   const bg = new Graphics();
   bg.rect(0, h * 0.35, w, 40).fill({ color: 0x000000, alpha: 0.5 });
   container.addChild(bg);
 
-  // Text
   const text = new Text({
     text: streakInfo.text,
     style: new TextStyle({
@@ -193,7 +189,6 @@ export function showKillStreakBanner(
   text.y = h * 0.35 + 20;
   container.addChild(text);
 
-  // Kill count
   const countText = new Text({
     text: `${killCount} kills`,
     style: new TextStyle({
@@ -208,28 +203,19 @@ export function showKillStreakBanner(
   container.addChild(countText);
 
   uiContainer.addChild(container);
-
-  // Animate in, hold, fade out
   container.alpha = 0;
-  let life = 0;
-  const animate = () => {
-    life += 1 / 60;
-    if (life < 0.2) {
-      container.alpha = life / 0.2;
-      text.scale.set(1 + (1 - life / 0.2) * 0.3);
-    } else if (life < 1.5) {
+
+  animateEffect(container, uiContainer, 2, (t) => {
+    if (t < 0.1) {
+      container.alpha = t / 0.1;
+      text.scale.set(1 + (1 - t / 0.1) * 0.3);
+    } else if (t < 0.75) {
       container.alpha = 1;
       text.scale.set(1);
-    } else if (life < 2) {
-      container.alpha = 1 - (life - 1.5) / 0.5;
     } else {
-      uiContainer.removeChild(container);
-      container.destroy({ children: true });
-      return;
+      container.alpha = 1 - (t - 0.75) / 0.25;
     }
-    requestAnimationFrame(animate);
-  };
-  requestAnimationFrame(animate);
+  });
 }
 
 // ─── Damage Type Indicator ───────────────────────────────────────
@@ -280,7 +266,6 @@ export function createGroundCrack(
   const g = new Graphics();
   g.zIndex = y - 50;
 
-  // Radial cracks
   const branches = 4 + Math.floor(Math.random() * 3);
   for (let i = 0; i < branches; i++) {
     const angle = (i / branches) * Math.PI * 2 + Math.random() * 0.5;
@@ -294,24 +279,12 @@ export function createGroundCrack(
       .stroke({ color: 0x222222, width: 1 + Math.random(), alpha: 0.35 });
   }
 
-  // Center impact
   g.circle(x, y, size * 0.15).fill({ color: 0x111111, alpha: 0.2 });
-
   container.addChild(g);
 
-  // Fade over 3 seconds
-  let life = 0;
-  const animate = () => {
-    life += 1 / 60;
-    if (life > 2) {
-      g.alpha = Math.max(0, 1 - (life - 2));
+  animateEffect(g, container, 3, (t) => {
+    if (t > 0.67) {
+      g.alpha = Math.max(0, 1 - (t - 0.67) / 0.33);
     }
-    if (life < 3) {
-      requestAnimationFrame(animate);
-    } else {
-      container.removeChild(g);
-      g.destroy();
-    }
-  };
-  requestAnimationFrame(animate);
+  });
 }

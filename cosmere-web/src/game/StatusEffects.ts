@@ -215,8 +215,13 @@ export function spawnStatusParticle(
   worldContainer.addChild(g);
 
   let elapsed = 0;
+  let seLast = performance.now();
   const anim = () => {
-    elapsed += 1 / 60;
+    if (g.destroyed) return;
+    const now = performance.now();
+    const dtSec = (now - seLast) / 1000;
+    seLast = now;
+    elapsed += dtSec;
     g.y -= 0.5;
     g.x += (Math.random() - 0.5) * 0.5;
     g.alpha = Math.max(0, 0.6 - elapsed);

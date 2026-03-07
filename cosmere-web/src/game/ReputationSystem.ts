@@ -230,8 +230,13 @@ export function showRankUpEffect(
 
   // Fade out
   let elapsed = 0;
+  let repLast = performance.now();
   const anim = () => {
-    elapsed += 1 / 60;
+    if (container.destroyed) return;
+    const now = performance.now();
+    const dtSec = (now - repLast) / 1000;
+    repLast = now;
+    elapsed += dtSec;
     if (elapsed > 1.5) {
       container.alpha = Math.max(0, 1 - (elapsed - 1.5) / 0.5);
     }

@@ -66,6 +66,7 @@ export function createAttackEffect(
   let elapsed = 0;
   let lastTime = performance.now();
   const anim = () => {
+    if (g.destroyed) return; // Scene changed — stop silently
     const now = performance.now();
     const frameDt = (now - lastTime) / 1000;
     lastTime = now;
@@ -204,6 +205,7 @@ export function createSkillEffect(
   let elapsed = 0;
   let lastTime = performance.now();
   const anim = () => {
+    if (g.destroyed) return; // Scene changed — stop silently
     const now = performance.now();
     const frameDt = (now - lastTime) / 1000;
     lastTime = now;
@@ -403,10 +405,14 @@ export function createSkillGroundMark(
 
   worldContainer.addChild(g);
 
-  // Fade over 4 seconds
+  // Fade over 4 seconds (frame-rate independent)
   let life = 0;
+  let lastT = performance.now();
   const animate = () => {
-    life += 1 / 60;
+    if (g.destroyed) return;
+    const now = performance.now();
+    life += (now - lastT) / 1000;
+    lastT = now;
     if (life > 2) {
       g.alpha = Math.max(0, 1 - (life - 2) / 2);
     }
@@ -524,22 +530,30 @@ export function createHitImpact(
     ring.x = tx; ring.y = ty; ring.zIndex = 100003;
     worldContainer.addChild(ring);
 
-    let elapsed = 0;
+    let ringElapsed = 0;
+    let ringLast = performance.now();
     const animRing = () => {
-      elapsed += 1 / 60;
-      const p = elapsed / 0.4;
+      if (ring.destroyed) return;
+      const now = performance.now();
+      ringElapsed += (now - ringLast) / 1000;
+      ringLast = now;
+      const p = ringElapsed / 0.4;
       ring.scale.set(1 + p * 3);
       ring.alpha = Math.max(0, 1 - p);
-      if (elapsed < 0.4) requestAnimationFrame(animRing);
+      if (ringElapsed < 0.4) requestAnimationFrame(animRing);
       else ring.destroy();
     };
     requestAnimationFrame(animRing);
   }
 
-  // Fade out impact
+  // Fade out impact (frame-rate independent)
   let elapsed = 0;
+  let lastT = performance.now();
   const anim = () => {
-    elapsed += 1 / 60;
+    if (flash.destroyed) return;
+    const now = performance.now();
+    elapsed += (now - lastT) / 1000;
+    lastT = now;
     const p = elapsed / 0.3;
     flash.alpha = Math.max(0, 0.3 - p * 0.3);
     flash.scale.set(1 + p * 2);

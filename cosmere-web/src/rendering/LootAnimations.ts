@@ -98,8 +98,12 @@ export function spawnLootDrop(
 
   // Animate
   const groundY = originY + 5;
+  let lastTime = performance.now();
   const anim = () => {
-    const dt = 1 / 60;
+    if (drop.destroyed) return;
+    const now = performance.now();
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
     lootDrop.elapsed += dt;
 
     if (!lootDrop.settled) {
@@ -182,11 +186,16 @@ export function spawnGoldBurst(
     let elapsed = 0;
     const groundY = originY + 5;
 
+    let coinLast = performance.now();
     const anim = () => {
-      elapsed += 1 / 60;
-      vy += 200 * (1 / 60);
-      x += vx * (1 / 60);
-      y += vy * (1 / 60);
+      if (coin.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - coinLast) / 1000;
+      coinLast = now;
+      elapsed += dtSec;
+      vy += 200 * dtSec;
+      x += vx * dtSec;
+      y += vy * dtSec;
       vx *= 0.98;
 
       if (y > groundY) {
@@ -238,8 +247,13 @@ export function spawnXPOrbs(
     const peakY = startY - 30 - Math.random() * 20;
     const delay = i * 0.1;
 
+    let orbLast = performance.now();
     const anim = () => {
-      elapsed += 1 / 60;
+      if (orb.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - orbLast) / 1000;
+      orbLast = now;
+      elapsed += dtSec;
       const t = Math.max(0, elapsed - delay);
 
       if (t <= 0) {

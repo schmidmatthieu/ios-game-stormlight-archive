@@ -1973,7 +1973,7 @@ export class ZoneScene extends Container implements GameScene {
     this.refreshMinimap();
     this.actionButtons.update(delta);
     this.checkZoneExit();
-    this.checkProximity();
+    this.checkProximity(delta);
     this.sortZOrder();
   }
 
@@ -2346,7 +2346,7 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── NPC Proximity ───────────────────────────────────────────
 
-  private checkProximity(): void {
+  private checkProximity(dt: number = 1 / 60): void {
     this.nearbyNPC = null;
     this.nearbyExit = null;
     this.nearbyLoot = null;
@@ -2438,7 +2438,7 @@ export class ZoneScene extends Container implements GameScene {
 
       // Check trap triggers
       if (obj.type === 'spikeTrap' || obj.type === 'poisonVent') {
-        const trapResult = checkTrapTrigger(obj, pCol, pRow, 1 / 60);
+        const trapResult = checkTrapTrigger(obj, pCol, pRow, dt);
         if (trapResult) {
           const trapDmgMult = NewGamePlusManager.shared.getDifficulty().trapDamageMult;
           const champ = GameManager.shared.champion;
@@ -3361,8 +3361,13 @@ export class ZoneScene extends Container implements GameScene {
     flash.zIndex = 10000;
     this.uiContainer.addChild(flash);
     let elapsed = 0;
+    let fadeLast = performance.now();
     const fadeOut = () => {
-      elapsed += 1 / 60;
+      if (flash.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - fadeLast) / 1000;
+      fadeLast = now;
+      elapsed += dtSec;
       flash.alpha = Math.max(0, 0.3 - elapsed * 0.6);
       if (elapsed < 0.5) requestAnimationFrame(fadeOut);
       else flash.destroy();
@@ -3434,8 +3439,13 @@ export class ZoneScene extends Container implements GameScene {
     this.worldContainer.addChild(txt);
 
     let elapsed = 0;
+    let txtLast = performance.now();
     const anim = () => {
-      elapsed += 1 / 60;
+      if (txt.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - txtLast) / 1000;
+      txtLast = now;
+      elapsed += dtSec;
       txt.y -= 0.5;
       txt.alpha = Math.max(0, 1 - elapsed / 2);
       if (elapsed < 2) requestAnimationFrame(anim);
@@ -3473,8 +3483,13 @@ export class ZoneScene extends Container implements GameScene {
     this.uiContainer.addChild(txt);
 
     let elapsed = 0;
+    let lvlLast = performance.now();
     const anim = () => {
-      elapsed += 1 / 60;
+      if (txt.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - lvlLast) / 1000;
+      lvlLast = now;
+      elapsed += dtSec;
       txt.y -= 0.3;
       txt.alpha = Math.max(0, 1 - elapsed / 2.5);
       flash.alpha = Math.max(0, 0.15 - elapsed / 2);
@@ -3488,9 +3503,13 @@ export class ZoneScene extends Container implements GameScene {
     const originalX = this.worldContainer.x;
     const originalY = this.worldContainer.y;
     let elapsed = 0;
+    let shakeLast = performance.now();
 
     const shake = () => {
-      elapsed += 1 / 60;
+      const now = performance.now();
+      const dtSec = (now - shakeLast) / 1000;
+      shakeLast = now;
+      elapsed += dtSec;
       const progress = elapsed / duration;
       const decay = 1 - progress;
       this.worldContainer.x = originalX + (Math.random() - 0.5) * intensity * 2 * decay;
@@ -3549,8 +3568,13 @@ export class ZoneScene extends Container implements GameScene {
           this.uiContainer.addChild(flash);
 
           let elapsed = 0;
+          let zoneLast = performance.now();
           const fadeOut = () => {
-            elapsed += 1 / 60;
+            if (flash.destroyed) return;
+            const now = performance.now();
+            const dtSec = (now - zoneLast) / 1000;
+            zoneLast = now;
+            elapsed += dtSec;
             flash.clear();
             flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: Math.min(1, elapsed / 0.4) });
             if (elapsed < 0.4) {

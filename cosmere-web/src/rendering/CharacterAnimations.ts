@@ -373,10 +373,13 @@ export function animateEnemyHit(enemySprite: Container): void {
   if (!inner) return;
 
   let elapsed = 0;
+  let last = performance.now();
   const originalX = inner.x;
   const anim = () => {
-    elapsed += 1 / 60;
-    // Shake and flash
+    if (inner.destroyed) return;
+    const now = performance.now();
+    elapsed += (now - last) / 1000;
+    last = now;
     inner.x = originalX + Math.sin(elapsed * 40) * (3 * (1 - elapsed / 0.2));
     if (elapsed < 0.2) requestAnimationFrame(anim);
     else inner.x = originalX;
@@ -392,11 +395,15 @@ export function animateEnemyDeath(
   x: number, y: number,
 ): void {
   let elapsed = 0;
+  let last = performance.now();
   const dur = 0.5;
   const startY = enemySprite.y;
 
   const anim = () => {
-    elapsed += 1 / 60;
+    if (enemySprite.destroyed) return;
+    const now = performance.now();
+    elapsed += (now - last) / 1000;
+    last = now;
     const p = Math.min(1, elapsed / dur);
 
     enemySprite.alpha = 1 - p;
@@ -419,12 +426,17 @@ export function animateEnemyDeath(
     worldContainer.addChild(particle);
 
     let pt = 0;
+    let pLast = performance.now();
     const speed = 15 + Math.random() * 10;
     const drift = (Math.random() - 0.5) * 15;
     const pAnim = () => {
-      pt += 1 / 60;
-      particle.y -= speed * (1 / 60);
-      particle.x += drift * (1 / 60);
+      if (particle.destroyed) return;
+      const now = performance.now();
+      const dt = (now - pLast) / 1000;
+      pLast = now;
+      pt += dt;
+      particle.y -= speed * dt;
+      particle.x += drift * dt;
       particle.alpha = Math.max(0, 0.4 - pt * 0.5);
       if (pt < 0.8) requestAnimationFrame(pAnim);
       else particle.destroy();
@@ -460,9 +472,14 @@ export function animateLevelUpBurst(
     worldContainer.addChild(p);
 
     let pt = 0;
+    let pLast = performance.now();
     const speed = 40 + Math.random() * 20;
     const pAnim = () => {
-      pt += 1 / 60;
+      if (p.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - pLast) / 1000;
+      pLast = now;
+      pt += dtSec;
       p.x = x + Math.cos(angle) * speed * pt;
       p.y = y - 15 + Math.sin(angle) * speed * pt * 0.5 - pt * 30;
       p.alpha = Math.max(0, 0.6 - pt * 0.6);
@@ -474,8 +491,13 @@ export function animateLevelUpBurst(
   }
 
   let elapsed = 0;
+  let ringLast = performance.now();
   const ringAnim = () => {
-    elapsed += 1 / 60;
+    if (ring.destroyed) return;
+    const now = performance.now();
+    const dtSec = (now - ringLast) / 1000;
+    ringLast = now;
+    elapsed += dtSec;
     ring.clear();
     const r = elapsed * 60;
     ring.circle(0, 0, r)
