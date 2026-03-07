@@ -407,7 +407,7 @@ export class ZoneScene extends Container implements GameScene {
 
     // Minimap
     this.minimap = new Minimap(w, h);
-    this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight);
+    this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight, this.zone.worldID, this.zone.id);
     this.uiContainer.addChild(this.minimap);
 
     // Center camera immediately
