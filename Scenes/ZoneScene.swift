@@ -51,9 +51,8 @@ class ZoneScene: SKScene {
     // Level up tracking
     private var previousLevel: Int = 1
 
-    // Low HP warning
-    private var lowHPOverlay: SKShapeNode?
-    private var isShowingLowHPWarning = false
+    // Combat feedback
+    private var lowHPVignette: SKShapeNode?
 
     // Theme
     private let worldTheme: WorldTheme
@@ -107,8 +106,25 @@ class ZoneScene: SKScene {
 
         GameManager.shared.questSystem.onZoneEntered(zoneID: zone.id)
 
+        // Low HP vignette
+        lowHPVignette = CombatFeedbackSystem.lowHealthVignette(on: cameraNode, screenSize: size)
+
+        // Listen for equipment changes to refresh player appearance
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(onEquipmentChanged),
+            name: .equipmentDidChange, object: nil
+        )
+
         // Auto-save on zone entry
         _ = SaveManager.shared.save()
+    }
+
+    @objc private func onEquipmentChanged() {
+        refreshPlayerAppearance()
+    }
+
+    override func willMove(from view: SKView) {
+        NotificationCenter.default.removeObserver(self, name: .equipmentDidChange, object: nil)
     }
 
     // MARK: - Setup
@@ -122,7 +138,7 @@ class ZoneScene: SKScene {
         addChild(worldNode)
 
         // Create themed tile textures (batch by variation for performance)
-        let textures = createTileTextures()
+        let textures = TileTextureGenerator.createTileTextures(theme: worldTheme, tileSize: tileSize)
 
         for row in 0..<zone.gridHeight {
             for col in 0..<zone.gridWidth {
@@ -141,39 +157,19 @@ class ZoneScene: SKScene {
         setupEdgeGlow()
     }
 
-    private func createTileTextures() -> [SKTexture] {
-        let view = SKView()
-        var textures: [SKTexture] = []
+    // MARK: - Equipment Visual Refresh
 
-        let allColors = [worldTheme.tileBaseColor] + worldTheme.tileVariations
-        for color in allColors {
-            let tileNode = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-            tileNode.fillColor = color
-            tileNode.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-            tileNode.lineWidth = 0.5
+    /// Reconstruit le sprite du joueur quand l'équipement change
+    func refreshPlayerAppearance() {
+        guard let champion = GameManager.shared.champion,
+              let currentPlayer = playerNode else { return }
 
-            // Subtle crack detail
-            let crack = SKShapeNode(rectOf: CGSize(width: 1, height: CGFloat.random(in: 4...10)))
-            crack.fillColor = SKColor(white: 0.1, alpha: 0.2)
-            crack.strokeColor = .clear
-            crack.position = CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: -4...4))
-            crack.zRotation = CGFloat.random(in: -0.5...0.5)
-            tileNode.addChild(crack)
+        PlayerRenderer.refreshPlayerAppearance(playerNode: currentPlayer, champion: champion)
 
-            if let tex = view.texture(from: tileNode) {
-                textures.append(tex)
-            }
+        // Re-assign reference to new player node
+        if let newPlayer = worldNode.childNode(withName: "player") {
+            playerNode = newPlayer
         }
-
-        if textures.isEmpty {
-            let fallback = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-            fallback.fillColor = worldTheme.tileBaseColor
-            fallback.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-            fallback.lineWidth = 0.5
-            textures.append(view.texture(from: fallback) ?? SKTexture())
-        }
-
-        return textures
     }
 
     private func setupEdgeGlow() {
@@ -823,11 +819,25 @@ class ZoneScene: SKScene {
 
         PlayerRenderer.playAttackAnimation(on: playerNode, in: worldNode)
 
+        // Weapon trail effect
+        let attackDirection = closestEnemy.map { atan2($0.node.position.y - playerNode.position.y,
+                                                        $0.node.position.x - playerNode.position.x) } ?? CGFloat(0)
+        CombatFeedbackSystem.weaponTrail(from: playerNode.position, direction: attackDirection,
+                                          color: .white, in: worldNode)
+
         if let target = closestEnemy {
             EntityRenderer.playHitEffect(on: target.node)
+            CombatFeedbackSystem.hitFlash(on: target.node)
 
-            let damage = champion.baseStats.strength + 5
-            showFloatingDamage(damage, at: target.node.position)
+            let isCrit = Int.random(in: 0..<100) < champion.baseStats.luck * 2
+            let baseDamage = champion.baseStats.strength + 5
+            let damage = isCrit ? baseDamage * 2 : baseDamage
+            let damageType: CombatFeedbackSystem.DamageType = isCrit ? .critical : .normal
+
+            CombatFeedbackSystem.showDamageNumber(damage, at: target.node.position,
+                                                   type: damageType, in: worldNode)
+            CombatFeedbackSystem.impactBurst(at: target.node.position, color: .white, in: worldNode, count: 5)
+            CombatFeedbackSystem.screenShake(on: cameraNode, intensity: isCrit ? .heavy : .light)
 
             if let idx = enemyInstances.firstIndex(where: {
                 "enemy_\($0.spawnData.enemyID)_\($0.spawnData.position.col)_\($0.spawnData.position.row)" == target.name
@@ -842,8 +852,12 @@ class ZoneScene: SKScene {
                     GameManager.shared.grantXP(xp)
                     GameManager.shared.mutateChampion { $0.gold += gold }
 
-                    showFloatingDamage(xp, at: CGPoint(x: target.node.position.x, y: target.node.position.y + 20),
-                                       color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
+                    CombatFeedbackSystem.showDamageNumber(xp, at: CGPoint(x: target.node.position.x,
+                                                                           y: target.node.position.y + 20),
+                                                          type: .magic(color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1)),
+                                                          in: worldNode)
+
+                    CombatFeedbackSystem.deathExplosion(at: target.node.position, color: .red, in: worldNode)
 
                     EntityRenderer.playDeathAnimation(on: target.node) { [weak self] in
                         self?.enemyNodes.removeValue(forKey: target.name)
@@ -975,11 +989,16 @@ class ZoneScene: SKScene {
     private func handleUltimate() {
         guard let champion = GameManager.shared.champion, let playerNode else { return }
 
-        // Spectacular ultimate effects
+        // Spectacular ultimate effects — casting circle + expanding rings
+        SpellEffectsSystem.spawnCastingCircle(at: playerNode.position,
+                                               color: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
+                                               in: worldNode, duration: 0.5)
+
         let ultimateFlash = SKShapeNode(circleOfRadius: 150)
         ultimateFlash.fillColor = SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 0.1)
         ultimateFlash.strokeColor = SKColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0)
         ultimateFlash.lineWidth = 4
+        ultimateFlash.glowWidth = 8
         ultimateFlash.position = playerNode.position
         ultimateFlash.zPosition = 400
         ultimateFlash.setScale(0.1)
@@ -993,34 +1012,35 @@ class ZoneScene: SKScene {
             SKAction.removeFromParent()
         ]))
 
-        let innerRing = SKShapeNode(circleOfRadius: 80)
-        innerRing.fillColor = .clear
-        innerRing.strokeColor = SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 0.8)
-        innerRing.lineWidth = 2
-        innerRing.position = playerNode.position
-        innerRing.zPosition = 401
-        innerRing.setScale(0.1)
-        worldNode.addChild(innerRing)
+        // Multiple rings expanding at different speeds
+        for i in 0..<3 {
+            let ring = SKShapeNode(circleOfRadius: CGFloat(60 + i * 25))
+            ring.fillColor = .clear
+            ring.strokeColor = SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 0.6 - CGFloat(i) * 0.15)
+            ring.lineWidth = CGFloat(3 - i)
+            ring.position = playerNode.position
+            ring.zPosition = 401
+            ring.setScale(0.1)
+            worldNode.addChild(ring)
 
-        innerRing.run(SKAction.sequence([
-            SKAction.group([
-                SKAction.scale(to: 1.2, duration: 0.35),
-                SKAction.fadeOut(withDuration: 0.4)
-            ]),
-            SKAction.removeFromParent()
-        ]))
+            let delay = Double(i) * 0.1
+            ring.run(SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([
+                    SKAction.scale(to: 1.3, duration: 0.4),
+                    SKAction.fadeOut(withDuration: 0.45)
+                ]),
+                SKAction.removeFromParent()
+            ]))
+        }
 
-        // Screen shake — applied to worldNode to avoid conflicting with camera follow
-        let shake = SKAction.sequence([
-            SKAction.moveBy(x: 5, y: 3, duration: 0.03),
-            SKAction.moveBy(x: -10, y: -6, duration: 0.03),
-            SKAction.moveBy(x: 8, y: 4, duration: 0.03),
-            SKAction.moveBy(x: -3, y: -1, duration: 0.03)
-        ])
-        worldNode.run(SKAction.sequence([
-            SKAction.repeat(shake, count: 4),
-            SKAction.move(to: worldNode.position, duration: 0.05)
-        ]), withKey: "screenShake")
+        // Golden particles burst
+        CombatFeedbackSystem.impactBurst(at: playerNode.position,
+                                          color: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
+                                          in: worldNode, count: 16, spread: 50)
+
+        // Epic screen shake
+        CombatFeedbackSystem.screenShake(on: cameraNode, intensity: .epic)
 
         let ultText: String
         switch champion.championClass {
@@ -1487,7 +1507,10 @@ class ZoneScene: SKScene {
         if let champion = GameManager.shared.champion {
             minimap.updatePlayerPosition(champion.gridPosition)
             updateHUD(champion: champion)
-            updateLowHPWarning(champion: champion)
+
+            // Update low HP vignette
+            let hpRatio = Double(champion.currentHP) / Double(max(1, champion.maxHP))
+            CombatFeedbackSystem.updateHealthVignette(lowHPVignette, hpRatio: hpRatio)
 
             // Détection de level up
             if champion.level > previousLevel {

@@ -117,6 +117,14 @@ class InventoryNode: SKNode {
         let equipSection = CGPoint(x: -screenSize.width / 4, y: 0)
 
         for (slot, x, y) in equipSlotPositions {
+            // Shadow
+            let shadow = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 6)
+            shadow.fillColor = SKColor(white: 0, alpha: 0.3)
+            shadow.strokeColor = .clear
+            shadow.position = CGPoint(x: equipSection.x + x + 1, y: equipSection.y + y - 1)
+            shadow.zPosition = 6001
+            panel.addChild(shadow)
+
             let slotNode = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 6)
             slotNode.fillColor = SKColor(white: 0.12, alpha: 1.0)
             slotNode.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
@@ -125,17 +133,55 @@ class InventoryNode: SKNode {
             slotNode.zPosition = 6002
             slotNode.name = "equip_\(slot.rawValue)"
 
+            // Inner shine
+            let shine = SKShapeNode(rectOf: CGSize(width: 36, height: 10), cornerRadius: 3)
+            shine.fillColor = SKColor(white: 1, alpha: 0.04)
+            shine.strokeColor = .clear
+            shine.position = CGPoint(x: 0, y: 10)
+            shine.zPosition = 1
+            slotNode.addChild(shine)
+
+            // Slot icon symbol
+            let icon = SKLabelNode(fontNamed: "Helvetica")
+            icon.text = slotIcon(slot)
+            icon.fontSize = 14
+            icon.fontColor = SKColor(white: 0.2, alpha: 0.4)
+            icon.verticalAlignmentMode = .center
+            icon.position = CGPoint(x: 0, y: 2)
+            icon.zPosition = 1
+            icon.name = "equip_icon_\(slot.rawValue)"
+            slotNode.addChild(icon)
+
             // Slot label
             let label = SKLabelNode(fontNamed: "Helvetica")
             label.text = slotAbbreviation(slot)
-            label.fontSize = 10
+            label.fontSize = 8
             label.fontColor = SKColor(white: 0.3, alpha: 0.5)
             label.verticalAlignmentMode = .center
+            label.position = CGPoint(x: 0, y: -14)
             label.name = "equip_\(slot.rawValue)"
             slotNode.addChild(label)
 
             panel.addChild(slotNode)
             equipmentSlots[slot] = slotNode
+        }
+    }
+
+    private func slotIcon(_ slot: EquipmentSlot) -> String {
+        switch slot {
+        case .helmet:     return "⛑"
+        case .shoulders:  return "⌃"
+        case .chest:      return "⊞"
+        case .cape:       return "◇"
+        case .gloves:     return "✋"
+        case .belt:       return "⊶"
+        case .legs:       return "⫿"
+        case .boots:      return "⊥"
+        case .mainWeapon: return "⚔"
+        case .offhand:    return "⊕"
+        case .amulet:     return "◈"
+        case .ring1:      return "○"
+        case .ring2:      return "○"
         }
     }
 
@@ -268,29 +314,42 @@ class InventoryNode: SKNode {
 
         // Refresh equipment
         for (eqSlot, node) in equipmentSlots {
-            // Nettoyer les labels d'items précédents
-            node.children.filter { $0.name == "equippedItemName" }.forEach { $0.removeFromParent() }
+            // Reset to default
+            node.fillColor = SKColor(white: 0.12, alpha: 1.0)
+            node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
+            node.glowWidth = 0
+
+            // Remove previous item indicators
+            node.children.filter { $0.name == "equipped_indicator" }.forEach { $0.removeFromParent() }
 
             if let itemID = champion.equipment.itemID(for: eqSlot),
                let item = GameManager.shared.allItems[itemID] {
-                node.fillColor = rarityColor(item.rarity).withAlphaComponent(0.2)
-                node.strokeColor = rarityColor(item.rarity)
+                let color = rarityColor(item.rarity)
+                node.fillColor = color.withAlphaComponent(0.15)
+                node.strokeColor = color
 
-                // Afficher le nom court de l'item équipé
-                let eqName = SKLabelNode(fontNamed: "Helvetica")
-                eqName.text = String(item.name.prefix(4))
-                eqName.fontSize = 8
-                eqName.fontColor = rarityColor(item.rarity)
-                eqName.verticalAlignmentMode = .center
-                eqName.position = CGPoint(x: 0, y: -18)
-                eqName.name = "equippedItemName"
-                node.addChild(eqName)
+                // Glow for epic+ items
+                switch item.rarity {
+                case .epic:      node.glowWidth = 2
+                case .legendary: node.glowWidth = 4
+                case .cosmeric:  node.glowWidth = 6
+                default: break
+                }
+
+                // Item name abbreviation
+                let nameLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
+                nameLabel.text = String(item.name.prefix(4))
+                nameLabel.fontSize = 8
+                nameLabel.fontColor = color
+                nameLabel.verticalAlignmentMode = .center
+                nameLabel.position = CGPoint(x: 0, y: 2)
+                nameLabel.zPosition = 3
+                nameLabel.name = "equipped_indicator"
+                node.addChild(nameLabel)
 
                 // Cacher le label d'emplacement vide
                 node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = true }
             } else {
-                node.fillColor = SKColor(white: 0.12, alpha: 1.0)
-                node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
                 // Réafficher le label d'emplacement
                 node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = false }
             }

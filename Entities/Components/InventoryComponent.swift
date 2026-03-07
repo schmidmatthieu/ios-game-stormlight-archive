@@ -1,5 +1,11 @@
 import GameplayKit
 
+// MARK: - Equipment Change Notification
+
+extension Notification.Name {
+    static let equipmentDidChange = Notification.Name("equipmentDidChange")
+}
+
 /// Composant d'inventaire — items, équipement, or
 class InventoryComponent: GKComponent {
 
@@ -82,6 +88,9 @@ class InventoryComponent: GKComponent {
             addItem(itemID: prev)
         }
 
+        // Notify scene to refresh player appearance
+        NotificationCenter.default.post(name: .equipmentDidChange, object: nil)
+
         return previousItemID
     }
 
@@ -106,6 +115,10 @@ class InventoryComponent: GKComponent {
         }
 
         addItem(itemID: itemID)
+
+        // Notify scene to refresh player appearance
+        NotificationCenter.default.post(name: .equipmentDidChange, object: nil)
+
         return itemID
     }
 
