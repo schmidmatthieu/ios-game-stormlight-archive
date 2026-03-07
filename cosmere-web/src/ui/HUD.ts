@@ -1,5 +1,6 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
+import { getLayoutInfo, fontSize, scaled, hudMargin, hudBarWidth, LayoutInfo } from '../ui/ResponsiveLayout';
 
 export class HUD extends Container {
   private hpBar: Graphics;
@@ -10,167 +11,236 @@ export class HUD extends Container {
   private levelText: Text;
   private zoneText: Text;
   private goldText: Text;
-  private screenWidth: number;
-  private barWidth = 120;
-  private barHeight = 10;
+  private barWidth: number;
+  private barHeight: number;
   private panel: Graphics;
+  private rightPanel: Graphics;
+  private hpIcon: Text;
+  private invIcon: Text;
+  private hpBg: Graphics;
+  private invBg: Graphics;
+  private xpBg: Graphics;
+  private layout: LayoutInfo;
 
   constructor(screenWidth: number, screenHeight: number) {
     super();
-    this.screenWidth = screenWidth;
+    this.layout = getLayoutInfo(screenWidth, screenHeight);
+    this.barWidth = hudBarWidth(this.layout);
+    this.barHeight = scaled(10, this.layout);
 
-    const margin = 12;
-    const leftX = margin;
-    const topY = margin;
+    const margins = hudMargin(this.layout);
+    const leftX = margins.left;
+    const topY = margins.top;
 
     // Semi-transparent panel background
     this.panel = new Graphics();
-    this.panel.roundRect(leftX - 4, topY - 4, 195, 58, 8)
-      .fill({ color: 0x0a0a1a, alpha: 0.6 });
-    this.panel.roundRect(leftX - 4, topY - 4, 195, 58, 8)
-      .stroke({ color: 0x334455, width: 1, alpha: 0.4 });
     this.addChild(this.panel);
 
     // Right panel for zone/gold
-    const rightPanel = new Graphics();
-    rightPanel.roundRect(screenWidth - margin - 130, topY - 4, 134, 40, 8)
-      .fill({ color: 0x0a0a1a, alpha: 0.6 });
-    rightPanel.roundRect(screenWidth - margin - 130, topY - 4, 134, 40, 8)
-      .stroke({ color: 0x334455, width: 1, alpha: 0.4 });
-    this.addChild(rightPanel);
+    this.rightPanel = new Graphics();
+    this.addChild(this.rightPanel);
 
-    const labelStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x888899 });
-    const valStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0xccccdd });
+    const labelFontSize = fontSize(8, this.layout);
+    const valStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: labelFontSize, fill: 0xccccdd });
 
     // Level
     this.levelText = new Text({
       text: 'Nv.1',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xe6cc66, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(14, this.layout), fill: 0xe6cc66, fontWeight: 'bold' }),
     });
-    this.levelText.x = leftX + 2;
-    this.levelText.y = topY;
     this.addChild(this.levelText);
 
-    // HP bar
-    const barStartX = leftX + 42;
-    const hpY = topY + 2;
-    this.drawBarBg(barStartX, hpY);
+    // HP background
+    this.hpBg = new Graphics();
+    this.addChild(this.hpBg);
 
+    // HP bar
     this.hpBar = new Graphics();
     this.addChild(this.hpBar);
 
     // HP icon
-    const hpIcon = new Text({ text: 'PV', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xcc5555, fontWeight: 'bold' }) });
-    hpIcon.x = barStartX - 14;
-    hpIcon.y = hpY + 1;
-    this.addChild(hpIcon);
+    this.hpIcon = new Text({ text: 'PV', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, this.layout), fill: 0xcc5555, fontWeight: 'bold' }) });
+    this.addChild(this.hpIcon);
 
     this.hpText = new Text({ text: '', style: valStyle });
-    this.hpText.x = barStartX + this.barWidth / 2;
-    this.hpText.y = hpY + 1;
     this.hpText.anchor.set(0.5, 0);
     this.addChild(this.hpText);
 
-    // Investiture bar
-    const invY = hpY + this.barHeight + 5;
-    this.drawBarBg(barStartX, invY);
+    // Investiture background
+    this.invBg = new Graphics();
+    this.addChild(this.invBg);
 
+    // Investiture bar
     this.invBar = new Graphics();
     this.addChild(this.invBar);
 
-    const invIcon = new Text({ text: 'INV', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x5577cc, fontWeight: 'bold' }) });
-    invIcon.x = barStartX - 18;
-    invIcon.y = invY + 1;
-    this.addChild(invIcon);
+    // Investiture icon
+    this.invIcon = new Text({ text: 'INV', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, this.layout), fill: 0x5577cc, fontWeight: 'bold' }) });
+    this.addChild(this.invIcon);
 
     this.invText = new Text({ text: '', style: valStyle });
-    this.invText.x = barStartX + this.barWidth / 2;
-    this.invText.y = invY + 1;
     this.invText.anchor.set(0.5, 0);
     this.addChild(this.invText);
 
-    // XP bar (thin, below)
-    const xpY = invY + this.barHeight + 5;
-    const xpBg = new Graphics();
-    xpBg.roundRect(barStartX, xpY, this.barWidth, 4, 2)
-      .fill({ color: 0x111122, alpha: 0.8 })
-      .stroke({ color: 0x222233, width: 0.5 });
-    this.addChild(xpBg);
+    // XP background
+    this.xpBg = new Graphics();
+    this.addChild(this.xpBg);
 
+    // XP bar
     this.xpBar = new Graphics();
     this.addChild(this.xpBar);
 
     // Zone name (top right)
     this.zoneText = new Text({
       text: '',
-      style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 11, fill: 0xaabbcc,
-      }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(11, this.layout), fill: 0xaabbcc }),
     });
     this.zoneText.anchor.set(1, 0);
-    this.zoneText.x = screenWidth - margin - 4;
-    this.zoneText.y = topY;
     this.addChild(this.zoneText);
 
     // Gold
     this.goldText = new Text({
       text: '0 or',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xe6cc33, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, this.layout), fill: 0xe6cc33, fontWeight: 'bold' }),
     });
     this.goldText.anchor.set(1, 0);
-    this.goldText.x = screenWidth - margin - 4;
-    this.goldText.y = topY + 18;
     this.addChild(this.goldText);
+
+    // Position everything
+    this.relayout(screenWidth, screenHeight);
   }
 
-  private drawBarBg(x: number, y: number): void {
-    const bg = new Graphics();
-    bg.roundRect(x, y, this.barWidth, this.barHeight, 4)
+  relayout(screenWidth: number, screenHeight: number): void {
+    this.layout = getLayoutInfo(screenWidth, screenHeight);
+    this.barWidth = hudBarWidth(this.layout);
+    this.barHeight = scaled(10, this.layout);
+
+    const margins = hudMargin(this.layout);
+    const leftX = margins.left;
+    const topY = margins.top;
+    const barStartX = leftX + scaled(42, this.layout);
+    const barSpacing = this.barHeight + scaled(5, this.layout);
+    const xpBarHeight = scaled(4, this.layout);
+
+    // Update font sizes
+    this.levelText.style.fontSize = fontSize(14, this.layout);
+    this.hpIcon.style.fontSize = fontSize(7, this.layout);
+    this.invIcon.style.fontSize = fontSize(7, this.layout);
+    this.hpText.style.fontSize = fontSize(8, this.layout);
+    this.invText.style.fontSize = fontSize(8, this.layout);
+    this.zoneText.style.fontSize = fontSize(11, this.layout);
+    this.goldText.style.fontSize = fontSize(11, this.layout);
+
+    // Left panel dimensions
+    const panelWidth = scaled(42, this.layout) + this.barWidth + scaled(20, this.layout);
+    const panelHeight = this.barHeight * 2 + xpBarHeight + scaled(5, this.layout) * 2 + scaled(8, this.layout);
+
+    // Left panel background
+    this.panel.clear();
+    this.panel.roundRect(leftX - scaled(4, this.layout), topY - scaled(4, this.layout), panelWidth, panelHeight, scaled(8, this.layout))
+      .fill({ color: 0x0a0a1a, alpha: 0.6 });
+    this.panel.roundRect(leftX - scaled(4, this.layout), topY - scaled(4, this.layout), panelWidth, panelHeight, scaled(8, this.layout))
+      .stroke({ color: 0x334455, width: 1, alpha: 0.4 });
+
+    // Right panel background
+    const rightPanelWidth = scaled(134, this.layout);
+    const rightPanelHeight = scaled(40, this.layout);
+    const rightPanelX = screenWidth - margins.right - rightPanelWidth;
+
+    this.rightPanel.clear();
+    this.rightPanel.roundRect(rightPanelX, topY - scaled(4, this.layout), rightPanelWidth, rightPanelHeight, scaled(8, this.layout))
+      .fill({ color: 0x0a0a1a, alpha: 0.6 });
+    this.rightPanel.roundRect(rightPanelX, topY - scaled(4, this.layout), rightPanelWidth, rightPanelHeight, scaled(8, this.layout))
+      .stroke({ color: 0x334455, width: 1, alpha: 0.4 });
+
+    // Level position
+    this.levelText.x = leftX + scaled(2, this.layout);
+    this.levelText.y = topY;
+
+    // HP positions
+    const hpY = topY + scaled(2, this.layout);
+    this.hpIcon.x = barStartX - scaled(14, this.layout);
+    this.hpIcon.y = hpY + scaled(1, this.layout);
+    this.hpText.x = barStartX + this.barWidth / 2;
+    this.hpText.y = hpY + scaled(1, this.layout);
+
+    // HP background
+    this.hpBg.clear();
+    this.hpBg.roundRect(barStartX, hpY, this.barWidth, this.barHeight, scaled(4, this.layout))
       .fill({ color: 0x111122, alpha: 0.9 })
       .stroke({ color: 0x222244, width: 0.5 });
-    this.addChild(bg);
+
+    // Investiture positions
+    const invY = hpY + barSpacing;
+    this.invIcon.x = barStartX - scaled(18, this.layout);
+    this.invIcon.y = invY + scaled(1, this.layout);
+    this.invText.x = barStartX + this.barWidth / 2;
+    this.invText.y = invY + scaled(1, this.layout);
+
+    // Investiture background
+    this.invBg.clear();
+    this.invBg.roundRect(barStartX, invY, this.barWidth, this.barHeight, scaled(4, this.layout))
+      .fill({ color: 0x111122, alpha: 0.9 })
+      .stroke({ color: 0x222244, width: 0.5 });
+
+    // XP background
+    const xpY = invY + barSpacing;
+    this.xpBg.clear();
+    this.xpBg.roundRect(barStartX, xpY, this.barWidth, xpBarHeight, scaled(2, this.layout))
+      .fill({ color: 0x111122, alpha: 0.8 })
+      .stroke({ color: 0x222233, width: 0.5 });
+
+    // Zone & gold positions (top right, respecting safe area)
+    this.zoneText.x = screenWidth - margins.right - scaled(4, this.layout);
+    this.zoneText.y = topY;
+    this.goldText.x = screenWidth - margins.right - scaled(4, this.layout);
+    this.goldText.y = topY + scaled(18, this.layout);
   }
 
   refresh(zoneName: string): void {
     const c = GameManager.shared.champion;
     if (!c) return;
     const gm = GameManager.shared;
-    const margin = 12;
-    const barStartX = margin + 42;
+
+    const margins = hudMargin(this.layout);
+    const barStartX = margins.left + scaled(42, this.layout);
+    const barSpacing = this.barHeight + scaled(5, this.layout);
+    const hpY = margins.top + scaled(2, this.layout);
+    const cornerRadius = scaled(4, this.layout);
 
     this.levelText.text = `Nv.${c.level}`;
 
     // HP
     const hpPct = Math.max(0, Math.min(1, c.currentHP / gm.maxHP));
-    const hpY = margin + 2;
     this.hpBar.clear();
     if (hpPct > 0) {
-      this.hpBar.roundRect(barStartX, hpY, this.barWidth * hpPct, this.barHeight, 4)
+      this.hpBar.roundRect(barStartX, hpY, this.barWidth * hpPct, this.barHeight, cornerRadius)
         .fill(hpPct > 0.3 ? 0xcc3333 : 0xff2222);
       // Shine
-      this.hpBar.roundRect(barStartX, hpY, this.barWidth * hpPct, this.barHeight / 2, 4)
+      this.hpBar.roundRect(barStartX, hpY, this.barWidth * hpPct, this.barHeight / 2, cornerRadius)
         .fill({ color: 0xffffff, alpha: 0.1 });
     }
     this.hpText.text = `${Math.ceil(c.currentHP)}/${gm.maxHP}`;
 
     // Investiture
     const invPct = Math.max(0, Math.min(1, c.currentInvestiture / gm.maxInvestiture));
-    const invY = hpY + this.barHeight + 5;
+    const invY = hpY + barSpacing;
     this.invBar.clear();
     if (invPct > 0) {
-      this.invBar.roundRect(barStartX, invY, this.barWidth * invPct, this.barHeight, 4)
+      this.invBar.roundRect(barStartX, invY, this.barWidth * invPct, this.barHeight, cornerRadius)
         .fill(0x3366bb);
-      this.invBar.roundRect(barStartX, invY, this.barWidth * invPct, this.barHeight / 2, 4)
+      this.invBar.roundRect(barStartX, invY, this.barWidth * invPct, this.barHeight / 2, cornerRadius)
         .fill({ color: 0xffffff, alpha: 0.1 });
     }
     this.invText.text = `${Math.ceil(c.currentInvestiture)}/${gm.maxInvestiture}`;
 
     // XP
     const xpPct = Math.max(0, Math.min(1, c.currentXP / gm.xpForNextLevel));
-    const xpY = invY + this.barHeight + 5;
+    const xpY = invY + barSpacing;
+    const xpBarHeight = scaled(4, this.layout);
     this.xpBar.clear();
     if (xpPct > 0) {
-      this.xpBar.roundRect(barStartX, xpY, this.barWidth * xpPct, 4, 2).fill(0x55aa44);
+      this.xpBar.roundRect(barStartX, xpY, this.barWidth * xpPct, xpBarHeight, scaled(2, this.layout)).fill(0x55aa44);
     }
 
     // Zone + Gold

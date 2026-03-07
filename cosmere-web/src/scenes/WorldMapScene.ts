@@ -5,6 +5,7 @@ import { GameManager } from '../game/GameManager';
 import { ZoneScene } from './ZoneScene';
 import { getCurrentRank, getReputation } from '../game/ReputationSystem';
 import { gameData } from '../data/DataLoader';
+import { getLayoutInfo, fontSize, scaled, LayoutInfo } from '../ui/ResponsiveLayout';
 
 // ─── World Definitions ──────────────────────────────────────────
 
@@ -75,6 +76,7 @@ export class WorldMapScene extends Container implements GameScene {
   private infoPanel: Container | null = null;
   private animTimer = 0;
   private nodeSprites: Map<string, Container> = new Map();
+  private layout!: LayoutInfo;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -83,18 +85,45 @@ export class WorldMapScene extends Container implements GameScene {
   }
 
   onEnter(): void {
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
+    this.layout = getLayoutInfo(this.app.screen.width, this.app.screen.height);
+    this.buildUI();
+  }
+
+  onResize(): void {
+    this.layout = getLayoutInfo(this.app.screen.width, this.app.screen.height);
+
+    // Tear down everything and rebuild
+    this.particles = [];
+    this.nodeSprites.clear();
+    this.selectedWorld = null;
+    this.infoPanel = null;
+    this.removeChildren();
+
+    this.buildUI();
+  }
+
+  private buildUI(): void {
+    const layout = this.layout;
+    const w = layout.width;
+    const h = layout.height;
+    const sa = layout.safeArea;
     const champ = GameManager.shared.champion;
     if (!champ) return;
+
+    // Usable area accounting for safe-area insets
+    const saLeft = Math.max(sa.left, scaled(10, layout));
+    const saRight = Math.max(sa.right, scaled(10, layout));
+    const saTop = Math.max(sa.top, scaled(10, layout));
+    const saBottom = Math.max(sa.bottom, scaled(10, layout));
 
     // Background - cosmic void
     const bg = new Graphics();
     bg.rect(0, 0, w, h).fill(0x030310);
     this.addChild(bg);
 
-    // Star field
-    for (let i = 0; i < 120; i++) {
+    // Star field — scale star count with screen area
+    const starCount = Math.round(120 * (w * h) / (390 * 844));
+    for (let i = 0; i < starCount; i++) {
       const star = new Graphics();
       const size = Math.random() * 1.5 + 0.3;
       const alpha = Math.random() * 0.4 + 0.1;
@@ -104,12 +133,12 @@ export class WorldMapScene extends Container implements GameScene {
       this.addChild(star);
     }
 
-    // Cosmic dust/nebula patches
+    // Cosmic dust/nebula patches — scale radius with screen
     for (let i = 0; i < 5; i++) {
       const nebula = new Graphics();
       const nx = Math.random() * w;
       const ny = Math.random() * h;
-      const nr = 40 + Math.random() * 60;
+      const nr = scaled(40 + Math.random() * 60, layout);
       const colors = [0x221133, 0x112233, 0x331122, 0x113322, 0x222211];
       nebula.circle(nx, ny, nr).fill({ color: colors[i % colors.length], alpha: 0.08 });
       nebula.circle(nx, ny, nr * 0.6).fill({ color: colors[i % colors.length], alpha: 0.05 });
@@ -120,25 +149,34 @@ export class WorldMapScene extends Container implements GameScene {
     const title = new Text({
       text: 'Carte du Cosmere',
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 18, fill: 0xe6cc66,
+        fontFamily: 'Georgia, serif', fontSize: fontSize(18, layout), fill: 0xe6cc66,
         fontWeight: 'bold', dropShadow: { color: 0x000000, blur: 4, distance: 1 },
       }),
     });
     title.anchor.set(0.5, 0);
     title.x = w / 2;
-    title.y = 10;
+    title.y = saTop;
     this.addChild(title);
 
+    // Map area: region in which world nodes are placed (with safe-area margins)
+    const mapLeft = saLeft + scaled(20, layout);
+    const mapRight = w - saRight - scaled(20, layout);
+    const mapTop = saTop + scaled(35, layout);
+    const mapBottom = h - saBottom - scaled(10, layout);
+    const mapW = mapRight - mapLeft;
+    const mapH = mapBottom - mapTop;
+
     // Draw connections first (behind nodes)
+    const lineWidth = Math.max(0.5, scaled(1, layout));
     const connectionLayer = new Graphics();
     for (const world of WORLDS) {
       for (const connID of world.connections) {
         const other = WORLDS.find(wn => wn.id === connID);
-        if (!other || other.id < world.id) continue; // Avoid duplicate lines
-        const x1 = world.x * (w - 80) + 40;
-        const y1 = world.y * (h - 120) + 60;
-        const x2 = other.x * (w - 80) + 40;
-        const y2 = other.y * (h - 120) + 60;
+        if (!other || other.id < world.id) continue;
+        const x1 = mapLeft + world.x * mapW;
+        const y1 = mapTop + world.y * mapH;
+        const x2 = mapLeft + other.x * mapW;
+        const y2 = mapTop + other.y * mapH;
 
         // Dashed line effect
         const steps = 20;
@@ -147,16 +185,22 @@ export class WorldMapScene extends Container implements GameScene {
           const t2 = (i + 1) / steps;
           connectionLayer.moveTo(x1 + (x2 - x1) * t1, y1 + (y2 - y1) * t1)
             .lineTo(x1 + (x2 - x1) * t2, y1 + (y2 - y1) * t2)
-            .stroke({ color: 0x333355, width: 1, alpha: 0.4 });
+            .stroke({ color: 0x333355, width: lineWidth, alpha: 0.4 });
         }
       }
     }
     this.addChild(connectionLayer);
 
+    // Node sizing
+    const glowRadius = scaled(28, layout);
+    const glowInnerRadius = scaled(18, layout);
+    const nodeRadius = scaled(14, layout);
+    const markerRadius = scaled(4, layout);
+
     // Draw world nodes
     for (const world of WORLDS) {
-      const nx = world.x * (w - 80) + 40;
-      const ny = world.y * (h - 120) + 60;
+      const nx = mapLeft + world.x * mapW;
+      const ny = mapTop + world.y * mapH;
       const isUnlocked = champ.level >= world.unlockLevel;
       const isCurrent = champ.currentWorldID === world.id;
 
@@ -166,21 +210,25 @@ export class WorldMapScene extends Container implements GameScene {
 
       // Glow
       const glow = new Graphics();
-      glow.circle(0, 0, 28).fill({ color: world.glowColor, alpha: isUnlocked ? 0.15 : 0.05 });
-      glow.circle(0, 0, 18).fill({ color: world.glowColor, alpha: isUnlocked ? 0.1 : 0.03 });
+      glow.circle(0, 0, glowRadius).fill({ color: world.glowColor, alpha: isUnlocked ? 0.15 : 0.05 });
+      glow.circle(0, 0, glowInnerRadius).fill({ color: world.glowColor, alpha: isUnlocked ? 0.1 : 0.03 });
       nodeContainer.addChild(glow);
 
       // Node circle
       const node = new Graphics();
-      node.circle(0, 0, 14)
+      node.circle(0, 0, nodeRadius)
         .fill({ color: isUnlocked ? world.color : 0x333344, alpha: 0.9 })
-        .stroke({ color: isCurrent ? 0xffcc44 : isUnlocked ? world.color : 0x444455, width: isCurrent ? 2.5 : 1.5, alpha: 0.8 });
+        .stroke({
+          color: isCurrent ? 0xffcc44 : isUnlocked ? world.color : 0x444455,
+          width: isCurrent ? scaled(2.5, layout) : scaled(1.5, layout),
+          alpha: 0.8,
+        });
       nodeContainer.addChild(node);
 
       // Current world indicator
       if (isCurrent) {
         const marker = new Graphics();
-        marker.circle(0, 0, 4).fill({ color: 0xffcc44, alpha: 0.9 });
+        marker.circle(0, 0, markerRadius).fill({ color: 0xffcc44, alpha: 0.9 });
         nodeContainer.addChild(marker);
       }
 
@@ -188,7 +236,7 @@ export class WorldMapScene extends Container implements GameScene {
       if (!isUnlocked) {
         const lock = new Text({
           text: '🔒',
-          style: new TextStyle({ fontSize: 10 }),
+          style: new TextStyle({ fontSize: fontSize(10, layout) }),
         });
         lock.anchor.set(0.5);
         lock.y = -1;
@@ -199,13 +247,13 @@ export class WorldMapScene extends Container implements GameScene {
       const nameLabel = new Text({
         text: world.name,
         style: new TextStyle({
-          fontFamily: 'Georgia, serif', fontSize: 9,
+          fontFamily: 'Georgia, serif', fontSize: fontSize(9, layout),
           fill: isUnlocked ? 0xddddcc : 0x666666,
           fontWeight: isCurrent ? 'bold' : 'normal',
         }),
       });
       nameLabel.anchor.set(0.5, 0);
-      nameLabel.y = 18;
+      nameLabel.y = nodeRadius + scaled(4, layout);
       nodeContainer.addChild(nameLabel);
 
       // Reputation indicator
@@ -214,10 +262,10 @@ export class WorldMapScene extends Container implements GameScene {
         const { name: rankName, rank } = getCurrentRank(world.id);
         const repLabel = new Text({
           text: rep > 0 ? `${rankName}` : '',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 6, fill: rank.color }),
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(6, layout), fill: rank.color }),
         });
         repLabel.anchor.set(0.5, 0);
-        repLabel.y = 28;
+        repLabel.y = nodeRadius + scaled(14, layout);
         nodeContainer.addChild(repLabel);
       }
 
@@ -233,12 +281,13 @@ export class WorldMapScene extends Container implements GameScene {
     }
 
     // Back button
-    this.createBackButton(w);
+    this.createBackButton();
 
     // Ambient particles
-    for (let i = 0; i < 15; i++) {
+    const particleCount = Math.round(15 * (w * h) / (390 * 844));
+    for (let i = 0; i < particleCount; i++) {
       const p = new Graphics();
-      p.circle(0, 0, 1).fill({ color: 0x8888cc, alpha: 0.2 });
+      p.circle(0, 0, scaled(1, layout)).fill({ color: 0x8888cc, alpha: 0.2 });
       p.x = Math.random() * w;
       p.y = Math.random() * h;
       this.addChild(p);
@@ -258,39 +307,50 @@ export class WorldMapScene extends Container implements GameScene {
       this.infoPanel = null;
     }
 
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
+    const layout = this.layout;
+    const w = layout.width;
+    const h = layout.height;
+    const sa = layout.safeArea;
     const champ = GameManager.shared.champion!;
-    const panelW = Math.min(260, w - 30);
-    const panelH = 130;
+
+    const saBottom = Math.max(sa.bottom, scaled(10, layout));
+    const saLeft = Math.max(sa.left, scaled(10, layout));
+    const saRight = Math.max(sa.right, scaled(10, layout));
+
+    // Panel dimensions — responsive width with a maximum, taller on larger screens
+    const maxPanelW = layout.device === 'mobile' ? 280 : layout.device === 'tablet' ? 360 : 400;
+    const panelW = Math.min(scaled(260, layout), maxPanelW, w - saLeft - saRight - scaled(10, layout));
+    const panelH = scaled(130, layout);
     const px = (w - panelW) / 2;
-    const py = h - panelH - 15;
+    const py = h - panelH - saBottom - scaled(5, layout);
 
     const panel = new Container();
     panel.zIndex = 5000;
 
-    const bg = new Graphics();
-    bg.roundRect(px, py, panelW, panelH, 10)
+    const bgPanel = new Graphics();
+    bgPanel.roundRect(px, py, panelW, panelH, scaled(10, layout))
       .fill({ color: 0x0a0815, alpha: 0.92 })
-      .stroke({ color: world.color, width: 2, alpha: 0.7 });
-    bg.eventMode = 'static';
-    panel.addChild(bg);
+      .stroke({ color: world.color, width: scaled(2, layout), alpha: 0.7 });
+    bgPanel.eventMode = 'static';
+    panel.addChild(bgPanel);
+
+    const innerPad = scaled(12, layout);
 
     // World name + subtitle
     const nameText = new Text({
       text: world.name,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: world.color, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(14, layout), fill: world.color, fontWeight: 'bold' }),
     });
-    nameText.x = px + 12;
-    nameText.y = py + 8;
+    nameText.x = px + innerPad;
+    nameText.y = py + scaled(8, layout);
     panel.addChild(nameText);
 
     const subText = new Text({
       text: world.subtitle,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 9, fill: 0x888888, fontStyle: 'italic' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(9, layout), fill: 0x888888, fontStyle: 'italic' }),
     });
-    subText.x = px + 12;
-    subText.y = py + 26;
+    subText.x = px + innerPad;
+    subText.y = py + scaled(26, layout);
     panel.addChild(subText);
 
     // Reputation info
@@ -298,40 +358,40 @@ export class WorldMapScene extends Container implements GameScene {
     const { name: rankName, rank } = getCurrentRank(world.id);
     const repText = new Text({
       text: `Réputation: ${rankName} (${rep})`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: rank.color }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: rank.color }),
     });
-    repText.x = px + 12;
-    repText.y = py + 42;
+    repText.x = px + innerPad;
+    repText.y = py + scaled(42, layout);
     panel.addChild(repText);
 
     // Zone count
     const zones = Array.from(gameData.zones.values()).filter(z => z.worldID === world.id);
     const zoneText = new Text({
       text: `${zones.length} zones disponibles`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x999999 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: 0x999999 }),
     });
-    zoneText.x = px + 12;
-    zoneText.y = py + 56;
+    zoneText.x = px + innerPad;
+    zoneText.y = py + scaled(56, layout);
     panel.addChild(zoneText);
 
     // Travel button
     const isCurrent = champ.currentWorldID === world.id;
-    const btnW = panelW - 24;
-    const btnH = 32;
-    const btnX = px + 12;
-    const btnY = py + panelH - btnH - 12;
+    const btnW = panelW - innerPad * 2;
+    const btnH = scaled(32, layout);
+    const btnX = px + innerPad;
+    const btnY = py + panelH - btnH - scaled(12, layout);
 
     const btn = new Graphics();
-    btn.roundRect(btnX, btnY, btnW, btnH, 6)
+    btn.roundRect(btnX, btnY, btnW, btnH, scaled(6, layout))
       .fill({ color: isCurrent ? 0x224433 : 0x33264d, alpha: 0.9 })
-      .stroke({ color: world.color, width: 1.5, alpha: 0.6 });
+      .stroke({ color: world.color, width: scaled(1.5, layout), alpha: 0.6 });
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     panel.addChild(btn);
 
     const btnLabel = new Text({
       text: isCurrent ? 'Retourner au hub' : `Voyager vers ${world.name}`,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 11, fill: 0xeeddcc }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(11, layout), fill: 0xeeddcc }),
     });
     btnLabel.anchor.set(0.5);
     btnLabel.x = btnX + btnW / 2;
@@ -350,24 +410,33 @@ export class WorldMapScene extends Container implements GameScene {
     this.addChild(panel);
   }
 
-  private createBackButton(screenW: number): void {
+  private createBackButton(): void {
+    const layout = this.layout;
+    const sa = layout.safeArea;
+    const saLeft = Math.max(sa.left, scaled(10, layout));
+    const saTop = Math.max(sa.top, scaled(10, layout));
+
+    const btnW = scaled(70, layout);
+    const btnH = scaled(28, layout);
+
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 70, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.8 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+      .stroke({ color: 0x443355, width: scaled(1, layout), alpha: 0.5 });
     btn.addChild(bg);
 
     const label = new Text({
       text: '← Retour',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0xcccccc }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: 0xcccccc }),
     });
-    label.x = 10;
-    label.y = 7;
+    label.anchor.set(0.5);
+    label.x = btnW / 2;
+    label.y = btnH / 2;
     btn.addChild(label);
 
-    btn.x = 10;
-    btn.y = 10;
+    btn.x = saLeft;
+    btn.y = saTop;
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => {

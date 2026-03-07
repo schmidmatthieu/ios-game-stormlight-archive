@@ -11,6 +11,8 @@ import { gameData } from '../data/DataLoader';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass } from '../data/types';
 import { CLASS_INFO } from '../data/types';
+import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const SHOWCASE_CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
 
@@ -29,8 +31,22 @@ export class MainMenuScene extends Container implements GameScene {
   }
 
   onEnter(): void {
+    this.buildUI();
+  }
+
+  onResize(): void {
+    // Clear everything and rebuild
+    this.removeChildren();
+    this.particles = [];
+    this.showcaseContainer = null;
+    this.buildUI();
+  }
+
+  private buildUI(): void {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
+    const layout = getLayoutInfo(w, h);
+    const isLandscape = layout.orientation === 'landscape';
 
     // Dark background with gradient effect
     const bg = new Graphics();
@@ -38,23 +54,33 @@ export class MainMenuScene extends Container implements GameScene {
     this.addChild(bg);
 
     // Subtle grid pattern
+    const gridSpacing = scaled(40, layout);
     const grid = new Graphics();
-    for (let x = 0; x < w; x += 40) {
+    for (let x = 0; x < w; x += gridSpacing) {
       grid.moveTo(x, 0).lineTo(x, h).stroke({ color: 0x111122, width: 0.5 });
     }
-    for (let y = 0; y < h; y += 40) {
+    for (let y = 0; y < h; y += gridSpacing) {
       grid.moveTo(0, y).lineTo(w, y).stroke({ color: 0x111122, width: 0.5 });
     }
     this.addChild(grid);
 
+    // Compute column positions for landscape two-column layout
+    const leftCenterX = isLandscape ? w * 0.35 : w / 2;
+    const rightCenterX = isLandscape ? w * 0.70 : w / 2;
+
     // Ambient glow behind title
+    const glowX = leftCenterX;
+    const glowY = isLandscape ? h * 0.20 : h * 0.25;
+    const glowR1 = scaled(120, layout);
+    const glowR2 = scaled(80, layout);
     const glow = new Graphics();
-    glow.circle(w / 2, h * 0.25, 120).fill({ color: 0x332200, alpha: 0.15 });
-    glow.circle(w / 2, h * 0.25, 80).fill({ color: 0x443300, alpha: 0.1 });
+    glow.circle(glowX, glowY, glowR1).fill({ color: 0x332200, alpha: 0.15 });
+    glow.circle(glowX, glowY, glowR2).fill({ color: 0x443300, alpha: 0.1 });
     this.addChild(glow);
 
     // Mist/particle effects
-    for (let i = 0; i < 60; i++) {
+    const particleCount = layout.device === 'mobile' ? 40 : 60;
+    for (let i = 0; i < particleCount; i++) {
       const dot = new Graphics();
       const size = Math.random() * 2 + 0.5;
       const alpha = Math.random() * 0.12 + 0.03;
@@ -69,69 +95,93 @@ export class MainMenuScene extends Container implements GameScene {
       });
     }
 
-    // Decorative line
+    // Decorative line above title
+    const lineHalfW = scaled(100, layout);
+    const lineY1 = isLandscape ? h * 0.16 : h * 0.22;
     const line = new Graphics();
-    line.moveTo(w / 2 - 100, h * 0.22).lineTo(w / 2 + 100, h * 0.22)
+    line.moveTo(leftCenterX - lineHalfW, lineY1).lineTo(leftCenterX + lineHalfW, lineY1)
       .stroke({ color: 0x665522, width: 1, alpha: 0.5 });
     this.addChild(line);
 
     // Title
+    const titleSize = fontSize(30, layout);
     const title = new Text({
       text: 'Cosmere Chronicles',
       style: new TextStyle({
         fontFamily: 'Georgia, Copperplate, serif',
-        fontSize: 30,
+        fontSize: titleSize,
         fill: 0xe6cc66,
         fontWeight: 'bold',
         dropShadow: { color: 0x000000, blur: 6, distance: 2, alpha: 0.8 },
       }),
     });
     title.anchor.set(0.5);
-    title.x = w / 2;
-    title.y = h * 0.27;
+    title.x = leftCenterX;
+    title.y = isLandscape ? h * 0.22 : h * 0.27;
     this.addChild(title);
 
     // Subtitle
+    const subtitleSize = fontSize(12, layout);
     const subtitle = new Text({
       text: 'Les Chroniques du Cosmere',
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 12, fill: 0x776644, fontStyle: 'italic',
+        fontFamily: 'Georgia, serif', fontSize: subtitleSize, fill: 0x776644, fontStyle: 'italic',
       }),
     });
     subtitle.anchor.set(0.5);
-    subtitle.x = w / 2;
-    subtitle.y = h * 0.33;
+    subtitle.x = leftCenterX;
+    subtitle.y = isLandscape ? h * 0.30 : h * 0.33;
     this.addChild(subtitle);
 
     // Decorative line below subtitle
+    const lineY2 = isLandscape ? h * 0.34 : h * 0.36;
     const line2 = new Graphics();
-    line2.moveTo(w / 2 - 100, h * 0.36).lineTo(w / 2 + 100, h * 0.36)
+    line2.moveTo(leftCenterX - lineHalfW, lineY2).lineTo(leftCenterX + lineHalfW, lineY2)
       .stroke({ color: 0x665522, width: 1, alpha: 0.5 });
     this.addChild(line2);
 
     // Character showcase area
     this.showcaseContainer = new Container();
-    this.showcaseContainer.x = w / 2;
-    this.showcaseContainer.y = h * 0.50;
+    if (isLandscape) {
+      this.showcaseContainer.x = rightCenterX;
+      this.showcaseContainer.y = h * 0.45;
+    } else {
+      this.showcaseContainer.x = w / 2;
+      this.showcaseContainer.y = h * 0.50;
+    }
     this.addChild(this.showcaseContainer);
-    this.updateShowcase();
+    this.updateShowcase(layout);
 
     // Class name label below showcase
+    const classLabelSize = fontSize(9, layout);
     const classLabel = new Text({
       text: '',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x666677 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: classLabelSize, fill: 0x666677 }),
     });
     classLabel.anchor.set(0.5);
-    classLabel.x = w / 2;
-    classLabel.y = h * 0.58;
+    if (isLandscape) {
+      classLabel.x = rightCenterX;
+      classLabel.y = h * 0.58;
+    } else {
+      classLabel.x = w / 2;
+      classLabel.y = h * 0.58;
+    }
     classLabel.name = 'classLabel';
     this.addChild(classLabel);
 
     // Buttons
     const hasSave = GameManager.shared.hasSave();
-    const btnY = hasSave ? h * 0.68 : h * 0.70;
+    const btnWidth = scaled(220, layout);
+    const btnSpacing = scaled(50, layout);
 
-    this.createButton('Nouvelle Partie', w / 2, btnY, 0x33264d, () => {
+    let btnY: number;
+    if (isLandscape) {
+      btnY = hasSave ? h * 0.52 : h * 0.56;
+    } else {
+      btnY = hasSave ? h * 0.68 : h * 0.70;
+    }
+
+    this.createButton('Nouvelle Partie', leftCenterX, btnY, 0x33264d, btnWidth, layout, () => {
       this.router.goto(CharacterCreationScene);
     });
 
@@ -145,7 +195,7 @@ export class MainMenuScene extends Container implements GameScene {
       const champ = GameManager.shared.champion;
       const label = champ ? `Continuer (${champ.name} Nv.${champ.level})` : continueLabel;
 
-      this.createButton(label, w / 2, btnY + 50, 0x224433, () => {
+      this.createButton(label, leftCenterX, btnY + btnSpacing, 0x224433, btnWidth, layout, () => {
         GameManager.shared.load();
         BestiaryManager.shared.load();
         AchievementManager.shared.load();
@@ -162,42 +212,56 @@ export class MainMenuScene extends Container implements GameScene {
       '"Les couleurs sont le souffle de la vie."',
       '"Le Dor coule en chaque être vivant."',
     ];
+    const quoteSize = fontSize(9, layout);
+    const quoteWrapWidth = isLandscape ? w * 0.45 : w - scaled(60, layout);
     const quote = new Text({
       text: quotes[Math.floor(Math.random() * quotes.length)],
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 9, fill: 0x554433,
-        fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 60, align: 'center',
+        fontFamily: 'Georgia, serif', fontSize: quoteSize, fill: 0x554433,
+        fontStyle: 'italic', wordWrap: true, wordWrapWidth: quoteWrapWidth, align: 'center',
       }),
     });
     quote.anchor.set(0.5);
-    quote.x = w / 2;
-    quote.y = h - 50;
+    if (isLandscape) {
+      quote.x = rightCenterX;
+      quote.y = h * 0.75;
+    } else {
+      quote.x = w / 2;
+      quote.y = h - scaled(50, layout);
+    }
     this.addChild(quote);
 
     // Version
+    const verSize = fontSize(9, layout);
     const ver = new Text({
       text: 'v1.1 — Prototype Web',
-      style: new TextStyle({ fontFamily: 'monospace', fontSize: 9, fill: 0x333333 }),
+      style: new TextStyle({ fontFamily: 'monospace', fontSize: verSize, fill: 0x333333 }),
     });
     ver.anchor.set(0.5);
     ver.x = w / 2;
-    ver.y = h - 15;
+    ver.y = h - scaled(15, layout);
     this.addChild(ver);
   }
 
-  private updateShowcase(): void {
+  private updateShowcase(layout?: LayoutInfo): void {
     if (!this.showcaseContainer) return;
     this.showcaseContainer.removeChildren();
+
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+    const li = layout ?? getLayoutInfo(w, h);
 
     const cls = SHOWCASE_CLASSES[this.showcaseIndex];
     const charSprite = new Graphics();
     drawPlayerCharacter(charSprite, cls);
-    charSprite.scale.set(2.5);
+    const showcaseScale = scaled(2.5, li);
+    charSprite.scale.set(showcaseScale);
     this.showcaseContainer.addChild(charSprite);
 
     // Glow behind character
     const charGlow = new Graphics();
-    charGlow.circle(0, -10, 25).fill({ color: 0x665522, alpha: 0.08 });
+    const glowRadius = scaled(25, li);
+    charGlow.circle(0, -scaled(10, li), glowRadius).fill({ color: 0x665522, alpha: 0.08 });
     this.showcaseContainer.addChildAt(charGlow, 0);
 
     // Update class label
@@ -207,21 +271,26 @@ export class MainMenuScene extends Container implements GameScene {
     }
   }
 
-  private createButton(label: string, x: number, y: number, color: number, onClick: () => void): void {
-    const bw = 220;
-    const bh = 40;
+  private createButton(
+    label: string, x: number, y: number, color: number,
+    btnWidth: number, layout: LayoutInfo, onClick: () => void
+  ): void {
+    const bw = btnWidth;
+    const bh = scaled(40, layout);
     const btn = new Container();
     btn.x = x;
     btn.y = y;
 
     const bg = new Graphics();
-    bg.roundRect(-bw / 2, -bh / 2, bw, bh, 8)
+    const radius = scaled(8, layout);
+    bg.roundRect(-bw / 2, -bh / 2, bw, bh, radius)
       .fill({ color, alpha: 0.85 })
       .stroke({ color: 0x998033, width: 1.5, alpha: 0.8 });
     btn.addChild(bg);
 
+    const btnFontSize = fontSize(14, layout);
     const style = new TextStyle({
-      fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xeeddcc,
+      fontFamily: 'Georgia, serif', fontSize: btnFontSize, fill: 0xeeddcc,
     });
     const txt = new Text({ text: label, style });
     txt.anchor.set(0.5);
