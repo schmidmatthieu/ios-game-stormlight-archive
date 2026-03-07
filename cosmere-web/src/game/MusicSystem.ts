@@ -1,6 +1,8 @@
 // ─── Music & Ambient Sound System ──────────────────────────────
-// Visual-only system (no actual audio) that tracks atmosphere and
-// displays a music/ambient indicator in the UI.
+// Tracks atmosphere, plays procedural audio via AudioEngine,
+// and exposes state for the UI music indicator.
+
+import { AudioEngine } from './AudioEngine';
 
 export type MusicMood = 'peaceful' | 'exploration' | 'tension' | 'combat' | 'boss' | 'mystery' | 'triumph';
 
@@ -33,6 +35,10 @@ const WORLD_TRACKS: Record<string, MusicTrack[]> = {
   taldain: [
     { name: 'Sables d\'Or', mood: 'exploration', icon: '🏜', color: 0xddbb44 },
     { name: 'Tempête de Sable', mood: 'tension', icon: '🌪', color: 0xccaa33 },
+  ],
+  komashi: [
+    { name: 'Encre et Silence', mood: 'mystery', icon: '🖌', color: 0xcc44aa },
+    { name: 'Rêve de Papier', mood: 'peaceful', icon: '🎵', color: 0xee88cc },
   ],
   shadesmar: [
     { name: 'Océan de Perles', mood: 'mystery', icon: '🔮', color: 0x6644aa },
@@ -69,6 +75,13 @@ const WEATHER_AMBIENTS: Record<string, AmbientLayer[]> = {
     { type: 'rain', label: 'Pluie torrentielle', icon: '🌧', intensity: 0.9 },
   ],
   rain: [{ type: 'rain', label: 'Pluie', icon: '🌧', intensity: 0.6 }],
+  sandstorm: [
+    { type: 'wind', label: 'Tempête de sable', icon: '🌪', intensity: 0.9 },
+  ],
+  nightmare: [
+    { type: 'cave', label: 'Ombre rampante', icon: '🌑', intensity: 0.7 },
+    { type: 'wind', label: 'Murmures', icon: '👻', intensity: 0.3 },
+  ],
 };
 
 export class MusicManager {
@@ -88,15 +101,32 @@ export class MusicManager {
   private combatCooldown = 0;
   private trackTimer = 0;
   private readonly TRACK_DURATION = 60; // seconds per "track"
+  private lastMood: MusicMood | null = null;
+  private audioInitialized = false;
+
+  /** Call once from a user gesture to unlock audio */
+  initAudio(): void {
+    if (this.audioInitialized) return;
+    AudioEngine.shared.init();
+    this.audioInitialized = true;
+
+    // Start playing if we already have a track
+    if (this.currentTrack) {
+      this.startAudioForCurrentTrack();
+    }
+  }
 
   setWorld(worldID: string): void {
     if (this.worldID === worldID) return;
     this.worldID = worldID;
     this.pickTrack();
+    this.startAudioForCurrentTrack();
+    this.updateAmbientAudio();
   }
 
   setWeather(weather: string): void {
     this.ambientLayers = WEATHER_AMBIENTS[weather] ?? WEATHER_AMBIENTS['none'];
+    this.updateAmbientAudio();
   }
 
   enterCombat(): void {
@@ -105,8 +135,9 @@ export class MusicManager {
       this.combatCooldown = 5;
       this.currentMood = 'combat';
       this.pickTrackForMood('combat');
+      this.startAudioForCurrentTrack();
     }
-    this.combatCooldown = 5; // Reset cooldown on each combat action
+    this.combatCooldown = 5;
   }
 
   update(dt: number): void {
@@ -117,6 +148,7 @@ export class MusicManager {
         this.inCombat = false;
         this.currentMood = 'exploration';
         this.pickTrack();
+        this.startAudioForCurrentTrack();
       }
     }
 
@@ -124,7 +156,10 @@ export class MusicManager {
     this.trackTimer += dt;
     if (this.trackTimer >= this.TRACK_DURATION) {
       this.trackTimer = 0;
-      if (!this.inCombat) this.pickTrack();
+      if (!this.inCombat) {
+        this.pickTrack();
+        this.startAudioForCurrentTrack();
+      }
     }
   }
 
@@ -144,11 +179,39 @@ export class MusicManager {
     }
   }
 
+  private startAudioForCurrentTrack(): void {
+    if (!this.audioInitialized || !this.currentTrack) return;
+    const mood = this.currentTrack.mood;
+    // Only restart if mood changed
+    if (mood === this.lastMood) return;
+    this.lastMood = mood;
+    AudioEngine.shared.playMusic(mood, this.worldID);
+  }
+
+  private updateAmbientAudio(): void {
+    if (!this.audioInitialized) return;
+    // Play the first ambient layer that has actual sound
+    const layer = this.ambientLayers.find(a => a.type !== 'silence');
+    if (layer) {
+      AudioEngine.shared.playAmbient(layer.type, layer.intensity);
+    } else {
+      AudioEngine.shared.stopAmbient();
+    }
+  }
+
   toggleMute(): void {
     this.isMuted = !this.isMuted;
+    AudioEngine.shared.muted = this.isMuted;
   }
 
   setVolume(v: number): void {
     this.volume = Math.max(0, Math.min(1, v));
+    AudioEngine.shared.musicVolume = this.volume;
+  }
+
+  /** Play a sound effect */
+  playSFX(name: string): void {
+    if (!this.audioInitialized) return;
+    AudioEngine.shared.playSFX(name);
   }
 }

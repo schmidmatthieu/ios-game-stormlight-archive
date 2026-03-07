@@ -14,6 +14,7 @@ import type { ChampionClass } from '../data/types';
 import { CLASS_INFO } from '../data/types';
 import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
+import { MusicManager } from '../game/MusicSystem';
 
 const SHOWCASE_CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
 
@@ -301,7 +302,13 @@ export class MainMenuScene extends Container implements GameScene {
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => { btn.scale.set(0.95); });
-    btn.on('pointerup', () => { btn.scale.set(1); onClick(); });
+    btn.on('pointerup', () => {
+      btn.scale.set(1);
+      // Initialize audio on first user gesture (browser requirement)
+      MusicManager.shared.initAudio();
+      MusicManager.shared.playSFX('button_click');
+      onClick();
+    });
     btn.on('pointerupoutside', () => { btn.scale.set(1); });
 
     this.addChild(btn);

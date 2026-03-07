@@ -1352,6 +1352,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private closeDialogue(): void {
     if (this.dialoguePanel) {
+      MusicManager.shared.playSFX('close_menu');
       this.dialoguePanel.destroy({ children: true });
       this.dialoguePanel = null;
     }
@@ -1416,6 +1417,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleInventory(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = new InventoryPanel(
       this.app.screen.width, this.app.screen.height,
@@ -2475,6 +2477,7 @@ export class ZoneScene extends Container implements GameScene {
 
     // Shield check (affix)
     if (closest.affixState?.shieldActive) {
+      MusicManager.shared.playSFX('block');
       this.showDamageNumber(closest.position.x, closest.position.y - 30, 0, false, 0x4488ff, 'block');
       return;
     }
@@ -2488,6 +2491,7 @@ export class ZoneScene extends Container implements GameScene {
 
     closest.hp -= totalDmg;
     const dmgStyle: DamageStyle = isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'normal';
+    MusicManager.shared.playSFX(isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'hit');
     this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit, undefined, dmgStyle, comboResult.combo);
     this.drawEnemyHP(closest.hpBar, closest.hp / closest.maxHP);
 
@@ -2547,6 +2551,14 @@ export class ZoneScene extends Container implements GameScene {
     // Cast animation
     this.playerAnimator.setState('cast');
 
+    // Magic SFX based on champion class
+    const classSfxMap: Record<string, string> = {
+      mistborn: 'magic_allomancy', radiant: 'magic_surgebinding',
+      awakener: 'magic_awakening', elantrian: 'magic_aondor',
+      sandMaster: 'magic_sand', nightmarePainter: 'magic_paint',
+    };
+    MusicManager.shared.playSFX(classSfxMap[champ.championClass] ?? 'magic_surgebinding');
+
     // Skill visual effect
     this.showSkillEffect(skill.range * 32);
 
@@ -2590,6 +2602,7 @@ export class ZoneScene extends Container implements GameScene {
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
+    MusicManager.shared.playSFX('hit');
 
     // Hurt animation
     this.playerAnimator.setState('hurt');
@@ -2607,6 +2620,7 @@ export class ZoneScene extends Container implements GameScene {
   private killEnemy(enemy: EnemyInstance): void {
     enemy.isDead = true;
     enemy.state = 'dead';
+    MusicManager.shared.playSFX('death');
 
     // Track in bestiary & achievements
     BestiaryManager.shared.registerKill(enemy.data);
@@ -2659,6 +2673,7 @@ export class ZoneScene extends Container implements GameScene {
     const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
     const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
     const leveledUp = gm.grantXP(finalXP);
+    if (leveledUp) MusicManager.shared.playSFX('level_up');
 
     // Grant reputation based on enemy tier
     const repByTier: Record<string, number> = { minion: 1, soldier: 2, elite: 4, boss: 15 };
@@ -2695,6 +2710,14 @@ export class ZoneScene extends Container implements GameScene {
           QuestManager.shared.onItemCollected(lootEntry.itemID);
           BestiaryManager.shared.registerDrop(enemy.data.id, lootEntry.itemID);
           AchievementManager.shared.recordItemCollect();
+
+          // Loot SFX based on rarity
+          const lootSfxMap: Record<string, string> = {
+            common: 'loot_common', uncommon: 'loot_common',
+            rare: 'loot_rare', epic: 'loot_epic',
+            legendary: 'loot_legendary', cosmeric: 'loot_legendary',
+          };
+          MusicManager.shared.playSFX(lootSfxMap[item.rarity] ?? 'loot_common');
 
           // Animated loot drop
           spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
@@ -3055,6 +3078,7 @@ export class ZoneScene extends Container implements GameScene {
       if (QuestManager.shared.checkQuestCompletion(qid)) {
         const result = QuestManager.shared.completeQuest(qid);
         if (result) {
+          MusicManager.shared.playSFX('quest_complete');
           // Show quest completion reward
           this.showFloatingText(
             this.playerScreenPos.x, this.playerScreenPos.y - 50,

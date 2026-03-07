@@ -10,6 +10,7 @@ import { CLASS_INFO } from '../data/types';
 import { CLASS_COLORS } from './CharacterPreview';
 import { ORDERS, ORDER_NAMES } from './OrderSelector';
 import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import { MusicManager } from '../game/MusicSystem';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
@@ -347,6 +348,7 @@ export class CharacterCreationScene extends Container implements GameScene {
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.on('pointerdown', () => {
+      MusicManager.shared.playSFX('button_click');
       this.selectedClass = cls;
       this.updateSelection();
     });
@@ -384,7 +386,7 @@ export class CharacterCreationScene extends Container implements GameScene {
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => { btn.scale.set(0.95); });
-    btn.on('pointerup', () => { btn.scale.set(1); onClick(); });
+    btn.on('pointerup', () => { btn.scale.set(1); MusicManager.shared.playSFX('button_click'); onClick(); });
     btn.on('pointerupoutside', () => { btn.scale.set(1); });
 
     this.addChild(btn);
