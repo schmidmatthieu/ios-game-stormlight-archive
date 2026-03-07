@@ -100,6 +100,13 @@ enum GameConstants {
         static let levelUpDuration: TimeInterval = 2.0
     }
 
+    // MARK: - NPC
+
+    enum NPC {
+        static let invulnerableHP: Int = 99999
+        static let invulnerableDefense: Int = 9999
+    }
+
     // MARK: - Colors
 
     enum Colors {

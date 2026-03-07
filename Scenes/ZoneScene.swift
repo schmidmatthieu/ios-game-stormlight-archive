@@ -322,6 +322,12 @@ class ZoneScene: SKScene {
         mpBg.zPosition = 2000
         cameraNode.addChild(mpBg)
 
+        let mpFill = SKShapeNode(rectOf: CGSize(width: 116, height: 8), cornerRadius: 2)
+        mpFill.fillColor = GameConstants.Colors.investitureBlue
+        mpFill.strokeColor = .clear
+        mpFill.name = "mpFill"
+        mpBg.addChild(mpFill)
+
         let mpShine = SKShapeNode(rectOf: CGSize(width: 116, height: 4), cornerRadius: 1)
         mpShine.fillColor = SKColor(white: 1, alpha: 0.12)
         mpShine.strokeColor = .clear
@@ -341,6 +347,7 @@ class ZoneScene: SKScene {
         mpLabel.fontSize = 10
         mpLabel.fontColor = .white
         mpLabel.verticalAlignmentMode = .center
+        mpLabel.name = "mpLabel"
         mpBg.addChild(mpLabel)
 
         // Level badge
@@ -423,6 +430,21 @@ class ZoneScene: SKScene {
         // Update gold label
         if let goldLabel = cameraNode.childNode(withName: "goldLabel") as? SKLabelNode {
             goldLabel.text = "\(champion.gold) or"
+        }
+
+        // Update investiture bar fill
+        if let mpBg = cameraNode.childNode(withName: "mpBarBg"),
+           let mpFill = mpBg.childNode(withName: "mpFill") as? SKShapeNode {
+            let mpRatio = CGFloat(champion.currentInvestiture) / CGFloat(max(1, champion.maxInvestiture))
+            let fillWidth = 116 * max(0, min(mpRatio, 1))
+            let rect = CGRect(x: -fillWidth / 2, y: -4, width: fillWidth, height: 8)
+            mpFill.path = CGPath(roundedRect: rect, cornerWidth: 2, cornerHeight: 2, transform: nil)
+        }
+
+        // Update investiture label
+        if let mpBg = cameraNode.childNode(withName: "mpBarBg"),
+           let mpLabel = mpBg.childNode(withName: "mpLabel") as? SKLabelNode {
+            mpLabel.text = "\(champion.currentInvestiture)/\(champion.maxInvestiture)"
         }
 
         // Update level label
@@ -787,7 +809,7 @@ class ZoneScene: SKScene {
     private func handleAttack() {
         guard let champion = GameManager.shared.champion, let playerNode else { return }
 
-        let attackRange: CGFloat = 60
+        let attackRange = GameConstants.Player.attackRange
         var closestEnemy: (name: String, node: SKNode, distance: CGFloat)?
 
         for (name, node) in enemyNodes {
