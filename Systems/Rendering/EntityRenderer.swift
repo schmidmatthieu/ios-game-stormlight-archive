@@ -128,7 +128,15 @@ final class EntityRenderer {
         let hpBarY = headY + headR + (enemy.tier == .boss ? 16 : 6) * scale
         addHPBar(to: container, tier: enemy.tier, position: CGPoint(x: 0, y: hpBarY))
 
-        // Name label (avec couleur de tier)
+        // Name label (avec couleur de tier + ombre)
+        let nameShadow = SKLabelNode(fontNamed: "Copperplate-Bold")
+        nameShadow.text = enemy.name
+        nameShadow.fontSize = 8
+        nameShadow.fontColor = SKColor(white: 0, alpha: 0.6)
+        nameShadow.position = CGPoint(x: 0.5, y: hpBarY + 5.5)
+        nameShadow.zPosition = 9.9
+        container.addChild(nameShadow)
+
         let nameLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         nameLabel.text = enemy.name
         nameLabel.fontSize = 8
@@ -137,7 +145,7 @@ final class EntityRenderer {
         nameLabel.zPosition = 10
         container.addChild(nameLabel)
 
-        // Tier indicator
+        // Tier indicator with decorative brackets
         if enemy.tier == .elite || enemy.tier == .boss {
             let tierIcon = SKLabelNode(fontNamed: "Helvetica-Bold")
             tierIcon.text = enemy.tier == .boss ? "★" : "◆"
@@ -146,6 +154,25 @@ final class EntityRenderer {
             tierIcon.position = CGPoint(x: -(CGFloat(enemy.name.count) * 2.5 + 6), y: hpBarY + 5)
             tierIcon.zPosition = 10
             container.addChild(tierIcon)
+
+            // Decorative underline for elite/boss name
+            let underline = SKShapeNode(rectOf: CGSize(width: CGFloat(enemy.name.count) * 4.5 + 6, height: 0.5))
+            underline.fillColor = tierLabelColor(for: enemy.tier).withAlphaComponent(0.4)
+            underline.strokeColor = .clear
+            underline.position = CGPoint(x: 0, y: hpBarY + 3)
+            underline.zPosition = 10
+            container.addChild(underline)
+        }
+
+        // Tier text for boss
+        if enemy.tier == .boss {
+            let bossTitle = SKLabelNode(fontNamed: "Copperplate")
+            bossTitle.text = "— BOSS —"
+            bossTitle.fontSize = 6
+            bossTitle.fontColor = SKColor(red: 1, green: 0.75, blue: 0.15, alpha: 0.7)
+            bossTitle.position = CGPoint(x: 0, y: hpBarY + 14)
+            bossTitle.zPosition = 10
+            container.addChild(bossTitle)
         }
 
         // Idle animations selon behavior
@@ -521,21 +548,42 @@ final class EntityRenderer {
     }
 
     static func playDeathAnimation(on enemyNode: SKNode, completion: @escaping () -> Void) {
-        // Particules d'explosion
-        let particleCount = 6
+        // Flash blanc initial
+        let flash = SKShapeNode(circleOfRadius: 15)
+        flash.fillColor = SKColor(white: 1, alpha: 0.6)
+        flash.strokeColor = .clear
+        flash.position = enemyNode.position
+        flash.zPosition = enemyNode.zPosition + 10
+        flash.setScale(0.3)
+        enemyNode.parent?.addChild(flash)
+        flash.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.scale(to: 1.5, duration: 0.15),
+                SKAction.fadeOut(withDuration: 0.2)
+            ]),
+            SKAction.removeFromParent()
+        ]))
+
+        // Particules d'explosion (plus nombreuses et variées)
+        let particleCount = 10
         for i in 0..<particleCount {
-            let particle = SKShapeNode(circleOfRadius: 2)
-            particle.fillColor = SKColor(red: 1, green: 0.6, blue: 0.1, alpha: 0.8)
+            let radius = CGFloat.random(in: 1.5...3)
+            let particle = SKShapeNode(circleOfRadius: radius)
+            let isSmoke = i > 6
+            particle.fillColor = isSmoke
+                ? SKColor(white: 0.3, alpha: 0.5)
+                : SKColor(red: 1, green: CGFloat.random(in: 0.3...0.7), blue: 0.1, alpha: 0.9)
             particle.strokeColor = .clear
             particle.position = enemyNode.position
             particle.zPosition = enemyNode.zPosition + 5
             enemyNode.parent?.addChild(particle)
 
-            let angle = CGFloat(i) * (.pi * 2 / CGFloat(particleCount))
-            let distance: CGFloat = 20
-            let move = SKAction.moveBy(x: cos(angle) * distance, y: sin(angle) * distance, duration: 0.4)
-            let fade = SKAction.fadeOut(withDuration: 0.4)
-            let scale = SKAction.scale(to: 0.1, duration: 0.4)
+            let angle = CGFloat(i) * (.pi * 2 / CGFloat(particleCount)) + CGFloat.random(in: -0.3...0.3)
+            let distance = CGFloat.random(in: 15...30)
+            let duration = Double.random(in: 0.3...0.6)
+            let move = SKAction.moveBy(x: cos(angle) * distance, y: sin(angle) * distance + (isSmoke ? 8 : 0), duration: duration)
+            let fade = SKAction.fadeOut(withDuration: duration)
+            let scale = SKAction.scale(to: 0.1, duration: duration)
 
             particle.run(SKAction.sequence([
                 SKAction.group([move, fade, scale]),
@@ -543,10 +591,32 @@ final class EntityRenderer {
             ]))
         }
 
+        // Debris (petits rectangles)
+        for _ in 0..<4 {
+            let debris = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 2...4), height: CGFloat.random(in: 1...3)))
+            debris.fillColor = SKColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 0.7)
+            debris.strokeColor = .clear
+            debris.position = enemyNode.position
+            debris.zPosition = enemyNode.zPosition + 3
+            debris.zRotation = CGFloat.random(in: 0...(.pi * 2))
+            enemyNode.parent?.addChild(debris)
+
+            let angle = CGFloat.random(in: 0...(.pi * 2))
+            debris.run(SKAction.sequence([
+                SKAction.group([
+                    SKAction.moveBy(x: cos(angle) * 18, y: sin(angle) * 18 + 5, duration: 0.5),
+                    SKAction.fadeOut(withDuration: 0.5),
+                    SKAction.rotate(byAngle: .pi, duration: 0.5)
+                ]),
+                SKAction.removeFromParent()
+            ]))
+        }
+
         let death = SKAction.sequence([
             SKAction.group([
                 SKAction.fadeOut(withDuration: 0.5),
-                SKAction.scale(to: 0.3, duration: 0.5)
+                SKAction.scale(to: 0.3, duration: 0.5),
+                SKAction.rotate(byAngle: 0.3, duration: 0.5)
             ]),
             SKAction.run(completion),
             SKAction.removeFromParent()
@@ -669,13 +739,34 @@ final class EntityRenderer {
             container.addChild(pupil)
         }
 
-        // Mouth (friendly smile)
-        let mouth = SKShapeNode(ellipseOf: CGSize(width: 4, height: 2))
-        mouth.fillColor = SKColor(red: 0.6, green: 0.35, blue: 0.3, alpha: 0.6)
-        mouth.strokeColor = .clear
-        mouth.position = CGPoint(x: 0, y: 27)
+        // Mouth (friendly smile — curved arc)
+        let mouthPath = CGMutablePath()
+        mouthPath.move(to: CGPoint(x: -2, y: 27.5))
+        mouthPath.addQuadCurve(to: CGPoint(x: 2, y: 27.5), control: CGPoint(x: 0, y: 25.5))
+        let mouth = SKShapeNode(path: mouthPath)
+        mouth.strokeColor = SKColor(red: 0.5, green: 0.3, blue: 0.25, alpha: 0.7)
+        mouth.lineWidth = 1
+        mouth.fillColor = .clear
         mouth.zPosition = 3
         container.addChild(mouth)
+
+        // Eyebrows (expressive)
+        for xOff in [-3, 3] as [CGFloat] {
+            let brow = SKShapeNode(rectOf: CGSize(width: 4, height: 1), cornerRadius: 0.5)
+            brow.fillColor = npcHairColor(role: role).withAlphaComponent(0.6)
+            brow.strokeColor = .clear
+            brow.position = CGPoint(x: xOff, y: 34)
+            brow.zPosition = 3
+            container.addChild(brow)
+        }
+
+        // Nose (small detail)
+        let nose = SKShapeNode(ellipseOf: CGSize(width: 2, height: 1.5))
+        nose.fillColor = skinCol.withAlphaComponent(0.5)
+        nose.strokeColor = .clear
+        nose.position = CGPoint(x: 0, y: 29)
+        nose.zPosition = 3
+        container.addChild(nose)
 
         // Role-specific accessories
         addNPCRoleAccessories(to: container, isShop: isShop, role: role)
@@ -689,15 +780,32 @@ final class EntityRenderer {
             addQuestIndicator(to: container, isShop: isShop)
         }
 
-        // NPC name
+        // NPC name (with shadow)
         let displayName = formatNPCName(npc.npcID)
-        let nameLabel = SKLabelNode(fontNamed: "Copperplate")
+        let nameShadow = SKLabelNode(fontNamed: "Copperplate-Bold")
+        nameShadow.text = displayName
+        nameShadow.fontSize = 7
+        nameShadow.fontColor = SKColor(white: 0, alpha: 0.6)
+        nameShadow.position = CGPoint(x: 0.5, y: isShop ? 51.5 : 43.5)
+        nameShadow.zPosition = 9.9
+        container.addChild(nameShadow)
+
+        let nameLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         nameLabel.text = displayName
         nameLabel.fontSize = 7
-        nameLabel.fontColor = isShop ? SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 1) : SKColor(white: 0.85, alpha: 1)
+        nameLabel.fontColor = isShop ? SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 1) : SKColor(white: 0.9, alpha: 1)
         nameLabel.position = CGPoint(x: 0, y: isShop ? 52 : 44)
         nameLabel.zPosition = 10
         container.addChild(nameLabel)
+
+        // Role title (under name)
+        let roleTitle = SKLabelNode(fontNamed: "Copperplate")
+        roleTitle.text = npcRoleTitle(isShop: isShop, role: role)
+        roleTitle.fontSize = 5
+        roleTitle.fontColor = npcAuraColor(isShop: isShop, role: role).withAlphaComponent(0.7)
+        roleTitle.position = CGPoint(x: 0, y: isShop ? 47 : 39)
+        roleTitle.zPosition = 10
+        container.addChild(roleTitle)
 
         // Idle animation
         let idle = SKAction.repeatForever(SKAction.sequence([
@@ -1062,5 +1170,18 @@ final class EntityRenderer {
 
     private static func formatNPCName(_ npcID: String) -> String {
         npcID.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    private static func npcRoleTitle(isShop: Bool, role: String) -> String {
+        if isShop { return "Marchand" }
+        switch role {
+        case "trainer", "master": return "Maître d'armes"
+        case "scholar", "ardent": return "Érudit"
+        case "captain", "bridge": return "Capitaine"
+        case "ally", "contact":   return "Allié"
+        case "informer":          return "Informateur"
+        case "merchant":          return "Commerçant"
+        default:                  return "Habitant"
+        }
     }
 }

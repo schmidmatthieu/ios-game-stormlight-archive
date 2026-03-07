@@ -125,7 +125,7 @@ final class PlayerRenderer {
             addRingEffects(to: container, count: appearance.ringCount, rarity: appearance.bestRingRarity)
         }
 
-        // === LAYER 8: Class Glow ===
+        // === LAYER 8: Class Glow (enhanced with inner ring) ===
         let glow = SKShapeNode(circleOfRadius: 22)
         glow.fillColor = classCol.withAlphaComponent(0.06)
         glow.strokeColor = classCol.withAlphaComponent(0.12)
@@ -135,6 +135,16 @@ final class PlayerRenderer {
         glow.name = "classGlow"
         container.addChild(glow)
 
+        // Inner class ring (subtle rotating sigil)
+        let innerRing = SKShapeNode(circleOfRadius: 16)
+        innerRing.fillColor = .clear
+        innerRing.strokeColor = classCol.withAlphaComponent(0.06)
+        innerRing.lineWidth = 0.5
+        innerRing.position = CGPoint(x: 0, y: 14)
+        innerRing.zPosition = -0.4
+        container.addChild(innerRing)
+        innerRing.run(SKAction.repeatForever(SKAction.rotate(byAngle: .pi * 2, duration: 12.0)))
+
         // === Breathing Animation ===
         let body = container.childNode(withName: "body")
         let breathe = SKAction.repeatForever(SKAction.sequence([
@@ -143,7 +153,15 @@ final class PlayerRenderer {
         ]))
         body?.run(breathe)
 
-        // === Name Label ===
+        // === Name Label (with shadow for readability) ===
+        let nameShadow = SKLabelNode(fontNamed: "Copperplate-Bold")
+        nameShadow.text = champion.name
+        nameShadow.fontSize = 9
+        nameShadow.fontColor = SKColor(white: 0, alpha: 0.7)
+        nameShadow.position = CGPoint(x: 0.5, y: 41.5)
+        nameShadow.zPosition = 9.9
+        container.addChild(nameShadow)
+
         let nameLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         nameLabel.text = champion.name
         nameLabel.fontSize = 9
@@ -152,21 +170,38 @@ final class PlayerRenderer {
         nameLabel.zPosition = 10
         container.addChild(nameLabel)
 
-        // === Level Badge ===
-        let levelBg = SKShapeNode(circleOfRadius: 5)
-        levelBg.fillColor = SKColor(red: 0.15, green: 0.15, blue: 0.2, alpha: 0.9)
-        levelBg.strokeColor = classCol.withAlphaComponent(0.6)
-        levelBg.lineWidth = 1
-        levelBg.position = CGPoint(x: -16, y: 38)
+        // === Class Title (under name) ===
+        let classTitle = SKLabelNode(fontNamed: "Copperplate")
+        classTitle.text = classDisplayName(for: champion.championClass)
+        classTitle.fontSize = 6
+        classTitle.fontColor = classCol.withAlphaComponent(0.7)
+        classTitle.position = CGPoint(x: 0, y: 36)
+        classTitle.zPosition = 10
+        container.addChild(classTitle)
+
+        // === Level Badge (enhanced with double ring) ===
+        let levelBg = SKShapeNode(circleOfRadius: 6)
+        levelBg.fillColor = SKColor(red: 0.12, green: 0.1, blue: 0.18, alpha: 0.95)
+        levelBg.strokeColor = classCol.withAlphaComponent(0.7)
+        levelBg.lineWidth = 1.5
+        levelBg.position = CGPoint(x: -18, y: 42)
         levelBg.zPosition = 10
         container.addChild(levelBg)
 
+        let levelOuter = SKShapeNode(circleOfRadius: 7.5)
+        levelOuter.fillColor = .clear
+        levelOuter.strokeColor = classCol.withAlphaComponent(0.25)
+        levelOuter.lineWidth = 0.5
+        levelOuter.position = CGPoint(x: -18, y: 42)
+        levelOuter.zPosition = 9.9
+        container.addChild(levelOuter)
+
         let levelLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         levelLabel.text = "\(champion.level)"
-        levelLabel.fontSize = 7
+        levelLabel.fontSize = 8
         levelLabel.fontColor = classCol
         levelLabel.verticalAlignmentMode = .center
-        levelLabel.position = CGPoint(x: -16, y: 38)
+        levelLabel.position = CGPoint(x: -18, y: 42)
         levelLabel.zPosition = 11
         container.addChild(levelLabel)
 
@@ -766,19 +801,50 @@ final class PlayerRenderer {
             leftPupil.run(eyeGlow)
             rightPupil.run(eyeGlow)
         } else if championClass == .elantrian {
-            // Points lumineux sur la peau
-            let glyphDot = SKShapeNode(circleOfRadius: 1)
-            glyphDot.fillColor = SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 0.5)
-            glyphDot.strokeColor = .clear
-            glyphDot.position = CGPoint(x: 5, y: 27)
-            glyphDot.zPosition = 4.1
-            container.addChild(glyphDot)
+            // Points lumineux Aon sur la peau
+            for (dx, dy) in [(5, 27), (-5, 26), (0, 24)] as [(CGFloat, CGFloat)] {
+                let glyphDot = SKShapeNode(circleOfRadius: 1)
+                glyphDot.fillColor = SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 0.5)
+                glyphDot.strokeColor = .clear
+                glyphDot.position = CGPoint(x: dx, y: dy)
+                glyphDot.zPosition = 4.1
+                container.addChild(glyphDot)
 
-            let glow = SKAction.repeatForever(SKAction.sequence([
-                SKAction.fadeAlpha(to: 0.2, duration: 1.5),
-                SKAction.fadeAlpha(to: 0.7, duration: 1.5)
+                let glow = SKAction.repeatForever(SKAction.sequence([
+                    SKAction.fadeAlpha(to: 0.2, duration: 1.5 + CGFloat.random(in: 0...0.5)),
+                    SKAction.fadeAlpha(to: 0.7, duration: 1.5 + CGFloat.random(in: 0...0.5))
+                ]))
+                glyphDot.run(glow)
+            }
+        } else if championClass == .mistborn {
+            // Yeux gris métallique — léger scintillement
+            let metalShine = SKAction.repeatForever(SKAction.sequence([
+                SKAction.run { leftPupil.glowWidth = 2 },
+                SKAction.wait(forDuration: 3.0),
+                SKAction.run { leftPupil.glowWidth = 0 },
+                SKAction.wait(forDuration: 3.0)
             ]))
-            glyphDot.run(glow)
+            leftPupil.run(metalShine)
+            rightPupil.run(metalShine)
+        } else if championClass == .awakener {
+            // Yeux qui changent de teinte (BioChromatic breath)
+            let colorShift = SKAction.repeatForever(SKAction.sequence([
+                SKAction.colorize(with: SKColor(red: 0.6, green: 0.2, blue: 0.7, alpha: 1), colorBlendFactor: 1.0, duration: 2.0),
+                SKAction.colorize(with: SKColor(red: 0.3, green: 0.5, blue: 0.9, alpha: 1), colorBlendFactor: 1.0, duration: 2.0),
+                SKAction.colorize(with: SKColor(red: 0.8, green: 0.3, blue: 0.5, alpha: 1), colorBlendFactor: 1.0, duration: 2.0)
+            ]))
+            leftPupil.run(colorShift)
+            rightPupil.run(colorShift)
+        } else if championClass == .nightmarePainter {
+            // Yeux sombres avec reflet d'encre
+            let inkPulse = SKAction.repeatForever(SKAction.sequence([
+                SKAction.run { leftPupil.glowWidth = 2 },
+                SKAction.wait(forDuration: 0.5),
+                SKAction.run { leftPupil.glowWidth = 0 },
+                SKAction.wait(forDuration: 4.0)
+            ]))
+            leftPupil.run(inkPulse)
+            rightPupil.run(inkPulse)
         }
 
         // Bouche
@@ -788,6 +854,17 @@ final class PlayerRenderer {
         mouth.position = CGPoint(x: 0, y: 25)
         mouth.zPosition = 4.2
         container.addChild(mouth)
+    }
+
+    static func classDisplayName(for championClass: ChampionClass) -> String {
+        switch championClass {
+        case .mistborn:         return "Brumeux"
+        case .radiant:          return "Radieux"
+        case .awakener:         return "Éveilleur"
+        case .elantrian:        return "Élantrien"
+        case .sandMaster:       return "Maître-Sable"
+        case .nightmarePainter: return "Peint-Cauchemar"
+        }
     }
 
     private static func classEyeColor(for championClass: ChampionClass) -> SKColor {
