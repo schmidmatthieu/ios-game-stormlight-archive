@@ -42,6 +42,9 @@ final class EnemyAISystem {
     private let abilityChance: Double = 0.2  // 20% chance d'utiliser une compétence spéciale
     private let retreatHealthThreshold: Double = 0.15  // Fuit à 15% PV
 
+    /// Called when an enemy hits the player, passing the enemy's position
+    var onPlayerHit: ((CGPoint) -> Void)?
+
     // MARK: - Update
 
     func update(enemy: inout EnemyInstance, playerPosition: CGPoint, deltaTime: TimeInterval) {
@@ -290,6 +293,7 @@ final class EnemyAISystem {
             )
             champion.currentHP = max(0, champion.currentHP - damage)
             GameManager.shared.champion = champion
+            onPlayerHit?(enemy.position)
         }
     }
 
@@ -310,6 +314,7 @@ final class EnemyAISystem {
             let damage = Int(Double(enemy.enemyData.damage) * 1.5)
             champion.currentHP = max(0, champion.currentHP - damage)
             GameManager.shared.champion = champion
+            onPlayerHit?(enemy.position)
         }
     }
 

@@ -40,6 +40,14 @@ class ZoneScene: SKScene {
     // Zone transition safety
     private var isTransitioning = false
 
+    // Gameplay: out-of-combat HP regen
+    private var lastDamageTakenTime: TimeInterval = 0
+    private let hpRegenDelay: TimeInterval = 5.0
+    private let hpRegenPercent: Double = 0.01  // 1% maxHP per second
+
+    // Gameplay: low HP vignette
+    private var lowHPVignette: SKShapeNode?
+
     // Theme
     private let worldTheme: WorldTheme
 
@@ -82,6 +90,9 @@ class ZoneScene: SKScene {
         setupPauseButton()
         setupEnemyInstances()
         setupPathfinding()
+        setupEnemyAICallbacks()
+
+        setupLowHPVignette()
 
         if let track = zone.ambientMusicTrack {
             AudioManager.shared.playMusic(track)
@@ -404,6 +415,19 @@ class ZoneScene: SKScene {
         pauseBtn.addChild(pauseIcon)
     }
 
+    private func setupLowHPVignette() {
+        let vignette = SKShapeNode(rectOf: CGSize(width: size.width + 20, height: size.height + 20), cornerRadius: 0)
+        vignette.fillColor = SKColor(red: 0.8, green: 0, blue: 0, alpha: 0.15)
+        vignette.strokeColor = SKColor(red: 1, green: 0, blue: 0, alpha: 0.3)
+        vignette.lineWidth = 12
+        vignette.position = .zero
+        vignette.zPosition = 1800
+        vignette.alpha = 0
+        vignette.name = "lowHPVignette"
+        cameraNode.addChild(vignette)
+        lowHPVignette = vignette
+    }
+
     // MARK: - Controls Setup
 
     private func setupControls() {
@@ -538,6 +562,14 @@ class ZoneScene: SKScene {
                 aggroTarget: nil
             )
             enemyInstances.append(instance)
+        }
+    }
+
+    private func setupEnemyAICallbacks() {
+        enemyAI.onPlayerHit = { [weak self] enemyPosition in
+            guard let self else { return }
+            self.lastDamageTakenTime = self.lastUpdateTime
+            self.showDamageIndicator(fromEnemy: enemyPosition)
         }
     }
 
@@ -704,15 +736,31 @@ class ZoneScene: SKScene {
         if let target = closestEnemy {
             EntityRenderer.playHitEffect(on: target.node)
 
-            let damage = champion.baseStats.strength + 5
-            showFloatingDamage(damage, at: target.node.position)
-
             if let idx = enemyInstances.firstIndex(where: {
                 "enemy_\($0.spawnData.enemyID)_\($0.spawnData.position.col)_\($0.spawnData.position.row)" == target.name
             }) {
+                // Use CombatSystem for proper damage + crit calculation
+                let damageResult = GameManager.shared.combatSystem.calculateDamage(
+                    attacker: champion.baseStats,
+                    skill: nil,
+                    defender: enemyInstances[idx].enemyData
+                )
+                let damage = damageResult.mitigatedDamage
+
+                // Critical hits: gold color, bigger text, "!" suffix
+                if damageResult.isCritical {
+                    showFloatingDamage(damage, at: target.node.position,
+                                       color: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1), isCritical: true)
+                } else {
+                    showFloatingDamage(damage, at: target.node.position)
+                }
+
                 enemyInstances[idx].currentHP -= damage
                 let ratio = CGFloat(enemyInstances[idx].currentHP) / CGFloat(enemyInstances[idx].enemyData.maxHP)
                 EntityRenderer.updateEnemyHP(node: target.node, ratio: ratio)
+
+                // Aggro nearby enemies (group aggro)
+                alertNearbyEnemies(aroundIndex: idx)
 
                 if enemyInstances[idx].currentHP <= 0 {
                     let xp = enemyInstances[idx].enemyData.xpReward
@@ -720,8 +768,16 @@ class ZoneScene: SKScene {
                     GameManager.shared.grantXP(xp)
                     GameManager.shared.mutateChampion { $0.gold += gold }
 
+                    // Floating XP label
                     showFloatingDamage(xp, at: CGPoint(x: target.node.position.x, y: target.node.position.y + 20),
                                        color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
+
+                    // Floating gold label
+                    showFloatingDamage(gold, at: CGPoint(x: target.node.position.x + 15, y: target.node.position.y + 10),
+                                       color: SKColor(red: 1, green: 0.85, blue: 0.3, alpha: 1))
+
+                    // Flash the XP bar
+                    flashXPBar()
 
                     EntityRenderer.playDeathAnimation(on: target.node) { [weak self] in
                         self?.enemyNodes.removeValue(forKey: target.name)
@@ -917,18 +973,23 @@ class ZoneScene: SKScene {
         return label
     }
 
-    private func showFloatingDamage(_ damage: Int, at position: CGPoint, color: SKColor = .white) {
+    private func showFloatingDamage(_ damage: Int, at position: CGPoint, color: SKColor = .white, isCritical: Bool = false) {
         let label = obtainDamageLabel()
-        label.text = "\(damage)"
+        label.text = isCritical ? "\(damage)!" : "\(damage)"
         label.fontColor = color
+        label.fontSize = isCritical ? 20 : 14
         label.position = position
         worldNode.addChild(label)
 
+        let floatDuration: TimeInterval = isCritical ? 0.8 : 0.6
+        let floatHeight: CGFloat = isCritical ? 55 : 40
+        let scaleTarget: CGFloat = isCritical ? 1.6 : 1.3
+
         label.run(SKAction.sequence([
             SKAction.group([
-                SKAction.moveBy(x: CGFloat.random(in: -15...15), y: 40, duration: 0.6),
-                SKAction.fadeOut(withDuration: 0.5),
-                SKAction.scale(to: 1.3, duration: 0.2)
+                SKAction.moveBy(x: CGFloat.random(in: -15...15), y: floatHeight, duration: floatDuration),
+                SKAction.fadeOut(withDuration: floatDuration - 0.1),
+                SKAction.scale(to: scaleTarget, duration: 0.2)
             ]),
             SKAction.run { [weak self] in
                 label.removeFromParent()
@@ -978,6 +1039,89 @@ class ZoneScene: SKScene {
                 SKAction.moveBy(x: 0, y: 50, duration: 0.8),
                 SKAction.fadeOut(withDuration: 0.7)
             ]),
+            SKAction.removeFromParent()
+        ]))
+    }
+
+    // MARK: - Group Aggro
+
+    private func alertNearbyEnemies(aroundIndex idx: Int) {
+        let aggroRadius: CGFloat = 100
+        let attackedPos = enemyInstances[idx].position
+
+        for i in 0..<enemyInstances.count where i != idx {
+            guard enemyInstances[i].isAlive else { continue }
+            switch enemyInstances[i].state {
+            case .idle, .patrolling:
+                let dist = hypot(enemyInstances[i].position.x - attackedPos.x,
+                                 enemyInstances[i].position.y - attackedPos.y)
+                if dist <= aggroRadius {
+                    enemyInstances[i].state = .chasing(target: attackedPos)
+                }
+            default:
+                break
+            }
+        }
+    }
+
+    // MARK: - XP Bar Flash
+
+    private func flashXPBar() {
+        guard let xpBg = cameraNode.childNode(withName: "//xpBarBg") as? SKShapeNode else {
+            // Find by position fallback — flash all XP-related elements
+            cameraNode.enumerateChildNodes(withName: "//*") { node, _ in
+                if let label = node as? SKLabelNode, label.text?.hasPrefix("XP") == true {
+                    label.run(SKAction.sequence([
+                        SKAction.colorize(with: .white, colorBlendFactor: 1, duration: 0.1),
+                        SKAction.wait(forDuration: 0.15),
+                        SKAction.colorize(withColorBlendFactor: 0, duration: 0.3)
+                    ]))
+                }
+            }
+            return
+        }
+        xpBg.run(SKAction.sequence([
+            SKAction.customAction(withDuration: 0.1) { node, _ in
+                (node as? SKShapeNode)?.strokeColor = .white
+            },
+            SKAction.wait(forDuration: 0.15),
+            SKAction.customAction(withDuration: 0.3) { node, _ in
+                (node as? SKShapeNode)?.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.4)
+            }
+        ]))
+    }
+
+    // MARK: - Damage Direction Indicator
+
+    private func showDamageIndicator(fromEnemy enemyPosition: CGPoint) {
+        guard let playerNode else { return }
+
+        let angle = atan2(enemyPosition.y - playerNode.position.y,
+                          enemyPosition.x - playerNode.position.x)
+
+        // Place indicator on screen edge in the direction of the enemy
+        let edgeDistance: CGFloat = min(size.width, size.height) / 2 - 30
+        let indicatorX = cos(angle) * edgeDistance
+        let indicatorY = sin(angle) * edgeDistance
+
+        let indicator = SKShapeNode()
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 0, y: 8))
+        path.addLine(to: CGPoint(x: -6, y: -4))
+        path.addLine(to: CGPoint(x: 6, y: -4))
+        path.closeSubpath()
+        indicator.path = path
+        indicator.fillColor = SKColor(red: 1, green: 0.2, blue: 0.2, alpha: 0.8)
+        indicator.strokeColor = .clear
+        indicator.position = CGPoint(x: indicatorX, y: indicatorY)
+        indicator.zRotation = angle - .pi / 2
+        indicator.zPosition = 3500
+        indicator.setScale(1.5)
+        cameraNode.addChild(indicator)
+
+        indicator.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.1),
+            SKAction.fadeOut(withDuration: 0.4),
             SKAction.removeFromParent()
         ]))
     }
@@ -1103,5 +1247,74 @@ class ZoneScene: SKScene {
 
         let enemies = enemyInstances.filter { $0.isAlive }.map { (position: $0.position, id: $0.enemyData.id) }
         companionSystem.update(deltaTime: deltaTime, playerPosition: playerPos, enemies: enemies)
+
+        // --- Gameplay improvements ---
+        updateRegeneration(currentTime: currentTime, deltaTime: deltaTime)
+        updateLowHPVignette()
+        updateHUDBars()
+    }
+
+    // MARK: - Passive Regeneration (HP + Investiture)
+
+    private func updateRegeneration(currentTime: TimeInterval, deltaTime: TimeInterval) {
+        GameManager.shared.mutateChampion { champ in
+            // Investiture regen: 2.0 per second, always active
+            let investitureRegen = 2.0 * deltaTime
+            champ.currentInvestiture = min(champ.maxInvestiture,
+                                           champ.currentInvestiture + Int(investitureRegen))
+
+            // HP regen: 1% maxHP/sec, only out of combat (5s since last hit)
+            if currentTime - self.lastDamageTakenTime > self.hpRegenDelay {
+                let hpRegen = Double(champ.maxHP) * self.hpRegenPercent * deltaTime
+                if champ.currentHP < champ.maxHP {
+                    champ.currentHP = min(champ.maxHP, champ.currentHP + max(1, Int(hpRegen)))
+                }
+            }
+        }
+    }
+
+    // MARK: - Low HP Vignette
+
+    private func updateLowHPVignette() {
+        guard let champion = GameManager.shared.champion, let vignette = lowHPVignette else { return }
+
+        let hpPercent = Double(champion.currentHP) / Double(champion.maxHP)
+        if hpPercent < 0.25 {
+            if vignette.action(forKey: "lowHPPulse") == nil {
+                let pulse = SKAction.repeatForever(SKAction.sequence([
+                    SKAction.fadeAlpha(to: 0.25, duration: 0.5),
+                    SKAction.fadeAlpha(to: 0.1, duration: 0.5)
+                ]))
+                vignette.run(pulse, withKey: "lowHPPulse")
+            }
+        } else {
+            vignette.removeAction(forKey: "lowHPPulse")
+            vignette.alpha = 0
+        }
+    }
+
+    // MARK: - HUD Bars Update
+
+    private func updateHUDBars() {
+        guard let champion = GameManager.shared.champion else { return }
+
+        // Update HP bar fill
+        if let hpFill = cameraNode.childNode(withName: "//hpFill") as? SKShapeNode {
+            let hpRatio = CGFloat(champion.currentHP) / CGFloat(champion.maxHP)
+            hpFill.xScale = max(0, hpRatio)
+        }
+        if let hpLabel = cameraNode.childNode(withName: "//hpLabel") as? SKLabelNode {
+            hpLabel.text = "\(champion.currentHP)/\(champion.maxHP)"
+        }
+
+        // Update gold
+        if let goldLabel = cameraNode.childNode(withName: "//goldLabel") as? SKLabelNode {
+            goldLabel.text = "\(champion.gold) or"
+        }
+
+        // Update level
+        if let levelLabel = cameraNode.childNode(withName: "//levelLabel") as? SKLabelNode {
+            levelLabel.text = "\(champion.level)"
+        }
     }
 }
