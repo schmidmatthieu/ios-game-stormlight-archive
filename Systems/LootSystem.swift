@@ -70,12 +70,12 @@ final class LootSystem {
     // MARK: - Génération d'item aléatoire
 
     func generateRandomItem(rarity: ItemRarity, level: Int) -> Item {
-        let slot = EquipmentSlot.allCases.randomElement()!
+        let slot = EquipmentSlot.allCases.randomElement() ?? .chest
         let statCount = rarity.statBonusCount
 
         let stats = (0..<statCount).map { _ in
             StatBonus(
-                stat: StatType.allCases.randomElement()!,
+                stat: StatType.allCases.randomElement() ?? .strength,
                 value: Int.random(in: 1...(level + 2))
             )
         }

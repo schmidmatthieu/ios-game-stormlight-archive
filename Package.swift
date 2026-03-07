@@ -11,8 +11,13 @@ let package = Package(
         .target(
             name: "CosmereChronicles",
             path: ".",
-            exclude: ["GAME_DESIGN.md", "Assets", "TileMaps"],
+            exclude: ["GAME_DESIGN.md", "Assets", "TileMaps", "Tests"],
             sources: ["App", "Core", "Scenes", "Entities", "Systems", "UI", "Data/Models"]
+        ),
+        .testTarget(
+            name: "CosmereChroniclesTests",
+            dependencies: ["CosmereChronicles"],
+            path: "Tests"
         )
     ]
 )

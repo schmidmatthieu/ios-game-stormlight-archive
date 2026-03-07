@@ -2,29 +2,51 @@ import SpriteKit
 import GameplayKit
 
 /// Singleton central qui gère l'état global du jeu
+/// Thread-safe via DispatchQueue pour les accès concurrents
 final class GameManager {
     static let shared = GameManager()
 
-    // État du jeu
-    var champion: Champion?
-    var currentZone: Zone?
-    var activeQuests: [Quest] = []
+    // MARK: - Thread Safety
 
-    // Bases de données chargées depuis JSON
-    var allItems: [String: Item] = [:]
-    var allEnemies: [String: Enemy] = [:]
-    var allQuests: [String: Quest] = [:]
-    var allZones: [String: Zone] = [:]
-    var allSkills: [String: Skill] = [:]
+    private let stateQueue = DispatchQueue(label: "com.cosmerechronicles.gamestate", attributes: .concurrent)
 
-    // Références aux systèmes
+    // MARK: - Game State (thread-safe accessors)
+
+    private var _champion: Champion?
+    var champion: Champion? {
+        get { stateQueue.sync { _champion } }
+        set { stateQueue.async(flags: .barrier) { self._champion = newValue } }
+    }
+
+    private var _currentZone: Zone?
+    var currentZone: Zone? {
+        get { stateQueue.sync { _currentZone } }
+        set { stateQueue.async(flags: .barrier) { self._currentZone = newValue } }
+    }
+
+    private var _activeQuests: [Quest] = []
+    var activeQuests: [Quest] {
+        get { stateQueue.sync { _activeQuests } }
+        set { stateQueue.async(flags: .barrier) { self._activeQuests = newValue } }
+    }
+
+    // MARK: - Data (read-only after load, no synchronization needed)
+
+    private(set) var allItems: [String: Item] = [:]
+    private(set) var allEnemies: [String: Enemy] = [:]
+    private(set) var allQuests: [String: Quest] = [:]
+    private(set) var allZones: [String: Zone] = [:]
+    private(set) var allSkills: [String: Skill] = [:]
+
+    // MARK: - Systems
+
     let combatSystem = CombatSystem()
     let lootSystem = LootSystem()
     let questSystem = QuestSystem()
 
     private init() {}
 
-    // MARK: - Chargement des données
+    // MARK: - Data Loading
 
     func loadGameData() {
         allItems = loadJSON("items")
@@ -35,16 +57,25 @@ final class GameManager {
     }
 
     private func loadJSON<T: Codable & Identifiable>(_ filename: String) -> [String: T] where T.ID == String {
-        guard let url = Bundle.main.url(forResource: filename, withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let items = try? JSONDecoder().decode([T].self, from: data) else {
-            print("⚠️ Failed to load \(filename).json")
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "json") else {
+            print("⚠️ \(filename).json not found in bundle")
             return [:]
         }
-        return Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
+
+        do {
+            let data = try Data(contentsOf: url)
+            let items = try JSONDecoder().decode([T].self, from: data)
+            // Use reduce to safely handle duplicate IDs (last wins)
+            return items.reduce(into: [:]) { result, item in
+                result[item.id] = item
+            }
+        } catch {
+            print("⚠️ Failed to decode \(filename).json: \(error.localizedDescription)")
+            return [:]
+        }
     }
 
-    // MARK: - Nouvelle partie
+    // MARK: - New Game
 
     func startNewGame(name: String, championClass: ChampionClass, order: RadiantOrder? = nil) {
         champion = Champion(
@@ -59,8 +90,8 @@ final class GameManager {
             baseStats: .baseStats,
             equipment: EquipmentLoadout(),
             inventoryItemIDs: [],
-            currentHP: 150, // baseStats.vigor * 10 + 50
-            currentInvestiture: 110, // baseStats.investiture * 8 + 30
+            currentHP: 150,
+            currentInvestiture: 110,
             gold: 50,
             metalReserves: championClass == .mistborn ? defaultMetalReserves() : nil,
             breathCount: championClass == .awakener ? 1 : nil,
@@ -83,21 +114,30 @@ final class GameManager {
         ]
     }
 
-    // MARK: - Gain XP & Level Up
+    // MARK: - Thread-Safe Champion Mutations
+
+    /// Perform a synchronized mutation on the champion struct
+    func mutateChampion(_ mutation: (inout Champion) -> Void) {
+        stateQueue.sync(flags: .barrier) {
+            guard var champ = _champion else { return }
+            mutation(&champ)
+            _champion = champ
+        }
+    }
+
+    // MARK: - XP & Level Up
 
     func grantXP(_ amount: Int) {
-        guard var champ = champion else { return }
-        champ.currentXP += amount
+        mutateChampion { champ in
+            champ.currentXP += amount
 
-        while champ.currentXP >= champ.xpForNextLevel {
-            champ.currentXP -= champ.xpForNextLevel
-            champ.level += 1
-            champ.skillPoints += 1
-            champ.currentHP = champ.maxHP
-            champ.currentInvestiture = champ.maxInvestiture
-            print("🎉 Level up! Niveau \(champ.level)")
+            while champ.currentXP >= champ.xpForNextLevel {
+                champ.currentXP -= champ.xpForNextLevel
+                champ.level += 1
+                champ.skillPoints += 1
+                champ.currentHP = champ.maxHP
+                champ.currentInvestiture = champ.maxInvestiture
+            }
         }
-
-        champion = champ
     }
 }

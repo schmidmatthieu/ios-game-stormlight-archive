@@ -15,10 +15,18 @@ class ZoneScene: SKScene {
     private var enemySprites: [String: SKSpriteNode] = [:]
 
     private let pathfinding = PathfindingSystem()
+    private let enemyAI = EnemyAISystem()
+    private let companionSystem = CompanionSystem()
 
     // Contrôles Wild Rift
     private var joystick: VirtualJoystickNode!
     private var actionButtons: ActionButtonsNode!
+    private var minimap: MinimapNode!
+    private var inventoryNode: InventoryNode?
+    private var dialogueBox: DialogueBoxNode?
+
+    // Enemy instances (runtime)
+    private var enemyInstances: [EnemyAISystem.EnemyInstance] = []
 
     // Mouvement continu via joystick
     private var lastUpdateTime: TimeInterval = 0
@@ -26,6 +34,10 @@ class ZoneScene: SKScene {
 
     // Taille d'une tile isométrique
     private let tileSize = CGSize(width: 64, height: 32)
+
+    // Node pooling pour dégâts flottants
+    private var damageNodePool: [SKLabelNode] = []
+    private let maxPoolSize = 20
 
     // MARK: - Init
 
@@ -50,6 +62,8 @@ class ZoneScene: SKScene {
         setupNPCs()
         setupHUD()
         setupControls()
+        setupMinimap()
+        setupEnemyInstances()
         setupPathfinding()
 
         // Musique d'ambiance
@@ -71,24 +85,31 @@ class ZoneScene: SKScene {
     private func setupWorld() {
         addChild(worldNode)
 
-        // Dessiner la grille isométrique (placeholder)
+        // Render tiles using a single texture for performance
+        // SKShapeNode per tile is expensive; use a pre-rendered tile texture instead
+        let tileTexture = createTileTexture()
+
         for row in 0..<zone.gridHeight {
             for col in 0..<zone.gridWidth {
                 let pos = isoPosition(col: col, row: row)
-                let tile = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-                tile.fillColor = SKColor(red: 0.15, green: 0.12, blue: 0.1, alpha: 1.0)
-                tile.strokeColor = SKColor(white: 0.3, alpha: 0.5)
-                tile.lineWidth = 0.5
+                let tile = SKSpriteNode(texture: tileTexture)
                 tile.position = pos
                 tile.zPosition = CGFloat(-row - col)
-
-                // Rotation pour effet isométrique
                 tile.zRotation = .pi / 4
                 tile.setScale(0.7)
-
                 worldNode.addChild(tile)
             }
         }
+    }
+
+    /// Create a reusable tile texture (avoids per-frame path rendering cost of SKShapeNode)
+    private func createTileTexture() -> SKTexture {
+        let tileNode = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
+        tileNode.fillColor = SKColor(red: 0.15, green: 0.12, blue: 0.1, alpha: 1.0)
+        tileNode.strokeColor = SKColor(white: 0.3, alpha: 0.5)
+        tileNode.lineWidth = 0.5
+        let view = SKView()
+        return view.texture(from: tileNode) ?? SKTexture()
     }
 
     private func setupPlayer() {
@@ -129,7 +150,9 @@ class ZoneScene: SKScene {
             sprite.addChild(hpBar)
 
             worldNode.addChild(sprite)
-            enemySprites[sprite.name!] = sprite
+            if let spriteName = sprite.name {
+                enemySprites[spriteName] = sprite
+            }
         }
     }
 
@@ -318,6 +341,52 @@ class ZoneScene: SKScene {
             actionButtons.updateAbilityIcon(index: 1, text: "Ash", color: SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 2, text: "Tia", color: SKColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 3, text: "Ien", color: SKColor(red: 0.7, green: 0.6, blue: 0.1, alpha: 0.85))
+
+        case .sandMaster:
+            actionButtons.updateAbilityIcon(index: 0, text: "FO", color: SKColor(red: 0.9, green: 0.8, blue: 0.5, alpha: 0.85)) // Fouet
+            actionButtons.updateAbilityIcon(index: 1, text: "BO", color: SKColor(red: 0.8, green: 0.7, blue: 0.4, alpha: 0.85)) // Bouclier
+            actionButtons.updateAbilityIcon(index: 2, text: "NU", color: SKColor(red: 0.7, green: 0.6, blue: 0.3, alpha: 0.85)) // Nuée
+            actionButtons.updateAbilityIcon(index: 3, text: "PL", color: SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.85)) // Plateforme
+
+        case .nightmarePainter:
+            actionButtons.updateAbilityIcon(index: 0, text: "PE", color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 0.85)) // Peinture
+            actionButtons.updateAbilityIcon(index: 1, text: "EM", color: SKColor(red: 0.4, green: 0.1, blue: 0.5, alpha: 0.85)) // Empilement
+            actionButtons.updateAbilityIcon(index: 2, text: "OM", color: SKColor(red: 0.2, green: 0.0, blue: 0.3, alpha: 0.85)) // Ombre
+            actionButtons.updateAbilityIcon(index: 3, text: "HI", color: SKColor(red: 0.5, green: 0.3, blue: 0.6, alpha: 0.85)) // Hion
+        }
+    }
+
+    private func setupMinimap() {
+        minimap = MinimapNode()
+        minimap.position = CGPoint(x: size.width / 2 - 60, y: size.height / 2 - 60)
+        minimap.zPosition = 4000
+        cameraNode.addChild(minimap)
+        minimap.setupForZone(zone)
+
+        if let champion = GameManager.shared.champion {
+            minimap.updatePlayerPosition(champion.gridPosition)
+        }
+    }
+
+    private func setupEnemyInstances() {
+        enemyInstances.removeAll()
+        for (i, spawn) in zone.enemySpawns.enumerated() {
+            guard let enemyData = GameManager.shared.allEnemies[spawn.enemyID] else { continue }
+            let spriteName = "enemy_\(spawn.enemyID)_\(spawn.position.col)_\(spawn.position.row)"
+            let instance = EnemyAISystem.EnemyInstance(
+                enemyData: enemyData,
+                spawnData: spawn,
+                currentHP: enemyData.maxHP,
+                position: isoPosition(col: spawn.position.col, row: spawn.position.row),
+                gridPosition: spawn.position,
+                state: .idle,
+                sprite: enemySprites[spriteName],
+                lastAttackTime: 0,
+                respawnTimer: nil,
+                abilityCooldowns: Array(repeating: 0, count: enemyData.abilities.count),
+                aggroTarget: nil
+            )
+            enemyInstances.append(instance)
         }
     }
 
@@ -510,10 +579,12 @@ class ZoneScene: SKScene {
 
         let ultText: String
         switch champion.championClass {
-        case .mistborn:  ultText = "BRUME ETERNELLE !"
-        case .radiant:   ultText = "SERMENT RADIEUX !"
-        case .awakener:  ultText = "ÉVEIL SUPREME !"
-        case .elantrian: ultText = "AON ULTIME !"
+        case .mistborn:         ultText = "BRUME ÉTERNELLE !"
+        case .radiant:          ultText = "SERMENT RADIEUX !"
+        case .awakener:         ultText = "ÉVEIL SUPRÊME !"
+        case .elantrian:        ultText = "AON ULTIME !"
+        case .sandMaster:       ultText = "TEMPÊTE DE SABLE !"
+        case .nightmarePainter: ultText = "PEINTURE CAUCHEMAR !"
         }
 
         showAbilityEffect(description: ultText)
@@ -643,10 +714,26 @@ class ZoneScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         let deltaTime = lastUpdateTime == 0 ? 0 : currentTime - lastUpdateTime
         lastUpdateTime = currentTime
+        guard deltaTime < 0.5 else { return } // Skip large frame gaps (e.g. backgrounding)
 
         // Mouvement continu via joystick
         movePlayerContinuous(deltaTime: deltaTime)
 
-        // TODO: Update IA ennemis, effets de statut, cooldowns
+        // Update enemy AI
+        let playerPos = playerSprite?.position ?? .zero
+        for i in 0..<enemyInstances.count {
+            enemyAI.update(enemy: &enemyInstances[i], playerPosition: playerPos, deltaTime: deltaTime)
+            minimap.updateEnemyPosition(index: i, gridPos: enemyInstances[i].gridPosition,
+                                         isAlive: enemyInstances[i].isAlive)
+        }
+
+        // Update minimap player position
+        if let champion = GameManager.shared.champion {
+            minimap.updatePlayerPosition(champion.gridPosition)
+        }
+
+        // Update companion
+        let enemies = enemyInstances.filter { $0.isAlive }.map { (position: $0.position, id: $0.enemyData.id) }
+        companionSystem.update(deltaTime: deltaTime, playerPosition: playerPos, enemies: enemies)
     }
 }
