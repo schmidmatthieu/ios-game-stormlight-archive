@@ -907,14 +907,17 @@ class ZoneScene: SKScene {
             SKAction.removeFromParent()
         ]))
 
-        // Screen shake
+        // Screen shake — applied to worldNode to avoid conflicting with camera follow
         let shake = SKAction.sequence([
             SKAction.moveBy(x: 5, y: 3, duration: 0.03),
             SKAction.moveBy(x: -10, y: -6, duration: 0.03),
             SKAction.moveBy(x: 8, y: 4, duration: 0.03),
             SKAction.moveBy(x: -3, y: -1, duration: 0.03)
         ])
-        cameraNode.run(SKAction.repeat(shake, count: 4))
+        worldNode.run(SKAction.sequence([
+            SKAction.repeat(shake, count: 4),
+            SKAction.move(to: worldNode.position, duration: 0.05)
+        ]), withKey: "screenShake")
 
         let ultText: String
         switch champion.championClass {
