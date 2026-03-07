@@ -49,6 +49,37 @@ class MinimapNode: SKNode {
         addChild(background)
         addChild(mapContent)
         mapContent.addChild(playerDot)
+        setupLegend()
+    }
+
+    private func setupLegend() {
+        let legendItems: [(color: SKColor, text: String)] = [
+            (.cyan,   "Vous"),
+            (.red,    "Ennemi"),
+            (.yellow, "PNJ"),
+            (.green,  "Sortie"),
+        ]
+
+        for (i, item) in legendItems.enumerated() {
+            let y = -mapSize.height / 2 - 10 - CGFloat(i) * 10
+            let x = -mapSize.width / 2 + 6
+
+            let dot = SKShapeNode(circleOfRadius: 2)
+            dot.fillColor = item.color
+            dot.strokeColor = .clear
+            dot.position = CGPoint(x: x, y: y)
+            dot.zPosition = 4000
+            addChild(dot)
+
+            let label = SKLabelNode(fontNamed: "Helvetica")
+            label.text = item.text
+            label.fontSize = 7
+            label.fontColor = item.color
+            label.horizontalAlignmentMode = .left
+            label.position = CGPoint(x: x + 6, y: y - 3)
+            label.zPosition = 4000
+            addChild(label)
+        }
     }
 
     required init?(coder aDecoder: NSCoder) {

@@ -38,6 +38,14 @@ class ActionButtonsNode: SKNode {
     // MARK: - State
 
     private(set) var currentMode: ActionMode = .attack
+    private(set) var isHoldingAttack: Bool = false
+    private var attackHoldTimer: TimeInterval = 0
+    private let autoAttackInterval: TimeInterval = 0.4
+
+    // ATK cooldown visual
+    private var atkCooldownOverlay: SKShapeNode?
+    private var atkCooldownTimer: TimeInterval = 0
+    private(set) var atkCooldownDuration: TimeInterval = 0
 
     // MARK: - Init
 
@@ -263,6 +271,8 @@ class ActionButtonsNode: SKNode {
             pressAnimation(attackButton)
             switch currentMode {
             case .attack:
+                isHoldingAttack = true
+                attackHoldTimer = 0
                 onAttackPressed?()
             default:
                 onInteractPressed?(currentMode)
@@ -288,6 +298,59 @@ class ActionButtonsNode: SKNode {
             return
         }
     }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        isHoldingAttack = false
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        isHoldingAttack = false
+    }
+
+    // MARK: - Frame Update (called from ZoneScene)
+
+    func update(deltaTime: TimeInterval) {
+        // Auto-attack on hold
+        if isHoldingAttack && currentMode == .attack {
+            attackHoldTimer += deltaTime
+            if attackHoldTimer >= autoAttackInterval {
+                attackHoldTimer = 0
+                onAttackPressed?()
+            }
+        }
+
+        // ATK cooldown visual
+        if atkCooldownTimer > 0 {
+            atkCooldownTimer -= deltaTime
+            if atkCooldownTimer <= 0 {
+                atkCooldownOverlay?.isHidden = true
+            }
+        }
+    }
+
+    func startAttackCooldown(duration: TimeInterval) {
+        atkCooldownDuration = duration
+        atkCooldownTimer = duration
+
+        if atkCooldownOverlay == nil {
+            let overlay = SKShapeNode(circleOfRadius: attackButtonRadius)
+            overlay.fillColor = SKColor(white: 0, alpha: 0.5)
+            overlay.strokeColor = .clear
+            overlay.zPosition = 1002
+            overlay.name = "atkCooldown"
+            attackButton.addChild(overlay)
+            atkCooldownOverlay = overlay
+        }
+        atkCooldownOverlay?.isHidden = false
+
+        // Sweep animation
+        atkCooldownOverlay?.run(SKAction.sequence([
+            SKAction.wait(forDuration: duration),
+            SKAction.run { [weak self] in self?.atkCooldownOverlay?.isHidden = true }
+        ]))
+    }
+
+    var isAttackOnCooldown: Bool { atkCooldownTimer > 0 }
 
     // MARK: - Cooldown Management
 

@@ -174,6 +174,11 @@ final class CompanionSystem {
     private(set) var activeCompanion: Companion?
     private var companionSprite: SKSpriteNode?
     private var specialAbilityCooldownTimer: TimeInterval = 0
+    private var attackCooldownTimer: TimeInterval = 0
+    private let attackCooldown: TimeInterval = 1.2
+
+    /// Called when companion hits an enemy, passing (enemyID, damage, position)
+    var onEnemyHit: ((String, Int, CGPoint) -> Void)?
 
     // MARK: - Recruit / Dismiss
 
@@ -199,9 +204,12 @@ final class CompanionSystem {
     func update(deltaTime: TimeInterval, playerPosition: CGPoint, enemies: [(position: CGPoint, id: String)]) {
         guard var companion = activeCompanion, let sprite = companionSprite else { return }
 
-        // Cooldown
+        // Cooldowns
         if specialAbilityCooldownTimer > 0 {
             specialAbilityCooldownTimer -= deltaTime
+        }
+        if attackCooldownTimer > 0 {
+            attackCooldownTimer -= deltaTime
         }
 
         // Follow player (stay within 2 tiles)
@@ -217,28 +225,29 @@ final class CompanionSystem {
         if let closestEnemy = findClosestEnemy(from: sprite.position, enemies: enemies) {
             let distToEnemy = closestEnemy.distance
 
+            let canAttack = attackCooldownTimer <= 0
             switch companion.combatStyle {
             case .aggressive:
-                if distToEnemy <= CGFloat(companion.attackRange) * 32 {
-                    performAttack(companion: companion, targetPosition: closestEnemy.position)
+                if distToEnemy <= CGFloat(companion.attackRange) * 32 && canAttack {
+                    performAttack(companion: companion, targetPosition: closestEnemy.position, enemyID: closestEnemy.id)
                 }
             case .defensive:
-                // Stay near player, only attack if enemy is close
-                if distToEnemy <= 60 {
-                    performAttack(companion: companion, targetPosition: closestEnemy.position)
+                if distToEnemy <= 60 && canAttack {
+                    performAttack(companion: companion, targetPosition: closestEnemy.position, enemyID: closestEnemy.id)
                 }
             case .support:
-                // Check if player needs healing
                 if let champ = GameManager.shared.champion, champ.currentHP < champ.maxHP / 2 {
-                    performHeal(companion: &companion)
+                    if canAttack { performHeal(companion: &companion) }
+                } else if distToEnemy <= CGFloat(companion.attackRange) * 32 && canAttack {
+                    performAttack(companion: companion, targetPosition: closestEnemy.position, enemyID: closestEnemy.id)
                 }
             case .ranged:
-                if distToEnemy <= CGFloat(companion.attackRange) * 32 {
-                    performRangedAttack(companion: companion, targetPosition: closestEnemy.position)
+                if distToEnemy <= CGFloat(companion.attackRange) * 32 && canAttack {
+                    performRangedAttack(companion: companion, targetPosition: closestEnemy.position, enemyID: closestEnemy.id)
                 }
             case .balanced:
-                if distToEnemy <= CGFloat(companion.attackRange) * 32 {
-                    performAttack(companion: companion, targetPosition: closestEnemy.position)
+                if distToEnemy <= CGFloat(companion.attackRange) * 32 && canAttack {
+                    performAttack(companion: companion, targetPosition: closestEnemy.position, enemyID: closestEnemy.id)
                 }
             }
         }
@@ -248,7 +257,7 @@ final class CompanionSystem {
 
     // MARK: - Combat Actions
 
-    private func performAttack(companion: Companion, targetPosition: CGPoint) {
+    private func performAttack(companion: Companion, targetPosition: CGPoint, enemyID: String) {
         guard let sprite = companionSprite else { return }
 
         let attackAnim = SKAction.sequence([
@@ -256,9 +265,14 @@ final class CompanionSystem {
             SKAction.scale(to: 1.0, duration: 0.08)
         ])
         sprite.run(attackAnim)
+
+        let loyaltyBonus = 1.0 + Double(companion.loyalty) * 0.005
+        let damage = max(1, Int(Double(companion.baseDamage + companion.level * 2) * loyaltyBonus))
+        attackCooldownTimer = attackCooldown
+        onEnemyHit?(enemyID, damage, targetPosition)
     }
 
-    private func performRangedAttack(companion: Companion, targetPosition: CGPoint) {
+    private func performRangedAttack(companion: Companion, targetPosition: CGPoint, enemyID: String) {
         guard let sprite = companionSprite else { return }
 
         let projectile = SKShapeNode(circleOfRadius: 4)
@@ -268,8 +282,15 @@ final class CompanionSystem {
         projectile.zPosition = 150
         sprite.parent?.addChild(projectile)
 
+        let loyaltyBonus = 1.0 + Double(companion.loyalty) * 0.005
+        let damage = max(1, Int(Double(companion.baseDamage + companion.level * 2) * loyaltyBonus))
+        attackCooldownTimer = attackCooldown
+
         projectile.run(SKAction.sequence([
             SKAction.move(to: targetPosition, duration: 0.3),
+            SKAction.run { [weak self] in
+                self?.onEnemyHit?(enemyID, damage, targetPosition)
+            },
             SKAction.removeFromParent()
         ]))
     }

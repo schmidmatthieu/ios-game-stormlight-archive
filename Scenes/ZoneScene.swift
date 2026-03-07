@@ -571,6 +571,21 @@ class ZoneScene: SKScene {
             self.lastDamageTakenTime = self.lastUpdateTime
             self.showDamageIndicator(fromEnemy: enemyPosition)
         }
+
+        companionSystem.onEnemyHit = { [weak self] enemyID, damage, position in
+            guard let self else { return }
+            for i in 0..<self.enemyInstances.count {
+                guard self.enemyInstances[i].isAlive,
+                      self.enemyInstances[i].enemyData.id == enemyID else { continue }
+                let dist = hypot(self.enemyInstances[i].position.x - position.x,
+                                 self.enemyInstances[i].position.y - position.y)
+                if dist < 60 {
+                    self.applyDamageToEnemy(index: i, damage: damage, effectColor: .green,
+                                            statusEffect: nil, statusDuration: 0)
+                    break
+                }
+            }
+        }
     }
 
     private func setupPathfinding() {
@@ -718,6 +733,7 @@ class ZoneScene: SKScene {
 
     private func handleAttack() {
         guard let champion = GameManager.shared.champion, let playerNode else { return }
+        guard !actionButtons.isAttackOnCooldown else { return }
 
         let attackRange: CGFloat = 60
         var closestEnemy: (name: String, node: SKNode, distance: CGFloat)?
@@ -732,6 +748,7 @@ class ZoneScene: SKScene {
         }
 
         PlayerRenderer.playAttackAnimation(on: playerNode, in: worldNode)
+        actionButtons.startAttackCooldown(duration: 0.5)
 
         if let target = closestEnemy {
             EntityRenderer.playHitEffect(on: target.node)
@@ -803,9 +820,16 @@ class ZoneScene: SKScene {
             if result.success {
                 showAbilityEffect(description: result.effectDescription)
                 actionButtons.startCooldown(abilityIndex: index, duration: 3.0)
+                let silverBlue = SKColor(red: 0.7, green: 0.8, blue: 1.0, alpha: 1)
                 switch metal {
-                case .steel:  SpellEffectsSystem.steelPush(from: playerNode.position, in: worldNode)
-                case .iron:   SpellEffectsSystem.ironPull(at: playerNode.position, in: worldNode)
+                case .steel:
+                    SpellEffectsSystem.steelPush(from: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 120, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: silverBlue)
+                case .iron:
+                    SpellEffectsSystem.ironPull(at: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 80, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: silverBlue)
                 case .pewter: SpellEffectsSystem.pewterFlare(on: playerNode)
                 case .tin:    SpellEffectsSystem.tinEnhance(on: playerNode, in: worldNode)
                 default: break
@@ -821,11 +845,19 @@ class ZoneScene: SKScene {
                 showAbilityEffect(description: result.description)
                 actionButtons.startCooldown(abilityIndex: index, duration: 5.0)
                 switch surge {
-                case .gravitation: SpellEffectsSystem.gravitationLash(from: playerNode.position, in: worldNode)
-                case .adhesion: SpellEffectsSystem.adhesionField(at: playerNode.position, in: worldNode)
+                case .gravitation:
+                    SpellEffectsSystem.gravitationLash(from: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 120, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: .cyan)
+                case .adhesion:
+                    SpellEffectsSystem.adhesionField(at: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: .cyan, isAoE: true)
                 case .progression: SpellEffectsSystem.progressionHeal(on: playerNode, in: worldNode)
                 default:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: .cyan, radius: 40, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: .cyan, isAoE: true)
                 }
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
             }
@@ -840,7 +872,8 @@ class ZoneScene: SKScene {
                 actionButtons.startCooldown(abilityIndex: index, duration: 4.0)
                 SpellEffectsSystem.awakeningAnimate(at: playerNode.position, in: worldNode)
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                if result.damage > 0 { showFloatingDamage(result.damage, at: playerNode.position, color: .magenta) }
+                applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                                   statusDuration: result.duration, effectColor: .magenta)
             }
 
         case .elantrian:
@@ -853,7 +886,8 @@ class ZoneScene: SKScene {
                 actionButtons.startCooldown(abilityIndex: index, duration: 4.5)
                 SpellEffectsSystem.drawAon(at: playerNode.position, color: result.glyphColor, in: worldNode)
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                if result.damage > 0 { showFloatingDamage(result.damage, at: playerNode.position, color: result.glyphColor) }
+                applyAbilityDamage(result.damage, range: 110, statusEffect: result.statusEffect,
+                                   statusDuration: result.duration, effectColor: result.glyphColor)
             }
 
         case .sandMaster:
@@ -866,11 +900,18 @@ class ZoneScene: SKScene {
                 actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
                 let sandColor = SKColor(red: 0.9, green: 0.8, blue: 0.5, alpha: 1)
                 switch form {
-                case .lash: SpellEffectsSystem.sandWhip(from: playerNode.position, toward: 0, in: worldNode)
+                case .lash:
+                    SpellEffectsSystem.sandWhip(from: playerNode.position, toward: 0, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 120, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: sandColor)
                 case .shield: SpellEffectsSystem.sandShield(on: playerNode)
-                default: SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
+                case .swarm:
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: sandColor, isAoE: true)
+                default:
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
                 }
-                if result.damage > 0 { showFloatingDamage(result.damage, at: playerNode.position, color: sandColor) }
             }
 
         case .nightmarePainter:
@@ -881,19 +922,24 @@ class ZoneScene: SKScene {
             if result.success {
                 showAbilityEffect(description: result.description)
                 actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+                let darkPurple = SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1)
                 switch technique {
-                case .ink_slash: SpellEffectsSystem.inkSlash(from: playerNode.position, in: worldNode)
-                case .capture: SpellEffectsSystem.nightmareCapture(at: playerNode.position, in: worldNode)
+                case .ink_slash:
+                    SpellEffectsSystem.inkSlash(from: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 110, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: darkPurple)
+                case .capture:
+                    SpellEffectsSystem.nightmareCapture(at: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 90, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: darkPurple)
+                case .banish:
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: darkPurple, radius: 30, in: worldNode)
+                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: darkPurple, isAoE: true)
                 default:
-                    SpellEffectsSystem.spawnAOE(at: playerNode.position,
-                                                 color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1),
-                                                 radius: 30, in: worldNode)
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: darkPurple, radius: 30, in: worldNode)
                 }
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                if result.damage > 0 {
-                    showFloatingDamage(result.damage, at: playerNode.position,
-                                       color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1))
-                }
             }
         }
     }
@@ -1041,6 +1087,86 @@ class ZoneScene: SKScene {
             ]),
             SKAction.removeFromParent()
         ]))
+    }
+
+    // MARK: - Ability Damage to Enemies
+
+    /// Finds the closest enemy in range and applies ability damage + status effects
+    private func applyAbilityDamage(_ damage: Int, range: CGFloat = 100, statusEffect: StatusEffectType? = nil,
+                                     statusDuration: TimeInterval = 0, effectColor: SKColor = .white, isAoE: Bool = false) {
+        guard damage > 0, let playerNode else { return }
+
+        if isAoE {
+            // AoE: hit all enemies in range
+            for i in 0..<enemyInstances.count {
+                guard enemyInstances[i].isAlive else { continue }
+                let dist = hypot(enemyInstances[i].position.x - playerNode.position.x,
+                                 enemyInstances[i].position.y - playerNode.position.y)
+                if dist <= range {
+                    applyDamageToEnemy(index: i, damage: damage, effectColor: effectColor,
+                                       statusEffect: statusEffect, statusDuration: statusDuration)
+                }
+            }
+        } else {
+            // Single target: closest enemy
+            var closestIdx: Int?
+            var closestDist: CGFloat = .greatestFiniteMagnitude
+
+            for i in 0..<enemyInstances.count {
+                guard enemyInstances[i].isAlive else { continue }
+                let dist = hypot(enemyInstances[i].position.x - playerNode.position.x,
+                                 enemyInstances[i].position.y - playerNode.position.y)
+                if dist <= range && dist < closestDist {
+                    closestDist = dist
+                    closestIdx = i
+                }
+            }
+
+            if let idx = closestIdx {
+                applyDamageToEnemy(index: idx, damage: damage, effectColor: effectColor,
+                                   statusEffect: statusEffect, statusDuration: statusDuration)
+            }
+        }
+    }
+
+    private func applyDamageToEnemy(index idx: Int, damage: Int, effectColor: SKColor,
+                                     statusEffect: StatusEffectType?, statusDuration: TimeInterval) {
+        let spriteName = "enemy_\(enemyInstances[idx].spawnData.enemyID)_\(enemyInstances[idx].spawnData.position.col)_\(enemyInstances[idx].spawnData.position.row)"
+
+        showFloatingDamage(damage, at: enemyInstances[idx].position, color: effectColor)
+
+        enemyInstances[idx].currentHP -= damage
+        if let node = enemyNodes[spriteName] {
+            EntityRenderer.playHitEffect(on: node)
+            let ratio = CGFloat(enemyInstances[idx].currentHP) / CGFloat(enemyInstances[idx].enemyData.maxHP)
+            EntityRenderer.updateEnemyHP(node: node, ratio: ratio)
+        }
+
+        // Apply status effect (stun)
+        if statusEffect == .stunned, statusDuration > 0 {
+            enemyAI.stun(enemy: &enemyInstances[idx], duration: statusDuration)
+        }
+
+        alertNearbyEnemies(aroundIndex: idx)
+
+        if enemyInstances[idx].currentHP <= 0 {
+            let xp = enemyInstances[idx].enemyData.xpReward
+            let gold = Int.random(in: enemyInstances[idx].enemyData.goldReward)
+            GameManager.shared.grantXP(xp)
+            GameManager.shared.mutateChampion { $0.gold += gold }
+
+            showFloatingDamage(xp, at: CGPoint(x: enemyInstances[idx].position.x, y: enemyInstances[idx].position.y + 20),
+                               color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
+            showFloatingDamage(gold, at: CGPoint(x: enemyInstances[idx].position.x + 15, y: enemyInstances[idx].position.y + 10),
+                               color: SKColor(red: 1, green: 0.85, blue: 0.3, alpha: 1))
+            flashXPBar()
+
+            if let node = enemyNodes[spriteName] {
+                EntityRenderer.playDeathAnimation(on: node) { [weak self] in
+                    self?.enemyNodes.removeValue(forKey: spriteName)
+                }
+            }
+        }
     }
 
     // MARK: - Group Aggro
@@ -1249,6 +1375,7 @@ class ZoneScene: SKScene {
         companionSystem.update(deltaTime: deltaTime, playerPosition: playerPos, enemies: enemies)
 
         // --- Gameplay improvements ---
+        actionButtons.update(deltaTime: deltaTime)
         updateRegeneration(currentTime: currentTime, deltaTime: deltaTime)
         updateLowHPVignette()
         updateHUDBars()
