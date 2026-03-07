@@ -224,7 +224,7 @@ class InventoryNode: SKNode {
                 let itemID = champion.inventoryItemIDs[i]
                 if let item = GameManager.shared.allItems[itemID] {
                     let nameLabel = SKLabelNode(fontNamed: "Helvetica")
-                    nameLabel.text = String(item.name.prefix(5))
+                    nameLabel.text = String(item.name.prefix(8))
                     nameLabel.fontSize = 9
                     nameLabel.fontColor = rarityColor(item.rarity)
                     nameLabel.verticalAlignmentMode = .center
