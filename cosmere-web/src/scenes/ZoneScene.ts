@@ -34,6 +34,9 @@ import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
 import { ComboManager, createComboDisplay } from '../game/ComboSystem';
+import { WorldEventManager } from '../game/WorldEvents';
+import type { WorldEventEffect } from '../game/WorldEvents';
+import { createWorldEventBanner } from '../ui/WorldEventBanner';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -286,6 +289,10 @@ export class ZoneScene extends Container implements GameScene {
   // Combo system
   private comboDisplay: { update: () => void } | null = null;
 
+  // World events
+  private eventBanner: { update: (dt: number) => void } | null = null;
+  private activeEventEffect: WorldEventEffect | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -442,6 +449,9 @@ export class ZoneScene extends Container implements GameScene {
     // Combo display
     this.comboDisplay = createComboDisplay(this.uiContainer, w, h);
     ComboManager.shared.reset();
+
+    // World events banner
+    this.eventBanner = createWorldEventBanner(this.uiContainer, w);
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -1968,6 +1978,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateWeather(delta);
     this.updateAchievements(delta);
     this.updateCompanion(delta);
+    this.updateWorldEvents(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -2497,12 +2508,13 @@ export class ZoneScene extends Container implements GameScene {
     const champ = gm.champion;
     if (!champ) return;
 
-    const gold = enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1));
+    const baseGold = enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1));
+    const gold = Math.floor(baseGold * this.getEventGoldBonus());
     champ.gold += gold;
 
-    // Apply reputation XP bonus
+    // Apply reputation XP bonus + event bonus
     const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
-    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus());
+    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
     const leveledUp = gm.grantXP(finalXP);
 
     // Grant reputation based on enemy tier
@@ -2666,6 +2678,41 @@ export class ZoneScene extends Container implements GameScene {
     if (msg) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, msg, 0xaaddff);
     }
+  }
+
+  private updateWorldEvents(dt: number): void {
+    const result = WorldEventManager.shared.update(dt, this.zone.worldID);
+    this.activeEventEffect = result.effect;
+
+    if (this.eventBanner) this.eventBanner.update(dt);
+
+    // Apply healing/investiture effects from events
+    if (result.effect) {
+      const champ = GameManager.shared.champion;
+      if (champ) {
+        if (result.effect.healPerTick) {
+          champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + result.effect.healPerTick * dt);
+        }
+        if (result.effect.investiturePerTick) {
+          champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + result.effect.investiturePerTick * dt);
+        }
+      }
+    }
+
+    if (result.ended) {
+      this.showFloatingText(
+        this.playerScreenPos.x, this.playerScreenPos.y - 50,
+        'Événement terminé', 0xaaaaaa,
+      );
+    }
+  }
+
+  private getEventXPBonus(): number {
+    return this.activeEventEffect?.xpBonus ? 1 + this.activeEventEffect.xpBonus / 100 : 1;
+  }
+
+  private getEventGoldBonus(): number {
+    return this.activeEventEffect?.goldBonus ? 1 + this.activeEventEffect.goldBonus / 100 : 1;
   }
 
   private updateDayNight(dt: number): void {
