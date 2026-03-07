@@ -50,6 +50,12 @@ import { createMobileMenu } from '../ui/MobileMenu';
 import { TutorialManager } from '../ui/TutorialSystem';
 import { SaveManager } from '../game/SaveManager';
 import { Pathfinder, smoothPath } from '../systems/Pathfinding';
+import { createBehaviorState, updateBehavior } from '../systems/EnemyBehaviors';
+import type { BehaviorState } from '../systems/EnemyBehaviors';
+import { generateEnvironmentObjects, createEnvironmentSprite, interactWith, checkTrapTrigger } from '../systems/EnvironmentInteractions';
+import type { EnvironmentObject } from '../systems/EnvironmentInteractions';
+import { HiddenQuestManager } from '../systems/HiddenQuests';
+import { NewGamePlusManager } from '../systems/NewGamePlus';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
@@ -297,6 +303,9 @@ export class ZoneScene extends Container implements GameScene {
   private enemyPaths: Map<string, { waypoints: { x: number; y: number }[]; idx: number; targetCol: number; targetRow: number; age: number }> = new Map();
   private nearbyBuilding: EnterableBuilding | null = null;
   private nearbySecret: SecretArea | null = null;
+  private environmentObjects: EnvironmentObject[] = [];
+  private nearbyEnvObject: EnvironmentObject | null = null;
+  private enemyBehaviors: Map<string, BehaviorState> = new Map();
 
   // Boss fight
   private activeBoss: EnemyInstance | null = null;
@@ -1216,6 +1225,8 @@ export class ZoneScene extends Container implements GameScene {
       case 'loot':
         if (this.nearbySecret) {
           this.interactWithSecret(this.nearbySecret);
+        } else if (this.nearbyEnvObject) {
+          this.interactWithEnvObject(this.nearbyEnvObject);
         } else if (this.nearbyLoot) {
           this.collectLoot(this.nearbyLoot.id);
         }
@@ -1289,6 +1300,59 @@ export class ZoneScene extends Container implements GameScene {
     // Remove from interactable
     secret.sprite.alpha = 0.3;
     this.secretAreas = this.secretAreas.filter(s => s !== secret);
+  }
+
+  private interactWithEnvObject(obj: EnvironmentObject): void {
+    const result = interactWith(obj);
+    MusicManager.shared.playSFX(result.sfx);
+
+    if (result.message) {
+      const pos = isoToScreen(obj.position.col, obj.position.row);
+      this.showFloatingText(pos.x, pos.y - 30, result.message, 0xffdd44);
+    }
+
+    if (result.xpReward > 0) {
+      const ngpRewards = NewGamePlusManager.shared.applyToRewards(result.xpReward, 0);
+      GameManager.shared.grantXP(ngpRewards.xp);
+    }
+
+    // Trigger linked object (e.g., lever → obelisk)
+    if (result.triggerLinkedID) {
+      const linked = this.environmentObjects.find(o => o.id === result.triggerLinkedID);
+      if (linked && !linked.activated) {
+        linked.activated = true;
+        const linkedPos = isoToScreen(linked.position.col, linked.position.row);
+        this.showFloatingText(linkedPos.x, linkedPos.y - 30, 'Activé !', 0x88ccff);
+        MusicManager.shared.playSFX('quest_complete');
+        // Report obelisk activation for hidden quests
+        if (linked.type === 'obelisk') {
+          const notifications = HiddenQuestManager.shared.reportTrigger('activate_obelisks', this.zone.worldID, this.zone.worldID);
+          for (const n of notifications) {
+            this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 70,
+              n.message, n.completed ? 0xffdd44 : 0x88ccff);
+            if (n.completed && n.rewards) {
+              this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 85,
+                `+${n.rewards.xp}XP +${n.rewards.gold}or`, 0x66cc44);
+            }
+          }
+        }
+        // Redraw linked sprite
+        linked.sprite.removeChildren();
+        const newSprite = createEnvironmentSprite(linked);
+        for (const child of newSprite.children) linked.sprite.addChild(child);
+      }
+    }
+
+    // Handle breakable — hide sprite, drop loot
+    if (obj.type === 'breakable' && obj.activated) {
+      obj.sprite.alpha = 0.2;
+      this.shakeCamera(1, 0.05);
+    }
+
+    // Redraw current object sprite
+    obj.sprite.removeChildren();
+    const newSprite = createEnvironmentSprite(obj);
+    for (const child of newSprite.children) obj.sprite.addChild(child);
   }
 
   private interactWithNPC(spawn: { npcID: string; isShopkeeper: boolean; dialogueTreeID: string | null }): void {
@@ -1684,11 +1748,19 @@ export class ZoneScene extends Container implements GameScene {
       container.y = pos.y;
       this.worldContainer.addChild(container);
 
+      // NG+ difficulty scaling
+      const ngpStats = NewGamePlusManager.shared.applyToEnemy(data.maxHP, data.damage, data.speed);
+
+      // NG+ elite upgrade chance for minions
+      if (data.tier === 'minion' && NewGamePlusManager.shared.shouldUpgradeToElite()) {
+        data.tier = 'elite' as typeof data.tier;
+      }
+
       // Roll affixes for elite/boss enemies
       const affixes = rollAffixes(data.tier);
       const affixState = affixes.length > 0 ? createAffixState(affixes) : undefined;
       const hpMult = affixState ? getAffixHPMultiplier(affixState) : 1;
-      const finalMaxHP = Math.floor(data.maxHP * hpMult);
+      const finalMaxHP = Math.floor(ngpStats.hp * hpMult);
 
       const enemy: EnemyInstance = {
         data, spawn,
@@ -1730,7 +1802,29 @@ export class ZoneScene extends Container implements GameScene {
       }
 
       this.enemies.push(enemy);
+
+      // Initialize AI behavior state
+      const behaviorKey = data.id + '_' + spawn.position.col + '_' + spawn.position.row;
+      const patrolWaypoints = spawn.patrolPath
+        ? spawn.patrolPath.map(p => isoToScreen(p.col, p.row))
+        : null;
+      this.enemyBehaviors.set(behaviorKey, createBehaviorState(
+        data.behavior, pos.x, pos.y, data.attackRange,
+      ));
     }
+
+    // Generate environment objects (puzzles, traps, breakables)
+    this.environmentObjects = generateEnvironmentObjects(
+      this.zone.worldID, this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.type, this.zone.gridWidth * 1000 + this.zone.gridHeight,
+    );
+    for (const obj of this.environmentObjects) {
+      obj.sprite = createEnvironmentSprite(obj);
+      this.worldContainer.addChild(obj.sprite);
+    }
+
+    // Report zone exploration for hidden quests
+    HiddenQuestManager.shared.reportTrigger('visit_secret_area', this.zone.worldID, this.zone.worldID);
   }
 
   // Enemy sprite drawing delegated to EnemyRenderer module
@@ -2209,11 +2303,58 @@ export class ZoneScene extends Container implements GameScene {
       const affixSpeedMult = enemy.affixState ? getAffixSpeedMultiplier(enemy.affixState) : 1;
       const speedMult = bossSpeedMult * affixSpeedMult;
 
-      if (dist < atkRange && enemy.attackCooldown <= 0) {
-        enemy.state = 'attacking';
-        enemy.attackCooldown = 1.5;
-        this.enemyAttacksPlayer(enemy);
-      } else if (dist < detRange) {
+      // Behavior-specific AI
+      const behaviorKey = enemy.data.id + '_' + enemy.spawn.position.col + '_' + enemy.spawn.position.row;
+      const behaviorState = this.enemyBehaviors.get(behaviorKey);
+      const hpPct = enemy.hp / (enemy.maxHP || enemy.data.maxHP);
+      const patrolWaypoints = enemy.spawn.patrolPath
+        ? enemy.spawn.patrolPath.map(p => isoToScreen(p.col, p.row))
+        : null;
+      const enemyIdx = this.enemies.indexOf(enemy);
+      const bResult = behaviorState
+        ? updateBehavior(behaviorState, dt, enemy.position.x, enemy.position.y,
+            playerPos.x, playerPos.y, dist, detRange, atkRange, hpPct,
+            this.enemies, enemyIdx, patrolWaypoints)
+        : null;
+
+      // Apply behavior detection modifier
+      const effectiveDetRange = bResult ? detRange * bResult.detectionMult : detRange;
+
+      // Support heal logic
+      if (bResult?.shouldHealAlly && bResult.healTargetIndex >= 0 && bResult.healTargetIndex < this.enemies.length) {
+        const ally = this.enemies[bResult.healTargetIndex];
+        if (!ally.isDead) {
+          const healAmt = Math.floor((enemy.maxHP || enemy.data.maxHP) * 0.1);
+          ally.hp = Math.min(ally.maxHP || ally.data.maxHP, ally.hp + healAmt);
+          this.drawEnemyHP(ally.hpBar, ally.hp / (ally.maxHP || ally.data.maxHP));
+          this.showFloatingText(ally.position.x, ally.position.y - 30, `+${healAmt}`, 0x44ff44);
+          MusicManager.shared.playSFX('heal');
+        }
+      }
+
+      // Flee behavior override
+      if (bResult?.shouldFlee) {
+        enemy.state = 'chasing'; // Still 'chasing' state visually, but running away
+        const speed = enemy.data.speed * 35 * dt * speedMult;
+        enemy.position.x += bResult.moveX * speed;
+        enemy.position.y += bResult.moveY * speed;
+        enemy.sprite.x = enemy.position.x;
+        enemy.sprite.y = enemy.position.y;
+      } else if (dist < atkRange && enemy.attackCooldown <= 0) {
+        // Ranged enemies back away when too close instead of attacking
+        if (bResult && enemy.data.behavior === 'ranged' && bResult.shouldMove) {
+          const speed = enemy.data.speed * 25 * dt * speedMult;
+          enemy.position.x += bResult.moveX * speed;
+          enemy.position.y += bResult.moveY * speed;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+        } else {
+          enemy.state = 'attacking';
+          const atkSpeedMult = bResult?.attackSpeedMult ?? 1;
+          enemy.attackCooldown = 1.5 / atkSpeedMult;
+          this.enemyAttacksPlayer(enemy, bResult?.damageMult ?? 1);
+        }
+      } else if (dist < effectiveDetRange) {
         if (enemy.state !== 'chasing') {
           BestiaryManager.shared.registerEncounter(enemy.data);
           if (enemy.enemyAnim) setEnemyAlert(enemy.enemyAnim);
@@ -2221,58 +2362,73 @@ export class ZoneScene extends Container implements GameScene {
         enemy.state = 'chasing';
         const speed = enemy.data.speed * 30 * dt * speedMult;
 
-        // A* pathfinding movement
-        const pathKey = enemy.data.id + '_' + enemy.spawn.position.col + '_' + enemy.spawn.position.row;
-        let cached = this.enemyPaths.get(pathKey);
-        const eGrid = screenToIso(enemy.position.x, enemy.position.y);
-        const pGrid = screenToIso(playerPos.x, playerPos.y);
-        const eCol = Math.round(eGrid.col);
-        const eRow = Math.round(eGrid.row);
-        const pCol = Math.round(pGrid.col);
-        const pRow = Math.round(pGrid.row);
+        // Guard behavior: return to post if too far
+        if (bResult?.shouldMove && enemy.data.behavior === 'guard') {
+          enemy.position.x += bResult.moveX * speed;
+          enemy.position.y += bResult.moveY * speed;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+        } else {
+          // A* pathfinding movement
+          const pathKey = behaviorKey;
+          let cached = this.enemyPaths.get(pathKey);
+          const eGrid = screenToIso(enemy.position.x, enemy.position.y);
+          const pGrid = screenToIso(playerPos.x, playerPos.y);
+          const eCol = Math.round(eGrid.col);
+          const eRow = Math.round(eGrid.row);
+          const pCol = Math.round(pGrid.col);
+          const pRow = Math.round(pGrid.row);
 
-        const needsPath = !cached || cached.age > 0.8 ||
-          cached.targetCol !== pCol || cached.targetRow !== pRow ||
-          cached.idx >= cached.waypoints.length;
+          const needsPath = !cached || cached.age > 0.8 ||
+            cached.targetCol !== pCol || cached.targetRow !== pRow ||
+            cached.idx >= cached.waypoints.length;
 
-        if (needsPath && this.pathfinder) {
-          const gridPath = this.pathfinder.findPath(eCol, eRow, pCol, pRow);
-          if (gridPath && gridPath.length > 1) {
-            const smooth = smoothPath(gridPath);
-            cached = { waypoints: smooth.map(g => isoToScreen(g.col, g.row)), idx: 1, targetCol: pCol, targetRow: pRow, age: 0 };
-            this.enemyPaths.set(pathKey, cached);
-          } else {
-            cached = undefined;
-          }
-        }
-
-        if (cached) {
-          cached.age += dt;
-          if (cached.idx < cached.waypoints.length) {
-            const wp = cached.waypoints[cached.idx];
-            const dx = wp.x - enemy.position.x;
-            const dy = wp.y - enemy.position.y;
-            if (Math.hypot(dx, dy) < 8) {
-              cached.idx++;
+          if (needsPath && this.pathfinder) {
+            const gridPath = this.pathfinder.findPath(eCol, eRow, pCol, pRow);
+            if (gridPath && gridPath.length > 1) {
+              const smooth = smoothPath(gridPath);
+              cached = { waypoints: smooth.map(g => isoToScreen(g.col, g.row)), idx: 1, targetCol: pCol, targetRow: pRow, age: 0 };
+              this.enemyPaths.set(pathKey, cached);
             } else {
-              const a = Math.atan2(dy, dx);
-              enemy.position.x += Math.cos(a) * speed;
-              enemy.position.y += Math.sin(a) * speed;
+              cached = undefined;
             }
           }
-        } else {
-          // Fallback: direct movement
-          const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
-          enemy.position.x += Math.cos(angle) * speed;
-          enemy.position.y += Math.sin(angle) * speed;
+
+          if (cached) {
+            cached.age += dt;
+            if (cached.idx < cached.waypoints.length) {
+              const wp = cached.waypoints[cached.idx];
+              const dx = wp.x - enemy.position.x;
+              const dy = wp.y - enemy.position.y;
+              if (Math.hypot(dx, dy) < 8) {
+                cached.idx++;
+              } else {
+                const a = Math.atan2(dy, dx);
+                enemy.position.x += Math.cos(a) * speed;
+                enemy.position.y += Math.sin(a) * speed;
+              }
+            }
+          } else {
+            const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
+            enemy.position.x += Math.cos(angle) * speed;
+            enemy.position.y += Math.sin(angle) * speed;
+          }
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
         }
-        enemy.sprite.x = enemy.position.x;
-        enemy.sprite.y = enemy.position.y;
       } else {
-        enemy.state = 'idle';
-        // Clear path cache when idle
-        const pathKey = enemy.data.id + '_' + enemy.spawn.position.col + '_' + enemy.spawn.position.row;
-        this.enemyPaths.delete(pathKey);
+        // Idle: behavior-specific idle movement (patrol, wander)
+        if (bResult?.shouldMove && !bResult.shouldFlee) {
+          const speed = enemy.data.speed * 15 * dt;
+          enemy.position.x += bResult.moveX * speed;
+          enemy.position.y += bResult.moveY * speed;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+          enemy.state = 'idle';
+        } else {
+          enemy.state = 'idle';
+        }
+        this.enemyPaths.delete(behaviorKey);
       }
     }
   }
@@ -2336,6 +2492,11 @@ export class ZoneScene extends Container implements GameScene {
         revealSecret(s, this.zone.worldID);
         this.showFloatingText(s.x, s.y - 20, '✦ Zone secrète découverte!', 0xffdd44);
         this.nearbySecret = s;
+        // Report secret area discovery for hidden quests
+        const hqNotifs = HiddenQuestManager.shared.reportTrigger('visit_secret_area', this.zone.worldID, this.zone.worldID);
+        for (const n of hqNotifs) {
+          this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 70, n.message, n.completed ? 0xffdd44 : 0x88ccff);
+        }
       }
     }
     // Check already revealed secrets for loot
@@ -2348,7 +2509,51 @@ export class ZoneScene extends Container implements GameScene {
       }
     }
 
-    // Determine mode (priority: NPC > Building > Exit > Secret > Loot > Attack)
+    // Check environment objects (interactables + traps)
+    this.nearbyEnvObject = null;
+    const playerGrid = screenToIso(this.playerScreenPos.x, this.playerScreenPos.y);
+    const pCol = Math.round(playerGrid.col);
+    const pRow = Math.round(playerGrid.row);
+    for (const obj of this.environmentObjects) {
+      if (obj.activated && (obj.type === 'breakable' || obj.type === 'obelisk')) continue;
+      const objPos = isoToScreen(obj.position.col, obj.position.row);
+      const dist = Math.hypot(objPos.x - this.playerScreenPos.x, objPos.y - this.playerScreenPos.y);
+
+      // Reveal hidden traps when very close
+      if (obj.hidden && dist < 30) {
+        obj.hidden = false;
+        obj.sprite.alpha = 1;
+      }
+
+      // Check trap triggers
+      if (obj.type === 'spikeTrap' || obj.type === 'poisonVent') {
+        const trapResult = checkTrapTrigger(obj, pCol, pRow, 1 / 60);
+        if (trapResult) {
+          const trapDmgMult = NewGamePlusManager.shared.getDifficulty().trapDamageMult;
+          const champ = GameManager.shared.champion;
+          if (champ) {
+            const dmg = Math.floor(trapResult.damage * trapDmgMult);
+            champ.currentHP -= dmg;
+            this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, dmg, false, 0xff4444);
+            MusicManager.shared.playSFX(trapResult.sfx);
+            if (trapResult.message) this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 55, trapResult.message, 0xff6644);
+            this.shakeCamera(2, 0.1);
+            if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
+          }
+          // Redraw trap sprite as activated
+          obj.sprite.removeChildren();
+          const newSprite = createEnvironmentSprite(obj);
+          for (const child of newSprite.children) obj.sprite.addChild(child);
+        }
+      }
+
+      // Nearby interactable
+      if (dist < 45 && (obj.type === 'lever' || obj.type === 'breakable' || obj.type === 'obelisk' || obj.type === 'pushBlock')) {
+        this.nearbyEnvObject = obj;
+      }
+    }
+
+    // Determine mode (priority: NPC > Building > Exit > Secret > Loot > EnvObj > Attack)
     let newMode: ActionMode = 'attack';
     let promptText = '';
     if (this.nearbyNPC && minNPCDist < minExitDist && minNPCDist < minLootDist) {
@@ -2365,6 +2570,12 @@ export class ZoneScene extends Container implements GameScene {
       newMode = 'loot';
       promptText = this.nearbySecret.type === 'treasure' ? 'Ouvrir le coffre'
         : this.nearbySecret.type === 'shrine' ? 'Prier au sanctuaire' : 'Explorer';
+    } else if (this.nearbyEnvObject) {
+      newMode = 'loot';
+      const typeLabels: Record<string, string> = {
+        lever: 'Actionner le levier', breakable: 'Briser', obelisk: 'Examiner', pushBlock: 'Pousser',
+      };
+      promptText = typeLabels[this.nearbyEnvObject.type] ?? 'Interagir';
     } else if (this.nearbyLoot) {
       newMode = 'loot';
       promptText = 'Ramasser';
@@ -2693,7 +2904,7 @@ export class ZoneScene extends Container implements GameScene {
     if (this.potionHotbar) this.potionHotbar.refresh();
   }
 
-  private enemyAttacksPlayer(enemy: EnemyInstance): void {
+  private enemyAttacksPlayer(enemy: EnemyInstance, behaviorDmgMult: number = 1): void {
     const champ = GameManager.shared.champion;
     if (!champ) return;
 
@@ -2704,8 +2915,9 @@ export class ZoneScene extends Container implements GameScene {
       ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).damageMultiplier : 1;
     const affixDmgMult = enemy.affixState
       ? getAffixDamageMultiplier(enemy.affixState, enemy.hp / enemy.maxHP) : 1;
+    const ngpDmgMult = NewGamePlusManager.shared.getDifficulty().enemyDamageMult;
     const shieldReduction = 1 - this.playerStatusEffects.getDamageReduction();
-    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * affixDmgMult * shieldReduction));
+    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * affixDmgMult * behaviorDmgMult * ngpDmgMult * shieldReduction));
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
@@ -2752,6 +2964,14 @@ export class ZoneScene extends Container implements GameScene {
     AchievementManager.shared.recordKill(enemy.data.tier);
     AchievementManager.shared.recordCreatureDiscovered(BestiaryManager.shared.totalDiscovered);
 
+    // Hidden quest: rare enemy kills
+    if (enemy.data.tier === 'elite' || enemy.data.tier === 'boss') {
+      const hqNotifs = HiddenQuestManager.shared.reportTrigger('kill_rare_enemy', 'nightmare_rare', this.zone.worldID);
+      for (const n of hqNotifs) {
+        this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 70, n.message, n.completed ? 0xffdd44 : 0x88ccff);
+      }
+    }
+
     // Animated death instead of instant hide
     animateEnemyDeath(enemy.sprite, this.worldContainer, enemy.position.x, enemy.position.y);
     setTimeout(() => { enemy.sprite.visible = false; }, 500);
@@ -2790,13 +3010,17 @@ export class ZoneScene extends Container implements GameScene {
     const champ = gm.champion;
     if (!champ) return;
 
-    const baseGold = enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1));
+    const ngpRewards = NewGamePlusManager.shared.applyToRewards(
+      enemy.data.xpReward,
+      enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1)),
+    );
+    const baseGold = ngpRewards.gold;
     const gold = Math.floor(baseGold * this.getEventGoldBonus());
     champ.gold += gold;
 
-    // Apply reputation XP bonus + event bonus
+    // Apply reputation XP bonus + event bonus + NG+ bonus
     const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
-    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
+    const finalXP = Math.floor(ngpRewards.xp * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
     const leveledUp = gm.grantXP(finalXP);
     if (leveledUp) MusicManager.shared.playSFX('level_up');
 
@@ -3088,6 +3312,11 @@ export class ZoneScene extends Container implements GameScene {
     if (this.weatherOverlay) {
       this.weatherOverlay.update(result.config, this.weatherManager.lightningFlash);
     }
+    // Weather-based camera shake (highstorm, sandstorm, nightmare)
+    if (result.config.screenShake > 0) {
+      this.shakeCamera(result.config.screenShake * 0.5, 0.05);
+    }
+
     // Weather damage (highstorm, sandstorm, nightmare)
     if (result.config.damagePerTick > 0) {
       const champ = GameManager.shared.champion;
