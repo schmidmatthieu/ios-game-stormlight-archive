@@ -52,6 +52,7 @@ import { WorldMapScene } from './WorldMapScene';
 import { NPCScheduleManager } from '../game/NPCScheduleSystem';
 import { moveNPCTo, teleportNPC, updateNPCAnimation, showActivityIndicator, setNPCSleeping, clearNPCAnimations } from '../rendering/NPCAnimator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
+import { renderEnhancedTilemap } from '../rendering/TileRenderer';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
 import { addReputation, createReputationBadge, showRankUpEffect, getBonusXPMultiplier } from '../game/ReputationSystem';
@@ -526,64 +527,11 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Tilemap ─────────────────────────────────────────────────
 
   private renderTilemap(): void {
-    const gw = this.zone.gridWidth;
-    const gh = this.zone.gridHeight;
-    const t = this.theme;
-
-    // Batch tiles in a single Graphics for performance
-    const tileGraphics = new Graphics();
-    tileGraphics.zIndex = -1000;
-
-    for (let col = 0; col < gw; col++) {
-      for (let row = 0; row < gh; row++) {
-        const { x, y } = isoToScreen(col, row);
-        const seed = col * 1000 + row;
-        const rand = seededRandom(seed);
-
-        // Pick tile color with more interesting variation
-        let color: number;
-        if (rand < 0.15) {
-          // Accent tile
-          color = t.tileAlt;
-        } else if (rand < 0.25) {
-          // Slightly darker
-          color = this.darkenColor(t.tileBase, 0.15);
-        } else {
-          // Normal with subtle variation
-          const variation = Math.floor(seededRandom(seed + 7) * 3) * 0x020202;
-          color = t.tileBase + variation;
-        }
-
-        // Is edge tile?
-        const isEdge = col === 0 || row === 0 || col === gw - 1 || row === gh - 1;
-        const alpha = isEdge ? 0.6 : 0.95;
-
-        // Diamond
-        tileGraphics.poly([
-          { x: x, y: y - 16 },
-          { x: x + 32, y: y },
-          { x: x, y: y + 16 },
-          { x: x - 32, y: y },
-        ]).fill({ color, alpha });
-
-        // Subtle grid line
-        tileGraphics.poly([
-          { x: x, y: y - 16 },
-          { x: x + 32, y: y },
-          { x: x, y: y + 16 },
-          { x: x - 32, y: y },
-        ]).stroke({ color: t.tileBorder, width: 0.3, alpha: 0.4 });
-
-        // Add subtle texture patterns on some tiles
-        if (rand > 0.7 && rand < 0.85) {
-          // Small crack/detail
-          const cx = x + (seededRandom(seed + 3) - 0.5) * 20;
-          const cy = y + (seededRandom(seed + 5) - 0.5) * 10;
-          tileGraphics.circle(cx, cy, 1.5).fill({ color: t.tileBorder, alpha: 0.3 });
-        }
-      }
-    }
-
+    const tileGraphics = renderEnhancedTilemap(
+      this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.worldID, this.theme,
+      isoToScreen, this.darkenColor.bind(this),
+    );
     this.worldContainer.addChild(tileGraphics);
   }
 
