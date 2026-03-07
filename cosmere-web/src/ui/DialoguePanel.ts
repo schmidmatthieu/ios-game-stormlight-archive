@@ -59,8 +59,38 @@ const WORLD_DIALOGUES: Record<string, DialogueTree[]> = {
           { text: 'As-tu quelque chose à vendre?', nextNodeID: null, reward: { xp: 5 } },
         ]},
         { id: 'ash', text: 'Pas directement, mais elles étouffent les cultures. Les skaa meurent de faim pendant que les nobles festoient.', choices: [
-          { text: 'C\'est injuste.', nextNodeID: null, reward: { xp: 10, reputation: 5 } },
+          { text: 'C\'est injuste. Il faut agir.', nextNodeID: 'revolt', reward: { xp: 10, reputation: 5 } },
           { text: 'Chacun pour soi.', nextNodeID: null, reward: { xp: 5, gold: 10 } },
+        ]},
+        { id: 'revolt', text: 'Tu parles comme un rebelle... Bien. Si tu veux aider, infiltre le bal des nobles à Kredik Shaw et vole leurs réserves de métaux.', choices: [
+          { text: 'Je suis prêt pour l\'infiltration.', nextNodeID: null, reward: { xp: 25, reputation: 15, gold: 20 } },
+          { text: 'C\'est trop risqué.', nextNodeID: null, reward: { xp: 5 } },
+        ]},
+      ],
+    },
+    {
+      startNodeID: 'start',
+      nodes: [
+        { id: 'start', text: 'Tu brûles des métaux, pas vrai? Je le vois dans tes yeux — un brumeux complet. C\'est rare.', choices: [
+          { text: 'Que savez-vous de l\'Allomancie?', nextNodeID: 'metals', reward: { xp: 15 } },
+          { text: 'J\'ai besoin de fioles de métal.', nextNodeID: 'vials' },
+          { text: 'Qui êtes-vous?', nextNodeID: 'identity' },
+        ]},
+        { id: 'metals', text: 'Huit métaux, huit pouvoirs. L\'acier et le fer pour la physique, l\'étain et le pewter pour le corps, le bronze et le cuivre pour la détection, le zinc et le laiton pour les émotions.', choices: [
+          { text: 'Quel métal est le plus puissant?', nextNodeID: 'power', reward: { xp: 20 } },
+          { text: 'Merci pour la leçon.', nextNodeID: null, reward: { xp: 10, reputation: 5 } },
+        ]},
+        { id: 'power', text: 'L\'atium. Mais il est presque introuvable. Il te permet de voir le futur immédiat de tes adversaires. Avec lui, tu es invincible.', choices: [
+          { text: 'Où en trouver?', nextNodeID: null, reward: { xp: 25, reputation: 10 } },
+          { text: 'Impressionnant.', nextNodeID: null, reward: { xp: 10 } },
+        ]},
+        { id: 'vials', text: 'J\'en ai quelques-unes cachées. 50 pièces d\'or chacune. Ou bien... élimine la patrouille qui surveille mon quartier et je t\'en offre gratuitement.', choices: [
+          { text: 'Je m\'occupe de la patrouille.', nextNodeID: null, reward: { xp: 20, reputation: 15 } },
+          { text: 'Je préfère payer.', nextNodeID: null, reward: { xp: 5 } },
+        ]},
+        { id: 'identity', text: 'Un ancien Brûleur de Cuivre pour Kelsier. Maintenant je vis caché. Le Lord Dirigeant a des yeux partout.', choices: [
+          { text: 'Kelsier serait fier de vous.', nextNodeID: null, reward: { xp: 15, reputation: 20 } },
+          { text: 'Restez en sécurité.', nextNodeID: null, reward: { xp: 10, gold: 5 } },
         ]},
       ],
     },
@@ -75,14 +105,39 @@ const WORLD_DIALOGUES: Record<string, DialogueTree[]> = {
           { text: 'Parlez-moi des sprens.', nextNodeID: 'spren' },
         ]},
         { id: 'desolation', text: 'Les Néantifères reviennent. Odium rassemble ses forces. Seuls les Radiants peuvent nous sauver.', choices: [
-          { text: 'Je protègerai ce monde.', nextNodeID: null, reward: { xp: 25, reputation: 10 } },
+          { text: 'Je protègerai ce monde.', nextNodeID: 'protect', reward: { xp: 25, reputation: 10 } },
           { text: 'C\'est un fardeau trop lourd.', nextNodeID: null, reward: { xp: 10 } },
+        ]},
+        { id: 'protect', text: 'Tu es courageux. Les Chevaliers Radiants avaient un credo : Vie avant la mort, force avant la faiblesse, voyage avant la destination.', choices: [
+          { text: 'Je prononcerai les Idéaux.', nextNodeID: null, reward: { xp: 30, reputation: 15 } },
+          { text: 'Ce sont de belles paroles.', nextNodeID: null, reward: { xp: 15, gold: 10 } },
         ]},
         { id: 'stormlight', text: 'Les sphères se rechargent pendant les Tempêtes. Plus la gemme est grosse, plus elle contient de Lumière.', choices: [
           { text: 'Où trouver de grandes gemmes?', nextNodeID: null, reward: { xp: 15, gold: 10 } },
         ]},
         { id: 'spren', text: 'Les sprens sont l\'essence même de Roshar. Ton spren te lie aux Surges. Protège-le bien.', choices: [
           { text: 'Mon spren est ma force.', nextNodeID: null, reward: { xp: 20, reputation: 5 } },
+        ]},
+      ],
+    },
+    {
+      startNodeID: 'start',
+      nodes: [
+        { id: 'start', text: 'Un voyageur des mondes! Les ponts entre les Royaumes s\'affaiblissent. Quelque chose de terrible se prépare.', choices: [
+          { text: 'Quel danger menace Roshar?', nextNodeID: 'danger', reward: { xp: 15 } },
+          { text: 'Avez-vous besoin d\'aide?', nextNodeID: 'help' },
+          { text: 'Je ne fais que passer.', nextNodeID: null, reward: { xp: 5 } },
+        ]},
+        { id: 'danger', text: 'Les Fusionnés infiltrent nos rangs. Certains Radiants brisent leurs serments sous la pression. Nous perdons espoir.', choices: [
+          { text: 'Je rallierai les indécis.', nextNodeID: 'rally', reward: { xp: 20, reputation: 15 } },
+          { text: 'Chacun doit choisir sa voie.', nextNodeID: null, reward: { xp: 10, gold: 10 } },
+        ]},
+        { id: 'rally', text: 'Si tu peux éliminer le Tonnerreclaste sur les Plaines Brisées, cela redonnera courage à tous. C\'est un acte héroïque!', choices: [
+          { text: 'J\'accepte ce défi.', nextNodeID: null, reward: { xp: 30, reputation: 20, gold: 25 } },
+        ]},
+        { id: 'help', text: 'Mes réserves de sphères sont épuisées. Si tu m\'en apportes, je pourrai te forger une lame d\'honneur.', choices: [
+          { text: 'Je trouverai des sphères.', nextNodeID: null, reward: { xp: 20, reputation: 10 } },
+          { text: 'Désolé, j\'ai mes propres problèmes.', nextNodeID: null, reward: { xp: 5 } },
         ]},
       ],
     },
@@ -213,12 +268,23 @@ export function showDialoguePanel(
   const contentContainer = new Container();
   panel.addChild(contentContainer);
 
+  function filterChoices(choices: DialogueChoice[]): DialogueChoice[] {
+    const champ = GameManager.shared.champion;
+    return choices.filter(c => {
+      if (!c.condition || c.condition === 'none') return true;
+      if (c.condition === 'high_level' && champ && champ.level >= 5) return true;
+      if (c.condition === 'has_gold' && champ && champ.gold >= 50) return true;
+      return false;
+    });
+  }
+
   function renderNode(node: DialogueNode): void {
     contentContainer.removeChildren();
 
+    const filteredChoices = filterChoices(node.choices);
     const choiceBtnH = scaled(32, layout);
     const choiceSpacing = scaled(34, layout);
-    const panelH = scaled(70, layout) + node.choices.length * choiceSpacing;
+    const panelH = scaled(70, layout) + filteredChoices.length * choiceSpacing;
     const panelY = screenH - panelH - scaled(20, layout);
     const radius = panelRadius(layout);
 
@@ -254,7 +320,7 @@ export function showDialoguePanel(
 
     // Choices — bigger touch targets, better styling
     const choiceStartY = panelY + scaled(58, layout);
-    node.choices.forEach((choice, i) => {
+    filteredChoices.forEach((choice, i) => {
       const choiceY = choiceStartY + i * choiceSpacing;
 
       const choiceBg = new Graphics();

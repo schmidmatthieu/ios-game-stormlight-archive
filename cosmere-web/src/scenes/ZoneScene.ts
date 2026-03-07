@@ -47,6 +47,9 @@ import { showSkillTreePanel } from '../ui/SkillTreePanel';
 import { showTalentTreePanel } from '../ui/TalentTreePanel';
 import { createZoneToolbar } from './ZoneToolbar';
 import { createMobileMenu } from '../ui/MobileMenu';
+import { TutorialManager } from '../ui/TutorialSystem';
+import { SaveManager } from '../game/SaveManager';
+import { Pathfinder, smoothPath } from '../systems/Pathfinding';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
@@ -290,6 +293,8 @@ export class ZoneScene extends Container implements GameScene {
   private walls: WallSegment[] = [];
   private enterableBuildings: EnterableBuilding[] = [];
   private secretAreas: SecretArea[] = [];
+  private pathfinder: Pathfinder | null = null;
+  private enemyPaths: Map<string, { waypoints: { x: number; y: number }[]; idx: number; targetCol: number; targetRow: number; age: number }> = new Map();
   private nearbyBuilding: EnterableBuilding | null = null;
   private nearbySecret: SecretArea | null = null;
 
@@ -404,6 +409,24 @@ export class ZoneScene extends Container implements GameScene {
       this.zone.worldID, this.zone.playerSpawnPosition,
     );
 
+    // Initialize pathfinder with wall data
+    this.pathfinder = new Pathfinder(this.zone.gridWidth, this.zone.gridHeight);
+    for (const wall of this.walls) {
+      // Convert screen coords to approximate grid coords for blocking
+      const col = Math.round((wall.x / 32 + wall.y / 16) / 2);
+      const row = Math.round((wall.y / 16 - wall.x / 32) / 2);
+      this.pathfinder.setBlocked(col, row, true);
+    }
+    for (const bld of this.enterableBuildings) {
+      const col = Math.round((bld.x / 32 + bld.y / 16) / 2);
+      const row = Math.round((bld.y / 16 - bld.x / 32) / 2);
+      for (let dc = -1; dc <= 1; dc++) {
+        for (let dr = -1; dr <= 1; dr++) {
+          this.pathfinder.setBlocked(col + dc, row + dr, true);
+        }
+      }
+    }
+
     // Loot points
     this.spawnLootPoints();
 
@@ -513,6 +536,14 @@ export class ZoneScene extends Container implements GameScene {
 
     // World events banner
     this.eventBanner = createWorldEventBanner(this.uiContainer, w);
+
+    // Tutorial for new players
+    if (!TutorialManager.shared.isComplete()) {
+      TutorialManager.shared.startTutorial(this.uiContainer, w, h);
+    }
+
+    // Auto-save on zone entry
+    SaveManager.shared.autoSave();
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -1241,6 +1272,7 @@ export class ZoneScene extends Container implements GameScene {
     if (this.repBadge) this.repBadge.refresh();
 
     if (secret.type === 'shrine') {
+      MusicManager.shared.playSFX('heal');
       // Shrine: full heal, full investiture, strong long-lasting buffs
       champ.currentHP = GameManager.shared.maxHP;
       champ.currentInvestiture = GameManager.shared.maxInvestiture;
@@ -1338,6 +1370,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private showShop(npcID: string): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showShopPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1363,6 +1396,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleProfessions(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showProfessionPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1372,6 +1406,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleCrafting(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showCraftingPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1383,6 +1418,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleBestiary(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showBestiaryPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1392,6 +1428,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleAchievements(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showAchievementPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1401,6 +1438,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleSkillTree(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showSkillTreePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1410,6 +1448,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleTalentTree(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showTalentTreePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1419,6 +1458,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleCompanion(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showCompanionPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1428,6 +1468,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleQuestJournal(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = showQuestJournal(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -2178,14 +2219,60 @@ export class ZoneScene extends Container implements GameScene {
           if (enemy.enemyAnim) setEnemyAlert(enemy.enemyAnim);
         }
         enemy.state = 'chasing';
-        const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
         const speed = enemy.data.speed * 30 * dt * speedMult;
-        enemy.position.x += Math.cos(angle) * speed;
-        enemy.position.y += Math.sin(angle) * speed;
+
+        // A* pathfinding movement
+        const pathKey = enemy.data.id + '_' + enemy.spawn.position.col + '_' + enemy.spawn.position.row;
+        let cached = this.enemyPaths.get(pathKey);
+        const eGrid = screenToIso(enemy.position.x, enemy.position.y);
+        const pGrid = screenToIso(playerPos.x, playerPos.y);
+        const eCol = Math.round(eGrid.col);
+        const eRow = Math.round(eGrid.row);
+        const pCol = Math.round(pGrid.col);
+        const pRow = Math.round(pGrid.row);
+
+        const needsPath = !cached || cached.age > 0.8 ||
+          cached.targetCol !== pCol || cached.targetRow !== pRow ||
+          cached.idx >= cached.waypoints.length;
+
+        if (needsPath && this.pathfinder) {
+          const gridPath = this.pathfinder.findPath(eCol, eRow, pCol, pRow);
+          if (gridPath && gridPath.length > 1) {
+            const smooth = smoothPath(gridPath);
+            cached = { waypoints: smooth.map(g => isoToScreen(g.col, g.row)), idx: 1, targetCol: pCol, targetRow: pRow, age: 0 };
+            this.enemyPaths.set(pathKey, cached);
+          } else {
+            cached = undefined;
+          }
+        }
+
+        if (cached) {
+          cached.age += dt;
+          if (cached.idx < cached.waypoints.length) {
+            const wp = cached.waypoints[cached.idx];
+            const dx = wp.x - enemy.position.x;
+            const dy = wp.y - enemy.position.y;
+            if (Math.hypot(dx, dy) < 8) {
+              cached.idx++;
+            } else {
+              const a = Math.atan2(dy, dx);
+              enemy.position.x += Math.cos(a) * speed;
+              enemy.position.y += Math.sin(a) * speed;
+            }
+          }
+        } else {
+          // Fallback: direct movement
+          const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
+          enemy.position.x += Math.cos(angle) * speed;
+          enemy.position.y += Math.sin(angle) * speed;
+        }
         enemy.sprite.x = enemy.position.x;
         enemy.sprite.y = enemy.position.y;
       } else {
         enemy.state = 'idle';
+        // Clear path cache when idle
+        const pathKey = enemy.data.id + '_' + enemy.spawn.position.col + '_' + enemy.spawn.position.row;
+        this.enemyPaths.delete(pathKey);
       }
     }
   }
@@ -2578,11 +2665,12 @@ export class ZoneScene extends Container implements GameScene {
 
     const effect = PotionManager.shared.usePotion(slotIndex);
     if (!effect) {
+      MusicManager.shared.playSFX('error');
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, 'Pas de potion!', 0xff6644);
       return;
     }
 
-    MusicManager.shared.playSFX('loot_common');
+    MusicManager.shared.playSFX('potion');
 
     if (effect.healPercent) {
       const heal = Math.floor(GameManager.shared.maxHP * effect.healPercent);
@@ -3314,6 +3402,7 @@ export class ZoneScene extends Container implements GameScene {
           this.checkQuestCompletion();
 
           // Transition effect
+          MusicManager.shared.playSFX('dash');
           const flash = new Graphics();
           flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: 0 });
           flash.zIndex = 99999;
@@ -3334,6 +3423,7 @@ export class ZoneScene extends Container implements GameScene {
               AchievementManager.shared.save();
               CompanionManager.shared.save();
               NPCRelationshipManager.shared.save();
+              SaveManager.shared.autoSave();
               this.router.goto(ZoneScene);
             }
           };
