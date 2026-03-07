@@ -238,10 +238,31 @@ class InventoryNode: SKNode {
 
         // Refresh equipment
         for (eqSlot, node) in equipmentSlots {
+            // Nettoyer les labels d'items précédents
+            node.children.filter { $0.name == "equippedItemName" }.forEach { $0.removeFromParent() }
+
             if let itemID = champion.equipment.itemID(for: eqSlot),
                let item = GameManager.shared.allItems[itemID] {
                 node.fillColor = rarityColor(item.rarity).withAlphaComponent(0.2)
                 node.strokeColor = rarityColor(item.rarity)
+
+                // Afficher le nom court de l'item équipé
+                let eqName = SKLabelNode(fontNamed: "Helvetica")
+                eqName.text = String(item.name.prefix(4))
+                eqName.fontSize = 8
+                eqName.fontColor = rarityColor(item.rarity)
+                eqName.verticalAlignmentMode = .center
+                eqName.position = CGPoint(x: 0, y: -18)
+                eqName.name = "equippedItemName"
+                node.addChild(eqName)
+
+                // Cacher le label d'emplacement vide
+                node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = true }
+            } else {
+                node.fillColor = SKColor(white: 0.12, alpha: 1.0)
+                node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
+                // Réafficher le label d'emplacement
+                node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = false }
             }
         }
     }
@@ -282,6 +303,15 @@ class InventoryNode: SKNode {
                 return
             }
 
+            // Déséquiper un slot d'équipement
+            if let name = node.name ?? node.parent?.name, name.hasPrefix("equip_") {
+                let slotRaw = name.replacingOccurrences(of: "equip_", with: "")
+                if let slot = EquipmentSlot(rawValue: slotRaw) {
+                    unequipSlot(slot)
+                }
+                return
+            }
+
             if let name = node.name, name.hasPrefix("slot_") {
                 let indexStr = name.replacingOccurrences(of: "slot_", with: "")
                 if let index = Int(indexStr) {
@@ -290,6 +320,31 @@ class InventoryNode: SKNode {
                 return
             }
         }
+    }
+
+    private func unequipSlot(_ slot: EquipmentSlot) {
+        guard var champion = GameManager.shared.champion else { return }
+        guard let itemID = champion.equipment.itemID(for: slot) else { return }
+
+        // Vérifier que l'inventaire n'est pas plein
+        guard champion.inventoryItemIDs.count < gridCols * gridRows else {
+            // Feedback : inventaire plein
+            if let node = equipmentSlots[slot] {
+                let shake = SKAction.sequence([
+                    SKAction.moveBy(x: -3, y: 0, duration: 0.03),
+                    SKAction.moveBy(x: 6, y: 0, duration: 0.03),
+                    SKAction.moveBy(x: -6, y: 0, duration: 0.03),
+                    SKAction.moveBy(x: 3, y: 0, duration: 0.03),
+                ])
+                node.run(shake)
+            }
+            return
+        }
+
+        champion.equipment.setItemID(nil, for: slot)
+        champion.inventoryItemIDs.append(itemID)
+        GameManager.shared.champion = champion
+        refresh()
     }
 
     private func equipSelectedItem() {
