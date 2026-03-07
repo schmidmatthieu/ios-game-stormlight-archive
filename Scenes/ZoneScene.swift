@@ -840,8 +840,40 @@ class ZoneScene: SKScene {
 
     // MARK: - Abilities
 
+    /// Returns the default skill IDs for each class ability slot (indices 0–3)
+    private func defaultSkillIDs(for championClass: ChampionClass) -> [String] {
+        switch championClass {
+        case .mistborn:         return ["steel_push", "iron_pull", "pewter_strength", "tin_senses"]
+        case .radiant:          return ["windrunner_gravitation", "windrunner_adhesion", "edgedancer_abrasion", "edgedancer_progression"]
+        case .awakener:         return ["awaken_garment", "awaken_weapon", "color_aura", "divine_breath"]
+        case .elantrian:        return ["aon_rao", "aon_ashe", "aon_tia", "aon_ien"]
+        case .sandMaster:       return ["sand_whip", "sand_shield", "sand_swarm", "sand_platform"]
+        case .nightmarePainter: return ["paint_inkstroke", "paint_capture", "paint_barrier", "paint_banishment"]
+        }
+    }
+
+    /// Looks up cooldown and range from Skill data, falling back to defaults
+    private func skillDataForAbility(champion: Champion, index: Int) -> (cooldown: TimeInterval, range: CGFloat) {
+        let equipped = champion.equippedSkillIDs
+        let skillID: String
+        if index < equipped.count, !equipped[index].isEmpty {
+            skillID = equipped[index]
+        } else {
+            let defaults = defaultSkillIDs(for: champion.championClass)
+            skillID = index < defaults.count ? defaults[index] : ""
+        }
+
+        if let skill = GameManager.shared.allSkills[skillID] {
+            // Convert grid range to pixel range (roughly 10 px per grid unit)
+            let pixelRange = CGFloat(skill.range > 0 ? skill.range * 10 : 100)
+            return (skill.cooldown, pixelRange)
+        }
+        return (3.0, 100)
+    }
+
     private func handleAbility(index: Int) {
         guard var champion = GameManager.shared.champion, let playerNode else { return }
+        let (cooldown, abilityRange) = skillDataForAbility(champion: champion, index: index)
 
         switch champion.championClass {
         case .mistborn:
@@ -851,16 +883,16 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.effectDescription)
-                actionButtons.startCooldown(abilityIndex: index, duration: 3.0)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 let silverBlue = SKColor(red: 0.7, green: 0.8, blue: 1.0, alpha: 1)
                 switch metal {
                 case .steel:
                     SpellEffectsSystem.steelPush(from: playerNode.position, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 120, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: silverBlue)
                 case .iron:
                     SpellEffectsSystem.ironPull(at: playerNode.position, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 80, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: silverBlue)
                 case .pewter: SpellEffectsSystem.pewterFlare(on: playerNode)
                 case .tin:    SpellEffectsSystem.tinEnhance(on: playerNode, in: worldNode)
@@ -875,20 +907,20 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 5.0)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 switch surge {
                 case .gravitation:
                     SpellEffectsSystem.gravitationLash(from: playerNode.position, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 120, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: .cyan)
                 case .adhesion:
                     SpellEffectsSystem.adhesionField(at: playerNode.position, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: .cyan, isAoE: true)
                 case .progression: SpellEffectsSystem.progressionHeal(on: playerNode, in: worldNode)
                 default:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: .cyan, radius: 40, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: .cyan, isAoE: true)
                 }
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
@@ -901,10 +933,10 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 4.0)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 SpellEffectsSystem.awakeningAnimate(at: playerNode.position, in: worldNode)
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                    statusDuration: result.duration, effectColor: .magenta)
             }
 
@@ -915,10 +947,10 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 4.5)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 SpellEffectsSystem.drawAon(at: playerNode.position, color: result.glyphColor, in: worldNode)
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                applyAbilityDamage(result.damage, range: 110, statusEffect: result.statusEffect,
+                applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                    statusDuration: result.duration, effectColor: result.glyphColor)
             }
 
@@ -929,17 +961,17 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 let sandColor = SKColor(red: 0.9, green: 0.8, blue: 0.5, alpha: 1)
                 switch form {
                 case .lash:
                     SpellEffectsSystem.sandWhip(from: playerNode.position, toward: 0, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 120, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: sandColor)
                 case .shield: SpellEffectsSystem.sandShield(on: playerNode)
                 case .swarm:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: sandColor, isAoE: true)
                 default:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
@@ -953,20 +985,20 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 let darkPurple = SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1)
                 switch technique {
                 case .ink_slash:
                     SpellEffectsSystem.inkSlash(from: playerNode.position, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 110, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: darkPurple)
                 case .capture:
                     SpellEffectsSystem.nightmareCapture(at: playerNode.position, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 90, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: darkPurple)
                 case .banish:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: darkPurple, radius: 30, in: worldNode)
-                    applyAbilityDamage(result.damage, range: 100, statusEffect: result.statusEffect,
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
                                        statusDuration: result.duration, effectColor: darkPurple, isAoE: true)
                 default:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: darkPurple, radius: 30, in: worldNode)
@@ -1243,11 +1275,34 @@ class ZoneScene: SKScene {
         let loot = GameManager.shared.lootSystem.generateLoot(from: enemy)
         guard !loot.isEmpty else { return }
 
+        let inventoryLimit = 30
+        var currentCount = GameManager.shared.champion?.inventoryItemIDs.count ?? 0
+
         for (i, item) in loot.enumerated() {
+            // Check inventory space
+            if currentCount >= inventoryLimit {
+                let fullLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
+                fullLabel.text = "Inventaire plein!"
+                fullLabel.fontSize = 12
+                fullLabel.fontColor = SKColor(red: 1, green: 0.3, blue: 0.3, alpha: 1)
+                fullLabel.position = CGPoint(x: position.x, y: position.y + 35 + CGFloat(i) * 18)
+                fullLabel.zPosition = 500
+                worldNode.addChild(fullLabel)
+                fullLabel.run(SKAction.sequence([
+                    SKAction.group([
+                        SKAction.moveBy(x: 0, y: 30, duration: 1.0),
+                        SKAction.fadeOut(withDuration: 1.0)
+                    ]),
+                    SKAction.removeFromParent()
+                ]))
+                break
+            }
+
             // Register generated items so they can be looked up by ID
             GameManager.shared.registerItem(item)
             GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(item.id) }
             GameManager.shared.questSystem.onItemCollected(itemID: item.id)
+            currentCount += 1
 
             // Show floating item name with rarity color
             let label = SKLabelNode(fontNamed: "Copperplate-Bold")

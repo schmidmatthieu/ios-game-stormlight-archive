@@ -49,6 +49,7 @@ enum EquipmentSlot: String, Codable, CaseIterable {
     case amulet
     case ring1
     case ring2
+    case consumable
 }
 
 // MARK: - Stat Bonus
@@ -88,6 +89,19 @@ enum TraitEffectType: String, Codable {
     case lifesteal
 }
 
+// MARK: - Consumable Effect
+
+struct ConsumableEffect: Codable {
+    let type: ConsumableType
+    let value: Int
+}
+
+enum ConsumableType: String, Codable {
+    case healHP
+    case restoreInvestiture
+    case healAndRestore
+}
+
 // MARK: - Item
 
 struct Item: Codable, Identifiable {
@@ -101,6 +115,27 @@ struct Item: Codable, Identifiable {
     let traits: [ItemTrait]
     let spriteName: String
     let worldOrigin: WorldID?
+    let consumableEffect: ConsumableEffect?
+
+    var isConsumable: Bool { slot == .consumable }
+
+    // Default init for backward compatibility
+    init(id: String, name: String, description: String, rarity: ItemRarity,
+         slot: EquipmentSlot, requiredLevel: Int, statBonuses: [StatBonus],
+         traits: [ItemTrait], spriteName: String, worldOrigin: WorldID?,
+         consumableEffect: ConsumableEffect? = nil) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.rarity = rarity
+        self.slot = slot
+        self.requiredLevel = requiredLevel
+        self.statBonuses = statBonuses
+        self.traits = traits
+        self.spriteName = spriteName
+        self.worldOrigin = worldOrigin
+        self.consumableEffect = consumableEffect
+    }
 }
 
 typealias WorldID = String

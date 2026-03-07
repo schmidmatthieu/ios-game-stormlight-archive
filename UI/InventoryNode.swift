@@ -317,6 +317,16 @@ class InventoryNode: SKNode {
                 return
             }
 
+            if node.name == "useButton" || node.parent?.name == "useButton" {
+                useSelectedConsumable()
+                return
+            }
+
+            if node.name == "discardButton" || node.parent?.name == "discardButton" {
+                discardSelectedItem()
+                return
+            }
+
             if let name = node.name, name.hasPrefix("equip_") {
                 let slotRaw = name.replacingOccurrences(of: "equip_", with: "")
                 if let slot = EquipmentSlot(rawValue: slotRaw) {
@@ -387,22 +397,58 @@ class InventoryNode: SKNode {
             detailPanel.addChild(statLabel)
         }
 
-        // Equip button
-        let equipBtnY = y - 55 - CGFloat(item.statBonuses.count) * 14
-        let equipBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 28), cornerRadius: 6)
-        equipBtn.fillColor = SKColor(red: 0.15, green: 0.4, blue: 0.15, alpha: 0.9)
-        equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.3, alpha: 1)
-        equipBtn.position = CGPoint(x: screenSize.width / 6, y: equipBtnY)
-        equipBtn.name = "equipButton"
-        detailPanel.addChild(equipBtn)
+        // Action buttons row
+        let btnY = y - 55 - CGFloat(item.statBonuses.count) * 14
 
-        let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
-        equipLabel.text = "Équiper"
-        equipLabel.fontSize = 12
-        equipLabel.fontColor = .white
-        equipLabel.verticalAlignmentMode = .center
-        equipLabel.name = "equipButton"
-        equipBtn.addChild(equipLabel)
+        if item.isConsumable {
+            // Use button for consumables
+            let useBtn = SKShapeNode(rectOf: CGSize(width: 80, height: 28), cornerRadius: 6)
+            useBtn.fillColor = SKColor(red: 0.1, green: 0.3, blue: 0.5, alpha: 0.9)
+            useBtn.strokeColor = SKColor(red: 0.3, green: 0.6, blue: 0.9, alpha: 1)
+            useBtn.position = CGPoint(x: screenSize.width / 6 - 48, y: btnY)
+            useBtn.name = "useButton"
+            detailPanel.addChild(useBtn)
+
+            let useLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+            useLabel.text = "Utiliser"
+            useLabel.fontSize = 12
+            useLabel.fontColor = .white
+            useLabel.verticalAlignmentMode = .center
+            useLabel.name = "useButton"
+            useBtn.addChild(useLabel)
+        } else {
+            // Equip button for equipment
+            let equipBtn = SKShapeNode(rectOf: CGSize(width: 80, height: 28), cornerRadius: 6)
+            equipBtn.fillColor = SKColor(red: 0.15, green: 0.4, blue: 0.15, alpha: 0.9)
+            equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.3, alpha: 1)
+            equipBtn.position = CGPoint(x: screenSize.width / 6 - 48, y: btnY)
+            equipBtn.name = "equipButton"
+            detailPanel.addChild(equipBtn)
+
+            let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+            equipLabel.text = "Équiper"
+            equipLabel.fontSize = 12
+            equipLabel.fontColor = .white
+            equipLabel.verticalAlignmentMode = .center
+            equipLabel.name = "equipButton"
+            equipBtn.addChild(equipLabel)
+        }
+
+        // Discard button (for all items)
+        let discardBtn = SKShapeNode(rectOf: CGSize(width: 80, height: 28), cornerRadius: 6)
+        discardBtn.fillColor = SKColor(red: 0.4, green: 0.1, blue: 0.1, alpha: 0.9)
+        discardBtn.strokeColor = SKColor(red: 0.7, green: 0.2, blue: 0.2, alpha: 1)
+        discardBtn.position = CGPoint(x: screenSize.width / 6 + 48, y: btnY)
+        discardBtn.name = "discardButton"
+        detailPanel.addChild(discardBtn)
+
+        let discardLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        discardLabel.text = "Jeter"
+        discardLabel.fontSize = 12
+        discardLabel.fontColor = .white
+        discardLabel.verticalAlignmentMode = .center
+        discardLabel.name = "discardButton"
+        discardBtn.addChild(discardLabel)
     }
 
     // MARK: - Equip/Unequip
@@ -447,6 +493,68 @@ class InventoryNode: SKNode {
             case .amulet:     champ.equipment.amulet = itemID
             case .ring1:      champ.equipment.ring1 = itemID
             case .ring2:      champ.equipment.ring2 = itemID
+            }
+        }
+
+        selectedItemIndex = nil
+        detailPanel.removeAllChildren()
+        refresh()
+    }
+
+    private func useSelectedConsumable() {
+        guard let index = selectedItemIndex,
+              let champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID],
+              let effect = item.consumableEffect else { return }
+
+        GameManager.shared.mutateChampion { champ in
+            switch effect.type {
+            case .healHP:
+                champ.currentHP = min(champ.maxHP, champ.currentHP + effect.value)
+            case .restoreInvestiture:
+                champ.currentInvestiture = min(champ.maxInvestiture, champ.currentInvestiture + effect.value)
+            case .healAndRestore:
+                champ.currentHP = min(champ.maxHP, champ.currentHP + effect.value)
+                champ.currentInvestiture = min(champ.maxInvestiture, champ.currentInvestiture + effect.value)
+            }
+
+            // Remove consumed item
+            if let removeIdx = champ.inventoryItemIDs.firstIndex(of: itemID) {
+                champ.inventoryItemIDs.remove(at: removeIdx)
+            }
+        }
+
+        selectedItemIndex = nil
+        detailPanel.removeAllChildren()
+        refresh()
+    }
+
+    private func discardSelectedItem() {
+        guard let index = selectedItemIndex,
+              let champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID] else { return }
+
+        // Give some gold for discarded items
+        let sellValue: Int
+        switch item.rarity {
+        case .common:    sellValue = 5
+        case .uncommon:  sellValue = 15
+        case .rare:      sellValue = 40
+        case .epic:      sellValue = 100
+        case .legendary: sellValue = 250
+        case .cosmeric:  sellValue = 500
+        }
+
+        GameManager.shared.mutateChampion { champ in
+            champ.gold += sellValue
+            if let removeIdx = champ.inventoryItemIDs.firstIndex(of: itemID) {
+                champ.inventoryItemIDs.remove(at: removeIdx)
             }
         }
 

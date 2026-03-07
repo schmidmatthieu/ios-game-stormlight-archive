@@ -72,7 +72,13 @@ final class LootSystem {
     // MARK: - Génération d'item aléatoire
 
     func generateRandomItem(rarity: ItemRarity, level: Int) -> Item {
-        let slot = EquipmentSlot.allCases.randomElement() ?? .chest
+        // Chance to generate a consumable instead of equipment
+        if Double.random(in: 0...1) < 0.25 {
+            return generateConsumable(rarity: rarity, level: level)
+        }
+
+        let equipmentSlots = EquipmentSlot.allCases.filter { $0 != .consumable }
+        let slot = equipmentSlots.randomElement() ?? .chest
         let statCount = rarity.statBonusCount
 
         let stats = (0..<statCount).map { _ in
@@ -117,6 +123,53 @@ final class LootSystem {
         let prefix = prefixes[rarity]?.randomElement() ?? "Mystérieux"
         let name = slotNames[slot] ?? "Objet"
         return "\(prefix) \(name)"
+    }
+
+    // MARK: - Consumable Generation
+
+    private func generateConsumable(rarity: ItemRarity, level: Int) -> Item {
+        let typeRoll = Double.random(in: 0...1)
+        let type: ConsumableType = typeRoll < 0.45 ? .healHP : typeRoll < 0.85 ? .restoreInvestiture : .healAndRestore
+
+        let baseValue = (level + 2) * 5
+        let rarityMultiplier: Int
+        switch rarity {
+        case .common:    rarityMultiplier = 1
+        case .uncommon:  rarityMultiplier = 2
+        case .rare:      rarityMultiplier = 3
+        case .epic:      rarityMultiplier = 4
+        case .legendary: rarityMultiplier = 6
+        case .cosmeric:  rarityMultiplier = 8
+        }
+        let value = baseValue * rarityMultiplier
+
+        let name: String
+        let description: String
+        switch type {
+        case .healHP:
+            name = "Potion de vie"
+            description = "Restaure \(value) PV"
+        case .restoreInvestiture:
+            name = "Fiole d'Investiture"
+            description = "Restaure \(value) Investiture"
+        case .healAndRestore:
+            name = "Élixir cosmérique"
+            description = "Restaure \(value) PV et Investiture"
+        }
+
+        return Item(
+            id: UUID().uuidString,
+            name: name,
+            description: description,
+            rarity: rarity,
+            slot: .consumable,
+            requiredLevel: 1,
+            statBonuses: [],
+            traits: [],
+            spriteName: "consumable_\(type.rawValue)_\(rarity.rawValue)",
+            worldOrigin: nil,
+            consumableEffect: ConsumableEffect(type: type, value: value)
+        )
     }
 
     // MARK: - Appliquer le loot au champion avec bonus de chance
