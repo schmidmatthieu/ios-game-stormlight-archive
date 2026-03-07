@@ -11,6 +11,7 @@ import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
+import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
@@ -215,6 +216,9 @@ export class ZoneScene extends Container implements GameScene {
 
   // Minimap
   private minimap!: Minimap;
+
+  // Death screen
+  private deathScreen: Container | null = null;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -1780,10 +1784,7 @@ export class ZoneScene extends Container implements GameScene {
 
     if (champ.currentHP <= 0) {
       champ.currentHP = 0;
-      setTimeout(() => {
-        champ.currentHP = GameManager.shared.maxHP;
-        champ.currentInvestiture = GameManager.shared.maxInvestiture;
-      }, 1000);
+      this.handlePlayerDeath();
     }
   }
 
@@ -1890,6 +1891,56 @@ export class ZoneScene extends Container implements GameScene {
       else txt.destroy();
     };
     requestAnimationFrame(anim);
+  }
+
+  private handlePlayerDeath(): void {
+    if (this.deathScreen) return;
+    this.isPaused = true;
+
+    this.deathScreen = showDeathScreen(
+      this.uiContainer,
+      this.app.screen.width,
+      this.app.screen.height,
+      () => this.respawnPlayer(),
+    );
+  }
+
+  private respawnPlayer(): void {
+    if (this.deathScreen) {
+      this.deathScreen.destroy({ children: true });
+      this.deathScreen = null;
+    }
+
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    // Restore HP/investiture to full
+    champ.currentHP = GameManager.shared.maxHP;
+    champ.currentInvestiture = GameManager.shared.maxInvestiture;
+
+    // Move player to zone spawn point
+    const spawnPos = isoToScreen(this.zone.playerSpawnPosition.col, this.zone.playerSpawnPosition.row);
+    this.playerScreenPos.x = spawnPos.x;
+    this.playerScreenPos.y = spawnPos.y;
+    this.playerGridPos = { ...this.zone.playerSpawnPosition };
+    this.playerContainer.x = spawnPos.x;
+    this.playerContainer.y = spawnPos.y;
+
+    // Flash effect on respawn
+    const flash = new Graphics();
+    flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0xffffff, alpha: 0.3 });
+    flash.zIndex = 10000;
+    this.uiContainer.addChild(flash);
+    let elapsed = 0;
+    const fadeOut = () => {
+      elapsed += 1 / 60;
+      flash.alpha = Math.max(0, 0.3 - elapsed * 0.6);
+      if (elapsed < 0.5) requestAnimationFrame(fadeOut);
+      else flash.destroy();
+    };
+    requestAnimationFrame(fadeOut);
+
+    this.isPaused = false;
   }
 
   private refreshMinimap(): void {
