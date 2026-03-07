@@ -70,11 +70,10 @@ class MainMenuScene: SKScene {
         for node in tapped {
             switch node.name {
             case "newGame":
-                // TODO: Afficher l'écran de création de personnage
-                GameManager.shared.startNewGame(name: "Kelsier", championClass: .mistborn)
                 if let view = self.view {
-                    let router = SceneRouter(view: view)
-                    router.transitionToZone("scadrial_hub")
+                    let creation = CharacterCreationScene(size: view.bounds.size)
+                    creation.scaleMode = .resizeFill
+                    view.presentScene(creation, transition: .fade(withDuration: 0.3))
                 }
 
             case "continue":
