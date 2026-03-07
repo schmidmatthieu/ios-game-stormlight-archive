@@ -67,8 +67,12 @@ export function createAttackEffect(
   worldContainer.addChild(armSwing);
 
   let elapsed = 0;
+  let lastTime = performance.now();
   const anim = () => {
-    elapsed += 1 / 60;
+    const now = performance.now();
+    const frameDt = (now - lastTime) / 1000;
+    lastTime = now;
+    elapsed += frameDt;
     const progress = elapsed / 0.25;
     g.alpha = Math.max(0, 1 - progress);
     g.scale.set(1 + elapsed * 2);
@@ -119,8 +123,12 @@ export function createSkillEffect(
   }
 
   let elapsed = 0;
+  let lastTime = performance.now();
   const anim = () => {
-    elapsed += 1 / 60;
+    const now = performance.now();
+    const frameDt = (now - lastTime) / 1000;
+    lastTime = now;
+    elapsed += frameDt;
     const progress = elapsed / 0.5;
     g.alpha = Math.max(0, 1 - progress);
     g.scale.set(0.3 + progress * 0.8);
