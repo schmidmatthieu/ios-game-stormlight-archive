@@ -122,6 +122,36 @@ class WorldMapScene: SKScene {
             container.addChild(lock)
         }
 
+        // Réputation / progression si déverrouillé
+        if world.unlocked {
+            let reputation = GameManager.shared.champion?.reputation[world.id] ?? 0
+            let repLabel = SKLabelNode(fontNamed: "Helvetica")
+            repLabel.text = "Rep: \(reputation)"
+            repLabel.fontSize = 10
+            repLabel.fontColor = GameConstants.Colors.gold
+            repLabel.position = CGPoint(x: 0, y: -68)
+            container.addChild(repLabel)
+
+            // Barre de progression de réputation
+            let barWidth: CGFloat = 50
+            let barBg = SKShapeNode(rectOf: CGSize(width: barWidth, height: 4), cornerRadius: 2)
+            barBg.fillColor = SKColor(white: 0.15, alpha: 0.8)
+            barBg.strokeColor = SKColor(white: 0.3, alpha: 0.5)
+            barBg.lineWidth = 0.5
+            barBg.position = CGPoint(x: 0, y: -78)
+            container.addChild(barBg)
+
+            let progress = min(1.0, CGFloat(reputation) / 100.0)
+            if progress > 0 {
+                let fillWidth = barWidth * progress
+                let fill = SKShapeNode(rectOf: CGSize(width: fillWidth, height: 3), cornerRadius: 1)
+                fill.fillColor = GameConstants.Colors.gold
+                fill.strokeColor = .clear
+                fill.position = CGPoint(x: -(barWidth - fillWidth) / 2, y: 0)
+                barBg.addChild(fill)
+            }
+        }
+
         return container
     }
 

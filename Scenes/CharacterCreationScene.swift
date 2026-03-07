@@ -314,7 +314,11 @@ class CharacterCreationScene: SKScene {
 
             // Start game
             if name == "startGame" {
-                startGame()
+                if SaveManager.shared.hasSave() {
+                    confirmNewGame()
+                } else {
+                    startGame()
+                }
                 return
             }
 
@@ -346,6 +350,27 @@ class CharacterCreationScene: SKScene {
                 self?.playerName = text
                 self?.nameLabel.text = "Nom: \(text)"
             }
+        })
+        alert.addAction(UIAlertAction(title: "Annuler", style: .cancel))
+        viewController.present(alert, animated: true)
+    }
+
+    // MARK: - Confirmation
+
+    private func confirmNewGame() {
+        guard let viewController = view?.window?.rootViewController else {
+            startGame()
+            return
+        }
+
+        let alert = UIAlertController(
+            title: "Nouvelle Partie",
+            message: "Une sauvegarde existe déjà. Commencer une nouvelle partie écrasera la sauvegarde actuelle.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Commencer", style: .destructive) { [weak self] _ in
+            SaveManager.shared.deleteSave()
+            self?.startGame()
         })
         alert.addAction(UIAlertAction(title: "Annuler", style: .cancel))
         viewController.present(alert, animated: true)

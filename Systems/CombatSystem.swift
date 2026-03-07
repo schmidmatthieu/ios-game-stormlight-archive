@@ -32,9 +32,10 @@ final class CombatSystem {
             attackPower = baseDmg + attacker.strength
         }
 
-        // Défense
+        // Défense (Double pour éviter troncature entière sur valeurs impaires)
         let defense = defender.defense
-        let mitigated = max(1, attackPower - defense / 2)
+        let reduction = Int(round(Double(defense) / 2.0))
+        let mitigated = max(1, attackPower - reduction)
 
         // Critique
         let critRoll = Double.random(in: 0...100)

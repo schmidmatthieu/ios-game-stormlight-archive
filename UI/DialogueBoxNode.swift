@@ -22,7 +22,10 @@ class DialogueBoxNode: SKNode {
     private var fullText: String = ""
     private var displayedCharCount: Int = 0
     private var isTyping: Bool = false
-    private let typingSpeed: TimeInterval = 0.03  // Secondes par caractère
+    /// Vitesse de frappe ajustée par les paramètres
+    private var typingSpeed: TimeInterval {
+        GameConstants.Dialogue.typingSpeed / Double(SettingsMenuNode.current.textSpeed)
+    }
 
     var onChoiceSelected: ((Int) -> Void)?
     var onContinue: (() -> Void)?
@@ -62,7 +65,7 @@ class DialogueBoxNode: SKNode {
         textLabel.horizontalAlignmentMode = .left
         textLabel.verticalAlignmentMode = .top
         textLabel.preferredMaxLayoutWidth = boxSize.width - portraitSize.width - 45
-        textLabel.numberOfLines = 4
+        textLabel.numberOfLines = GameConstants.Dialogue.maxLines
         textLabel.position = CGPoint(x: -boxSize.width / 2 + portraitSize.width + 25, y: 35)
         textLabel.zPosition = 5001
 
