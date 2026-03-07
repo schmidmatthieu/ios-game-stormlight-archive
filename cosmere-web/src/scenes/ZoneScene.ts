@@ -28,6 +28,8 @@ import { showBestiaryPanel } from '../ui/BestiaryPanel';
 import { AchievementManager } from '../game/AchievementSystem';
 import { createAchievementToast, showAchievementPanel } from '../ui/AchievementUI';
 import { showSkillTreePanel } from '../ui/SkillTreePanel';
+import { CompanionManager } from '../game/CompanionSystem';
+import { showCompanionPanel } from '../ui/CompanionPanel';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -268,6 +270,11 @@ export class ZoneScene extends Container implements GameScene {
   private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
   private achievementToast: { update: (dt: number) => void } | null = null;
 
+  // Companion
+  private companionSprite: Graphics | null = null;
+  private companionPos = { x: 0, y: 0 };
+  private companionAnimTimer = 0;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -413,6 +420,13 @@ export class ZoneScene extends Container implements GameScene {
 
     // Skill tree button (next to achievements)
     this.createSkillTreeButton(w);
+
+    // Companion button
+    this.createCompanionButton(w);
+
+    // Initialize companion
+    CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
+    this.spawnCompanionSprite();
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -1446,6 +1460,36 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
+  private createCompanionButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Companion orb icon
+    const icon = new Graphics();
+    icon.circle(18, 15, 6).fill({ color: 0x88ccff, alpha: 0.5 });
+    icon.circle(18, 15, 4).fill({ color: 0xaaddff, alpha: 0.7 });
+    icon.circle(17, 14, 2).fill({ color: 0xffffff, alpha: 0.4 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 - 102;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleCompanion());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleCompanion(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showCompanionPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => { this.closeDialogue(); this.spawnCompanionSprite(); },
+    );
+  }
+
   private applyCraftResult(recipeID: string): void {
     const effect = getRecipeEffect(recipeID);
     if (!effect) return;
@@ -1509,6 +1553,7 @@ export class ZoneScene extends Container implements GameScene {
         GameManager.shared.save();
         BestiaryManager.shared.save();
         AchievementManager.shared.save();
+        CompanionManager.shared.save();
         this.router.goto(WorldMapScene);
       },
     );
@@ -1876,6 +1921,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateWorldMechanics(delta);
     this.updateWeather(delta);
     this.updateAchievements(delta);
+    this.updateCompanion(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -1890,7 +1936,7 @@ export class ZoneScene extends Container implements GameScene {
   private handleMovement(dt: number): void {
     if (!this.joystick.active || this.joystick.magnitude === 0) return;
 
-    const speedMult = this.playerStatusEffects.getSpeedMultiplier();
+    const speedMult = this.playerStatusEffects.getSpeedMultiplier() * this.getCompanionSpeedBonus();
     const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
     const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
 
@@ -2407,7 +2453,7 @@ export class ZoneScene extends Container implements GameScene {
 
     // Apply reputation XP bonus
     const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
-    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier);
+    const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus());
     const leveledUp = gm.grantXP(finalXP);
 
     // Grant reputation based on enemy tier
@@ -2594,6 +2640,83 @@ export class ZoneScene extends Container implements GameScene {
   private updateAchievements(dt: number): void {
     AchievementManager.shared.updateCombo(dt);
     if (this.achievementToast) this.achievementToast.update(dt);
+  }
+
+  private spawnCompanionSprite(): void {
+    if (this.companionSprite) {
+      this.worldContainer.removeChild(this.companionSprite);
+      this.companionSprite.destroy();
+      this.companionSprite = null;
+    }
+    const comp = CompanionManager.shared.getActive();
+    if (!comp) return;
+
+    const sprite = new Graphics();
+    sprite.circle(0, 0, comp.size + 3).fill({ color: comp.glowColor, alpha: 0.15 });
+    sprite.circle(0, 0, comp.size).fill({ color: comp.color, alpha: 0.8 });
+    sprite.circle(0, -1, comp.size * 0.5).fill({ color: 0xffffff, alpha: 0.3 });
+    sprite.zIndex = 999;
+
+    this.companionPos.x = this.playerScreenPos.x + 20;
+    this.companionPos.y = this.playerScreenPos.y - 15;
+    sprite.x = this.companionPos.x;
+    sprite.y = this.companionPos.y;
+
+    this.worldContainer.addChild(sprite);
+    this.companionSprite = sprite;
+  }
+
+  private updateCompanion(dt: number): void {
+    if (!this.companionSprite) return;
+    const comp = CompanionManager.shared.getActive();
+    if (!comp) return;
+
+    this.companionAnimTimer += dt * 2.5;
+
+    // Smooth follow with orbit
+    const targetX = this.playerScreenPos.x + Math.cos(this.companionAnimTimer) * 22;
+    const targetY = this.playerScreenPos.y - 18 + Math.sin(this.companionAnimTimer * 1.3) * 6;
+
+    this.companionPos.x += (targetX - this.companionPos.x) * dt * 3;
+    this.companionPos.y += (targetY - this.companionPos.y) * dt * 3;
+
+    this.companionSprite.x = this.companionPos.x;
+    this.companionSprite.y = this.companionPos.y;
+
+    // Pulsing glow
+    this.companionSprite.alpha = 0.8 + Math.sin(this.companionAnimTimer * 2) * 0.15;
+
+    // Companion passive healing
+    if (comp.bonusType === 'heal') {
+      const champ = GameManager.shared.champion;
+      if (champ && champ.currentHP < GameManager.shared.maxHP) {
+        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + comp.bonusValue * dt);
+      }
+    }
+  }
+
+  private getCompanionDamageBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'damage') return 1 + bonus.value / 100;
+    return 1;
+  }
+
+  private getCompanionDefenseBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'defense') return 1 - bonus.value / 100;
+    return 1;
+  }
+
+  private getCompanionSpeedBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'speed') return 1 + bonus.value / 100;
+    return 1;
+  }
+
+  private getCompanionXPBonus(): number {
+    const bonus = CompanionManager.shared.getBonus();
+    if (bonus && bonus.type === 'xp') return 1 + bonus.value / 100;
+    return 1;
   }
 
   private handlePlayerDeath(): void {
@@ -2829,6 +2952,7 @@ export class ZoneScene extends Container implements GameScene {
               GameManager.shared.save();
               BestiaryManager.shared.save();
               AchievementManager.shared.save();
+              CompanionManager.shared.save();
               this.router.goto(ZoneScene);
             }
           };

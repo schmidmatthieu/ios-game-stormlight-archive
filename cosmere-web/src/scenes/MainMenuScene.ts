@@ -4,6 +4,7 @@ import { SceneRouter } from '../game/SceneRouter';
 import { GameManager } from '../game/GameManager';
 import { BestiaryManager } from '../game/BestiarySystem';
 import { AchievementManager } from '../game/AchievementSystem';
+import { CompanionManager } from '../game/CompanionSystem';
 import { CharacterCreationScene } from './CharacterCreationScene';
 import { ZoneScene } from './ZoneScene';
 import { gameData } from '../data/DataLoader';
@@ -148,6 +149,7 @@ export class MainMenuScene extends Container implements GameScene {
         GameManager.shared.load();
         BestiaryManager.shared.load();
         AchievementManager.shared.load();
+        CompanionManager.shared.load();
         this.router.goto(ZoneScene);
       });
     }
