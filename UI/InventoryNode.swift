@@ -351,7 +351,7 @@ class InventoryNode: SKNode {
 
         let descLabel = SKLabelNode(fontNamed: "Helvetica")
         descLabel.text = item.description
-        descLabel.fontSize = 10
+        descLabel.fontSize = 12
         descLabel.fontColor = .lightGray
         descLabel.preferredMaxLayoutWidth = 180
         descLabel.numberOfLines = 3
