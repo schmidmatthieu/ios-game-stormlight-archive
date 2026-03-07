@@ -1,9 +1,10 @@
 // ─── Zone Scene — Orchestrator ───────────────────────────────────
 // This is the main gameplay scene. Logic is delegated to sub-modules:
 //   IsoUtils, WorldThemes, ZoneTypes, ParticleSystem, VisualEffects,
-//   DecorationRenderer, EntitySpawner, CombatManager
+//   DecorationRenderer, EntitySpawner, CombatManager, EnemyAI,
+//   ZoneInteraction, ZoneTransitions, BuildingPanel
 
-import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { Application, Container, Graphics, Text } from 'pixi.js';
 import type { GameScene } from '../game/SceneRouter';
 import { SceneRouter } from '../game/SceneRouter';
 import { GameManager } from '../game/GameManager';
@@ -22,10 +23,9 @@ import { QuestManager } from '../game/QuestManager';
 import { createWorldMechanics } from '../game/WorldMechanics';
 import type { WorldEffect } from '../game/WorldMechanics';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
-import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
+import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
-import type { Zone, ZoneConnection } from '../data/types';
-import type { ActionMode } from '../ui/ActionButtons';
+import type { Zone } from '../data/types';
 
 // Extracted modules
 import { isoToScreen, screenToIso } from './IsoUtils';
@@ -38,6 +38,10 @@ import { renderTilemap, renderMapEdge, spawnDecorations } from './DecorationRend
 import { spawnEnemies, spawnNPCs, spawnLootPoints, renderExits, formatNPCName } from './EntitySpawner';
 import { CombatManager } from './CombatManager';
 import { EnemyAI } from './EnemyAI';
+import { checkProximity, isInLootRange, InteractPromptManager } from './ZoneInteraction';
+import type { ProximityState } from './ZoneInteraction';
+import { checkZoneExit } from './ZoneTransitions';
+import { showBuildingPanel } from './BuildingPanel';
 
 // ─── Constants ───────────────────────────────────────────────
 const PLAYER_SPEED = 120;
@@ -89,12 +93,11 @@ export class ZoneScene extends Container implements GameScene {
   private deathScreen: Container | null = null;
 
   // Interaction
-  private interactPrompt: Text | null = null;
-  private nearbyNPC: NPCInstance | null = null;
-  private nearbyExit: ZoneConnection | null = null;
-  private nearbyLoot: LootInstance | null = null;
-  private nearbyBuilding: EnterableBuilding | null = null;
-  private nearbySecret: SecretArea | null = null;
+  private promptManager!: InteractPromptManager;
+  private proximity: ProximityState = {
+    nearbyNPC: null, nearbyExit: null, nearbyLoot: null,
+    nearbyBuilding: null, nearbySecret: null,
+  };
 
   // Map structures
   private walls: WallSegment[] = [];
@@ -238,6 +241,8 @@ export class ZoneScene extends Container implements GameScene {
     this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight);
     this.uiContainer.addChild(this.minimap);
 
+    this.promptManager = new InteractPromptManager(this.uiContainer, w, h);
+
     this.fogOverlay = new Graphics();
     this.updateFog();
   }
@@ -303,8 +308,8 @@ export class ZoneScene extends Container implements GameScene {
     this.questTracker.refresh();
     this.refreshMinimap();
     this.actionButtons.update(delta);
-    this.checkZoneExit();
-    this.checkProximity();
+    this.checkZoneExitState();
+    this.checkProximityState();
     this.sortZOrder();
   }
 
@@ -365,20 +370,20 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── Interactions ────────────────────────────────────────────
 
-  private handleInteraction(mode: ActionMode): void {
+  private handleInteraction(mode: string): void {
     switch (mode) {
       case 'talk':
-        if (this.nearbyNPC) {
-          const spawn = this.zone.npcSpawns.find(s => s.npcID === this.nearbyNPC!.id);
+        if (this.proximity.nearbyNPC) {
+          const spawn = this.zone.npcSpawns.find(s => s.npcID === this.proximity.nearbyNPC!.id);
           if (spawn) this.interactWithNPC(spawn);
         }
         break;
       case 'enter':
-        if (this.nearbyBuilding) this.enterBuilding(this.nearbyBuilding);
+        if (this.proximity.nearbyBuilding) this.enterBuilding(this.proximity.nearbyBuilding);
         break;
       case 'loot':
-        if (this.nearbySecret) this.interactWithSecret(this.nearbySecret);
-        else if (this.nearbyLoot) this.collectLoot(this.nearbyLoot.id);
+        if (this.proximity.nearbySecret) this.interactWithSecret(this.proximity.nearbySecret);
+        else if (this.proximity.nearbyLoot) this.collectLoot(this.proximity.nearbyLoot.id);
         break;
     }
   }
@@ -422,75 +427,10 @@ export class ZoneScene extends Container implements GameScene {
   private enterBuilding(building: EnterableBuilding): void {
     if (this.dialoguePanel) return;
     this.isPaused = true;
-
-    const champ = GameManager.shared.champion;
-    const goldReward = 5 + Math.floor(Math.random() * 15);
-    const xpReward = 10 + Math.floor(Math.random() * 20);
-
-    if (champ) {
-      champ.gold += goldReward;
-      GameManager.shared.grantXP(xpReward);
-    }
-
-    const panel = new Container();
-    panel.zIndex = 10000;
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-
-    const overlay = new Graphics();
-    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.5 });
-    overlay.eventMode = 'static';
-    panel.addChild(overlay);
-
-    const panelH = 120;
-    const panelY = h - panelH - 20;
-    const bg = new Graphics();
-    bg.roundRect(20, panelY, w - 40, panelH, 12)
-      .fill({ color: 0x0a0815, alpha: 0.92 })
-      .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
-    bg.eventMode = 'static';
-    panel.addChild(bg);
-
-    const title = new Text({
-      text: building.name,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 13, fill: 0xe6cc66, fontWeight: 'bold' }),
-    });
-    title.x = 36; title.y = panelY + 10;
-    panel.addChild(title);
-
-    const desc = new Text({
-      text: `Vous explorez ${building.name}.\nVous trouvez quelques ressources utiles.`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0xccccbb, wordWrap: true, wordWrapWidth: w - 80 }),
-    });
-    desc.x = 36; desc.y = panelY + 30;
-    panel.addChild(desc);
-
-    const reward = new Text({
-      text: `+${xpReward} XP  +${goldReward} or`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
-    });
-    reward.anchor.set(1, 0);
-    reward.x = w - 36; reward.y = panelY + 10;
-    panel.addChild(reward);
-
-    const closeHint = new Text({
-      text: 'Toucher pour fermer',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x888888 }),
-    });
-    closeHint.anchor.set(0.5);
-    closeHint.x = w / 2; closeHint.y = panelY + panelH - 14;
-    panel.addChild(closeHint);
-
-    const close = () => {
-      panel.destroy({ children: true });
-      this.dialoguePanel = null;
-      this.isPaused = false;
-    };
-    overlay.on('pointerdown', close);
-    bg.on('pointerdown', close);
-
-    this.dialoguePanel = panel;
-    this.uiContainer.addChild(panel);
+    this.dialoguePanel = showBuildingPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      building, () => { this.dialoguePanel = null; this.isPaused = false; },
+    );
   }
 
   private interactWithSecret(secret: SecretArea): void {
@@ -518,8 +458,7 @@ export class ZoneScene extends Container implements GameScene {
     const instance = this.lootPoints.find(l => l.id === lootId);
     if (!instance || instance.collected) return;
 
-    const playerDist = Math.hypot(instance.position.x - this.playerScreenPos.x, instance.position.y - this.playerScreenPos.y);
-    if (playerDist > 60) {
+    if (!isInLootRange(this.playerScreenPos, instance.position)) {
       this.vfx.showFloatingText(instance.position.x, instance.position.y - 20, 'Trop loin!', 0xff6644);
       return;
     }
@@ -614,101 +553,12 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── Proximity Detection ─────────────────────────────────────
 
-  private checkProximity(): void {
-    this.nearbyNPC = null;
-    this.nearbyExit = null;
-    this.nearbyLoot = null;
-    this.nearbyBuilding = null;
-    this.nearbySecret = null;
-
-    let minNPCDist = Infinity;
-    for (const npc of this.npcs) {
-      const dist = Math.hypot(npc.position.x - this.playerScreenPos.x, npc.position.y - this.playerScreenPos.y);
-      if (dist < 55 && dist < minNPCDist) { minNPCDist = dist; this.nearbyNPC = npc; }
-    }
-
-    let minExitDist = Infinity;
-    for (const conn of this.zone.connections) {
-      const exitPos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
-      const dist = Math.hypot(exitPos.x - this.playerScreenPos.x, exitPos.y - this.playerScreenPos.y);
-      if (dist < 55 && dist < minExitDist) { minExitDist = dist; this.nearbyExit = conn; }
-    }
-
-    let minLootDist = Infinity;
-    for (const loot of this.lootPoints) {
-      if (loot.collected) continue;
-      const dist = Math.hypot(loot.position.x - this.playerScreenPos.x, loot.position.y - this.playerScreenPos.y);
-      if (dist < 55 && dist < minLootDist) { minLootDist = dist; this.nearbyLoot = loot; }
-    }
-
-    let minBuildingDist = Infinity;
-    for (const b of this.enterableBuildings) {
-      const dist = Math.hypot(b.x - this.playerScreenPos.x, b.y - this.playerScreenPos.y);
-      if (dist < b.interactionRadius && dist < minBuildingDist) { minBuildingDist = dist; this.nearbyBuilding = b; }
-    }
-
-    for (const s of this.secretAreas) {
-      if (s.revealed) continue;
-      const dist = Math.hypot(s.x - this.playerScreenPos.x, s.y - this.playerScreenPos.y);
-      if (dist < s.interactionRadius) {
-        revealSecret(s, this.zone.worldID);
-        this.vfx.showFloatingText(s.x, s.y - 20, '✦ Zone secrète découverte!', 0xffdd44);
-        this.nearbySecret = s;
-      }
-    }
-    for (const s of this.secretAreas) {
-      if (!s.revealed) continue;
-      const dist = Math.hypot(s.x - this.playerScreenPos.x, s.y - this.playerScreenPos.y);
-      if (dist < 40) { this.nearbySecret = s; break; }
-    }
-
-    let newMode: ActionMode = 'attack';
-    let promptText = '';
-    if (this.nearbyNPC && minNPCDist < minExitDist && minNPCDist < minLootDist) {
-      newMode = 'talk';
-      promptText = this.nearbyNPC.isShopkeeper ? 'Ouvrir la boutique' : 'Parler';
-    } else if (this.nearbyBuilding && minBuildingDist < minExitDist) {
-      newMode = 'enter';
-      promptText = this.nearbyBuilding.name;
-    } else if (this.nearbyExit && minExitDist < minLootDist) {
-      newMode = 'enter';
-      const targetZone = gameData.zone(this.nearbyExit.targetZoneID);
-      promptText = `→ ${targetZone?.name ?? this.nearbyExit.targetZoneID}`;
-    } else if (this.nearbySecret) {
-      newMode = 'loot';
-      promptText = this.nearbySecret.type === 'treasure' ? 'Ouvrir le coffre'
-        : this.nearbySecret.type === 'shrine' ? 'Prier au sanctuaire' : 'Explorer';
-    } else if (this.nearbyLoot) {
-      newMode = 'loot';
-      promptText = 'Ramasser';
-    }
-
-    this.actionButtons.setMode(newMode);
-    this.updateInteractPrompt(promptText);
-  }
-
-  private updateInteractPrompt(text: string): void {
-    if (text) {
-      if (!this.interactPrompt) {
-        this.interactPrompt = new Text({
-          text,
-          style: new TextStyle({
-            fontFamily: 'Georgia, serif', fontSize: 11, fill: 0xeedd88,
-            fontWeight: 'bold',
-            dropShadow: { color: 0x000000, blur: 3, distance: 1 },
-          }),
-        });
-        this.interactPrompt.anchor.set(0.5);
-        this.interactPrompt.x = this.app.screen.width / 2;
-        this.interactPrompt.y = this.app.screen.height * 0.68;
-        this.uiContainer.addChild(this.interactPrompt);
-      } else {
-        this.interactPrompt.text = text;
-      }
-    } else if (this.interactPrompt) {
-      this.interactPrompt.destroy();
-      this.interactPrompt = null;
-    }
+  private checkProximityState(): void {
+    this.proximity = checkProximity(
+      this.playerScreenPos, this.npcs, this.zone.connections,
+      this.lootPoints, this.enterableBuildings, this.secretAreas,
+      this.zone.worldID, this.vfx, this.actionButtons, this.promptManager,
+    );
   }
 
   // ─── Combat Callbacks ────────────────────────────────────────
@@ -812,54 +662,12 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── Zone Transitions ────────────────────────────────────────
 
-  private checkZoneExit(): void {
-    if (this.isTransitioning) return;
-
-    for (const conn of this.zone.connections) {
-      const exitPos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
-      const dist = Math.hypot(exitPos.x - this.playerScreenPos.x, exitPos.y - this.playerScreenPos.y);
-
-      if (dist < 30) {
-        const targetZone = gameData.zone(conn.targetZoneID);
-        if (!targetZone) continue;
-
-        if (conn.requiredQuestID) {
-          const champ = GameManager.shared.champion;
-          if (!champ?.completedQuestIDs.includes(conn.requiredQuestID)) continue;
-        }
-
-        const champ = GameManager.shared.champion;
-        if (champ) {
-          this.isTransitioning = true;
-          const flash = new Graphics();
-          flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: 0 });
-          flash.zIndex = 99999;
-          this.uiContainer.addChild(flash);
-
-          let elapsed = 0;
-          let lastTime = performance.now();
-          const fadeOut = () => {
-            const now = performance.now();
-            const frameDt = (now - lastTime) / 1000;
-            lastTime = now;
-            elapsed += frameDt;
-            flash.clear();
-            flash.rect(0, 0, this.app.screen.width, this.app.screen.height)
-              .fill({ color: 0x000000, alpha: Math.min(1, elapsed / 0.4) });
-            if (elapsed < 0.4) {
-              requestAnimationFrame(fadeOut);
-            } else {
-              champ.currentZoneID = conn.targetZoneID;
-              champ.gridPosition = { ...targetZone.playerSpawnPosition };
-              GameManager.shared.save();
-              this.router.goto(ZoneScene);
-            }
-          };
-          requestAnimationFrame(fadeOut);
-        }
-        return;
-      }
-    }
+  private checkZoneExitState(): void {
+    checkZoneExit(
+      this.zone, this.playerScreenPos, this.isTransitioning,
+      this.app, this.uiContainer, this.router, ZoneScene,
+      (v) => { this.isTransitioning = v; },
+    );
   }
 
   // ─── Fog ─────────────────────────────────────────────────────
