@@ -22,7 +22,9 @@ import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import { drawEquipmentOverlay } from '../rendering/EquipmentVisuals';
 import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
-import { drawEnemySprite } from '../rendering/EnemyRenderer';
+import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer';
+import { createEnemyAnimState, updateEnemyIdle, triggerEnemyHurt, triggerEnemyDeath, drawBossAura, drawAlertIndicator, setEnemyAlert } from '../rendering/EnemyAnimations';
+import type { EnemyAnimState } from '../rendering/EnemyAnimations';
 import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle } from '../rendering/SpellEffects';
 import { FloatingDamageManager } from '../rendering/FloatingDamage';
 import type { DamageStyle } from '../rendering/FloatingDamage';
@@ -106,6 +108,9 @@ interface EnemyInstance {
   animTimer: number;
   affixState?: EnemyAffixState;
   affixLabel?: Text;
+  enemyAnim?: EnemyAnimState;
+  bossAuraGfx?: Graphics;
+  statusGfx?: Graphics;
 }
 
 interface NPCInstance {
@@ -1647,6 +1652,7 @@ export class ZoneScene extends Container implements GameScene {
         respawnTimer: 0,
         animTimer: Math.random() * Math.PI * 2,
         affixState,
+        enemyAnim: createEnemyAnimState(),
       };
 
       // Affix label under name
@@ -2034,6 +2040,17 @@ export class ZoneScene extends Container implements GameScene {
         continue;
       }
 
+      // Animate enemy idle (breathing, sway)
+      if (enemy.enemyAnim) {
+        updateEnemyIdle(enemy.sprite, enemy.enemyAnim, dt, enemy.data.tier);
+        // Boss aura animation
+        if (enemy.data.tier === 'boss' && enemy.bossState?.announced) {
+          if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); }
+          const phase = enemy.bossState.currentPhase + 1;
+          enemy.bossAuraGfx = drawBossAura(enemy.sprite, enemy.enemyAnim.timer, WORLD_ENEMY_COLORS[enemy.data.worldID]?.boss ?? 0xcc5500, phase);
+        }
+      }
+
       const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
       const mistMult = this.worldMechanics instanceof ScadrialMechanics
         ? (this.worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
@@ -2136,7 +2153,10 @@ export class ZoneScene extends Container implements GameScene {
         enemy.attackCooldown = 1.5;
         this.enemyAttacksPlayer(enemy);
       } else if (dist < detRange) {
-        if (enemy.state !== 'chasing') BestiaryManager.shared.registerEncounter(enemy.data);
+        if (enemy.state !== 'chasing') {
+          BestiaryManager.shared.registerEncounter(enemy.data);
+          if (enemy.enemyAnim) setEnemyAlert(enemy.enemyAnim);
+        }
         enemy.state = 'chasing';
         const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
         const speed = enemy.data.speed * 30 * dt * speedMult;
@@ -2337,6 +2357,7 @@ export class ZoneScene extends Container implements GameScene {
 
     // Hit flash + shake animation
     animateEnemyHit(closest.sprite);
+    if (closest.enemyAnim) triggerEnemyHurt(closest.enemyAnim);
     createHitImpact(
       this.worldContainer, closest.position.x, closest.position.y,
       champ.championClass, isCrit, this.particles as any,
@@ -2445,6 +2466,8 @@ export class ZoneScene extends Container implements GameScene {
   private killEnemy(enemy: EnemyInstance): void {
     enemy.isDead = true;
     enemy.state = 'dead';
+    if (enemy.enemyAnim) triggerEnemyDeath(enemy.enemyAnim);
+    if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); enemy.bossAuraGfx = undefined; }
     MusicManager.shared.playSFX('death');
 
     // Track in bestiary & achievements
