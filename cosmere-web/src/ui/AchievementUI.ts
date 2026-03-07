@@ -349,9 +349,9 @@ export function showAchievementPanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.circle(px + panelW - 16, py + 16, 10)
-    .fill({ color: 0x332222, alpha: 0.8 })
-    .stroke({ color: 0x664444, width: 1.5, alpha: 0.6 });
+  closeBtn.circle(px + panelW - 16, py + 16, buttonHeight(panelLayout) / 2)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1.5, alpha: 0.6 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -359,7 +359,7 @@ export function showAchievementPanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontSize: fontSize(11, panelLayout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 16;

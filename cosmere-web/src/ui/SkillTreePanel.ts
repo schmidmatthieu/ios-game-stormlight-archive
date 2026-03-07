@@ -123,7 +123,7 @@ export function showSkillTreePanel(
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
