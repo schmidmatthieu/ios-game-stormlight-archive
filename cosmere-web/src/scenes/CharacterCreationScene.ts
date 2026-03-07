@@ -7,24 +7,10 @@ import { MainMenuScene } from './MainMenuScene';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
+import { updateCharacterPreview, CLASS_COLORS } from './CharacterPreview';
+import { createOrderSelector } from './OrderSelector';
 
 const CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
-const ORDERS: RadiantOrder[] = ['windrunner', 'lightweaver', 'bondsmith', 'edgedancer'];
-const ORDER_NAMES: Record<RadiantOrder, string> = {
-  windrunner: 'Chevalier du Vent',
-  lightweaver: 'Tisseuse de Lumière',
-  bondsmith: 'Forgeur de Liens',
-  edgedancer: 'Danseuse du Fil',
-};
-
-const CLASS_COLORS: Record<ChampionClass, number> = {
-  mistborn: 0x888899,
-  radiant: 0x4488ff,
-  awakener: 0xff66aa,
-  elantrian: 0xffcc33,
-  sandMaster: 0xddcc66,
-  nightmarePainter: 0xaa44cc,
-};
 
 const WORLD_NAMES: Record<string, string> = {
   scadrial: 'Scadrial — Le monde des brumes et des métaux',
@@ -250,21 +236,7 @@ export class CharacterCreationScene extends Container implements GameScene {
     this.descText.text = info.description;
     this.worldText.text = WORLD_NAMES[info.startingWorld] ?? info.startingWorld;
 
-    // Update preview
-    // Remove old preview character (keep background at index 0)
-    while (this.previewContainer.children.length > 1) {
-      this.previewContainer.removeChildAt(1);
-    }
-    const charSprite = new Graphics();
-    drawPlayerCharacter(charSprite, this.selectedClass);
-    charSprite.scale.set(3);
-    charSprite.y = -5;
-    this.previewContainer.addChild(charSprite);
-
-    // Glow ring
-    const glow = new Graphics();
-    glow.circle(0, 10, 20).fill({ color: CLASS_COLORS[this.selectedClass], alpha: 0.08 });
-    this.previewContainer.addChild(glow);
+    updateCharacterPreview(this.previewContainer, this.selectedClass);
 
     // Highlight selected class button
     for (const btn of this.classButtons) {
@@ -283,41 +255,15 @@ export class CharacterCreationScene extends Container implements GameScene {
     this.orderContainer = null;
 
     if (this.selectedClass === 'radiant') {
-      const w = this.app.screen.width;
-      const oc = new Container();
-      oc.y = this.worldText.y + 20;
-
-      const label = new Text({
-        text: 'Ordre Radieux:',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x777777 }),
-      });
-      label.anchor.set(0.5, 0);
-      label.x = w / 2;
-      oc.addChild(label);
-
-      ORDERS.forEach((order, i) => {
-        const ox = w / 2 + (i - 1.5) * 70;
-        const selected = this.selectedOrder === order;
-        const txt = new Text({
-          text: ORDER_NAMES[order],
-          style: new TextStyle({
-            fontFamily: 'sans-serif', fontSize: 8,
-            fill: selected ? 0x66aaff : 0x555555,
-            fontWeight: selected ? 'bold' : 'normal',
-          }),
-        });
-        txt.anchor.set(0.5, 0);
-        txt.x = ox;
-        txt.y = 14;
-        txt.eventMode = 'static';
-        txt.cursor = 'pointer';
-        txt.on('pointerdown', () => {
+      const oc = createOrderSelector(
+        this.app.screen.width,
+        this.worldText.y + 20,
+        this.selectedOrder,
+        (order) => {
           this.selectedOrder = order;
           this.updateSelection();
-        });
-        oc.addChild(txt);
-      });
-
+        },
+      );
       this.addChild(oc);
       this.orderContainer = oc;
     }

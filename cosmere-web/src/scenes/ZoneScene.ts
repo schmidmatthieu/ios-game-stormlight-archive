@@ -37,6 +37,7 @@ import { VisualEffects } from './VisualEffects';
 import { renderTilemap, renderMapEdge, spawnDecorations } from './DecorationRenderer';
 import { spawnEnemies, spawnNPCs, spawnLootPoints, renderExits, formatNPCName } from './EntitySpawner';
 import { CombatManager } from './CombatManager';
+import { EnemyAI } from './EnemyAI';
 
 // ─── Constants ───────────────────────────────────────────────
 const PLAYER_SPEED = 120;
@@ -69,6 +70,7 @@ export class ZoneScene extends Container implements GameScene {
   private particleSystem!: ParticleSystem;
   private vfx!: VisualEffects;
   private combat!: CombatManager;
+  private enemyAI!: EnemyAI;
 
   // UI
   private joystick!: VirtualJoystick;
@@ -243,7 +245,9 @@ export class ZoneScene extends Container implements GameScene {
   private setupSystems(_w: number, _h: number): void {
     this.particleSystem = new ParticleSystem(this.worldContainer);
     this.vfx = new VisualEffects(this.worldContainer, this.uiContainer);
-    this.combat = new CombatManager(this.worldContainer, this.uiContainer, this.vfx, this.particleSystem);
+    this.enemyAI = new EnemyAI(this.worldContainer, this.uiContainer, this.vfx);
+    this.combat = new CombatManager(this.worldContainer, this.vfx, this.particleSystem);
+    this.combat.setEnemyAI(this.enemyAI);
 
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
     QuestManager.shared.init();
@@ -277,11 +281,12 @@ export class ZoneScene extends Container implements GameScene {
     const delta = dt / 60;
 
     this.handleMovement(delta);
-    this.combat.updateEnemyAI(
+    this.enemyAI.update(
       delta, this.playerScreenPos, this.enemies, this.worldMechanics,
       this.app.screen.width,
       () => this.handlePlayerDeath(),
       (i, d) => this.shakeCamera(i, d),
+      (enemy, playerPos, wm, onDeath, shake) => this.combat.enemyAttacksPlayer(enemy, playerPos, wm, onDeath, shake),
     );
     this.combat.update(delta);
     this.updateCamera();

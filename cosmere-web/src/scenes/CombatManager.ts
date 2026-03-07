@@ -6,38 +6,36 @@ import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
 import { QuestManager } from '../game/QuestManager';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
-import { createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
-import { KomashiMechanics, ScadrialMechanics } from '../game/WorldMechanics';
+import { KomashiMechanics } from '../game/WorldMechanics';
 import type { WorldEffect } from '../game/WorldMechanics';
-import { isoToScreen } from './IsoUtils';
 import { drawEnemyHP } from './EntitySpawner';
-import type { EnemyInstance, Particle } from './ZoneTypes';
+import type { EnemyInstance } from './ZoneTypes';
 import type { VisualEffects } from './VisualEffects';
 import type { ParticleSystem } from './ParticleSystem';
+import type { EnemyAI } from './EnemyAI';
 import type { ActionButtons } from '../ui/ActionButtons';
-import type { ChampionClass } from '../data/types';
 
 const ATTACK_COOLDOWN = 0.5;
 
 export class CombatManager {
   private attackCooldown = 0;
   private worldContainer: Container;
-  private uiContainer: Container;
   private vfx: VisualEffects;
   private particleSystem: ParticleSystem;
-  private activeBoss: EnemyInstance | null = null;
-  private bossHPBar: { container: Container; update: (hp: number, phase: string) => void; destroy: () => void } | null = null;
+  private enemyAI: EnemyAI | null = null;
 
   constructor(
     worldContainer: Container,
-    uiContainer: Container,
     vfx: VisualEffects,
     particleSystem: ParticleSystem,
   ) {
     this.worldContainer = worldContainer;
-    this.uiContainer = uiContainer;
     this.vfx = vfx;
     this.particleSystem = particleSystem;
+  }
+
+  setEnemyAI(ai: EnemyAI): void {
+    this.enemyAI = ai;
   }
 
   update(dt: number): void {
@@ -177,11 +175,11 @@ export class CombatManager {
       this.vfx.showFloatingText(enemy.position.x, enemy.position.y - 60,
         enemy.bossState.config.defeatMessage, 0xffcc44);
       shakeCamera(6, 0.4);
-      if (this.bossHPBar) {
-        this.bossHPBar.destroy();
-        this.bossHPBar = null;
+      if (this.enemyAI) {
+        this.enemyAI.bossHPBar?.destroy();
+        this.enemyAI.bossHPBar = null;
+        this.enemyAI.activeBoss = null;
       }
-      this.activeBoss = null;
     }
 
     // Death particles using pool
@@ -252,99 +250,4 @@ export class CombatManager {
     }
   }
 
-  updateEnemyAI(
-    dt: number,
-    playerPos: { x: number; y: number },
-    enemies: EnemyInstance[],
-    worldMechanics: WorldEffect,
-    screenW: number,
-    onDeath: () => void,
-    shakeCamera: (intensity: number, duration: number) => void,
-  ): void {
-    for (const enemy of enemies) {
-      if (enemy.isDead) {
-        enemy.respawnTimer -= dt;
-        if (enemy.respawnTimer <= 0 && enemy.spawn.respawnTime) {
-          enemy.hp = enemy.data.maxHP;
-          enemy.isDead = false;
-          enemy.state = 'idle';
-          enemy.sprite.visible = true;
-          const pos = isoToScreen(enemy.spawn.position.col, enemy.spawn.position.row);
-          enemy.position = { ...pos };
-          enemy.sprite.x = pos.x;
-          enemy.sprite.y = pos.y;
-          drawEnemyHP(enemy.hpBar, 1);
-        }
-        continue;
-      }
-
-      const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
-      const mistMult = worldMechanics instanceof ScadrialMechanics
-        ? (worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
-      const detRange = enemy.data.detectionRange * 32 * mistMult;
-      const atkRange = enemy.data.attackRange * 32;
-
-      enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
-
-      // Boss mechanics
-      if (enemy.bossState && dist < detRange) {
-        if (!enemy.bossState.announced) {
-          enemy.bossState.announced = true;
-          this.activeBoss = enemy;
-          this.vfx.showFloatingText(enemy.position.x, enemy.position.y - 50,
-            enemy.bossState.config.entranceMessage, 0xff6644);
-          this.bossHPBar = createBossHPBar(this.uiContainer, screenW, enemy.data.name);
-          shakeCamera(5, 0.3);
-        }
-
-        const hpPct = enemy.hp / enemy.data.maxHP;
-        const result = enemy.bossState.update(dt, hpPct);
-
-        if (result.phaseChanged && result.message) {
-          this.vfx.showFloatingText(enemy.position.x, enemy.position.y - 50, result.message, 0xff4444);
-          shakeCamera(4, 0.2);
-        }
-
-        if (result.canSpecialAttack && dist < detRange) {
-          const phase = enemy.bossState.getCurrentPhase(hpPct);
-          const effect = createBossSpecialEffect(
-            this.worldContainer, enemy.position.x, enemy.position.y,
-            playerPos.x, playerPos.y, phase.specialAttack,
-          );
-          const champ = GameManager.shared.champion;
-          if (champ) {
-            const dmg = Math.floor(effect.damage * phase.damageMultiplier);
-            champ.currentHP -= dmg;
-            this.vfx.showDamageNumber(playerPos.x, playerPos.y - 40, dmg, false, 0xff4444);
-            shakeCamera(3, 0.15);
-            if (champ.currentHP <= 0) {
-              champ.currentHP = 0;
-              onDeath();
-            }
-          }
-        }
-
-        this.bossHPBar?.update(hpPct, enemy.bossState.config.phases[enemy.bossState.currentPhase].name);
-      }
-
-      const speedMult = enemy.bossState
-        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).speedMultiplier : 1;
-
-      if (dist < atkRange && enemy.attackCooldown <= 0) {
-        enemy.state = 'attacking';
-        enemy.attackCooldown = 1.5;
-        this.enemyAttacksPlayer(enemy, playerPos, worldMechanics, onDeath, shakeCamera);
-      } else if (dist < detRange) {
-        enemy.state = 'chasing';
-        const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
-        const speed = enemy.data.speed * 30 * dt * speedMult;
-        enemy.position.x += Math.cos(angle) * speed;
-        enemy.position.y += Math.sin(angle) * speed;
-        enemy.sprite.x = enemy.position.x;
-        enemy.sprite.y = enemy.position.y;
-      } else {
-        enemy.state = 'idle';
-      }
-    }
-  }
 }
