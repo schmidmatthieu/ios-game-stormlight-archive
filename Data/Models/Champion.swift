@@ -150,6 +150,28 @@ struct Champion: Codable {
 
     // Calculé
     var xpForNextLevel: Int { level * 100 + 50 }
-    var maxHP: Int { baseStats.vigor * 10 + 50 }
-    var maxInvestiture: Int { baseStats.investiture * 8 + 30 }
+
+    /// Stats effectives = base + bonus d'équipement
+    var effectiveStats: ChampionStats {
+        var stats = baseStats
+        let slots: [EquipmentSlot] = [.helmet, .shoulders, .chest, .cape, .gloves, .belt, .legs, .boots, .mainWeapon, .offhand, .amulet, .ring1, .ring2]
+        for slot in slots {
+            guard let itemID = equipment.itemID(for: slot),
+                  let item = GameManager.shared.item(byID: itemID) else { continue }
+            for bonus in item.statBonuses {
+                switch bonus.stat {
+                case .vigor:       stats.vigor += bonus.value
+                case .investiture: stats.investiture += bonus.value
+                case .strength:    stats.strength += bonus.value
+                case .agility:     stats.agility += bonus.value
+                case .spirit:      stats.spirit += bonus.value
+                case .luck:        stats.luck += bonus.value
+                }
+            }
+        }
+        return stats
+    }
+
+    var maxHP: Int { effectiveStats.vigor * 10 + 50 }
+    var maxInvestiture: Int { effectiveStats.investiture * 8 + 30 }
 }

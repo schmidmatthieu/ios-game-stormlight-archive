@@ -25,6 +25,7 @@ final class SaveManager {
         let saveData = SaveData(
             champion: champion,
             activeQuests: GameManager.shared.activeQuests,
+            talentData: GameManager.shared.talentTree.playerTalents,
             timestamp: Date()
         )
 
@@ -52,6 +53,9 @@ final class SaveManager {
             let saveData = try decoder.decode(SaveData.self, from: data)
             GameManager.shared.champion = saveData.champion
             GameManager.shared.activeQuests = saveData.activeQuests
+            if let talents = saveData.talentData {
+                GameManager.shared.talentTree.restoreTalents(talents)
+            }
             print("📂 Partie chargée (niveau \(saveData.champion.level))")
             return true
         } catch {
@@ -76,5 +80,6 @@ final class SaveManager {
 struct SaveData: Codable {
     let champion: Champion
     let activeQuests: [Quest]
+    let talentData: TalentTreeSystem.PlayerTalents?
     let timestamp: Date
 }

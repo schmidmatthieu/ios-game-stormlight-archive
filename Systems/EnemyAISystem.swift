@@ -428,7 +428,7 @@ final class EnemyAISystem {
         if var champion = GameManager.shared.champion {
             let damage = GameManager.shared.combatSystem.calculateEnemyDamage(
                 enemy: enemy.enemyData,
-                defenderStats: champion.baseStats
+                defenderStats: champion.effectiveStats
             )
             champion.currentHP = max(0, champion.currentHP - damage)
             GameManager.shared.champion = champion

@@ -48,6 +48,10 @@ class ZoneScene: SKScene {
     // Gameplay: low HP vignette
     private var lowHPVignette: SKShapeNode?
 
+    // Ultimate cooldown
+    private var ultimateCooldownRemaining: TimeInterval = 0
+    private let ultimateCooldownDuration: TimeInterval = 45.0
+
     // Theme
     private let worldTheme: WorldTheme
 
@@ -571,6 +575,11 @@ class ZoneScene: SKScene {
             self.lastDamageTakenTime = self.lastUpdateTime
             self.showDamageIndicator(fromEnemy: enemyPosition)
             self.playPlayerHitFeedback(fromEnemy: enemyPosition)
+
+            // Check player death
+            if let champion = GameManager.shared.champion, champion.currentHP <= 0 {
+                self.handlePlayerDeath()
+            }
         }
 
         companionSystem.onEnemyHit = { [weak self] enemyID, damage, position in
@@ -672,6 +681,7 @@ class ZoneScene: SKScene {
 
     private func handleTalkToNPC(npcID: String) {
         guard let npc = zone.npcSpawns.first(where: { $0.npcID == npcID }) else { return }
+        GameManager.shared.questSystem.onNPCTalkedTo(npcID: npcID)
 
         if npc.isShopkeeper {
             showAbilityEffect(description: "Boutique de \(npcID.replacingOccurrences(of: "_", with: " ").capitalized)")
@@ -728,6 +738,7 @@ class ZoneScene: SKScene {
                     rarity: .common, level: champion.level
                 )
                 GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(item.id) }
+                GameManager.shared.questSystem.onItemCollected(itemID: item.id)
 
                 showAbilityEffect(description: "Obtenu: \(item.name)")
 
@@ -774,7 +785,7 @@ class ZoneScene: SKScene {
             }) {
                 // Use CombatSystem for proper damage + crit calculation
                 let damageResult = GameManager.shared.combatSystem.calculateDamage(
-                    attacker: champion.baseStats,
+                    attacker: champion.effectiveStats,
                     skill: nil,
                     defender: enemyInstances[idx].enemyData
                 )
@@ -963,6 +974,23 @@ class ZoneScene: SKScene {
     private func handleUltimate() {
         guard let champion = GameManager.shared.champion, let playerNode else { return }
 
+        // Check cooldown
+        guard ultimateCooldownRemaining <= 0 else {
+            showAbilityEffect(description: "Ultime: \(Int(ultimateCooldownRemaining))s")
+            return
+        }
+
+        // Investiture cost: 50% of max
+        let investitureCost = champion.maxInvestiture / 2
+        guard champion.currentInvestiture >= investitureCost else {
+            showAbilityEffect(description: "Investiture insuffisante")
+            return
+        }
+
+        // Apply cost and start cooldown
+        GameManager.shared.mutateChampion { $0.currentInvestiture -= investitureCost }
+        ultimateCooldownRemaining = ultimateCooldownDuration
+
         // Spectacular ultimate effects
         let ultimateFlash = SKShapeNode(circleOfRadius: 150)
         ultimateFlash.fillColor = SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 0.1)
@@ -1020,7 +1048,7 @@ class ZoneScene: SKScene {
         showAbilityEffect(description: ultText)
 
         // Ultimate AoE damage — massive hit on all enemies in range
-        let ultDamage = champion.baseStats.strength * 3 + champion.baseStats.spirit * 2
+        let ultDamage = champion.effectiveStats.strength * 3 + champion.effectiveStats.spirit * 2
         let ultRange: CGFloat = 200
         applyAbilityDamage(ultDamage, range: ultRange, statusEffect: .stunned,
                            statusDuration: 1.5, effectColor: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
@@ -1180,10 +1208,12 @@ class ZoneScene: SKScene {
         alertNearbyEnemies(aroundIndex: idx)
 
         if enemyInstances[idx].currentHP <= 0 {
+            let enemyID = enemyInstances[idx].enemyData.id
             let xp = enemyInstances[idx].enemyData.xpReward
             let gold = Int.random(in: enemyInstances[idx].enemyData.goldReward)
             GameManager.shared.grantXP(xp)
             GameManager.shared.mutateChampion { $0.gold += gold }
+            GameManager.shared.questSystem.onEnemyKilled(enemyID: enemyID)
 
             showFloatingDamage(xp, at: CGPoint(x: enemyInstances[idx].position.x, y: enemyInstances[idx].position.y + 20),
                                color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
@@ -1375,6 +1405,10 @@ class ZoneScene: SKScene {
                 togglePause()
                 return
             }
+            if node.name == "respawnButton" {
+                handleRespawn()
+                return
+            }
         }
     }
 
@@ -1398,6 +1432,80 @@ class ZoneScene: SKScene {
         }
         cameraNode.addChild(menu)
         pauseMenu = menu
+    }
+
+    // MARK: - Player Death
+
+    private var isPlayerDead = false
+
+    private func handlePlayerDeath() {
+        guard !isPlayerDead else { return }
+        isPlayerDead = true
+        isTransitioning = true  // Block all input
+
+        // Player fade + shrink
+        playerNode?.run(SKAction.group([
+            SKAction.fadeOut(withDuration: 0.6),
+            SKAction.scale(to: 0.3, duration: 0.6)
+        ]))
+
+        // Dark overlay
+        let overlay = SKShapeNode(rectOf: CGSize(width: size.width * 2, height: size.height * 2))
+        overlay.fillColor = .black
+        overlay.strokeColor = .clear
+        overlay.alpha = 0
+        overlay.zPosition = 9000
+        cameraNode.addChild(overlay)
+
+        // Defeat label
+        let defeatLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        defeatLabel.text = "DÉFAITE"
+        defeatLabel.fontSize = 36
+        defeatLabel.fontColor = SKColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1)
+        defeatLabel.position = CGPoint(x: 0, y: 30)
+        defeatLabel.zPosition = 9001
+        defeatLabel.alpha = 0
+        cameraNode.addChild(defeatLabel)
+
+        // Respawn button
+        let respawnLabel = SKLabelNode(fontNamed: "Copperplate")
+        respawnLabel.text = "Toucher pour réapparaître"
+        respawnLabel.fontSize = 18
+        respawnLabel.fontColor = SKColor(red: 0.8, green: 0.8, blue: 0.8, alpha: 1)
+        respawnLabel.position = CGPoint(x: 0, y: -30)
+        respawnLabel.zPosition = 9001
+        respawnLabel.alpha = 0
+        respawnLabel.name = "respawnButton"
+        cameraNode.addChild(respawnLabel)
+
+        overlay.run(SKAction.fadeAlpha(to: 0.7, duration: 0.8))
+        defeatLabel.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.5),
+            SKAction.fadeIn(withDuration: 0.5)
+        ]))
+        respawnLabel.run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.0),
+            SKAction.fadeIn(withDuration: 0.5),
+            SKAction.repeatForever(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.5, duration: 0.8),
+                SKAction.fadeAlpha(to: 1.0, duration: 0.8)
+            ]))
+        ]))
+    }
+
+    private func handleRespawn() {
+        guard isPlayerDead, let view = self.view else { return }
+
+        // Restore HP to 50%, keep gold but lose 10%
+        GameManager.shared.mutateChampion { champ in
+            champ.currentHP = champ.maxHP / 2
+            champ.currentInvestiture = champ.maxInvestiture / 2
+            champ.gold = max(0, champ.gold - champ.gold / 10)
+        }
+
+        // Reload current zone
+        let zoneID = zone.id
+        SceneRouter(view: view).transitionToZone(zoneID)
     }
 
     // MARK: - Update Loop
@@ -1427,6 +1535,9 @@ class ZoneScene: SKScene {
 
         // --- Gameplay improvements ---
         actionButtons.update(deltaTime: deltaTime)
+        if ultimateCooldownRemaining > 0 {
+            ultimateCooldownRemaining = max(0, ultimateCooldownRemaining - deltaTime)
+        }
         updateRegeneration(currentTime: currentTime, deltaTime: deltaTime)
         updateLowHPVignette()
         updateHUDBars()
