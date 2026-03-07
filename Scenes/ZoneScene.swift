@@ -24,6 +24,7 @@ class ZoneScene: SKScene {
     private var minimap: MinimapNode!
     private var dialogueBox: DialogueBoxNode?
     private var pauseMenu: PauseMenuNode?
+    private var inventoryNode: InventoryNode?
 
     // Enemy instances (runtime)
     private var enemyInstances: [EnemyAISystem.EnemyInstance] = []
@@ -429,6 +430,24 @@ class ZoneScene: SKScene {
         pauseIcon.verticalAlignmentMode = .center
         pauseIcon.name = "pauseButton"
         pauseBtn.addChild(pauseIcon)
+
+        // Inventory button
+        let invBtn = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 8)
+        invBtn.fillColor = SKColor(white: 0.1, alpha: 0.6)
+        invBtn.strokeColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 0.5)
+        invBtn.lineWidth = 1
+        invBtn.position = CGPoint(x: size.width / 2 - 80, y: size.height / 2 - 55)
+        invBtn.zPosition = 2000
+        invBtn.name = "inventoryButton"
+        cameraNode.addChild(invBtn)
+
+        let invIcon = SKLabelNode(fontNamed: "Copperplate-Bold")
+        invIcon.text = "INV"
+        invIcon.fontSize = 11
+        invIcon.fontColor = SKColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 1)
+        invIcon.verticalAlignmentMode = .center
+        invIcon.name = "inventoryButton"
+        invBtn.addChild(invIcon)
     }
 
     // MARK: - Controls Setup
@@ -1084,6 +1103,10 @@ class ZoneScene: SKScene {
                 togglePause()
                 return
             }
+            if node.name == "inventoryButton" {
+                toggleInventory()
+                return
+            }
         }
     }
 
@@ -1107,6 +1130,19 @@ class ZoneScene: SKScene {
         }
         cameraNode.addChild(menu)
         pauseMenu = menu
+    }
+
+    private func toggleInventory() {
+        if let existing = inventoryNode {
+            existing.removeFromParent()
+            inventoryNode = nil
+            return
+        }
+
+        let inv = InventoryNode(screenSize: size)
+        inv.zPosition = 6001
+        cameraNode.addChild(inv)
+        inventoryNode = inv
     }
 
     // MARK: - Update Loop
