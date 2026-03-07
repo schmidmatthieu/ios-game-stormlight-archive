@@ -60,14 +60,27 @@ class WorldMapScene: SKScene {
         title.position = CGPoint(x: size.width / 2, y: size.height * 0.9)
         addChild(title)
 
-        // Bouton retour
+        // Bouton retour avec zone tactile 44pt
+        let backContainer = SKNode()
+        backContainer.position = CGPoint(x: 60, y: size.height - 50)
+        backContainer.name = "back"
+
+        let backBg = SKShapeNode(rectOf: CGSize(width: 100, height: 44), cornerRadius: 8)
+        backBg.fillColor = SKColor(white: 0.15, alpha: 0.6)
+        backBg.strokeColor = SKColor(white: 0.3, alpha: 0.5)
+        backBg.lineWidth = 1
+        backBg.name = "back"
+        backContainer.addChild(backBg)
+
         let back = SKLabelNode(fontNamed: "Copperplate")
         back.text = "← Retour"
         back.fontSize = 16
         back.fontColor = .lightGray
-        back.position = CGPoint(x: 60, y: size.height - 50)
+        back.verticalAlignmentMode = .center
         back.name = "back"
-        addChild(back)
+        backContainer.addChild(back)
+
+        addChild(backContainer)
     }
 
     private func createWorldNode(world: (id: String, name: String, color: SKColor, position: CGPoint, unlocked: Bool)) -> SKNode {
