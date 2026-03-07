@@ -48,6 +48,8 @@ import { WorldEventManager } from '../game/WorldEvents';
 import type { WorldEventEffect } from '../game/WorldEvents';
 import { createWorldEventBanner } from '../ui/WorldEventBanner';
 import { WorldMapScene } from './WorldMapScene';
+import { NPCScheduleManager } from '../game/NPCScheduleSystem';
+import { moveNPCTo, teleportNPC, updateNPCAnimation, showActivityIndicator, setNPCSleeping, clearNPCAnimations } from '../rendering/NPCAnimator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
@@ -486,6 +488,9 @@ export class ZoneScene extends Container implements GameScene {
     // Day/night cycle
     this.dayNightManager = new DayNightManager(this.zone.worldID);
     this.dayNightOverlay = createDayNightOverlay(this.uiContainer, w, h);
+
+    // Initialize NPC schedules based on current time
+    this.initNPCSchedules();
 
     // Dynamic weather
     this.weatherManager = new WeatherManager(this.zone.worldID);
@@ -1299,6 +1304,13 @@ export class ZoneScene extends Container implements GameScene {
     const npc = this.npcs.find(n => n.id === spawn.npcID);
     if (!npc) return;
 
+    // Check if NPC is sleeping (unavailable)
+    const schedMgr = NPCScheduleManager.shared;
+    if (schedMgr.hasSchedule(spawn.npcID) && !schedMgr.isAvailable(spawn.npcID)) {
+      this.showFloatingText(npc.position.x, npc.position.y - 50, '💤 Dort...', 0x6677aa);
+      return;
+    }
+
     if (spawn.isShopkeeper) {
       this.showShop(spawn.npcID);
     } else {
@@ -1338,6 +1350,15 @@ export class ZoneScene extends Container implements GameScene {
       this.playerScreenPos.x + 30, this.playerScreenPos.y - 40,
       `${levelLabel} (${affinity}%)`, levelColor,
     );
+
+    // Show time-based dialogue override from schedule
+    const timeDialogue = NPCScheduleManager.shared.getTimeDialogue(npcID);
+    if (timeDialogue) {
+      const npcInst = this.npcs.find(n => n.id === npcID);
+      if (npcInst) {
+        this.showFloatingText(npcInst.position.x, npcInst.position.y - 60, timeDialogue, 0xddddaa);
+      }
+    }
 
     this.dialoguePanel = showDialoguePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -2729,6 +2750,40 @@ export class ZoneScene extends Container implements GameScene {
     }
     if (result.changed && result.message) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, result.message, 0xddddaa);
+      // Update NPC schedules on time change
+      this.updateNPCSchedules();
+    }
+    // Animate NPC movement each frame
+    for (const npc of this.npcs) {
+      updateNPCAnimation(npc, dt);
+    }
+  }
+
+  private initNPCSchedules(): void {
+    const schedMgr = NPCScheduleManager.shared;
+    schedMgr.initialize(this.dayNightManager.currentTime);
+
+    for (const npc of this.npcs) {
+      const entry = schedMgr.getScheduleEntry(npc.id, this.dayNightManager.currentTime);
+      if (entry) {
+        teleportNPC(npc, entry.position);
+        showActivityIndicator(npc, entry.activity);
+        setNPCSleeping(npc, entry.activity === 'sleeping');
+      }
+    }
+  }
+
+  private updateNPCSchedules(): void {
+    const schedMgr = NPCScheduleManager.shared;
+    const movers = schedMgr.onTimeChange(this.dayNightManager.currentTime);
+
+    for (const move of movers) {
+      const npc = this.npcs.find(n => n.id === move.npcID);
+      if (!npc) continue;
+
+      moveNPCTo(npc, move.newPosition);
+      showActivityIndicator(npc, move.activity);
+      setNPCSleeping(npc, move.activity === 'sleeping');
     }
   }
 
