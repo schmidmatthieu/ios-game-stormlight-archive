@@ -22,6 +22,7 @@ import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyH
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
 import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
+import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -257,6 +258,10 @@ export class ZoneScene extends Container implements GameScene {
   private statusBar: { container: Container; update: (effects: ActiveStatusEffect[]) => void } | null = null;
   private statusParticleTimer = 0;
 
+  // Weather
+  private weatherManager!: WeatherManager;
+  private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -396,6 +401,10 @@ export class ZoneScene extends Container implements GameScene {
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
+
+    // Dynamic weather
+    this.weatherManager = new WeatherManager(this.zone.worldID);
+    this.weatherOverlay = createWeatherOverlay(this.uiContainer, w, h);
 
     // Quest system
     QuestManager.shared.init();
@@ -1746,6 +1755,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateAnimations(delta);
     this.spawnAmbientParticles(delta);
     this.updateWorldMechanics(delta);
+    this.updateWeather(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -2418,6 +2428,24 @@ export class ZoneScene extends Container implements GameScene {
     const msg = this.worldMechanics.tick(dt);
     if (msg) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, msg, 0xaaddff);
+    }
+  }
+
+  private updateWeather(dt: number): void {
+    const result = this.weatherManager.update(dt);
+    if (result.changed && result.message) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, result.message, 0xaaddff);
+    }
+    if (this.weatherOverlay) {
+      this.weatherOverlay.update(result.config, this.weatherManager.lightningFlash);
+    }
+    // Weather damage (highstorm, sandstorm, nightmare)
+    if (result.config.damagePerTick > 0) {
+      const champ = GameManager.shared.champion;
+      if (champ) {
+        champ.currentHP -= result.config.damagePerTick * dt;
+        if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
+      }
     }
   }
 
