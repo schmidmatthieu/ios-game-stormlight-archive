@@ -1,5 +1,6 @@
 import type { Champion, ChampionClass, ChampionStats, RadiantOrder, MagicSystemType } from '../data/types';
 import { CLASS_INFO } from '../data/types';
+import { gameData } from '../data/DataLoader';
 
 const BASE_STATS: ChampionStats = { vigor: 10, investiture: 10, strength: 10, agility: 10, spirit: 10, luck: 5 };
 
@@ -110,6 +111,65 @@ export class GameManager {
       this.champion.inventoryItemIDs.push(item);
       eq[slot] = null;
     }
+  }
+
+  // MARK: - Sell / Disenchant
+
+  /** Sell an item for gold */
+  sellItem(itemID: string): number {
+    if (!this.champion) return 0;
+    const idx = this.champion.inventoryItemIDs.indexOf(itemID);
+    if (idx < 0) return 0;
+    const gold = GameManager.getItemSellPrice(itemID);
+    this.champion.inventoryItemIDs.splice(idx, 1);
+    this.champion.gold += gold;
+    return gold;
+  }
+
+  /** Disenchant an item into crafting materials (essences) */
+  disenchantItem(itemID: string): { materials: string; amount: number } | null {
+    if (!this.champion) return null;
+    const idx = this.champion.inventoryItemIDs.indexOf(itemID);
+    if (idx < 0) return null;
+    const result = GameManager.getDisenchantResult(itemID);
+    this.champion.inventoryItemIDs.splice(idx, 1);
+    // Add essences as gold-equivalent for now (material currency)
+    this.champion.gold += result.amount;
+    return result;
+  }
+
+  static readonly RARITY_SELL_VALUES: Record<string, number> = {
+    common: 5, uncommon: 12, rare: 30, epic: 75, legendary: 200, cosmeric: 500,
+  };
+
+  static readonly RARITY_ESSENCE_VALUES: Record<string, number> = {
+    common: 2, uncommon: 5, rare: 15, epic: 40, legendary: 100, cosmeric: 250,
+  };
+
+  static readonly RARITY_MATERIAL_NAMES: Record<string, string> = {
+    common: 'Poussière d\'Investiture',
+    uncommon: 'Fragment d\'Investiture',
+    rare: 'Cristal d\'Investiture',
+    epic: 'Essence d\'Investiture',
+    legendary: 'Noyau d\'Investiture',
+    cosmeric: 'Nexus d\'Investiture',
+  };
+
+  static getItemSellPrice(itemID: string): number {
+    const item = gameData.item(itemID);
+    if (!item) return 1;
+    const basePrice = GameManager.RARITY_SELL_VALUES[item.rarity] ?? 5;
+    const statBonus = item.statBonuses.reduce((sum: number, b: { value: number }) => sum + b.value, 0);
+    return basePrice + statBonus * 2;
+  }
+
+  static getDisenchantResult(itemID: string): { materials: string; amount: number } {
+    const item = gameData.item(itemID);
+    if (!item) return { materials: 'Poussière d\'Investiture', amount: 1 };
+    return {
+      materials: GameManager.RARITY_MATERIAL_NAMES[item.rarity] ?? 'Poussière d\'Investiture',
+      amount: GameManager.RARITY_ESSENCE_VALUES[item.rarity] ?? 2,
+    };
   }
 
   // MARK: - XP
