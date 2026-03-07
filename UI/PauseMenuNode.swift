@@ -7,6 +7,7 @@ final class PauseMenuNode: SKNode {
     var onResume: (() -> Void)?
     var onSave: (() -> Void)?
     var onQuit: (() -> Void)?
+    var onSettings: (() -> Void)?
 
     init(screenSize: CGSize) {
         self.screenSize = screenSize
@@ -30,7 +31,7 @@ final class PauseMenuNode: SKNode {
         addChild(overlay)
 
         // Panel
-        let panel = SKShapeNode(rectOf: CGSize(width: 240, height: 260), cornerRadius: 12)
+        let panel = SKShapeNode(rectOf: CGSize(width: 240, height: 320), cornerRadius: 12)
         panel.fillColor = SKColor(red: 0.08, green: 0.06, blue: 0.14, alpha: 0.95)
         panel.strokeColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 0.8)
         panel.lineWidth = 2
@@ -49,7 +50,8 @@ final class PauseMenuNode: SKNode {
         // Buttons
         addButton(text: "Reprendre", y: 50, name: "resume")
         addButton(text: "Sauvegarder", y: -10, name: "save")
-        addButton(text: "Quitter", y: -70, name: "quit", color: SKColor(red: 0.5, green: 0.15, blue: 0.1, alpha: 0.8))
+        addButton(text: "Paramètres", y: -70, name: "settings")
+        addButton(text: "Quitter", y: -130, name: "quit", color: SKColor(red: 0.5, green: 0.15, blue: 0.1, alpha: 0.8))
     }
 
     private func addButton(text: String, y: CGFloat, name: String,
@@ -91,6 +93,9 @@ final class PauseMenuNode: SKNode {
             case "save":
                 let success = SaveManager.shared.save()
                 showSaveConfirmation(success: success)
+                hitButton = true
+            case "settings":
+                onSettings?()
                 hitButton = true
             case "quit":
                 if showingQuitConfirm {

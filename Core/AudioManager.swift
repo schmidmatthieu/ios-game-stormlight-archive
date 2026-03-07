@@ -47,6 +47,14 @@ final class AudioManager {
 
     // MARK: - Effets sonores (via SKAction pour performance)
 
+    func setMusicVolume(_ volume: Float) {
+        musicVolume = max(0, min(1, volume))
+    }
+
+    func setSFXVolume(_ volume: Float) {
+        sfxVolume = max(0, min(1, volume))
+    }
+
     func playSFX(_ name: String, on node: SKNode) {
         let action: SKAction
         if let cached = sfxActions[name] {

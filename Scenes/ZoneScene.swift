@@ -44,9 +44,16 @@ class ZoneScene: SKScene {
 
     // Regen
     private var regenAccumulator: TimeInterval = 0
-    private let regenInterval: TimeInterval = 1.0  // Régénère toutes les secondes
-    private let hpRegenBase: Int = 1               // PV/s de base
-    private let investitureRegenBase: Int = 2       // Investiture/s de base
+    private let regenInterval: TimeInterval = 1.0
+    private let hpRegenBase: Int = 1
+    private let investitureRegenBase: Int = 2
+
+    // Level up tracking
+    private var previousLevel: Int = 1
+
+    // Low HP warning
+    private var lowHPOverlay: SKShapeNode?
+    private var isShowingLowHPWarning = false
 
     // Theme
     private let worldTheme: WorldTheme
@@ -90,6 +97,9 @@ class ZoneScene: SKScene {
         setupPauseButton()
         setupEnemyInstances()
         setupPathfinding()
+
+        previousLevel = GameManager.shared.champion?.level ?? 1
+        setupLowHPOverlay()
 
         if let track = zone.ambientMusicTrack {
             AudioManager.shared.playMusic(track)
@@ -1172,6 +1182,9 @@ class ZoneScene: SKScene {
         menu.onResume = { [weak self] in
             self?.togglePause()
         }
+        menu.onSettings = { [weak self] in
+            self?.showSettings()
+        }
         menu.onQuit = { [weak self] in
             guard let self, let view = self.view else { return }
             _ = SaveManager.shared.save()
@@ -1223,6 +1236,185 @@ class ZoneScene: SKScene {
         statsMenu = menu
     }
 
+    // MARK: - Settings
+
+    private func showSettings() {
+        let settings = SettingsMenuNode(screenSize: size)
+        settings.zPosition = 7000
+        settings.onClose = { [weak settings] in
+            settings?.removeFromParent()
+        }
+        cameraNode.addChild(settings)
+    }
+
+    // MARK: - Low HP Warning
+
+    private func setupLowHPOverlay() {
+        let overlay = SKShapeNode(rectOf: CGSize(width: size.width * 2, height: size.height * 2))
+        overlay.fillColor = GameConstants.Colors.lowHPWarning
+        overlay.strokeColor = .clear
+        overlay.zPosition = 1500
+        overlay.alpha = 0
+        overlay.name = "lowHPOverlay"
+        cameraNode.addChild(overlay)
+        lowHPOverlay = overlay
+    }
+
+    private func updateLowHPWarning(champion: Champion) {
+        let hpRatio = Double(champion.currentHP) / Double(champion.maxHP)
+        if hpRatio <= GameConstants.HUD.lowHPThreshold && !isShowingLowHPWarning {
+            isShowingLowHPWarning = true
+            let pulse = SKAction.repeatForever(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.4, duration: 0.3),
+                SKAction.fadeAlpha(to: 0.1, duration: 0.3)
+            ]))
+            lowHPOverlay?.run(pulse, withKey: "lowHPPulse")
+        } else if hpRatio > GameConstants.HUD.lowHPThreshold && isShowingLowHPWarning {
+            isShowingLowHPWarning = false
+            lowHPOverlay?.removeAction(forKey: "lowHPPulse")
+            lowHPOverlay?.run(SKAction.fadeAlpha(to: 0, duration: 0.3))
+        }
+    }
+
+    // MARK: - Level Up Celebration
+
+    private func showLevelUpCelebration(newLevel: Int) {
+        guard let playerNode else { return }
+
+        // Grand texte doré
+        let label = SKLabelNode(fontNamed: "Copperplate-Bold")
+        label.text = "NIVEAU \(newLevel) !"
+        label.fontSize = 28
+        label.fontColor = GameConstants.Colors.gold
+        label.position = CGPoint(x: 0, y: size.height / 4)
+        label.zPosition = 3000
+        label.setScale(0.3)
+        cameraNode.addChild(label)
+
+        label.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.scale(to: 1.2, duration: 0.3),
+                SKAction.fadeIn(withDuration: 0.2)
+            ]),
+            SKAction.scale(to: 1.0, duration: 0.1),
+            SKAction.wait(forDuration: 1.5),
+            SKAction.group([
+                SKAction.moveBy(x: 0, y: 40, duration: 0.5),
+                SKAction.fadeOut(withDuration: 0.5)
+            ]),
+            SKAction.removeFromParent()
+        ]))
+
+        // Sous-texte "PV & Investiture restaurés"
+        let subLabel = SKLabelNode(fontNamed: "Copperplate")
+        subLabel.text = "PV & Investiture restaurés !"
+        subLabel.fontSize = 14
+        subLabel.fontColor = GameConstants.Colors.healGreen
+        subLabel.position = CGPoint(x: 0, y: size.height / 4 - 35)
+        subLabel.zPosition = 3000
+        subLabel.alpha = 0
+        cameraNode.addChild(subLabel)
+
+        subLabel.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.4),
+            SKAction.fadeIn(withDuration: 0.3),
+            SKAction.wait(forDuration: 1.5),
+            SKAction.fadeOut(withDuration: 0.5),
+            SKAction.removeFromParent()
+        ]))
+
+        // Cercle de lumière doré sur le joueur
+        let ring = SKShapeNode(circleOfRadius: 60)
+        ring.fillColor = SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 0.15)
+        ring.strokeColor = GameConstants.Colors.gold
+        ring.lineWidth = 3
+        ring.position = playerNode.position
+        ring.zPosition = 400
+        ring.setScale(0.1)
+        worldNode.addChild(ring)
+
+        ring.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.scale(to: 1.5, duration: 0.6),
+                SKAction.fadeOut(withDuration: 0.6)
+            ]),
+            SKAction.removeFromParent()
+        ]))
+
+        // Particules étoilées montantes
+        for i in 0..<8 {
+            let star = SKLabelNode(fontNamed: "Copperplate-Bold")
+            star.text = "★"
+            star.fontSize = CGFloat.random(in: 10...18)
+            star.fontColor = GameConstants.Colors.gold
+            star.position = playerNode.position
+            star.zPosition = 401
+            worldNode.addChild(star)
+
+            let angle = CGFloat(i) * .pi * 2 / 8
+            let dist = CGFloat.random(in: 30...60)
+
+            star.run(SKAction.sequence([
+                SKAction.wait(forDuration: Double(i) * 0.05),
+                SKAction.group([
+                    SKAction.move(to: CGPoint(
+                        x: playerNode.position.x + cos(angle) * dist,
+                        y: playerNode.position.y + sin(angle) * dist + 40
+                    ), duration: 0.8),
+                    SKAction.sequence([
+                        SKAction.fadeIn(withDuration: 0.1),
+                        SKAction.wait(forDuration: 0.4),
+                        SKAction.fadeOut(withDuration: 0.3)
+                    ])
+                ]),
+                SKAction.removeFromParent()
+            ]))
+        }
+
+        // Screen flash doré
+        let flash = SKShapeNode(rectOf: CGSize(width: size.width * 2, height: size.height * 2))
+        flash.fillColor = SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 0.3)
+        flash.strokeColor = .clear
+        flash.zPosition = 1500
+        cameraNode.addChild(flash)
+
+        flash.run(SKAction.sequence([
+            SKAction.fadeOut(withDuration: 0.5),
+            SKAction.removeFromParent()
+        ]))
+
+        AudioManager.shared.playSFX("level_up", on: self)
+    }
+
+    // MARK: - Regen Visual
+
+    private func showRegenTick(hpHealed: Int, invHealed: Int) {
+        guard let playerNode, (hpHealed > 0 || invHealed > 0) else { return }
+
+        if hpHealed > 0 {
+            let label = obtainDamageLabel()
+            label.text = "+\(hpHealed)"
+            label.fontColor = GameConstants.Colors.healGreen
+            label.fontSize = 12
+            label.position = CGPoint(x: playerNode.position.x - 15, y: playerNode.position.y + 20)
+            worldNode.addChild(label)
+
+            label.run(SKAction.sequence([
+                SKAction.group([
+                    SKAction.moveBy(x: 0, y: 25, duration: 0.6),
+                    SKAction.fadeOut(withDuration: 0.5)
+                ]),
+                SKAction.run { [weak self] in
+                    label.removeFromParent()
+                    guard let self else { return }
+                    if self.damageNodePool.count < self.maxPoolSize {
+                        self.damageNodePool.append(label)
+                    }
+                }
+            ]))
+        }
+    }
+
     // MARK: - Update Loop
 
     override func update(_ currentTime: TimeInterval) {
@@ -1245,19 +1437,33 @@ class ZoneScene: SKScene {
         regenAccumulator += deltaTime
         if regenAccumulator >= regenInterval {
             regenAccumulator -= regenInterval
+            var hpHealed = 0
+            var invHealed = 0
             GameManager.shared.mutateChampion { champ in
                 if champ.currentHP < champ.maxHP {
-                    champ.currentHP = min(champ.maxHP, champ.currentHP + self.hpRegenBase)
+                    let heal = min(self.hpRegenBase, champ.maxHP - champ.currentHP)
+                    champ.currentHP += heal
+                    hpHealed = heal
                 }
                 if champ.currentInvestiture < champ.maxInvestiture {
-                    champ.currentInvestiture = min(champ.maxInvestiture, champ.currentInvestiture + self.investitureRegenBase)
+                    let heal = min(self.investitureRegenBase, champ.maxInvestiture - champ.currentInvestiture)
+                    champ.currentInvestiture += heal
+                    invHealed = heal
                 }
             }
+            showRegenTick(hpHealed: hpHealed, invHealed: invHealed)
         }
 
         if let champion = GameManager.shared.champion {
             minimap.updatePlayerPosition(champion.gridPosition)
             updateHUD(champion: champion)
+            updateLowHPWarning(champion: champion)
+
+            // Détection de level up
+            if champion.level > previousLevel {
+                showLevelUpCelebration(newLevel: champion.level)
+                previousLevel = champion.level
+            }
         }
 
         let enemies = enemyInstances.filter { $0.isAlive }.map { (position: $0.position, id: $0.enemyData.id) }

@@ -7,7 +7,7 @@ class StatsMenuNode: SKNode {
     // MARK: - Configuration
 
     private let screenSize: CGSize
-    private let talentSystem = TalentTreeSystem()
+    private var talentSystem: TalentTreeSystem { GameManager.shared.talentSystem }
 
     // MARK: - Nodes
 
@@ -352,7 +352,7 @@ class StatsMenuNode: SKNode {
 
             // Icône du tier
             let tierIcon = SKLabelNode(fontNamed: "Copperplate-Bold")
-            tierIcon.text = talent.icon.isEmpty ? "★" : "★"
+            tierIcon.text = talent.icon.isEmpty ? "★" : talent.icon
             tierIcon.fontSize = 18
             tierIcon.fontColor = currentRank > 0
                 ? SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 1.0)

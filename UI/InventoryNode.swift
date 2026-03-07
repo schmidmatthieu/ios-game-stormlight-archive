@@ -145,6 +145,36 @@ class InventoryNode: SKNode {
             y: 80
         )
 
+        // Boutons de tri
+        let sortButtons: [(label: String, name: String)] = [
+            ("Rareté", "sort_rarity"),
+            ("Type", "sort_type"),
+            ("Nom", "sort_name")
+        ]
+
+        for (i, btn) in sortButtons.enumerated() {
+            let x = gridOrigin.x + CGFloat(i - 1) * 65
+            let y = gridOrigin.y + CGFloat(gridRows / 2) * (slotSize + 4) + 30
+
+            let bg = SKShapeNode(rectOf: CGSize(width: 58, height: 24), cornerRadius: 6)
+            bg.fillColor = SKColor(white: 0.12, alpha: 1.0)
+            bg.strokeColor = GameConstants.Colors.panelBorder
+            bg.lineWidth = 1
+            bg.position = CGPoint(x: x, y: y)
+            bg.zPosition = 6003
+            bg.name = btn.name
+
+            let label = SKLabelNode(fontNamed: "Helvetica")
+            label.text = btn.label
+            label.fontSize = 10
+            label.fontColor = SKColor(white: 0.7, alpha: 1.0)
+            label.verticalAlignmentMode = .center
+            label.name = btn.name
+            bg.addChild(label)
+
+            panel.addChild(bg)
+        }
+
         for row in 0..<gridRows {
             for col in 0..<gridCols {
                 let index = row * gridCols + col
@@ -303,6 +333,12 @@ class InventoryNode: SKNode {
                 return
             }
 
+            // Tri de l'inventaire
+            if let name = node.name ?? node.parent?.name, name.hasPrefix("sort_") {
+                sortInventory(by: name)
+                return
+            }
+
             // Déséquiper un slot d'équipement
             if let name = node.name ?? node.parent?.name, name.hasPrefix("equip_") {
                 let slotRaw = name.replacingOccurrences(of: "equip_", with: "")
@@ -369,6 +405,40 @@ class InventoryNode: SKNode {
 
         GameManager.shared.champion = champion
         selectedItemIndex = nil
+
+        // Animation d'équipement — flash doré sur le slot
+        if let equipNode = equipmentSlots[slot] {
+            let originalColor = equipNode.strokeColor
+            let equipFlash = SKAction.sequence([
+                SKAction.run { equipNode.strokeColor = GameConstants.Colors.gold },
+                SKAction.scale(to: 1.2, duration: 0.1),
+                SKAction.scale(to: 1.0, duration: 0.1),
+                SKAction.run { equipNode.strokeColor = originalColor }
+            ])
+            equipNode.run(equipFlash)
+        }
+
+        // Texte flottant "Équipé !"
+        let equipText = SKLabelNode(fontNamed: "Copperplate-Bold")
+        equipText.text = "Équipé !"
+        equipText.fontSize = 16
+        equipText.fontColor = GameConstants.Colors.gold
+        equipText.position = CGPoint(x: 0, y: 0)
+        equipText.zPosition = 6010
+        panel.addChild(equipText)
+
+        equipText.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.moveBy(x: 0, y: 40, duration: 0.8),
+                SKAction.sequence([
+                    SKAction.fadeIn(withDuration: 0.1),
+                    SKAction.wait(forDuration: 0.5),
+                    SKAction.fadeOut(withDuration: 0.3)
+                ])
+            ]),
+            SKAction.removeFromParent()
+        ]))
+
         refresh()
     }
 
@@ -443,6 +513,32 @@ class InventoryNode: SKNode {
         equipBtn.addChild(equipLabel)
 
         detailPanel.addChild(equipBtn)
+    }
+
+    // MARK: - Sorting
+
+    private func sortInventory(by sortType: String) {
+        GameManager.shared.mutateChampion { champ in
+            let items = GameManager.shared.allItems
+            champ.inventoryItemIDs.sort { a, b in
+                guard let itemA = items[a], let itemB = items[b] else { return false }
+                switch sortType {
+                case "sort_rarity":
+                    let rarityOrder: [ItemRarity] = [.cosmeric, .legendary, .epic, .rare, .uncommon, .common]
+                    let idxA = rarityOrder.firstIndex(of: itemA.rarity) ?? 99
+                    let idxB = rarityOrder.firstIndex(of: itemB.rarity) ?? 99
+                    return idxA < idxB
+                case "sort_type":
+                    return itemA.slot.rawValue < itemB.slot.rawValue
+                case "sort_name":
+                    return itemA.name < itemB.name
+                default:
+                    return false
+                }
+            }
+        }
+        selectedItemIndex = nil
+        refresh()
     }
 
     // MARK: - Helpers
