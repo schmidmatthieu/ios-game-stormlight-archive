@@ -103,10 +103,15 @@ export class VisualEffects {
       text: txt, startY: txt.y, elapsed: 0, duration: 2.5, speed: 7.2,
     });
 
-    // Fade flash separately
+    // Fade flash separately (initial alpha 0.15, fade over ~0.25s)
+    const flashDuration = 0.25;
+    let flashLast = performance.now();
     const fadeFlash = () => {
       if (!this.running) { flash.destroy(); return; }
-      flash.alpha -= 0.01;
+      const now = performance.now();
+      const frameDt = (now - flashLast) / 1000;
+      flashLast = now;
+      flash.alpha -= (0.15 / flashDuration) * frameDt;
       if (flash.alpha > 0) requestAnimationFrame(fadeFlash);
       else flash.destroy();
     };
@@ -119,9 +124,13 @@ export class VisualEffects {
     flash.zIndex = 10000;
     container.addChild(flash);
 
+    let lastTime = performance.now();
     const fadeFlash = () => {
       if (!this.running) { flash.destroy(); return; }
-      flash.alpha -= alpha / (duration * 60);
+      const now = performance.now();
+      const frameDt = (now - lastTime) / 1000;
+      lastTime = now;
+      flash.alpha -= (alpha / duration) * frameDt;
       if (flash.alpha > 0) requestAnimationFrame(fadeFlash);
       else flash.destroy();
     };

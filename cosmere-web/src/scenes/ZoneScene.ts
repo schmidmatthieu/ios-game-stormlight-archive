@@ -12,7 +12,8 @@ import { VirtualJoystick } from '../ui/VirtualJoystick';
 import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
 import { InventoryPanel } from '../ui/InventoryPanel';
-import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
+import { showDialoguePanel } from '../ui/DialoguePanel';
+import { showShopPanel } from '../ui/ShopPanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
@@ -296,7 +297,7 @@ export class ZoneScene extends Container implements GameScene {
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
-    this.actionButtons.update(dt);
+    this.actionButtons.update(delta);
     this.checkZoneExit();
     this.checkProximity();
     this.sortZOrder();
