@@ -32,6 +32,7 @@ import { createAchievementToast, showAchievementPanel } from '../ui/AchievementU
 import { showSkillTreePanel } from '../ui/SkillTreePanel';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
+import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -1264,10 +1265,35 @@ export class ZoneScene extends Container implements GameScene {
     if (this.dialoguePanel) return;
     this.isPaused = true;
 
-    // Track quest progress for NPC interaction
+    // Track quest progress and NPC relationship
     QuestManager.shared.onNPCTalkedTo(npcID);
     this.checkQuestCompletion();
     const npcName = this.formatNPCName(npcID);
+    NPCRelationshipManager.shared.recordTalk(npcID, npcName, this.zone.worldID);
+
+    // Check for relationship level up
+    const levelUp = NPCRelationshipManager.shared.popLevelUp();
+    if (levelUp) {
+      const color = LEVEL_COLORS[levelUp.level] ?? 0xffffff;
+      const label = LEVEL_LABELS[levelUp.level] ?? levelUp.level;
+      setTimeout(() => {
+        this.showFloatingText(
+          this.playerScreenPos.x, this.playerScreenPos.y - 70,
+          `${levelUp.npcName}: ${label}!`, color,
+        );
+      }, 500);
+    }
+
+    // Show relationship info as floating text
+    const level = NPCRelationshipManager.shared.getLevel(npcID);
+    const levelLabel = LEVEL_LABELS[level];
+    const levelColor = LEVEL_COLORS[level];
+    const affinity = NPCRelationshipManager.shared.getAffinityPercent(npcID);
+    this.showFloatingText(
+      this.playerScreenPos.x + 30, this.playerScreenPos.y - 40,
+      `${levelLabel} (${affinity}%)`, levelColor,
+    );
+
     this.dialoguePanel = showDialoguePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       this.zone.worldID, npcName, () => this.closeDialogue(),
@@ -1564,6 +1590,7 @@ export class ZoneScene extends Container implements GameScene {
         BestiaryManager.shared.save();
         AchievementManager.shared.save();
         CompanionManager.shared.save();
+        NPCRelationshipManager.shared.save();
         this.router.goto(WorldMapScene);
       },
     );
@@ -2976,6 +3003,7 @@ export class ZoneScene extends Container implements GameScene {
               BestiaryManager.shared.save();
               AchievementManager.shared.save();
               CompanionManager.shared.save();
+              NPCRelationshipManager.shared.save();
               this.router.goto(ZoneScene);
             }
           };

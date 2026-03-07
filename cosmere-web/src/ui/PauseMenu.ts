@@ -3,6 +3,7 @@ import { GameManager } from '../game/GameManager';
 import { BestiaryManager } from '../game/BestiarySystem';
 import { AchievementManager } from '../game/AchievementSystem';
 import { CompanionManager } from '../game/CompanionSystem';
+import { NPCRelationshipManager } from '../game/NPCRelationships';
 
 export function showPauseMenu(
   uiContainer: Container,
@@ -53,6 +54,7 @@ export function showPauseMenu(
         BestiaryManager.shared.save();
         AchievementManager.shared.save();
         CompanionManager.shared.save();
+        NPCRelationshipManager.shared.save();
         showFloatingText(playerPos.x, playerPos.y - 40, 'Partie sauvegardée!', 0x66cc44);
         onResume();
       },
@@ -73,6 +75,7 @@ export function showPauseMenu(
       BestiaryManager.shared.save();
       AchievementManager.shared.save();
       CompanionManager.shared.save();
+      NPCRelationshipManager.shared.save();
       window.location.reload();
     },
   });
