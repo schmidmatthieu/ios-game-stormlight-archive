@@ -408,7 +408,7 @@ class ZoneScene: SKScene {
 
     private func setupControls() {
         joystick = VirtualJoystickNode()
-        joystick.position = CGPoint(x: -size.width / 2 + 100, y: -size.height / 2 + 110)
+        joystick.position = CGPoint(x: -size.width / 2 + 140, y: -size.height / 2 + 110)
         joystick.zPosition = 2000
 
         joystick.onDirectionChanged = { [weak self] direction, magnitude in
@@ -423,7 +423,7 @@ class ZoneScene: SKScene {
         cameraNode.addChild(joystick)
 
         actionButtons = ActionButtonsNode()
-        actionButtons.position = CGPoint(x: size.width / 2 - 100, y: -size.height / 2 + 100)
+        actionButtons.position = CGPoint(x: size.width / 2 - 140, y: -size.height / 2 + 100)
         actionButtons.zPosition = 2000
 
         actionButtons.onAttackPressed = { [weak self] in
