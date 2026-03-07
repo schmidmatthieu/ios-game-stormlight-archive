@@ -40,9 +40,18 @@ class LootPopupNode: SKNode {
         let container = SKNode()
         container.position = position
 
+        // Measure text width using a temporary label
+        let label = SKLabelNode(fontNamed: "Helvetica-Bold")
+        label.text = itemName
+        label.fontSize = 12
+        label.fontColor = color
+        label.verticalAlignmentMode = .center
+        label.horizontalAlignmentMode = .left
+
+        let textWidth = max(label.frame.width + 44, 80)
+
         // Background pill
-        let textWidth = CGFloat(itemName.count * 7 + 20)
-        let bg = SKShapeNode(rectOf: CGSize(width: textWidth, height: 22), cornerRadius: 11)
+        let bg = SKShapeNode(rectOf: CGSize(width: textWidth, height: 24), cornerRadius: 12)
         bg.fillColor = SKColor(white: 0.1, alpha: 0.85)
         bg.strokeColor = color
         bg.lineWidth = 1.5
@@ -56,12 +65,6 @@ class LootPopupNode: SKNode {
         container.addChild(icon)
 
         // Item name
-        let label = SKLabelNode(fontNamed: "Helvetica-Bold")
-        label.text = itemName
-        label.fontSize = 10
-        label.fontColor = color
-        label.verticalAlignmentMode = .center
-        label.horizontalAlignmentMode = .left
         label.position = CGPoint(x: -textWidth / 2 + 26, y: 0)
         container.addChild(label)
 
