@@ -1040,7 +1040,6 @@ final class DecorationRenderer {
                 SKAction.fadeAlpha(to: 0.6, duration: 2.0)
             ]))
             light.run(glow)
-        }
 
         // === NEW DECORATION TYPES ===
 
