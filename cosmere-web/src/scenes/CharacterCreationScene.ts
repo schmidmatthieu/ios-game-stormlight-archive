@@ -7,26 +7,12 @@ import { MainMenuScene } from './MainMenuScene';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
+import { CLASS_COLORS } from './CharacterPreview';
+import { ORDERS, ORDER_NAMES } from './OrderSelector';
 import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
-const ORDERS: RadiantOrder[] = ['windrunner', 'lightweaver', 'bondsmith', 'edgedancer'];
-const ORDER_NAMES: Record<RadiantOrder, string> = {
-  windrunner: 'Chevalier du Vent',
-  lightweaver: 'Tisseuse de Lumière',
-  bondsmith: 'Forgeur de Liens',
-  edgedancer: 'Danseuse du Fil',
-};
-
-const CLASS_COLORS: Record<ChampionClass, number> = {
-  mistborn: 0x888899,
-  radiant: 0x4488ff,
-  awakener: 0xff66aa,
-  elantrian: 0xffcc33,
-  sandMaster: 0xddcc66,
-  nightmarePainter: 0xaa44cc,
-};
 
 const WORLD_NAMES: Record<string, string> = {
   scadrial: 'Scadrial — Le monde des brumes et des métaux',
