@@ -57,7 +57,7 @@ class DialogueBoxNode: SKNode {
 
         // Text label
         textLabel = SKLabelNode(fontNamed: "Helvetica")
-        textLabel.fontSize = 13
+        textLabel.fontSize = 15
         textLabel.fontColor = .white
         textLabel.horizontalAlignmentMode = .left
         textLabel.verticalAlignmentMode = .top
@@ -150,7 +150,7 @@ class DialogueBoxNode: SKNode {
 
         for (i, choice) in choices.enumerated() {
             let choiceWidth = boxSize.width - 30
-            let choiceHeight: CGFloat = 30
+            let choiceHeight: CGFloat = 44
             let yOffset = -boxSize.height / 2 - 10 - CGFloat(i) * (choiceHeight + 8)
 
             let bg = SKShapeNode(rectOf: CGSize(width: choiceWidth, height: choiceHeight), cornerRadius: 6)
@@ -163,7 +163,7 @@ class DialogueBoxNode: SKNode {
 
             let label = SKLabelNode(fontNamed: "Helvetica")
             label.text = "▸ \(choice.text)"
-            label.fontSize = 12
+            label.fontSize = 14
             label.fontColor = .white
             label.horizontalAlignmentMode = .left
             label.verticalAlignmentMode = .center
@@ -178,6 +178,7 @@ class DialogueBoxNode: SKNode {
                     bg.fillColor = SKColor(white: 0.1, alpha: 0.5)
                     label.fontColor = .gray
                     label.text = "▸ [Réputation \(req.worldID) \(req.minReputation) requise] \(choice.text)"
+                    bg.name = "choice_locked_\(i)"
                 }
             }
 
@@ -245,6 +246,16 @@ class DialogueBoxNode: SKNode {
         // Vérifier les choix
         for (i, node) in choiceNodes.enumerated() {
             if node.contains(location) {
+                // Ignorer les choix verrouillés
+                if node.name?.hasPrefix("choice_locked_") == true {
+                    // Shake animation pour indiquer que le choix est verrouillé
+                    node.run(SKAction.sequence([
+                        SKAction.moveBy(x: 5, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: -10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: 5, y: 0, duration: 0.05)
+                    ]))
+                    return
+                }
                 // Animation de sélection
                 node.run(SKAction.sequence([
                     SKAction.group([
