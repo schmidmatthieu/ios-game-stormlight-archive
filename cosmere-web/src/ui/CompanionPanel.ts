@@ -165,7 +165,7 @@ export function showCompanionPanel(
     // Origin world
     const worldText = new Text({
       text: WORLD_NAMES[comp.origin] ?? comp.origin,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x888899 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted }),
     });
     worldText.x = x + w - 6;
     worldText.anchor.set(1, 0);
@@ -177,7 +177,7 @@ export function showCompanionPanel(
       const desc = comp.description.length > 60 ? comp.description.slice(0, 57) + '...' : comp.description;
       const descText = new Text({
         text: desc,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x999999, fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 54 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary, fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 54 }),
       });
       descText.x = x + 44;
       descText.y = y + 20;
@@ -186,7 +186,7 @@ export function showCompanionPanel(
       // Bonus
       const bonusText = new Text({
         text: comp.bonusDescription,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fontWeight: 'bold', fill: 0x66cc44 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fontWeight: 'bold', fill: UI_COLORS.success }),
       });
       bonusText.x = x + 44;
       bonusText.y = y + 52;
@@ -196,7 +196,7 @@ export function showCompanionPanel(
       if (isActive) {
         const badge = new Text({
           text: '✓ Actif',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fontWeight: 'bold', fill: 0x44cc44 }),
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fontWeight: 'bold', fill: UI_COLORS.success }),
         });
         badge.x = x + w - 6;
         badge.anchor.set(1, 0);
@@ -205,7 +205,7 @@ export function showCompanionPanel(
       } else {
         const selectBtn = new Graphics();
         selectBtn.roundRect(x + w - 60, y + 48, 54, 18, 4)
-          .fill({ color: 0x224433, alpha: 0.8 })
+          .fill({ color: UI_COLORS.btnSuccess, alpha: UI_ALPHA.buttonBg })
           .stroke({ color: 0x44aa66, width: 1, alpha: 0.5 });
         selectBtn.eventMode = 'static';
         selectBtn.cursor = 'pointer';
@@ -218,7 +218,7 @@ export function showCompanionPanel(
 
         const selectText = new Text({
           text: 'Sélectionner',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x88dd88 }),
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.success }),
         });
         selectText.x = x + w - 33;
         selectText.anchor.set(0.5, 0);
@@ -229,7 +229,7 @@ export function showCompanionPanel(
       // Lock condition
       const lockText = new Text({
         text: `🔒 ${comp.unlockCondition}`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x666677 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted }),
       });
       lockText.x = x + 44;
       lockText.y = y + 22;
@@ -260,9 +260,9 @@ export function showCompanionPanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.circle(px + panelW - 16, py + 16, 10)
-    .fill({ color: 0x332222, alpha: 0.8 })
-    .stroke({ color: 0x664444, width: 1.5, alpha: 0.6 });
+  closeBtn.circle(px + panelW - 16, py + 16, buttonHeight(layout) / 2)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1.5, alpha: 0.6 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -270,7 +270,7 @@ export function showCompanionPanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontSize: fontSize(11, layout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 16;

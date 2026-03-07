@@ -2,6 +2,8 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
 import { RARITY_COLORS } from '../data/types';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { ItemRarity } from '../data/types';
 
 // ─── Crafting Recipes ────────────────────────────────────────────
@@ -104,10 +106,11 @@ export function showCraftingPanel(
 
   const panel = new Container();
   panel.zIndex = 10000;
+  const layout = getLayoutInfo(screenW, screenH);
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.5 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
@@ -118,16 +121,16 @@ export function showCraftingPanel(
   const py = (screenH - panelH) / 2;
 
   const bg = new Graphics();
-  bg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
-    .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
+  bg.roundRect(px, py, panelW, panelH, panelRadius(layout))
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
+    .stroke({ color: UI_COLORS.borderAccent, width: 2, alpha: UI_ALPHA.panelBorder });
   bg.eventMode = 'static';
   panel.addChild(bg);
 
   // Title
   const title = new Text({
     text: 'Atelier d\'Artisanat',
-    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xe6cc66, fontWeight: 'bold' }),
+    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(15, layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
   });
   title.anchor.set(0.5);
   title.x = screenW / 2;
@@ -137,7 +140,7 @@ export function showCraftingPanel(
   // Gold display
   const goldText = new Text({
     text: `${champ.gold} or`,
-    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0xe6cc33, fontWeight: 'bold' }),
+    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: UI_COLORS.textGoldBright, fontWeight: 'bold' }),
   });
   goldText.anchor.set(1, 0);
   goldText.x = px + panelW - 12;
@@ -167,8 +170,8 @@ export function showCraftingPanel(
 
       const tab = new Graphics();
       tab.roundRect(tabX, tabY, tabW - 2, 22, 4)
-        .fill({ color: isActive ? 0x1a1528 : 0x0a0815, alpha: 0.9 })
-        .stroke({ color: isActive ? 0xe6cc66 : 0x443355, width: 1, alpha: 0.5 });
+        .fill({ color: isActive ? UI_COLORS.btnSecondary : UI_COLORS.panelBgAlt, alpha: UI_ALPHA.barBg })
+        .stroke({ color: isActive ? UI_COLORS.textGold : 0x443355, width: 1, alpha: UI_ALPHA.panelBorder });
       tab.eventMode = 'static';
       tab.cursor = 'pointer';
       tab.on('pointerdown', () => { activeTab = cat.cat; renderTabs(); renderRecipes(); });
