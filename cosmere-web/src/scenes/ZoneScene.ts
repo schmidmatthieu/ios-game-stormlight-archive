@@ -10,6 +10,7 @@ import { InventoryPanel } from '../ui/InventoryPanel';
 import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
+import { Minimap } from '../ui/Minimap';
 import { QuestManager } from '../game/QuestManager';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
@@ -212,6 +213,9 @@ export class ZoneScene extends Container implements GameScene {
   // Quest tracker
   private questTracker!: QuestTracker;
 
+  // Minimap
+  private minimap!: Minimap;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -329,6 +333,11 @@ export class ZoneScene extends Container implements GameScene {
     this.questTracker = new QuestTracker(w);
     this.questTracker.refresh();
     this.uiContainer.addChild(this.questTracker);
+
+    // Minimap
+    this.minimap = new Minimap(w, h);
+    this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight);
+    this.uiContainer.addChild(this.minimap);
 
     // Center camera immediately
     this.worldContainer.x = w / 2 - this.playerScreenPos.x;
@@ -1450,6 +1459,7 @@ export class ZoneScene extends Container implements GameScene {
     this.spawnAmbientParticles(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
+    this.refreshMinimap();
     this.actionButtons.update(dt);
     this.checkZoneExit();
     this.checkProximity();
@@ -1880,6 +1890,35 @@ export class ZoneScene extends Container implements GameScene {
       else txt.destroy();
     };
     requestAnimationFrame(anim);
+  }
+
+  private refreshMinimap(): void {
+    const enemyDots = this.enemies
+      .filter(e => !e.isDead)
+      .map(e => ({
+        x: e.position.x,
+        y: e.position.y,
+        color: e.data.tier === 'boss' ? 0xff2222 : e.data.tier === 'elite' ? 0xff6644 : 0xcc4444,
+        size: e.data.tier === 'boss' ? 3 : e.data.tier === 'elite' ? 2 : 1.5,
+      }));
+
+    const npcDots = this.npcs.map(n => ({
+      x: n.position.x, y: n.position.y, color: 0x44aaff,
+    }));
+
+    const exitDots = this.zone.connections.map(c => {
+      const pos = isoToScreen(c.exitPosition.col, c.exitPosition.row);
+      return { x: pos.x, y: pos.y, color: 0xeedd44 };
+    });
+
+    const lootDots = this.lootPoints
+      .filter(l => !l.collected)
+      .map(l => ({ x: l.position.x, y: l.position.y, color: 0xee9944 }));
+
+    this.minimap.refresh(
+      this.playerScreenPos.x, this.playerScreenPos.y,
+      enemyDots, npcDots, exitDots, lootDots,
+    );
   }
 
   private checkQuestCompletion(): void {
