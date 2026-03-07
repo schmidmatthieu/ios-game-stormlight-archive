@@ -174,3 +174,224 @@ function drawClassBurst(burst: Graphics, cls: string, range: number, cfg: { colo
       break;
   }
 }
+
+// ─── Enhanced Magic Effects ──────────────────────────────────
+
+/**
+ * Creates a class-specific on-hit impact effect at the target position.
+ * More visually distinct than the generic damage number.
+ */
+export function createHitImpact(
+  worldContainer: Container,
+  tx: number, ty: number,
+  cls: ChampionClass,
+  isCrit: boolean,
+  particles: SpellParticle[],
+): void {
+  const cfg = SKILL_COLORS[cls] ?? SKILL_COLORS.mistborn;
+  const color = isCrit ? 0xffdd44 : cfg.color1;
+  const particleCount = isCrit ? 10 : 5;
+
+  // Impact flash
+  const flash = new Graphics();
+  flash.circle(0, 0, isCrit ? 16 : 10).fill({ color, alpha: isCrit ? 0.5 : 0.3 });
+  flash.x = tx; flash.y = ty; flash.zIndex = 100000;
+  worldContainer.addChild(flash);
+
+  // Class-specific impact marks
+  const mark = new Graphics();
+  mark.x = tx; mark.y = ty; mark.zIndex = 100001;
+
+  switch (cls) {
+    case 'mistborn':
+      // Metal shards flying outward
+      for (let i = 0; i < 4; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = 6 + Math.random() * 8;
+        mark.moveTo(Math.cos(angle) * 3, Math.sin(angle) * 3)
+          .lineTo(Math.cos(angle) * r, Math.sin(angle) * r)
+          .stroke({ color: 0x88aacc, width: 1.5, alpha: 0.6 });
+      }
+      break;
+    case 'radiant':
+      // Stormlight wisps
+      mark.circle(0, 0, 8).stroke({ color: 0x88ccff, width: 1, alpha: 0.4 });
+      mark.circle(0, 0, 12).stroke({ color: 0x44aaff, width: 0.5, alpha: 0.2 });
+      break;
+    case 'awakener':
+      // Color burst (rainbow lines)
+      [0xff4466, 0x44ff66, 0x4466ff, 0xffaa22].forEach((c, i) => {
+        const angle = (i / 4) * Math.PI * 2 + Math.random() * 0.5;
+        mark.moveTo(0, 0).lineTo(Math.cos(angle) * 12, Math.sin(angle) * 12)
+          .stroke({ color: c, width: 2, alpha: 0.5 });
+      });
+      break;
+    case 'elantrian':
+      // Aon glyph shimmer (X pattern)
+      mark.moveTo(-8, -8).lineTo(8, 8).stroke({ color: 0xffcc44, width: 1.5, alpha: 0.5 });
+      mark.moveTo(8, -8).lineTo(-8, 8).stroke({ color: 0xffaa33, width: 1.5, alpha: 0.4 });
+      mark.circle(0, 0, 6).stroke({ color: 0xffdd66, width: 1, alpha: 0.3 });
+      break;
+    case 'sandMaster':
+      // Sand explosion dots
+      for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = 4 + Math.random() * 10;
+        mark.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1).fill({ color: 0xddcc88, alpha: 0.5 });
+      }
+      break;
+    case 'nightmarePainter':
+      // Ink splatter
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = 3 + Math.random() * 8;
+        const size = 1 + Math.random() * 2;
+        mark.ellipse(Math.cos(angle) * r, Math.sin(angle) * r, size, size * 0.6)
+          .fill({ color: 0x222244, alpha: 0.6 });
+      }
+      break;
+  }
+  worldContainer.addChild(mark);
+
+  // Spawn impact particles
+  for (let i = 0; i < particleCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 20 + Math.random() * 40;
+    const p = new Graphics();
+    const pColor = isCrit ? 0xffee66 : cfg.particleColor;
+    p.circle(0, 0, 1 + Math.random() * (isCrit ? 2 : 1)).fill({ color: pColor, alpha: 0.7 });
+    p.x = tx; p.y = ty; p.zIndex = 100002;
+    worldContainer.addChild(p);
+    particles.push({
+      sprite: p, x: tx, y: ty,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - (isCrit ? 30 : 15),
+      life: 0.3 + Math.random() * 0.3,
+      maxLife: 0.6,
+      size: 1.5,
+    });
+  }
+
+  // Crit screen shake indicator - expanding ring
+  if (isCrit) {
+    const ring = new Graphics();
+    ring.circle(0, 0, 6).stroke({ color: 0xffdd44, width: 3, alpha: 0.8 });
+    ring.x = tx; ring.y = ty; ring.zIndex = 100003;
+    worldContainer.addChild(ring);
+
+    let elapsed = 0;
+    const animRing = () => {
+      elapsed += 1 / 60;
+      const p = elapsed / 0.4;
+      ring.scale.set(1 + p * 3);
+      ring.alpha = Math.max(0, 1 - p);
+      if (elapsed < 0.4) requestAnimationFrame(animRing);
+      else ring.destroy();
+    };
+    requestAnimationFrame(animRing);
+  }
+
+  // Fade out impact
+  let elapsed = 0;
+  const anim = () => {
+    elapsed += 1 / 60;
+    const p = elapsed / 0.3;
+    flash.alpha = Math.max(0, 0.3 - p * 0.3);
+    flash.scale.set(1 + p * 2);
+    mark.alpha = Math.max(0, 1 - p);
+    if (elapsed < 0.3) requestAnimationFrame(anim);
+    else { flash.destroy(); mark.destroy(); }
+  };
+  requestAnimationFrame(anim);
+}
+
+/**
+ * Creates lingering magic ambient particles around the player
+ * based on their class. Called periodically for passive visual flavor.
+ */
+export function spawnClassAmbientParticle(
+  worldContainer: Container,
+  px: number, py: number,
+  cls: ChampionClass,
+  particles: SpellParticle[],
+): void {
+  const cfg = SKILL_COLORS[cls] ?? SKILL_COLORS.mistborn;
+
+  const p = new Graphics();
+  let size = 1;
+  let color = cfg.particleColor;
+  let vx = 0;
+  let vy = 0;
+  let life = 1;
+
+  switch (cls) {
+    case 'mistborn':
+      // Metallic sparkle drifting upward
+      size = 0.8 + Math.random() * 0.8;
+      color = Math.random() > 0.5 ? 0x88aacc : 0xaabbdd;
+      vx = (Math.random() - 0.5) * 8;
+      vy = -10 - Math.random() * 15;
+      life = 1.5 + Math.random();
+      break;
+    case 'radiant':
+      // Stormlight wisps floating upward
+      size = 1 + Math.random();
+      color = Math.random() > 0.5 ? 0x88ccff : 0xaaddff;
+      vx = (Math.random() - 0.5) * 12;
+      vy = -15 - Math.random() * 10;
+      life = 1 + Math.random() * 0.8;
+      break;
+    case 'awakener':
+      // Color motes drifting
+      const colorPool = [0xff4466, 0x44aaff, 0xffaa22, 0x44ff66, 0xaa44ff];
+      color = colorPool[Math.floor(Math.random() * colorPool.length)];
+      size = 0.8 + Math.random();
+      vx = (Math.random() - 0.5) * 20;
+      vy = -5 - Math.random() * 10;
+      life = 2 + Math.random();
+      break;
+    case 'elantrian':
+      // Golden Aon glow dots
+      size = 0.6 + Math.random() * 0.6;
+      color = Math.random() > 0.5 ? 0xffcc44 : 0xffdd88;
+      const aonAngle = Math.random() * Math.PI * 2;
+      const aonR = 8 + Math.random() * 12;
+      vx = Math.cos(aonAngle) * 5;
+      vy = Math.sin(aonAngle) * 5 - 8;
+      life = 1.2 + Math.random();
+      p.x = px + Math.cos(aonAngle) * aonR;
+      p.y = py + Math.sin(aonAngle) * aonR;
+      break;
+    case 'sandMaster':
+      // Sand grains swirling
+      size = 0.5 + Math.random() * 0.5;
+      color = Math.random() > 0.5 ? 0xddcc88 : 0xccbb77;
+      const sandAngle = Math.random() * Math.PI * 2;
+      vx = Math.cos(sandAngle) * 15;
+      vy = Math.sin(sandAngle) * 10 - 5;
+      life = 0.8 + Math.random() * 0.5;
+      break;
+    case 'nightmarePainter':
+      // Dark ink droplets rising
+      size = 1 + Math.random() * 1.5;
+      color = Math.random() > 0.6 ? 0x8855cc : 0x332244;
+      vx = (Math.random() - 0.5) * 6;
+      vy = -8 - Math.random() * 12;
+      life = 1.5 + Math.random();
+      break;
+  }
+
+  p.circle(0, 0, size).fill({ color, alpha: 0.5 });
+  if (!p.x) p.x = px + (Math.random() - 0.5) * 16;
+  if (!p.y) p.y = py - Math.random() * 10;
+  p.zIndex = 99999;
+  worldContainer.addChild(p);
+
+  particles.push({
+    sprite: p,
+    x: p.x, y: p.y,
+    vx, vy,
+    life, maxLife: life,
+    size,
+  });
+}
