@@ -23,6 +23,8 @@ import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
 import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
 import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
+import { BestiaryManager } from '../game/BestiarySystem';
+import { showBestiaryPanel } from '../ui/BestiaryPanel';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -398,6 +400,9 @@ export class ZoneScene extends Container implements GameScene {
 
     // Crafting button (next to inventory)
     this.createCraftingButton(w);
+
+    // Bestiary button (next to crafting)
+    this.createBestiaryButton(w);
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -1329,6 +1334,38 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
+  private createBestiaryButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Book icon
+    const icon = new Graphics();
+    icon.roundRect(10, 7, 16, 16, 2).fill({ color: 0x557744, alpha: 0.7 });
+    icon.rect(12, 9, 12, 1).fill({ color: 0xddddcc, alpha: 0.6 });
+    icon.rect(12, 12, 10, 1).fill({ color: 0xddddcc, alpha: 0.5 });
+    icon.rect(12, 15, 11, 1).fill({ color: 0xddddcc, alpha: 0.4 });
+    icon.rect(10, 7, 2, 16).fill({ color: 0x445533, alpha: 0.8 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + 108;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleBestiary());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleBestiary(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showBestiaryPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
+
   private applyCraftResult(recipeID: string): void {
     const effect = getRecipeEffect(recipeID);
     if (!effect) return;
@@ -1390,6 +1427,7 @@ export class ZoneScene extends Container implements GameScene {
       this.playerScreenPos,
       () => {
         GameManager.shared.save();
+        BestiaryManager.shared.save();
         this.router.goto(WorldMapScene);
       },
     );
@@ -1970,6 +2008,7 @@ export class ZoneScene extends Container implements GameScene {
         enemy.attackCooldown = 1.5;
         this.enemyAttacksPlayer(enemy);
       } else if (dist < detRange) {
+        if (enemy.state !== 'chasing') BestiaryManager.shared.registerEncounter(enemy.data);
         enemy.state = 'chasing';
         const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
         const speed = enemy.data.speed * 30 * dt * speedMult;
@@ -2238,6 +2277,9 @@ export class ZoneScene extends Container implements GameScene {
     enemy.isDead = true;
     enemy.state = 'dead';
 
+    // Track in bestiary
+    BestiaryManager.shared.registerKill(enemy.data);
+
     // Animated death instead of instant hide
     animateEnemyDeath(enemy.sprite, this.worldContainer, enemy.position.x, enemy.position.y);
     setTimeout(() => { enemy.sprite.visible = false; }, 500);
@@ -2311,6 +2353,7 @@ export class ZoneScene extends Container implements GameScene {
         if (item && champ) {
           champ.inventoryItemIDs.push(lootEntry.itemID);
           QuestManager.shared.onItemCollected(lootEntry.itemID);
+          BestiaryManager.shared.registerDrop(enemy.data.id, lootEntry.itemID);
 
           // Animated loot drop
           spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
@@ -2678,6 +2721,7 @@ export class ZoneScene extends Container implements GameScene {
               champ.currentZoneID = conn.targetZoneID;
               champ.gridPosition = { ...targetZone.playerSpawnPosition };
               GameManager.shared.save();
+              BestiaryManager.shared.save();
               this.router.goto(ZoneScene);
             }
           };

@@ -1,5 +1,6 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
+import { BestiaryManager } from '../game/BestiarySystem';
 
 export function showPauseMenu(
   uiContainer: Container,
@@ -47,6 +48,7 @@ export function showPauseMenu(
       label: 'Sauvegarder', y: py + 105,
       action: () => {
         GameManager.shared.save();
+        BestiaryManager.shared.save();
         showFloatingText(playerPos.x, playerPos.y - 40, 'Partie sauvegardée!', 0x66cc44);
         onResume();
       },
@@ -64,6 +66,7 @@ export function showPauseMenu(
     label: 'Quitter', y: onWorldMap ? py + 195 : py + 150, color: 0x552222,
     action: () => {
       GameManager.shared.save();
+      BestiaryManager.shared.save();
       window.location.reload();
     },
   });
