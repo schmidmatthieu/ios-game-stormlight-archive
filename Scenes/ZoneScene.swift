@@ -117,6 +117,9 @@ class ZoneScene: SKScene {
 
         GameManager.shared.questSystem.onZoneEntered(zoneID: zone.id)
 
+        // Zone entrance title card
+        showZoneEntranceTitle()
+
         // Low HP vignette
         lowHPVignette = CombatFeedbackSystem.lowHealthVignette(on: cameraNode, screenSize: size)
 
@@ -166,6 +169,62 @@ class ZoneScene: SKScene {
 
         // Edge glow
         setupEdgeGlow()
+    }
+
+    // MARK: - Zone Entrance Title
+
+    private func showZoneEntranceTitle() {
+        let titleContainer = SKNode()
+        titleContainer.zPosition = 5000
+        titleContainer.alpha = 0
+        cameraNode.addChild(titleContainer)
+
+        // Main zone name
+        let titleShadow = SKLabelNode(fontNamed: "Copperplate-Bold")
+        titleShadow.text = zone.name
+        titleShadow.fontSize = 22
+        titleShadow.fontColor = SKColor(white: 0, alpha: 0.6)
+        titleShadow.position = CGPoint(x: 1, y: -1)
+        titleContainer.addChild(titleShadow)
+
+        let title = SKLabelNode(fontNamed: "Copperplate-Bold")
+        title.text = zone.name
+        title.fontSize = 22
+        title.fontColor = SKColor(white: 1, alpha: 1)
+        titleContainer.addChild(title)
+
+        // World name subtitle
+        let subtitle = SKLabelNode(fontNamed: "Copperplate")
+        subtitle.text = "— \(zone.worldID.capitalized) —"
+        subtitle.fontSize = 11
+        subtitle.fontColor = worldTheme.edgeGlowColor.withAlphaComponent(0.8)
+        subtitle.position = CGPoint(x: 0, y: -20)
+        titleContainer.addChild(subtitle)
+
+        // Decorative lines
+        for xOff in [-60, 60] as [CGFloat] {
+            let line = SKShapeNode(rectOf: CGSize(width: 30, height: 1))
+            line.fillColor = worldTheme.edgeGlowColor.withAlphaComponent(0.4)
+            line.strokeColor = .clear
+            line.position = CGPoint(x: xOff, y: -8)
+            titleContainer.addChild(line)
+        }
+
+        // Diamond center
+        let diamond = SKShapeNode(rectOf: CGSize(width: 4, height: 4))
+        diamond.fillColor = worldTheme.edgeGlowColor.withAlphaComponent(0.5)
+        diamond.strokeColor = .clear
+        diamond.zRotation = .pi / 4
+        diamond.position = CGPoint(x: 0, y: -8)
+        titleContainer.addChild(diamond)
+
+        // Animate: fade in, hold, fade out
+        titleContainer.run(SKAction.sequence([
+            SKAction.fadeIn(withDuration: 0.8),
+            SKAction.wait(forDuration: 2.0),
+            SKAction.fadeOut(withDuration: 1.0),
+            SKAction.removeFromParent()
+        ]))
     }
 
     // MARK: - Equipment Visual Refresh
@@ -357,38 +416,81 @@ class ZoneScene: SKScene {
         mpLabel.name = "mpLabel"
         mpBg.addChild(mpLabel)
 
-        // Level badge
+        // Level badge (enhanced with double ring)
+        let levelOuter = SKShapeNode(circleOfRadius: 16)
+        levelOuter.fillColor = .clear
+        levelOuter.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.3)
+        levelOuter.lineWidth = 0.5
+        levelOuter.position = CGPoint(x: -size.width / 2 + 22, y: size.height / 2 - 22)
+        levelOuter.zPosition = 1999
+        cameraNode.addChild(levelOuter)
+
         let levelBadge = SKShapeNode(circleOfRadius: 14)
-        levelBadge.fillColor = SKColor(red: 0.15, green: 0.12, blue: 0.25, alpha: 0.9)
+        levelBadge.fillColor = SKColor(red: 0.12, green: 0.1, blue: 0.2, alpha: 0.95)
         levelBadge.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.8)
         levelBadge.lineWidth = 1.5
         levelBadge.position = CGPoint(x: -size.width / 2 + 22, y: size.height / 2 - 22)
         levelBadge.zPosition = 2000
         cameraNode.addChild(levelBadge)
 
+        let lvlPrefix = SKLabelNode(fontNamed: "Copperplate")
+        lvlPrefix.text = "Nv."
+        lvlPrefix.fontSize = 6
+        lvlPrefix.fontColor = SKColor(red: 0.7, green: 0.6, blue: 0.3, alpha: 0.7)
+        lvlPrefix.verticalAlignmentMode = .center
+        lvlPrefix.position = CGPoint(x: 0, y: 6)
+        levelBadge.addChild(lvlPrefix)
+
         let levelLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         levelLabel.text = "\(champion.level)"
-        levelLabel.fontSize = 13
+        levelLabel.fontSize = 14
         levelLabel.fontColor = .white
         levelLabel.verticalAlignmentMode = .center
+        levelLabel.position = CGPoint(x: 0, y: -3)
         levelLabel.name = "levelLabel"
         levelBadge.addChild(levelLabel)
 
-        // Zone name
-        let zoneBg = SKShapeNode(rectOf: CGSize(width: 160, height: 22), cornerRadius: 6)
-        zoneBg.fillColor = SKColor(white: 0, alpha: 0.4)
-        zoneBg.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-        zoneBg.lineWidth = 0.5
+        // Zone name (enhanced with ornamental design)
+        let zoneBg = SKShapeNode(rectOf: CGSize(width: 180, height: 28), cornerRadius: 8)
+        zoneBg.fillColor = SKColor(white: 0, alpha: 0.5)
+        zoneBg.strokeColor = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 0.4)
+        zoneBg.lineWidth = 1
         zoneBg.position = CGPoint(x: 0, y: size.height / 2 - 25)
         zoneBg.zPosition = 2000
         cameraNode.addChild(zoneBg)
 
-        let zoneLabel = SKLabelNode(fontNamed: "Copperplate")
-        zoneLabel.text = zone.name
-        zoneLabel.fontSize = 11
-        zoneLabel.fontColor = .lightGray
+        // Ornamental dividers
+        for xOff in [-75, 75] as [CGFloat] {
+            let divider = SKShapeNode(rectOf: CGSize(width: 12, height: 1))
+            divider.fillColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 0.4)
+            divider.strokeColor = .clear
+            divider.position = CGPoint(x: xOff, y: 0)
+            zoneBg.addChild(divider)
+
+            let diamond = SKShapeNode(rectOf: CGSize(width: 3, height: 3))
+            diamond.fillColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 0.3)
+            diamond.strokeColor = .clear
+            diamond.zRotation = .pi / 4
+            diamond.position = CGPoint(x: xOff + (xOff > 0 ? 8 : -8), y: 0)
+            zoneBg.addChild(diamond)
+        }
+
+        let zoneLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        zoneLabel.text = zone.name.uppercased()
+        zoneLabel.fontSize = 10
+        zoneLabel.fontColor = SKColor(white: 0.9, alpha: 1)
         zoneLabel.verticalAlignmentMode = .center
+        zoneLabel.position = CGPoint(x: 0, y: 1)
         zoneBg.addChild(zoneLabel)
+
+        // World subtitle
+        let worldLabel = SKLabelNode(fontNamed: "Copperplate")
+        worldLabel.text = zone.worldID.capitalized
+        worldLabel.fontSize = 6
+        worldLabel.fontColor = SKColor(red: 0.5, green: 0.45, blue: 0.3, alpha: 0.6)
+        worldLabel.verticalAlignmentMode = .center
+        worldLabel.position = CGPoint(x: 0, y: -8)
+        zoneBg.addChild(worldLabel)
 
         // XP bar
         let xpBg = SKShapeNode(rectOf: CGSize(width: 120, height: 10), cornerRadius: 2)

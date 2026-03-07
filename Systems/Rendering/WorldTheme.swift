@@ -25,13 +25,13 @@ struct WorldTheme {
     }
 
     enum DecorationType {
-        case ashPile, deadTree, metalShard, ruinedWall                  // Scadrial
-        case rockFormation, stormPost, chasmmoss, rockbud               // Roshar
-        case sandDune, cactus, oasis, sandRock                          // Taldain
-        case flower, garden, statue, fountain                           // Nalthis
-        case beadPile, flamespren, glassTree, shardPillar               // Shadesmar
-        case inkBlot, paperLantern, nightmareResidue, brush             // Komashi
-        case aonGlyph, stoneColumn, mossCluster, shrine                 // Sel
+        case ashPile, deadTree, metalShard, ruinedWall, ashVent         // Scadrial
+        case rockFormation, stormPost, chasmmoss, rockbud, stormSpren   // Roshar
+        case sandDune, cactus, oasis, sandRock, sandWhirl               // Taldain
+        case flower, garden, statue, fountain, coloredBanner            // Nalthis
+        case beadPile, flamespren, glassTree, shardPillar, cognitiveRift // Shadesmar
+        case inkBlot, paperLantern, nightmareResidue, brush, dreamCatcher // Komashi
+        case aonGlyph, stoneColumn, mossCluster, shrine, lightWell      // Sel
     }
 
     static func theme(for worldID: String) -> WorldTheme {
@@ -49,7 +49,7 @@ struct WorldTheme {
                 fogAlpha: 0.15,
                 particleColor: SKColor(white: 0.7, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 1),
-                decorationTypes: [.ashPile, .deadTree, .metalShard, .ruinedWall],
+                decorationTypes: [.ashPile, .deadTree, .metalShard, .ruinedWall, .ashVent],
                 tileAccentColor: SKColor(red: 0.3, green: 0.25, blue: 0.2, alpha: 0.3),
                 tilePatternType: .cracks
             )
@@ -66,7 +66,7 @@ struct WorldTheme {
                 fogAlpha: 0.1,
                 particleColor: SKColor(red: 0.6, green: 0.8, blue: 0.5, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.3, green: 0.5, blue: 0.7, alpha: 1),
-                decorationTypes: [.rockFormation, .stormPost, .chasmmoss, .rockbud],
+                decorationTypes: [.rockFormation, .stormPost, .chasmmoss, .rockbud, .stormSpren],
                 tileAccentColor: SKColor(red: 0.25, green: 0.3, blue: 0.4, alpha: 0.25),
                 tilePatternType: .stoneSlabs
             )
@@ -83,7 +83,7 @@ struct WorldTheme {
                 fogAlpha: 0.08,
                 particleColor: SKColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.7, green: 0.6, blue: 0.3, alpha: 1),
-                decorationTypes: [.sandDune, .cactus, .oasis, .sandRock],
+                decorationTypes: [.sandDune, .cactus, .oasis, .sandRock, .sandWhirl],
                 tileAccentColor: SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 0.2),
                 tilePatternType: .sandWaves
             )
@@ -100,7 +100,7 @@ struct WorldTheme {
                 fogAlpha: 0.06,
                 particleColor: SKColor(red: 0.4, green: 0.9, blue: 0.5, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.3, green: 0.7, blue: 0.4, alpha: 1),
-                decorationTypes: [.flower, .garden, .statue, .fountain],
+                decorationTypes: [.flower, .garden, .statue, .fountain, .coloredBanner],
                 tileAccentColor: SKColor(red: 0.15, green: 0.3, blue: 0.18, alpha: 0.3),
                 tilePatternType: .grassPatches
             )
@@ -117,7 +117,7 @@ struct WorldTheme {
                 fogAlpha: 0.05,
                 particleColor: SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.7, green: 0.6, blue: 0.2, alpha: 1),
-                decorationTypes: [.aonGlyph, .stoneColumn, .mossCluster, .shrine],
+                decorationTypes: [.aonGlyph, .stoneColumn, .mossCluster, .shrine, .lightWell],
                 tileAccentColor: SKColor(red: 0.5, green: 0.45, blue: 0.25, alpha: 0.2),
                 tilePatternType: .glyphMarks
             )
@@ -134,7 +134,7 @@ struct WorldTheme {
                 fogAlpha: 0.12,
                 particleColor: SKColor(red: 0.8, green: 0.3, blue: 0.6, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.5, green: 0.2, blue: 0.6, alpha: 1),
-                decorationTypes: [.inkBlot, .paperLantern, .nightmareResidue, .brush],
+                decorationTypes: [.inkBlot, .paperLantern, .nightmareResidue, .brush, .dreamCatcher],
                 tileAccentColor: SKColor(red: 0.25, green: 0.1, blue: 0.3, alpha: 0.3),
                 tilePatternType: .inkStains
             )
@@ -150,7 +150,7 @@ struct WorldTheme {
                 fogAlpha: 0.18,
                 particleColor: SKColor(red: 0.6, green: 0.3, blue: 0.8, alpha: 1),
                 edgeGlowColor: SKColor(red: 0.4, green: 0.1, blue: 0.6, alpha: 1),
-                decorationTypes: [.beadPile, .flamespren, .glassTree, .shardPillar],
+                decorationTypes: [.beadPile, .flamespren, .glassTree, .shardPillar, .cognitiveRift],
                 tileAccentColor: SKColor(red: 0.2, green: 0.1, blue: 0.35, alpha: 0.3),
                 tilePatternType: .glassShards
             )
@@ -385,7 +385,7 @@ final class DecorationRenderer {
 
     static func placeDecorations(on worldNode: SKNode, zone: Zone, theme: WorldTheme, isoPosition: (Int, Int) -> CGPoint) {
         var rng = SeededRNG(seed: zone.id.hashValue)
-        let decorationCount = (zone.gridWidth * zone.gridHeight) / 20 // Densité augmentée
+        let decorationCount = (zone.gridWidth * zone.gridHeight) / 15 // Densité augmentée
 
         for _ in 0..<decorationCount {
             let col = Int(rng.next() % UInt64(zone.gridWidth))
@@ -1040,6 +1040,260 @@ final class DecorationRenderer {
                 SKAction.fadeAlpha(to: 0.6, duration: 2.0)
             ]))
             light.run(glow)
+
+        // === NEW DECORATION TYPES ===
+
+        case .ashVent:
+            // Scadrial — fissure volcanique émettant de la cendre
+            let vent = SKShapeNode(ellipseOf: CGSize(width: 8, height: 5))
+            vent.fillColor = SKColor(red: 0.15, green: 0.08, blue: 0.05, alpha: 0.9)
+            vent.strokeColor = SKColor(red: 0.4, green: 0.2, blue: 0.1, alpha: 0.5)
+            vent.lineWidth = 1
+            container.addChild(vent)
+
+            let innerGlow = SKShapeNode(ellipseOf: CGSize(width: 4, height: 2.5))
+            innerGlow.fillColor = SKColor(red: 0.6, green: 0.2, blue: 0.05, alpha: 0.4)
+            innerGlow.strokeColor = .clear
+            container.addChild(innerGlow)
+
+            // Smoke rising
+            for i in 0..<3 {
+                let smoke = SKShapeNode(circleOfRadius: CGFloat(2 + i))
+                smoke.fillColor = SKColor(white: 0.35, alpha: 0.15)
+                smoke.strokeColor = .clear
+                smoke.position = CGPoint(x: CGFloat(i - 1) * 2, y: CGFloat(3 + i * 4))
+                container.addChild(smoke)
+
+                let rise = SKAction.repeatForever(SKAction.sequence([
+                    SKAction.group([
+                        SKAction.moveBy(x: CGFloat.random(in: -2...2), y: 6, duration: 2.0 + Double(i) * 0.5),
+                        SKAction.fadeOut(withDuration: 2.0 + Double(i) * 0.5)
+                    ]),
+                    SKAction.group([
+                        SKAction.move(to: CGPoint(x: CGFloat(i - 1) * 2, y: CGFloat(3 + i * 4)), duration: 0),
+                        SKAction.fadeIn(withDuration: 0.3)
+                    ])
+                ]))
+                smoke.run(rise)
+            }
+
+        case .stormSpren:
+            // Roshar — petit spren lumineux flottant
+            let sprenCore = SKShapeNode(circleOfRadius: 3)
+            sprenCore.fillColor = SKColor(red: 0.5, green: 0.8, blue: 1.0, alpha: 0.6)
+            sprenCore.strokeColor = SKColor(red: 0.6, green: 0.9, blue: 1.0, alpha: 0.3)
+            sprenCore.lineWidth = 1
+            sprenCore.glowWidth = 3
+            sprenCore.position = CGPoint(x: 0, y: 8)
+            container.addChild(sprenCore)
+
+            // Trailing wisps
+            for i in 0..<3 {
+                let wisp = SKShapeNode(circleOfRadius: CGFloat(1.5 - Double(i) * 0.3))
+                wisp.fillColor = SKColor(red: 0.5, green: 0.8, blue: 1.0, alpha: 0.3 - CGFloat(i) * 0.08)
+                wisp.strokeColor = .clear
+                wisp.position = CGPoint(x: 0, y: CGFloat(5 - i * 2))
+                container.addChild(wisp)
+            }
+
+            let sprenFloat = SKAction.repeatForever(SKAction.sequence([
+                SKAction.moveBy(x: 4, y: 3, duration: 1.5),
+                SKAction.moveBy(x: -6, y: 2, duration: 2.0),
+                SKAction.moveBy(x: 2, y: -5, duration: 1.5)
+            ]))
+            sprenCore.run(sprenFloat)
+
+            let shimmer = SKAction.repeatForever(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.3, duration: 0.8),
+                SKAction.fadeAlpha(to: 0.8, duration: 0.8)
+            ]))
+            sprenCore.run(shimmer)
+
+        case .sandWhirl:
+            // Taldain — petit tourbillon de sable
+            for i in 0..<5 {
+                let grain = SKShapeNode(circleOfRadius: 1)
+                grain.fillColor = SKColor(red: 0.8, green: 0.7, blue: 0.4, alpha: 0.5)
+                grain.strokeColor = .clear
+                let angle = CGFloat(i) * (.pi * 2 / 5)
+                let radius: CGFloat = 4
+                grain.position = CGPoint(x: cos(angle) * radius, y: sin(angle) * radius + 4)
+                grain.name = "sandGrain_\(i)"
+                container.addChild(grain)
+
+                grain.run(SKAction.repeatForever(
+                    SKAction.customAction(withDuration: 2.0) { node, time in
+                        let t = time / 2.0
+                        let a = angle + t * .pi * 2
+                        let r = radius + sin(t * .pi * 4) * 2
+                        node.position = CGPoint(x: cos(a) * r, y: sin(a) * r + 4)
+                        node.alpha = 0.3 + 0.4 * sin(t * .pi * 2)
+                    }
+                ))
+            }
+
+            // Center dust
+            let dust = SKShapeNode(circleOfRadius: 2)
+            dust.fillColor = SKColor(red: 0.7, green: 0.6, blue: 0.35, alpha: 0.2)
+            dust.strokeColor = .clear
+            dust.position = CGPoint(x: 0, y: 4)
+            container.addChild(dust)
+
+        case .coloredBanner:
+            // Nalthis — bannière colorée BioChromatic
+            let pole = SKShapeNode(rectOf: CGSize(width: 1.5, height: 20))
+            pole.fillColor = SKColor(red: 0.35, green: 0.3, blue: 0.2, alpha: 0.9)
+            pole.strokeColor = .clear
+            pole.position = CGPoint(x: 0, y: 10)
+            container.addChild(pole)
+
+            let hue = CGFloat(rng.next() % 100) / 100.0
+            let banner = SKShapeNode(rectOf: CGSize(width: 8, height: 12), cornerRadius: 1)
+            banner.fillColor = SKColor(hue: hue, saturation: 0.85, brightness: 0.9, alpha: 0.8)
+            banner.strokeColor = SKColor(hue: hue, saturation: 0.9, brightness: 0.7, alpha: 0.5)
+            banner.lineWidth = 0.5
+            banner.position = CGPoint(x: 5, y: 14)
+            container.addChild(banner)
+
+            // Emblem on banner
+            let emblem = SKShapeNode(circleOfRadius: 2)
+            emblem.fillColor = SKColor(hue: (hue + 0.5).truncatingRemainder(dividingBy: 1.0), saturation: 0.7, brightness: 1.0, alpha: 0.7)
+            emblem.strokeColor = .clear
+            emblem.position = CGPoint(x: 5, y: 15)
+            container.addChild(emblem)
+
+            // Flutter animation
+            let flutter = SKAction.repeatForever(SKAction.sequence([
+                SKAction.moveBy(x: 1, y: 0, duration: 0.8),
+                SKAction.moveBy(x: -1, y: 0, duration: 0.8)
+            ]))
+            banner.run(flutter)
+
+        case .cognitiveRift:
+            // Shadesmar — fissure dimensionnelle avec lueur
+            let rift = SKShapeNode(rectOf: CGSize(width: 2, height: 18))
+            rift.fillColor = SKColor(red: 0.5, green: 0.2, blue: 0.8, alpha: 0.7)
+            rift.strokeColor = .clear
+            rift.position = CGPoint(x: 0, y: 9)
+            rift.zRotation = CGFloat.random(in: -0.2...0.2)
+            container.addChild(rift)
+
+            let riftGlow = SKShapeNode(rectOf: CGSize(width: 6, height: 20))
+            riftGlow.fillColor = SKColor(red: 0.4, green: 0.15, blue: 0.6, alpha: 0.15)
+            riftGlow.strokeColor = .clear
+            riftGlow.position = CGPoint(x: 0, y: 9)
+            riftGlow.zRotation = rift.zRotation
+            container.addChild(riftGlow)
+
+            // Particles being drawn into the rift
+            for i in 0..<4 {
+                let spark = SKShapeNode(circleOfRadius: 1)
+                spark.fillColor = SKColor(red: 0.6, green: 0.3, blue: 0.9, alpha: 0.5)
+                spark.strokeColor = .clear
+                spark.position = CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: 2...16))
+                container.addChild(spark)
+
+                let converge = SKAction.repeatForever(SKAction.sequence([
+                    SKAction.move(to: CGPoint(x: 0, y: 9), duration: 1.5 + Double(i) * 0.3),
+                    SKAction.fadeOut(withDuration: 0.1),
+                    SKAction.move(to: CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: 2...16)), duration: 0),
+                    SKAction.fadeIn(withDuration: 0.3)
+                ]))
+                spark.run(converge)
+            }
+
+            let pulse = SKAction.repeatForever(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.3, duration: 1.5),
+                SKAction.fadeAlpha(to: 0.8, duration: 1.5)
+            ]))
+            rift.run(pulse)
+
+        case .dreamCatcher:
+            // Komashi — attrape-cauchemar suspendu
+            let frame = SKShapeNode(circleOfRadius: 6)
+            frame.fillColor = .clear
+            frame.strokeColor = SKColor(red: 0.4, green: 0.2, blue: 0.5, alpha: 0.7)
+            frame.lineWidth = 1.5
+            frame.position = CGPoint(x: 0, y: 12)
+            container.addChild(frame)
+
+            // Web pattern inside
+            let cross1 = SKShapeNode(rectOf: CGSize(width: 0.5, height: 10))
+            cross1.fillColor = SKColor(red: 0.3, green: 0.15, blue: 0.4, alpha: 0.4)
+            cross1.strokeColor = .clear
+            cross1.position = CGPoint(x: 0, y: 12)
+            container.addChild(cross1)
+
+            let cross2 = SKShapeNode(rectOf: CGSize(width: 10, height: 0.5))
+            cross2.fillColor = SKColor(red: 0.3, green: 0.15, blue: 0.4, alpha: 0.4)
+            cross2.strokeColor = .clear
+            cross2.position = CGPoint(x: 0, y: 12)
+            container.addChild(cross2)
+
+            // Inner circle
+            let inner = SKShapeNode(circleOfRadius: 3)
+            inner.fillColor = SKColor(red: 0.2, green: 0.1, blue: 0.3, alpha: 0.2)
+            inner.strokeColor = SKColor(red: 0.4, green: 0.2, blue: 0.5, alpha: 0.3)
+            inner.lineWidth = 0.5
+            inner.position = CGPoint(x: 0, y: 12)
+            container.addChild(inner)
+
+            // Hanging threads with beads
+            for i in 0..<3 {
+                let thread = SKShapeNode(rectOf: CGSize(width: 0.5, height: CGFloat(4 + i * 2)))
+                thread.fillColor = SKColor(red: 0.3, green: 0.15, blue: 0.4, alpha: 0.5)
+                thread.strokeColor = .clear
+                thread.position = CGPoint(x: CGFloat(i - 1) * 3, y: CGFloat(3 - i))
+                container.addChild(thread)
+
+                let bead = SKShapeNode(circleOfRadius: 1)
+                bead.fillColor = SKColor(red: 0.6, green: 0.3, blue: 0.7, alpha: 0.6)
+                bead.strokeColor = .clear
+                bead.position = CGPoint(x: CGFloat(i - 1) * 3, y: CGFloat(1 - i * 2))
+                container.addChild(bead)
+            }
+
+            // Gentle sway
+            let sway = SKAction.repeatForever(SKAction.sequence([
+                SKAction.rotate(byAngle: 0.05, duration: 2.0),
+                SKAction.rotate(byAngle: -0.05, duration: 2.0)
+            ]))
+            container.run(sway)
+
+        case .lightWell:
+            // Sel — puits de lumière Aon
+            let well = SKShapeNode(circleOfRadius: 7)
+            well.fillColor = SKColor(red: 0.8, green: 0.7, blue: 0.3, alpha: 0.1)
+            well.strokeColor = SKColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 0.3)
+            well.lineWidth = 1.5
+            container.addChild(well)
+
+            // Inner rings
+            let ring1 = SKShapeNode(circleOfRadius: 4)
+            ring1.fillColor = .clear
+            ring1.strokeColor = SKColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 0.2)
+            ring1.lineWidth = 0.5
+            container.addChild(ring1)
+
+            let ring2 = SKShapeNode(circleOfRadius: 2)
+            ring2.fillColor = SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 0.3)
+            ring2.strokeColor = .clear
+            container.addChild(ring2)
+
+            // Light beam upward
+            let beam = SKShapeNode(rectOf: CGSize(width: 3, height: 16))
+            beam.fillColor = SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 0.15)
+            beam.strokeColor = .clear
+            beam.position = CGPoint(x: 0, y: 8)
+            container.addChild(beam)
+
+            let beamPulse = SKAction.repeatForever(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.05, duration: 2.0),
+                SKAction.fadeAlpha(to: 0.25, duration: 2.0)
+            ]))
+            beam.run(beamPulse)
+
+            ring1.run(SKAction.repeatForever(SKAction.rotate(byAngle: .pi * 2, duration: 8.0)))
         }
 
         container.setScale(CGFloat(scale))
