@@ -2,40 +2,45 @@
   {
     "id": "steel_push",
     "name": "Pousser les métaux",
-    "description": "Propulse des objets métalliques vers un ennemi avec une force allomantique dévastatrice.",
+    "description": "Propulse des objets métalliques avec une force dévastatrice, repoussant l'ennemi et infligeant des dégâts de zone aux cibles proches de l'impact.",
     "magicSystem": "allomancy",
     "icon": "skill_steel_push",
     "targeting": "singleEnemy",
     "damageType": "allomantic",
-    "baseDamage": 45,
-    "investitureCost": 15,
-    "cooldown": 2.0,
-    "range": 12.0,
-    "areaRadius": 0.0,
+    "baseDamage": 55,
+    "investitureCost": 18,
+    "cooldown": 2.5,
+    "range": 14.0,
+    "areaRadius": 3.0,
     "resourceCost": { "resourceType": "steel", "amount": 1 },
     "requiredLevel": 1,
     "maxRank": 5,
     "prerequisiteSkillID": null,
-    "statusEffects": []
+    "statusEffects": [
+      { "effectType": "stunned", "duration": 1.0, "magnitude": 1.0, "chance": 0.3 }
+    ]
   },
   {
     "id": "iron_pull",
     "name": "Tirer les métaux",
-    "description": "Attire les objets métalliques ou se propulse vers un ennemi, infligeant des dégâts au contact.",
+    "description": "Attire l'ennemi vers vous avec une force allomantique irrésistible, infligeant des dégâts au contact et le ralentissant.",
     "magicSystem": "allomancy",
     "icon": "skill_iron_pull",
     "targeting": "singleEnemy",
     "damageType": "allomantic",
-    "baseDamage": 40,
-    "investitureCost": 15,
-    "cooldown": 2.5,
+    "baseDamage": 35,
+    "investitureCost": 12,
+    "cooldown": 1.5,
     "range": 10.0,
     "areaRadius": 0.0,
     "resourceCost": { "resourceType": "iron", "amount": 1 },
     "requiredLevel": 1,
     "maxRank": 5,
     "prerequisiteSkillID": null,
-    "statusEffects": []
+    "statusEffects": [
+      { "effectType": "slowed", "duration": 3.0, "magnitude": 0.5, "chance": 0.7 },
+      { "effectType": "weakened", "duration": 4.0, "magnitude": 0.8, "chance": 0.4 }
+    ]
   },
   {
     "id": "tin_senses",

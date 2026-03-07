@@ -55,6 +55,8 @@ import type { WorldEventEffect } from '../game/WorldEvents';
 import { createWorldEventBanner } from '../ui/WorldEventBanner';
 import { WorldMapScene } from './WorldMapScene';
 import { NPCScheduleManager } from '../game/NPCScheduleSystem';
+import { PotionManager } from '../game/PotionSystem';
+import { createPotionHotbar } from '../ui/PotionHotbar';
 import { moveNPCTo, teleportNPC, updateNPCAnimation, showActivityIndicator, setNPCSleeping, clearNPCAnimations } from '../rendering/NPCAnimator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import { renderEnhancedTilemap } from '../rendering/TileRenderer';
@@ -333,6 +335,9 @@ export class ZoneScene extends Container implements GameScene {
   // Music indicator
   private musicIndicator: { update: (dt: number) => void } | null = null;
 
+  // Potion hotbar
+  private potionHotbar: { container: Container; refresh: () => void } | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -517,6 +522,18 @@ export class ZoneScene extends Container implements GameScene {
     this.ambientAtmosphere = new AmbientAtmosphereManager(
       this.worldContainer, this.zone.worldID, w, h,
     );
+
+    // Potion hotbar
+    PotionManager.shared.load();
+    // Grant starter potions if slots are empty
+    if (!PotionManager.shared.slots[0] && !PotionManager.shared.slots[1] && !PotionManager.shared.slots[2]) {
+      PotionManager.shared.addPotion('potion_heal_small', 5);
+      PotionManager.shared.addPotion('potion_investiture', 3);
+      PotionManager.shared.addPotion('potion_strength', 2);
+    }
+    this.potionHotbar = createPotionHotbar(this.uiContainer, w, h, {
+      onUsePotion: (idx) => this.usePotion(idx),
+    });
 
     // Achievement toast
     this.achievementToast = createAchievementToast(this.uiContainer, w);
@@ -1266,12 +1283,14 @@ export class ZoneScene extends Container implements GameScene {
     if (this.repBadge) this.repBadge.refresh();
 
     if (secret.type === 'shrine') {
-      // Shrine: heal, buff, and grant status effects
+      // Shrine: full heal, full investiture, strong long-lasting buffs
       champ.currentHP = GameManager.shared.maxHP;
       champ.currentInvestiture = GameManager.shared.maxInvestiture;
-      this.playerStatusEffects.apply('regenerating', 15, 3);
-      this.playerStatusEffects.apply('shielded', 20, 1);
-      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV, Inv, Bouclier + Régén!', 0x88ccff);
+      this.playerStatusEffects.apply('regenerating', 120, 5);     // 2 min regen (+5 HP/tick)
+      this.playerStatusEffects.apply('shielded', 120, 2);         // 2 min shield (40% DR)
+      this.playerStatusEffects.apply('strengthened', 120, 1.5);   // 2 min +50% damage
+      this.playerStatusEffects.apply('haste', 90, 1);             // 90s speed boost
+      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV, Inv, +50% Dégâts, Bouclier, Régén, Hâte!', 0x88ccff);
     } else {
       this.showFloatingText(secret.x, secret.y - 30,
         `${secret.loot.itemHint}! +${secret.loot.xp}XP +${secret.loot.gold}or`, 0xffdd44);
@@ -1306,6 +1325,8 @@ export class ZoneScene extends Container implements GameScene {
 
     // Track quest progress and NPC relationship
     QuestManager.shared.onNPCTalkedTo(npcID);
+    // Also trigger escort completion when talking to an escort NPC
+    QuestManager.shared.onEscortComplete(npcID);
     this.checkQuestCompletion();
     const npcName = this.formatNPCName(npcID);
     NPCRelationshipManager.shared.recordTalk(npcID, npcName, this.zone.worldID);
@@ -2475,6 +2496,38 @@ export class ZoneScene extends Container implements GameScene {
         createHitImpact(this.worldContainer, enemy.position.x, enemy.position.y, champ.championClass, isCrit, this.particles as any);
         animateEnemyHit(enemy.sprite);
         if (enemy.enemyAnim) triggerEnemyHurt(enemy.enemyAnim);
+
+        // Skill-specific mechanical effects
+        if (skill.id === 'steel_push' && dist > 0) {
+          // Knockback: push enemy away from player
+          const pushDX = (enemy.position.x - this.playerScreenPos.x) / dist;
+          const pushDY = (enemy.position.y - this.playerScreenPos.y) / dist;
+          const knockDist = 60;
+          enemy.position.x += pushDX * knockDist;
+          enemy.position.y += pushDY * knockDist;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+        } else if (skill.id === 'iron_pull' && dist > 30) {
+          // Pull: drag enemy toward player
+          const pullDX = (this.playerScreenPos.x - enemy.position.x) / dist;
+          const pullDY = (this.playerScreenPos.y - enemy.position.y) / dist;
+          const pullDist = Math.min(dist - 30, 80);
+          enemy.position.x += pullDX * pullDist;
+          enemy.position.y += pullDY * pullDist;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+        }
+
+        // Apply status effects from skill data
+        if (skill.statusEffects) {
+          for (const se of skill.statusEffects) {
+            if (Math.random() < (se.chance ?? 1)) {
+              // For enemy debuffs, we show visual feedback
+              this.showFloatingText(enemy.position.x, enemy.position.y - 40, `${se.effectType}!`, 0xffaa44);
+            }
+          }
+        }
+
         this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
         if (enemy.hp <= 0) this.killEnemy(enemy);
       }
@@ -2548,6 +2601,41 @@ export class ZoneScene extends Container implements GameScene {
     if (killCount > 0) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 80, `ULTIME! ${killCount} éliminé(s)!`, 0xffcc33);
     }
+  }
+
+  // ─── Potion Use ──────────────────────────────────────────────
+
+  private usePotion(slotIndex: number): void {
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    const effect = PotionManager.shared.usePotion(slotIndex);
+    if (!effect) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, 'Pas de potion!', 0xff6644);
+      return;
+    }
+
+    MusicManager.shared.playSFX('loot_common');
+
+    if (effect.healPercent) {
+      const heal = Math.floor(GameManager.shared.maxHP * effect.healPercent);
+      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + heal);
+      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, heal, false, 0x44ff66);
+    }
+    if (effect.investiturePercent) {
+      const restore = Math.floor(GameManager.shared.maxInvestiture * effect.investiturePercent);
+      champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + restore);
+      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, restore, false, 0x8866ff);
+    }
+    if (effect.statusType && effect.statusDuration) {
+      this.playerStatusEffects.apply(
+        effect.statusType as any,
+        effect.statusDuration,
+        effect.statusMagnitude ?? 1,
+      );
+    }
+
+    if (this.potionHotbar) this.potionHotbar.refresh();
   }
 
   private enemyAttacksPlayer(enemy: EnemyInstance): void {
@@ -2677,6 +2765,17 @@ export class ZoneScene extends Container implements GameScene {
     if (leveledUp) AchievementManager.shared.recordLevel(champ.level);
     AchievementManager.shared.check();
 
+    // Chance to drop potions (20% for normal, 50% for elite, 100% for boss)
+    const potionDropChance = enemy.data.tier === 'boss' ? 1 : enemy.data.tier === 'elite' ? 0.5 : 0.2;
+    if (Math.random() < potionDropChance) {
+      const potionPool = ['potion_heal_small', 'potion_investiture', 'potion_heal_small', 'potion_strength', 'potion_haste', 'potion_shield', 'potion_regen'];
+      const potionID = potionPool[Math.floor(Math.random() * potionPool.length)];
+      if (PotionManager.shared.addPotion(potionID)) {
+        this.showFloatingText(enemy.position.x, enemy.position.y - 50, `+1 Potion!`, 0xff88cc);
+        if (this.potionHotbar) this.potionHotbar.refresh();
+      }
+    }
+
     // Animated gold burst and XP orbs
     spawnGoldBurst(this.worldContainer, enemy.position.x, enemy.position.y, gold);
     spawnXPOrbs(this.worldContainer, enemy.position.x, enemy.position.y,
@@ -2759,7 +2858,23 @@ export class ZoneScene extends Container implements GameScene {
 
     const result = this.playerStatusEffects.update(dt);
 
-    // Apply periodic damage/heal
+    // ── Passive Regeneration (base + talents) ──
+    const talents = GameManager.shared.talentSystem;
+    const baseInvRegen = 1.5; // Base passive investiture regen per second
+    const baseHPRegen = 0.5;  // Base passive HP regen per second
+    const talentInvRegen = talents?.getBonus('investitureRegenPerSecond') ?? 0;
+    const talentHPRegen = talents?.getBonus('hpRegenPerSecond') ?? 0;
+    const totalInvRegen = (baseInvRegen + talentInvRegen) * dt;
+    const totalHPRegen = (baseHPRegen + talentHPRegen) * dt;
+
+    if (champ.currentInvestiture < GameManager.shared.maxInvestiture) {
+      champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + totalInvRegen);
+    }
+    if (champ.currentHP < GameManager.shared.maxHP && champ.currentHP > 0) {
+      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + totalHPRegen);
+    }
+
+    // Apply periodic damage/heal from status effects
     if (result.damagePerTick > 0) {
       champ.currentHP -= result.damagePerTick;
       this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.damagePerTick), false, 0x44cc44);
@@ -3224,6 +3339,12 @@ export class ZoneScene extends Container implements GameScene {
         const champ = GameManager.shared.champion;
         if (champ) {
           this.isTransitioning = true;
+
+          // Complete escort quests when leaving zone (NPC escorted to safety)
+          for (const npc of this.npcs) {
+            QuestManager.shared.onEscortComplete(npc.id);
+          }
+          this.checkQuestCompletion();
 
           // Transition effect
           const flash = new Graphics();

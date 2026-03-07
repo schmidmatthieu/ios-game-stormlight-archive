@@ -189,7 +189,7 @@ export class GameManager {
     while (this.champion.currentXP >= this.xpForNextLevel) {
       this.champion.currentXP -= this.xpForNextLevel;
       this.champion.level++;
-      this.champion.skillPoints++;
+      this.champion.skillPoints += 2; // 2 talent points per level for deeper progression
       this.champion.currentHP = this.maxHP;
       this.champion.currentInvestiture = this.maxInvestiture;
       leveledUp = true;
