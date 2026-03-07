@@ -25,6 +25,8 @@ import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } f
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
 import { addReputation, createReputationBadge, showRankUpEffect, getBonusXPMultiplier } from '../game/ReputationSystem';
+import { StatusEffectManager, createStatusBar, spawnStatusParticle } from '../game/StatusEffects';
+import type { ActiveStatusEffect } from '../game/StatusEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
 
@@ -248,6 +250,11 @@ export class ZoneScene extends Container implements GameScene {
   // Reputation badge
   private repBadge: { container: Container; refresh: () => void } | null = null;
 
+  // Status effects
+  private playerStatusEffects = new StatusEffectManager();
+  private statusBar: { container: Container; update: (effects: ActiveStatusEffect[]) => void } | null = null;
+  private statusParticleTimer = 0;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -343,6 +350,9 @@ export class ZoneScene extends Container implements GameScene {
 
     // Reputation badge
     this.repBadge = createReputationBadge(this.uiContainer, w, this.zone.worldID);
+
+    // Status effect bar
+    this.statusBar = createStatusBar(this.uiContainer, w);
 
     // Joystick
     this.joystick = new VirtualJoystick();
@@ -1163,10 +1173,12 @@ export class ZoneScene extends Container implements GameScene {
     if (this.repBadge) this.repBadge.refresh();
 
     if (secret.type === 'shrine') {
-      // Shrine: heal and buff
+      // Shrine: heal, buff, and grant status effects
       champ.currentHP = GameManager.shared.maxHP;
       champ.currentInvestiture = GameManager.shared.maxInvestiture;
-      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV et Inv restaurés', 0x88ccff);
+      this.playerStatusEffects.apply('regenerating', 15, 3);
+      this.playerStatusEffects.apply('shielded', 20, 1);
+      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV, Inv, Bouclier + Régén!', 0x88ccff);
     } else {
       this.showFloatingText(secret.x, secret.y - 30,
         `${secret.loot.itemHint}! +${secret.loot.xp}XP +${secret.loot.gold}or`, 0xffdd44);
@@ -1646,6 +1658,7 @@ export class ZoneScene extends Container implements GameScene {
     this.handleMovement(delta);
     this.updateEnemyAI(delta);
     this.updateCombat(delta);
+    this.updateStatusEffects(delta);
     this.updateCamera();
     this.updateAnimations(delta);
     this.spawnAmbientParticles(delta);
@@ -1664,8 +1677,9 @@ export class ZoneScene extends Container implements GameScene {
   private handleMovement(dt: number): void {
     if (!this.joystick.active || this.joystick.magnitude === 0) return;
 
-    const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude;
-    const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude;
+    const speedMult = this.playerStatusEffects.getSpeedMultiplier();
+    const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
+    const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
 
     // Track facing
     if (dx > 0.5) this.playerFacing = 'right';
@@ -1822,12 +1836,30 @@ export class ZoneScene extends Container implements GameScene {
           );
           const champ = GameManager.shared.champion;
           if (champ) {
-            const dmg = Math.floor(effect.damage * phase.damageMultiplier);
+            const shieldReduct = 1 - this.playerStatusEffects.getDamageReduction();
+            const dmg = Math.max(1, Math.floor(effect.damage * phase.damageMultiplier * shieldReduct));
             champ.currentHP -= dmg;
             this.showDamageNumber(playerPos.x, playerPos.y - 40, dmg, false, 0xff4444);
             this.shakeCamera(3, 0.15);
+            this.playerAnimator.setState('hurt');
+
+            // Boss attacks can inflict status effects
+            const statusByAttack: Record<string, { type: 'poison' | 'burning' | 'frozen' | 'weakened' | 'blinded'; dur: number; mag: number }> = {
+              spike_barrage: { type: 'poison', dur: 8, mag: 5 },
+              dark_sand: { type: 'blinded', dur: 5, mag: 1 },
+              void_consume: { type: 'weakened', dur: 10, mag: 1 },
+              stomp_wave: { type: 'frozen', dur: 2, mag: 1 },
+              fear_pulse: { type: 'weakened', dur: 6, mag: 1 },
+            };
+            const statusInfo = statusByAttack[phase.specialAttack];
+            if (statusInfo) {
+              const msg = this.playerStatusEffects.apply(statusInfo.type, statusInfo.dur, statusInfo.mag);
+              if (msg) this.showFloatingText(playerPos.x, playerPos.y - 55, msg, 0xff8844);
+            }
+
             if (champ.currentHP <= 0) {
               champ.currentHP = 0;
+              this.playerAnimator.setState('death');
               this.handlePlayerDeath();
             }
           }
@@ -2007,7 +2039,9 @@ export class ZoneScene extends Container implements GameScene {
 
     if (!closest) return;
 
-    const damage = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
+    const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
+    const statusDmgMult = this.playerStatusEffects.getDamageMultiplier();
+    const damage = Math.floor(baseDmg * statusDmgMult);
     const isCrit = Math.random() < champ.baseStats.luck * 0.01;
     const totalDmg = isCrit ? damage * 2 : damage;
 
@@ -2088,7 +2122,8 @@ export class ZoneScene extends Container implements GameScene {
       ? (this.worldMechanics as KomashiMechanics).getDamageMultiplier() : 1;
     const bossMult = enemy.bossState
       ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).damageMultiplier : 1;
-    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult));
+    const shieldReduction = 1 - this.playerStatusEffects.getDamageReduction();
+    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * shieldReduction));
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
@@ -2214,6 +2249,45 @@ export class ZoneScene extends Container implements GameScene {
 
   private updateCombat(dt: number): void {
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+  }
+
+  private updateStatusEffects(dt: number): void {
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    const result = this.playerStatusEffects.update(dt);
+
+    // Apply periodic damage/heal
+    if (result.damagePerTick > 0) {
+      champ.currentHP -= result.damagePerTick;
+      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.damagePerTick), false, 0x44cc44);
+      if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
+    }
+    if (result.healPerTick > 0) {
+      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + result.healPerTick);
+      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.healPerTick), false, 0x44ff66);
+    }
+
+    // Show expired messages
+    for (const type of result.expired) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, `${type} dissipé`, 0x999999);
+    }
+
+    // Spawn visual particles for active effects
+    this.statusParticleTimer += dt;
+    if (this.statusParticleTimer > 0.3) {
+      this.statusParticleTimer = 0;
+      for (const effect of this.playerStatusEffects.effects) {
+        if (Math.random() < 0.5) {
+          spawnStatusParticle(this.worldContainer, this.playerScreenPos.x, this.playerScreenPos.y - 15, effect.type);
+        }
+      }
+    }
+
+    // Update HUD status bar
+    if (this.statusBar) {
+      this.statusBar.update(this.playerStatusEffects.effects);
+    }
   }
 
   // ─── Visual Effects ──────────────────────────────────────────
