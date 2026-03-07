@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { CompanionManager, COMPANIONS } from '../game/CompanionSystem';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { CompanionDef } from '../game/CompanionSystem';
 
 // ─── World Labels ────────────────────────────────────────────
@@ -18,12 +20,13 @@ export function showCompanionPanel(
 ): Container {
   const panel = new Container();
   panel.zIndex = 10000;
+  const layout = getLayoutInfo(screenW, screenH);
 
   const cm = CompanionManager.shared;
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
@@ -35,16 +38,16 @@ export function showCompanionPanel(
   const py = (screenH - panelH) / 2;
 
   const panelBg = new Graphics();
-  panelBg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
-    .stroke({ color: 0x554433, width: 2, alpha: 0.7 });
+  panelBg.roundRect(px, py, panelW, panelH, panelRadius(layout))
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
+    .stroke({ color: UI_COLORS.borderAccent, width: 2, alpha: UI_ALPHA.panelBorder });
   panelBg.eventMode = 'static';
   panel.addChild(panelBg);
 
   // Title
   const title = new Text({
     text: '🐾 Compagnons',
-    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 'bold', fill: 0xe6cc66 }),
+    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(15, layout), fontWeight: 'bold', fill: UI_COLORS.textGold }),
   });
   title.x = px + panelW / 2;
   title.anchor.set(0.5, 0);
@@ -74,7 +77,7 @@ export function showCompanionPanel(
     if (active) {
       const text = new Text({
         text: `Actif: ${active.name} (${active.bonusDescription})`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0xaaddaa }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.success }),
       });
       text.x = px + panelW / 2;
       text.anchor.set(0.5, 0);
@@ -82,7 +85,7 @@ export function showCompanionPanel(
 
       const desc = new Text({
         text: active.description.length > 60 ? active.description.slice(0, 57) + '...' : active.description,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x888899, fontStyle: 'italic' }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted, fontStyle: 'italic' }),
       });
       desc.x = px + panelW / 2;
       desc.anchor.set(0.5, 0);
@@ -91,7 +94,7 @@ export function showCompanionPanel(
     } else {
       const text = new Text({
         text: 'Aucun compagnon actif',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x666677 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textMuted }),
       });
       text.x = px + panelW / 2;
       text.anchor.set(0.5, 0);
@@ -128,7 +131,7 @@ export function showCompanionPanel(
     const bg = new Graphics();
     bg.roundRect(x, y, w, 70, 8)
       .fill({ color: isActive ? 0x151a28 : 0x12101e, alpha: 0.9 })
-      .stroke({ color: isActive ? comp.color : unlocked ? 0x555566 : 0x333344, width: isActive ? 2 : 1, alpha: isActive ? 0.8 : 0.4 });
+      .stroke({ color: isActive ? comp.color : unlocked ? 0x555566 : UI_COLORS.borderSubtle, width: isActive ? 2 : 1, alpha: isActive ? 0.8 : 0.4 });
     card.addChild(bg);
 
     // Companion orb icon

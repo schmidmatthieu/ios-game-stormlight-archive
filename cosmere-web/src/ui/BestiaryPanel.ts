@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { BestiaryManager } from '../game/BestiarySystem';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { BestiaryEntry } from '../game/BestiarySystem';
 
 // ─── Tier Colors & World Colors ──────────────────────────────
@@ -58,10 +60,11 @@ export function showBestiaryPanel(
 ): Container {
   const panel = new Container();
   panel.zIndex = 10000;
+  const layout = getLayoutInfo(screenW, screenH);
 
   // Dark overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
@@ -73,9 +76,9 @@ export function showBestiaryPanel(
   const py = (screenH - panelH) / 2;
 
   const panelBg = new Graphics();
-  panelBg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
-    .stroke({ color: 0x554433, width: 2, alpha: 0.7 });
+  panelBg.roundRect(px, py, panelW, panelH, panelRadius(layout))
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
+    .stroke({ color: UI_COLORS.borderAccent, width: 2, alpha: UI_ALPHA.panelBorder });
   panelBg.eventMode = 'static'; // Prevent clicks from reaching overlay
   panel.addChild(panelBg);
 
@@ -83,8 +86,8 @@ export function showBestiaryPanel(
   const title = new Text({
     text: '📖 Bestiaire du Cosmere',
     style: new TextStyle({
-      fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 'bold',
-      fill: 0xe6cc66,
+      fontFamily: 'Georgia, serif', fontSize: fontSize(15, layout), fontWeight: 'bold',
+      fill: UI_COLORS.textGold,
     }),
   });
   title.x = px + panelW / 2 - 80;
@@ -95,7 +98,7 @@ export function showBestiaryPanel(
   const bestiary = BestiaryManager.shared;
   const statsText = new Text({
     text: `${bestiary.totalDiscovered} créatures découvertes · ${bestiary.totalKills} vaincues`,
-    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x888899 }),
+    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textMuted }),
   });
   statsText.x = px + panelW / 2 - 80;
   statsText.y = py + 30;
@@ -133,8 +136,8 @@ export function showBestiaryPanel(
       const tabW = label.length * 6 + 12;
 
       tabBg.roundRect(0, 0, tabW, 18, 4)
-        .fill({ color: isActive ? (WORLD_COLORS[w] ?? 0x444455) : 0x1a1528, alpha: isActive ? 0.8 : 0.5 })
-        .stroke({ color: isActive ? 0xddddcc : 0x444455, width: 1, alpha: 0.4 });
+        .fill({ color: isActive ? (WORLD_COLORS[w] ?? 0x444455) : UI_COLORS.btnSecondary, alpha: isActive ? 0.8 : 0.5 })
+        .stroke({ color: isActive ? UI_COLORS.textPrimary : 0x444455, width: 1, alpha: 0.4 });
       tabBg.x = tabX;
       tabBg.eventMode = 'static';
       tabBg.cursor = 'pointer';
@@ -147,7 +150,7 @@ export function showBestiaryPanel(
 
       const tabText = new Text({
         text: label,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: isActive ? 0xffffff : 0x999999 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: isActive ? 0xffffff : UI_COLORS.textSecondary }),
       });
       tabText.x = tabX + 6;
       tabText.y = 4;
@@ -164,7 +167,7 @@ export function showBestiaryPanel(
     if (entries.length === 0) {
       const emptyText = new Text({
         text: 'Aucune créature découverte.\nExplorez le monde et combattez des ennemis!',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x666677, align: 'center' }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textMuted, align: 'center' }),
       });
       emptyText.x = px + panelW / 2 - 80;
       emptyText.y = py + panelH / 2 - 20;
@@ -223,7 +226,7 @@ export function showBestiaryPanel(
     const nameText = new Text({
       text: entry.name,
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 10, fontWeight: 'bold',
+        fontFamily: 'Georgia, serif', fontSize: fontSize(11, layout), fontWeight: 'bold',
         fill: tierColor,
       }),
     });
@@ -234,7 +237,7 @@ export function showBestiaryPanel(
     // Tier + Level badge
     const badgeText = new Text({
       text: `${TIER_LABELS[entry.tier] ?? entry.tier} Nv.${entry.level}`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x999999 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary }),
     });
     badgeText.x = x + 44;
     badgeText.y = y + 20;
@@ -245,7 +248,7 @@ export function showBestiaryPanel(
     const behaviorLabel = BEHAVIOR_LABELS[entry.behavior] ?? entry.behavior;
     const infoText = new Text({
       text: `${worldLabel} · ${behaviorLabel}`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x777788 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted }),
     });
     infoText.x = x + w - 6;
     infoText.anchor.set(1, 0);
@@ -255,7 +258,7 @@ export function showBestiaryPanel(
     // Stats row
     const statsRow = new Text({
       text: `♥ ${entry.maxHP}  ⚔ ${entry.damage}  🛡 ${entry.defense}`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0xbbbbaa }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textPrimary }),
     });
     statsRow.x = x + 44;
     statsRow.y = y + 34;
@@ -265,7 +268,7 @@ export function showBestiaryPanel(
     const desc = entry.description.length > 70 ? entry.description.slice(0, 67) + '...' : entry.description;
     const descText = new Text({
       text: desc,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x888899, fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 54 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted, fontStyle: 'italic', wordWrap: true, wordWrapWidth: w - 54 }),
     });
     descText.x = x + 44;
     descText.y = y + 48;
@@ -274,7 +277,7 @@ export function showBestiaryPanel(
     // Kill count
     const killText = new Text({
       text: `${entry.timesDefeated}×`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fontWeight: 'bold', fill: entry.timesDefeated > 0 ? 0x66cc44 : 0x555555 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fontWeight: 'bold', fill: entry.timesDefeated > 0 ? UI_COLORS.success : 0x555555 }),
     });
     killText.x = x + 22;
     killText.anchor.set(0.5, 0);
@@ -285,7 +288,7 @@ export function showBestiaryPanel(
     if (entry.dropsDiscovered.length > 0) {
       const dropText = new Text({
         text: `Butins: ${entry.dropsDiscovered.length} découvert(s)`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xaaaa55 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.warning }),
       });
       dropText.x = x + 44;
       dropText.y = y + 65;
@@ -316,9 +319,9 @@ export function showBestiaryPanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.circle(px + panelW - 16, py + 16, 10)
-    .fill({ color: 0x332222, alpha: 0.8 })
-    .stroke({ color: 0x664444, width: 1.5, alpha: 0.6 });
+  closeBtn.circle(px + panelW - 16, py + 16, buttonHeight(layout) / 2)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1.5, alpha: 0.6 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -326,7 +329,7 @@ export function showBestiaryPanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontSize: fontSize(11, layout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 16;

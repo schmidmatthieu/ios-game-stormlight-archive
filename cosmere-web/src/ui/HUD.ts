@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
-import { getLayoutInfo, fontSize, scaled, hudMargin, hudBarWidth, LayoutInfo } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, hudMargin, hudBarWidth, panelRadius, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 export class HUD extends Container {
   private hpBar: Graphics;
@@ -22,11 +23,21 @@ export class HUD extends Container {
   private xpBg: Graphics;
   private layout: LayoutInfo;
 
+  // Animated values for smooth transitions
+  private animHP = 1;
+  private animInv = 1;
+  private animXP = 0;
+  private targetHP = 1;
+  private targetInv = 1;
+  private targetXP = 0;
+  private prevLevel = 1;
+  private levelUpGlow: Graphics;
+
   constructor(screenWidth: number, screenHeight: number) {
     super();
     this.layout = getLayoutInfo(screenWidth, screenHeight);
     this.barWidth = hudBarWidth(this.layout);
-    this.barHeight = scaled(10, this.layout);
+    this.barHeight = scaled(11, this.layout);
 
     const margins = hudMargin(this.layout);
     const leftX = margins.left;
@@ -40,15 +51,20 @@ export class HUD extends Container {
     this.rightPanel = new Graphics();
     this.addChild(this.rightPanel);
 
-    const labelFontSize = fontSize(8, this.layout);
-    const valStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: labelFontSize, fill: 0xccccdd });
+    const labelFontSize = fontSize(9, this.layout);
+    const valStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: labelFontSize, fill: UI_COLORS.textSecondary, fontWeight: 'bold' });
 
     // Level
     this.levelText = new Text({
       text: 'Nv.1',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(14, this.layout), fill: 0xe6cc66, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(15, this.layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
     });
     this.addChild(this.levelText);
+
+    // Level up glow effect
+    this.levelUpGlow = new Graphics();
+    this.levelUpGlow.alpha = 0;
+    this.addChild(this.levelUpGlow);
 
     // HP background
     this.hpBg = new Graphics();
@@ -58,12 +74,15 @@ export class HUD extends Container {
     this.hpBar = new Graphics();
     this.addChild(this.hpBar);
 
-    // HP icon
-    this.hpIcon = new Text({ text: 'PV', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, this.layout), fill: 0xcc5555, fontWeight: 'bold' }) });
+    // HP icon with better contrast
+    this.hpIcon = new Text({
+      text: 'PV',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: UI_COLORS.hpHigh, fontWeight: 'bold' }),
+    });
     this.addChild(this.hpIcon);
 
     this.hpText = new Text({ text: '', style: valStyle });
-    this.hpText.anchor.set(0.5, 0);
+    this.hpText.anchor.set(0.5, 0.5);
     this.addChild(this.hpText);
 
     // Investiture background
@@ -75,11 +94,14 @@ export class HUD extends Container {
     this.addChild(this.invBar);
 
     // Investiture icon
-    this.invIcon = new Text({ text: 'INV', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, this.layout), fill: 0x5577cc, fontWeight: 'bold' }) });
+    this.invIcon = new Text({
+      text: 'INV',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: UI_COLORS.investiture, fontWeight: 'bold' }),
+    });
     this.addChild(this.invIcon);
 
     this.invText = new Text({ text: '', style: valStyle });
-    this.invText.anchor.set(0.5, 0);
+    this.invText.anchor.set(0.5, 0.5);
     this.addChild(this.invText);
 
     // XP background
@@ -93,15 +115,15 @@ export class HUD extends Container {
     // Zone name (top right)
     this.zoneText = new Text({
       text: '',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(11, this.layout), fill: 0xaabbcc }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(12, this.layout), fill: UI_COLORS.textSecondary }),
     });
     this.zoneText.anchor.set(1, 0);
     this.addChild(this.zoneText);
 
-    // Gold
+    // Gold with icon
     this.goldText = new Text({
       text: '0 or',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, this.layout), fill: 0xe6cc33, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(12, this.layout), fill: UI_COLORS.textGoldBright, fontWeight: 'bold' }),
     });
     this.goldText.anchor.set(1, 0);
     this.addChild(this.goldText);
@@ -113,45 +135,47 @@ export class HUD extends Container {
   relayout(screenWidth: number, screenHeight: number): void {
     this.layout = getLayoutInfo(screenWidth, screenHeight);
     this.barWidth = hudBarWidth(this.layout);
-    this.barHeight = scaled(10, this.layout);
+    this.barHeight = scaled(11, this.layout);
 
     const margins = hudMargin(this.layout);
     const leftX = margins.left;
     const topY = margins.top;
-    const barStartX = leftX + scaled(42, this.layout);
-    const barSpacing = this.barHeight + scaled(5, this.layout);
-    const xpBarHeight = scaled(4, this.layout);
+    const barStartX = leftX + scaled(44, this.layout);
+    const barSpacing = this.barHeight + scaled(6, this.layout);
+    const xpBarHeight = scaled(5, this.layout);
+    const radius = panelRadius(this.layout);
+    const smallRadius = scaled(5, this.layout);
 
     // Update font sizes
-    this.levelText.style.fontSize = fontSize(14, this.layout);
-    this.hpIcon.style.fontSize = fontSize(7, this.layout);
-    this.invIcon.style.fontSize = fontSize(7, this.layout);
-    this.hpText.style.fontSize = fontSize(8, this.layout);
-    this.invText.style.fontSize = fontSize(8, this.layout);
-    this.zoneText.style.fontSize = fontSize(11, this.layout);
-    this.goldText.style.fontSize = fontSize(11, this.layout);
+    this.levelText.style.fontSize = fontSize(15, this.layout);
+    this.hpIcon.style.fontSize = fontSize(8, this.layout);
+    this.invIcon.style.fontSize = fontSize(8, this.layout);
+    this.hpText.style.fontSize = fontSize(9, this.layout);
+    this.invText.style.fontSize = fontSize(9, this.layout);
+    this.zoneText.style.fontSize = fontSize(12, this.layout);
+    this.goldText.style.fontSize = fontSize(12, this.layout);
 
     // Left panel dimensions
-    const panelWidth = scaled(42, this.layout) + this.barWidth + scaled(20, this.layout);
-    const panelHeight = this.barHeight * 2 + xpBarHeight + scaled(5, this.layout) * 2 + scaled(8, this.layout);
+    const panelWidth = scaled(44, this.layout) + this.barWidth + scaled(22, this.layout);
+    const panelHeight = this.barHeight * 2 + xpBarHeight + scaled(6, this.layout) * 2 + scaled(10, this.layout);
 
-    // Left panel background
+    // Left panel background — glass-morphism style
     this.panel.clear();
-    this.panel.roundRect(leftX - scaled(4, this.layout), topY - scaled(4, this.layout), panelWidth, panelHeight, scaled(8, this.layout))
-      .fill({ color: 0x0a0a1a, alpha: 0.6 });
-    this.panel.roundRect(leftX - scaled(4, this.layout), topY - scaled(4, this.layout), panelWidth, panelHeight, scaled(8, this.layout))
-      .stroke({ color: 0x334455, width: 1, alpha: 0.4 });
+    this.panel.roundRect(leftX - scaled(6, this.layout), topY - scaled(6, this.layout), panelWidth + scaled(4, this.layout), panelHeight + scaled(4, this.layout), radius)
+      .fill({ color: UI_COLORS.panelBg, alpha: UI_ALPHA.panelBg });
+    this.panel.roundRect(leftX - scaled(6, this.layout), topY - scaled(6, this.layout), panelWidth + scaled(4, this.layout), panelHeight + scaled(4, this.layout), radius)
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.5, alpha: UI_ALPHA.panelBorder });
 
     // Right panel background
-    const rightPanelWidth = scaled(134, this.layout);
-    const rightPanelHeight = scaled(40, this.layout);
+    const rightPanelWidth = scaled(140, this.layout);
+    const rightPanelHeight = scaled(44, this.layout);
     const rightPanelX = screenWidth - margins.right - rightPanelWidth;
 
     this.rightPanel.clear();
-    this.rightPanel.roundRect(rightPanelX, topY - scaled(4, this.layout), rightPanelWidth, rightPanelHeight, scaled(8, this.layout))
-      .fill({ color: 0x0a0a1a, alpha: 0.6 });
-    this.rightPanel.roundRect(rightPanelX, topY - scaled(4, this.layout), rightPanelWidth, rightPanelHeight, scaled(8, this.layout))
-      .stroke({ color: 0x334455, width: 1, alpha: 0.4 });
+    this.rightPanel.roundRect(rightPanelX, topY - scaled(6, this.layout), rightPanelWidth, rightPanelHeight, radius)
+      .fill({ color: UI_COLORS.panelBg, alpha: UI_ALPHA.panelBg });
+    this.rightPanel.roundRect(rightPanelX, topY - scaled(6, this.layout), rightPanelWidth, rightPanelHeight, radius)
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.5, alpha: UI_ALPHA.panelBorder });
 
     // Level position
     this.levelText.x = leftX + scaled(2, this.layout);
@@ -159,42 +183,42 @@ export class HUD extends Container {
 
     // HP positions
     const hpY = topY + scaled(2, this.layout);
-    this.hpIcon.x = barStartX - scaled(14, this.layout);
+    this.hpIcon.x = barStartX - scaled(16, this.layout);
     this.hpIcon.y = hpY + scaled(1, this.layout);
     this.hpText.x = barStartX + this.barWidth / 2;
-    this.hpText.y = hpY + scaled(1, this.layout);
+    this.hpText.y = hpY + this.barHeight / 2;
 
     // HP background
     this.hpBg.clear();
-    this.hpBg.roundRect(barStartX, hpY, this.barWidth, this.barHeight, scaled(4, this.layout))
-      .fill({ color: 0x111122, alpha: 0.9 })
-      .stroke({ color: 0x222244, width: 0.5 });
+    this.hpBg.roundRect(barStartX, hpY, this.barWidth, this.barHeight, smallRadius)
+      .fill({ color: 0x1a0a0a, alpha: UI_ALPHA.barBg })
+      .stroke({ color: 0x332222, width: 0.8 });
 
     // Investiture positions
     const invY = hpY + barSpacing;
-    this.invIcon.x = barStartX - scaled(18, this.layout);
+    this.invIcon.x = barStartX - scaled(20, this.layout);
     this.invIcon.y = invY + scaled(1, this.layout);
     this.invText.x = barStartX + this.barWidth / 2;
-    this.invText.y = invY + scaled(1, this.layout);
+    this.invText.y = invY + this.barHeight / 2;
 
     // Investiture background
     this.invBg.clear();
-    this.invBg.roundRect(barStartX, invY, this.barWidth, this.barHeight, scaled(4, this.layout))
-      .fill({ color: 0x111122, alpha: 0.9 })
-      .stroke({ color: 0x222244, width: 0.5 });
+    this.invBg.roundRect(barStartX, invY, this.barWidth, this.barHeight, smallRadius)
+      .fill({ color: 0x0a0a1a, alpha: UI_ALPHA.barBg })
+      .stroke({ color: 0x222233, width: 0.8 });
 
     // XP background
     const xpY = invY + barSpacing;
     this.xpBg.clear();
-    this.xpBg.roundRect(barStartX, xpY, this.barWidth, xpBarHeight, scaled(2, this.layout))
-      .fill({ color: 0x111122, alpha: 0.8 })
-      .stroke({ color: 0x222233, width: 0.5 });
+    this.xpBg.roundRect(barStartX, xpY, this.barWidth, xpBarHeight, scaled(3, this.layout))
+      .fill({ color: 0x0a1a0a, alpha: 0.8 })
+      .stroke({ color: 0x223322, width: 0.5 });
 
     // Zone & gold positions (top right, respecting safe area)
-    this.zoneText.x = screenWidth - margins.right - scaled(4, this.layout);
+    this.zoneText.x = screenWidth - margins.right - scaled(6, this.layout);
     this.zoneText.y = topY;
-    this.goldText.x = screenWidth - margins.right - scaled(4, this.layout);
-    this.goldText.y = topY + scaled(18, this.layout);
+    this.goldText.x = screenWidth - margins.right - scaled(6, this.layout);
+    this.goldText.y = topY + scaled(20, this.layout);
   }
 
   refresh(zoneName: string): void {
@@ -203,48 +227,110 @@ export class HUD extends Container {
     const gm = GameManager.shared;
 
     const margins = hudMargin(this.layout);
-    const barStartX = margins.left + scaled(42, this.layout);
-    const barSpacing = this.barHeight + scaled(5, this.layout);
+    const barStartX = margins.left + scaled(44, this.layout);
+    const barSpacing = this.barHeight + scaled(6, this.layout);
     const hpY = margins.top + scaled(2, this.layout);
-    const cornerRadius = scaled(4, this.layout);
+    const cornerRadius = scaled(5, this.layout);
+
+    // Update targets for smooth animation
+    this.targetHP = Math.max(0, Math.min(1, c.currentHP / gm.maxHP));
+    this.targetInv = Math.max(0, Math.min(1, c.currentInvestiture / gm.maxInvestiture));
+    this.targetXP = Math.max(0, Math.min(1, c.currentXP / gm.xpForNextLevel));
+
+    // Smooth lerp animation
+    this.animHP += (this.targetHP - this.animHP) * 0.12;
+    this.animInv += (this.targetInv - this.animInv) * 0.12;
+    this.animXP += (this.targetXP - this.animXP) * 0.15;
+
+    // Snap when close enough
+    if (Math.abs(this.animHP - this.targetHP) < 0.002) this.animHP = this.targetHP;
+    if (Math.abs(this.animInv - this.targetInv) < 0.002) this.animInv = this.targetInv;
+    if (Math.abs(this.animXP - this.targetXP) < 0.002) this.animXP = this.targetXP;
+
+    // Level up detection
+    if (c.level !== this.prevLevel) {
+      this.prevLevel = c.level;
+      this.triggerLevelUpGlow();
+    }
 
     this.levelText.text = `Nv.${c.level}`;
 
-    // HP
-    const hpPct = Math.max(0, Math.min(1, c.currentHP / gm.maxHP));
+    // HP — gradient color based on percentage, accessible
+    const hpPct = this.animHP;
     this.hpBar.clear();
     if (hpPct > 0) {
-      this.hpBar.roundRect(barStartX, hpY, this.barWidth * hpPct, this.barHeight, cornerRadius)
-        .fill(hpPct > 0.3 ? 0xcc3333 : 0xff2222);
-      // Shine
-      this.hpBar.roundRect(barStartX, hpY, this.barWidth * hpPct, this.barHeight / 2, cornerRadius)
-        .fill({ color: 0xffffff, alpha: 0.1 });
+      // Color transitions: green > yellow > orange > red
+      let hpColor: number;
+      if (hpPct > 0.6) {
+        hpColor = UI_COLORS.hpHigh;
+      } else if (hpPct > 0.3) {
+        hpColor = UI_COLORS.hpCritical; // Orange — visible for colorblind
+      } else {
+        hpColor = UI_COLORS.hpLow;
+      }
+
+      const fillWidth = Math.max(cornerRadius * 2, this.barWidth * hpPct);
+      this.hpBar.roundRect(barStartX, hpY, fillWidth, this.barHeight, cornerRadius)
+        .fill(hpColor);
+      // Glossy shine
+      this.hpBar.roundRect(barStartX + 1, hpY + 1, fillWidth - 2, this.barHeight * 0.4, cornerRadius)
+        .fill({ color: 0xffffff, alpha: 0.15 });
+
+      // Critical pulse effect
+      if (hpPct <= 0.2) {
+        const pulse = 0.6 + Math.sin(performance.now() / 300) * 0.4;
+        this.hpBar.roundRect(barStartX, hpY, fillWidth, this.barHeight, cornerRadius)
+          .fill({ color: 0xff0000, alpha: pulse * 0.15 });
+      }
     }
     this.hpText.text = `${Math.ceil(c.currentHP)}/${gm.maxHP}`;
 
     // Investiture
-    const invPct = Math.max(0, Math.min(1, c.currentInvestiture / gm.maxInvestiture));
+    const invPct = this.animInv;
     const invY = hpY + barSpacing;
     this.invBar.clear();
     if (invPct > 0) {
-      this.invBar.roundRect(barStartX, invY, this.barWidth * invPct, this.barHeight, cornerRadius)
-        .fill(0x3366bb);
-      this.invBar.roundRect(barStartX, invY, this.barWidth * invPct, this.barHeight / 2, cornerRadius)
-        .fill({ color: 0xffffff, alpha: 0.1 });
+      const fillWidth = Math.max(cornerRadius * 2, this.barWidth * invPct);
+      this.invBar.roundRect(barStartX, invY, fillWidth, this.barHeight, cornerRadius)
+        .fill(UI_COLORS.investiture);
+      // Glossy shine
+      this.invBar.roundRect(barStartX + 1, invY + 1, fillWidth - 2, this.barHeight * 0.4, cornerRadius)
+        .fill({ color: 0xffffff, alpha: 0.15 });
+      // Shimmer effect when full
+      if (invPct > 0.95) {
+        const shimmer = 0.05 + Math.sin(performance.now() / 500) * 0.05;
+        this.invBar.roundRect(barStartX, invY, fillWidth, this.barHeight, cornerRadius)
+          .fill({ color: 0xffffff, alpha: shimmer });
+      }
     }
     this.invText.text = `${Math.ceil(c.currentInvestiture)}/${gm.maxInvestiture}`;
 
     // XP
-    const xpPct = Math.max(0, Math.min(1, c.currentXP / gm.xpForNextLevel));
+    const xpPct = this.animXP;
     const xpY = invY + barSpacing;
-    const xpBarHeight = scaled(4, this.layout);
+    const xpBarHeight = scaled(5, this.layout);
     this.xpBar.clear();
     if (xpPct > 0) {
-      this.xpBar.roundRect(barStartX, xpY, this.barWidth * xpPct, xpBarHeight, scaled(2, this.layout)).fill(0x55aa44);
+      const fillWidth = Math.max(scaled(3, this.layout), this.barWidth * xpPct);
+      this.xpBar.roundRect(barStartX, xpY, fillWidth, xpBarHeight, scaled(3, this.layout))
+        .fill(UI_COLORS.xp);
     }
 
     // Zone + Gold
     this.zoneText.text = zoneName;
     this.goldText.text = `${c.gold} or`;
+
+    // Decay level up glow
+    if (this.levelUpGlow.alpha > 0) {
+      this.levelUpGlow.alpha -= 0.015;
+    }
+  }
+
+  private triggerLevelUpGlow(): void {
+    const margins = hudMargin(this.layout);
+    this.levelUpGlow.clear();
+    this.levelUpGlow.circle(margins.left + scaled(16, this.layout), margins.top + scaled(10, this.layout), scaled(25, this.layout))
+      .fill({ color: UI_COLORS.textGold, alpha: 0.3 });
+    this.levelUpGlow.alpha = 1;
   }
 }

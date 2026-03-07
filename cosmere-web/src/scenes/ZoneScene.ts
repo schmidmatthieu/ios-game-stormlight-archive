@@ -46,7 +46,7 @@ import { StatusEffectManager, createStatusBar, spawnStatusParticle } from '../ga
 import type { ActiveStatusEffect } from '../game/StatusEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
-import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize, touchTarget, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 // ─── Isometric Helpers ─────────────────────────────────────────
@@ -1346,46 +1346,51 @@ export class ZoneScene extends Container implements GameScene {
 
   private createPauseButton(screenWidth: number, layout: LayoutInfo): void {
     const btnSize = toolbarButtonSize(layout);
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
     const icon = new Graphics();
-    icon.rect(scaled(10, layout), scaled(6, layout), scaled(4, layout), scaled(16, layout)).fill({ color: 0xcccccc, alpha: 0.8 });
-    icon.rect(scaled(20, layout), scaled(6, layout), scaled(4, layout), scaled(16, layout)).fill({ color: 0xcccccc, alpha: 0.8 });
+    icon.rect(btnW * 0.3, btnH * 0.2, btnW * 0.1, btnH * 0.6).fill({ color: UI_COLORS.textPrimary, alpha: 0.85 });
+    icon.rect(btnW * 0.55, btnH * 0.2, btnW * 0.1, btnH * 0.6).fill({ color: UI_COLORS.textPrimary, alpha: 0.85 });
     btn.addChild(icon);
     btn.x = screenWidth / 2 - btnW / 2;
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.togglePause());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.togglePause(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 
   private createInventoryButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
-    // Bag icon
+    // Bag icon — proportional
     const icon = new Graphics();
-    icon.roundRect(scaled(10, layout), scaled(8, layout), scaled(16, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0xaa8855, alpha: 0.7 });
-    icon.roundRect(scaled(10, layout), scaled(8, layout), scaled(16, layout), scaled(14, layout), scaled(3, layout)).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
-    icon.arc(scaled(18, layout), scaled(8, layout), scaled(5, layout), Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
+    const ix = btnW * 0.28, iy = btnH * 0.3, iw = btnW * 0.44, ih = btnH * 0.5;
+    icon.roundRect(ix, iy, iw, ih, scaled(3, layout)).fill({ color: 0xaa8855, alpha: 0.7 });
+    icon.roundRect(ix, iy, iw, ih, scaled(3, layout)).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
+    icon.arc(btnW * 0.5, iy, iw * 0.3, Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(24, layout);
+    btn.x = screenWidth / 2 + scaled(26, layout);
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleInventory());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleInventory(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 
@@ -1400,25 +1405,27 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private createCraftingButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
-    // Anvil icon
+    // Anvil icon — proportional
     const icon = new Graphics();
-    icon.poly([{ x: scaled(12, layout), y: scaled(20, layout) }, { x: scaled(18, layout), y: scaled(10, layout) }, { x: scaled(24, layout), y: scaled(20, layout) }]).fill({ color: 0x888899, alpha: 0.7 });
-    icon.rect(scaled(10, layout), scaled(20, layout), scaled(16, layout), scaled(3, layout)).fill({ color: 0x666677, alpha: 0.8 });
-    icon.rect(scaled(16, layout), scaled(6, layout), scaled(4, layout), scaled(6, layout)).fill({ color: 0xaa8844, alpha: 0.7 });
+    icon.poly([{ x: btnW * 0.33, y: btnH * 0.7 }, { x: btnW * 0.5, y: btnH * 0.35 }, { x: btnW * 0.67, y: btnH * 0.7 }]).fill({ color: 0x888899, alpha: 0.7 });
+    icon.rect(btnW * 0.28, btnH * 0.7, btnW * 0.44, btnH * 0.1).fill({ color: 0x666677, alpha: 0.8 });
+    icon.rect(btnW * 0.44, btnH * 0.2, btnW * 0.1, btnH * 0.2).fill({ color: 0xaa8844, alpha: 0.7 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(66, layout);
+    btn.x = screenWidth / 2 + scaled(70, layout);
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleCrafting());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleCrafting(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 
@@ -1434,27 +1441,29 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private createBestiaryButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
-    // Book icon
+    // Book icon — proportional
     const icon = new Graphics();
-    icon.roundRect(scaled(10, layout), scaled(7, layout), scaled(16, layout), scaled(16, layout), scaled(2, layout)).fill({ color: 0x557744, alpha: 0.7 });
-    icon.rect(scaled(12, layout), scaled(9, layout), scaled(12, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.6 });
-    icon.rect(scaled(12, layout), scaled(12, layout), scaled(10, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.5 });
-    icon.rect(scaled(12, layout), scaled(15, layout), scaled(11, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.4 });
-    icon.rect(scaled(10, layout), scaled(7, layout), scaled(2, layout), scaled(16, layout)).fill({ color: 0x445533, alpha: 0.8 });
+    icon.roundRect(btnW * 0.28, btnH * 0.22, btnW * 0.44, btnH * 0.56, scaled(2, layout)).fill({ color: 0x557744, alpha: 0.7 });
+    icon.rect(btnW * 0.33, btnH * 0.32, btnW * 0.33, btnH * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.6 });
+    icon.rect(btnW * 0.33, btnH * 0.42, btnW * 0.28, btnH * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.5 });
+    icon.rect(btnW * 0.33, btnH * 0.52, btnW * 0.3, btnH * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.4 });
+    icon.rect(btnW * 0.28, btnH * 0.22, btnW * 0.06, btnH * 0.56).fill({ color: 0x445533, alpha: 0.8 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(108, layout);
+    btn.x = screenWidth / 2 + scaled(114, layout);
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleBestiary());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleBestiary(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 
@@ -1468,25 +1477,27 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private createAchievementButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
-    // Trophy icon
+    // Trophy icon — proportional
     const icon = new Graphics();
-    icon.moveTo(scaled(14, layout), scaled(8, layout)).lineTo(scaled(22, layout), scaled(8, layout)).lineTo(scaled(21, layout), scaled(16, layout)).lineTo(scaled(15, layout), scaled(16, layout)).closePath().fill({ color: 0xe6cc66, alpha: 0.7 });
-    icon.rect(scaled(16, layout), scaled(16, layout), scaled(4, layout), scaled(3, layout)).fill({ color: 0xccaa44, alpha: 0.7 });
-    icon.rect(scaled(14, layout), scaled(19, layout), scaled(8, layout), scaled(2, layout)).fill({ color: 0xccaa44, alpha: 0.6 });
+    icon.moveTo(btnW * 0.36, btnH * 0.25).lineTo(btnW * 0.64, btnH * 0.25).lineTo(btnW * 0.6, btnH * 0.55).lineTo(btnW * 0.4, btnH * 0.55).closePath().fill({ color: UI_COLORS.textGold, alpha: 0.7 });
+    icon.rect(btnW * 0.44, btnH * 0.55, btnW * 0.12, btnH * 0.12).fill({ color: 0xccaa44, alpha: 0.7 });
+    icon.rect(btnW * 0.38, btnH * 0.67, btnW * 0.24, btnH * 0.08).fill({ color: 0xccaa44, alpha: 0.6 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + scaled(150, layout);
+    btn.x = screenWidth / 2 + scaled(158, layout);
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleAchievements());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleAchievements(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 
@@ -1500,28 +1511,30 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private createSkillTreeButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
-    // Tree/branch icon
+    // Tree/branch icon — proportional
     const icon = new Graphics();
-    icon.rect(scaled(17, layout), scaled(8, layout), scaled(2, layout), scaled(14, layout)).fill({ color: 0x5588cc, alpha: 0.7 });
-    icon.circle(scaled(18, layout), scaled(8, layout), scaled(4, layout)).fill({ color: 0x5588cc, alpha: 0.6 });
-    icon.circle(scaled(12, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0x4477aa, alpha: 0.5 });
-    icon.circle(scaled(24, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0x4477aa, alpha: 0.5 });
-    icon.moveTo(scaled(18, layout), scaled(12, layout)).lineTo(scaled(12, layout), scaled(14, layout)).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
-    icon.moveTo(scaled(18, layout), scaled(12, layout)).lineTo(scaled(24, layout), scaled(14, layout)).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    icon.rect(btnW * 0.47, btnH * 0.3, btnW * 0.06, btnH * 0.5).fill({ color: 0x5588cc, alpha: 0.7 });
+    icon.circle(btnW * 0.5, btnH * 0.3, btnW * 0.1).fill({ color: 0x5588cc, alpha: 0.6 });
+    icon.circle(btnW * 0.33, btnH * 0.55, btnW * 0.08).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.circle(btnW * 0.67, btnH * 0.55, btnW * 0.08).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.moveTo(btnW * 0.5, btnH * 0.45).lineTo(btnW * 0.33, btnH * 0.55).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    icon.moveTo(btnW * 0.5, btnH * 0.45).lineTo(btnW * 0.67, btnH * 0.55).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 - scaled(60, layout);
+    btn.x = screenWidth / 2 - scaled(64, layout);
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleSkillTree());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleSkillTree(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 
@@ -1535,25 +1548,27 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private createCompanionButton(screenWidth: number, layout: LayoutInfo): void {
-    const btnW = scaled(36, layout);
-    const btnH = scaled(28, layout);
+    const btnW = touchTarget(36, layout);
+    const btnH = touchTarget(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
-      .fill({ color: 0x1a1528, alpha: 0.7 })
-      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
     btn.addChild(bg);
-    // Companion orb icon
+    // Companion orb icon — proportional
     const icon = new Graphics();
-    icon.circle(scaled(18, layout), scaled(15, layout), scaled(6, layout)).fill({ color: 0x88ccff, alpha: 0.5 });
-    icon.circle(scaled(18, layout), scaled(15, layout), scaled(4, layout)).fill({ color: 0xaaddff, alpha: 0.7 });
-    icon.circle(scaled(17, layout), scaled(14, layout), scaled(2, layout)).fill({ color: 0xffffff, alpha: 0.4 });
+    icon.circle(btnW * 0.5, btnH * 0.5, btnW * 0.17).fill({ color: 0x88ccff, alpha: 0.5 });
+    icon.circle(btnW * 0.5, btnH * 0.5, btnW * 0.11).fill({ color: 0xaaddff, alpha: 0.7 });
+    icon.circle(btnW * 0.47, btnH * 0.47, btnW * 0.06).fill({ color: 0xffffff, alpha: 0.4 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 - scaled(102, layout);
+    btn.x = screenWidth / 2 - scaled(108, layout);
     btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => this.toggleCompanion());
+    btn.on('pointerdown', () => { btn.alpha = 0.7; this.toggleCompanion(); });
+    btn.on('pointerup', () => { btn.alpha = 1; });
+    btn.on('pointerupoutside', () => { btn.alpha = 1; });
     this.uiContainer.addChild(btn);
   }
 

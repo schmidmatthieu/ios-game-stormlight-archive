@@ -1,7 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { addReputation, showRankUpEffect } from '../game/ReputationSystem';
-import { getLayoutInfo, fontSize, scaled, dialogueWidth } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, dialogueWidth, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 // ─── Dialogue Tree System ───────────────────────────────────────
@@ -198,7 +198,7 @@ export function showDialoguePanel(
 
   // Dark overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.4 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: UI_ALPHA.overlay - 0.15 });
   overlay.eventMode = 'static';
   panel.addChild(overlay);
 
@@ -216,69 +216,75 @@ export function showDialoguePanel(
   function renderNode(node: DialogueNode): void {
     contentContainer.removeChildren();
 
-    const choiceH = scaled(30, layout);
-    const panelH = scaled(60, layout) + node.choices.length * choiceH;
+    const choiceBtnH = scaled(32, layout);
+    const choiceSpacing = scaled(34, layout);
+    const panelH = scaled(70, layout) + node.choices.length * choiceSpacing;
     const panelY = screenH - panelH - scaled(20, layout);
+    const radius = panelRadius(layout);
 
-    // Panel background
+    // Panel background — glass style
     const bg = new Graphics();
-    bg.roundRect(dlgX, panelY, dlgW, panelH, 12)
-      .fill({ color: 0x0a0815, alpha: 0.92 })
+    bg.roundRect(dlgX, panelY, dlgW, panelH, radius + 2)
+      .fill({ color: UI_COLORS.panelBgAlt, alpha: 0.94 })
       .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
     bg.eventMode = 'static';
     contentContainer.addChild(bg);
 
-    // NPC name
+    // NPC name badge
     const nameLabel = new Text({
       text: npcName,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(12, layout), fill: 0xe6cc66, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(13, layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
     });
-    nameLabel.x = dlgX + scaled(16, layout);
-    nameLabel.y = panelY + scaled(8, layout);
+    nameLabel.x = dlgX + scaled(18, layout);
+    nameLabel.y = panelY + scaled(10, layout);
     contentContainer.addChild(nameLabel);
 
-    // Dialogue text
+    // Dialogue text — better readability
     const dialogueText = new Text({
       text: node.text,
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: fontSize(10, layout), fill: 0xddddcc,
-        wordWrap: true, wordWrapWidth: dlgW - scaled(40, layout),
+        fontFamily: 'Georgia, serif', fontSize: fontSize(11, layout), fill: UI_COLORS.textPrimary,
+        wordWrap: true, wordWrapWidth: dlgW - scaled(36, layout),
+        lineHeight: fontSize(11, layout) * 1.4,
       }),
     });
-    dialogueText.x = dlgX + scaled(16, layout);
-    dialogueText.y = panelY + scaled(26, layout);
+    dialogueText.x = dlgX + scaled(18, layout);
+    dialogueText.y = panelY + scaled(30, layout);
     contentContainer.addChild(dialogueText);
 
-    // Choices
-    const choiceStartY = panelY + scaled(50, layout);
+    // Choices — bigger touch targets, better styling
+    const choiceStartY = panelY + scaled(58, layout);
     node.choices.forEach((choice, i) => {
-      const choiceY = choiceStartY + i * scaled(28, layout);
+      const choiceY = choiceStartY + i * choiceSpacing;
 
       const choiceBg = new Graphics();
-      choiceBg.roundRect(dlgX + scaled(10, layout), choiceY, dlgW - scaled(20, layout), scaled(24, layout), 4)
-        .fill({ color: 0x1a1528, alpha: 0.7 })
-        .stroke({ color: 0x443355, width: 1, alpha: 0.4 });
+      choiceBg.roundRect(dlgX + scaled(12, layout), choiceY, dlgW - scaled(24, layout), choiceBtnH, 6)
+        .fill({ color: UI_COLORS.btnSecondary, alpha: 0.75 })
+        .stroke({ color: 0x443355, width: 1, alpha: UI_ALPHA.panelBorder });
       choiceBg.eventMode = 'static';
       choiceBg.cursor = 'pointer';
       contentContainer.addChild(choiceBg);
 
       const arrow = new Text({
-        text: '\u25b8',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: 0xe6cc66 }),
+        text: '\u25B8',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: UI_COLORS.textGold }),
       });
-      arrow.x = dlgX + scaled(18, layout);
-      arrow.y = choiceY + scaled(4, layout);
+      arrow.x = dlgX + scaled(20, layout);
+      arrow.y = choiceY + scaled(6, layout);
       contentContainer.addChild(arrow);
 
       const choiceText = new Text({
         text: choice.text,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: 0xccccbb }),
+        style: new TextStyle({
+          fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textPrimary,
+          wordWrap: true, wordWrapWidth: dlgW - scaled(80, layout),
+        }),
       });
-      choiceText.x = dlgX + scaled(32, layout);
-      choiceText.y = choiceY + scaled(5, layout);
+      choiceText.x = dlgX + scaled(36, layout);
+      choiceText.y = choiceY + scaled(7, layout);
       contentContainer.addChild(choiceText);
 
-      // Reward hint
+      // Reward hint — more visible
       if (choice.reward) {
         const parts: string[] = [];
         if (choice.reward.xp) parts.push(`+${choice.reward.xp}XP`);
@@ -287,16 +293,20 @@ export function showDialoguePanel(
         if (parts.length > 0) {
           const rewardHint = new Text({
             text: parts.join(' '),
-            style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: 0x66aa44 }),
+            style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.success }),
           });
-          rewardHint.anchor.set(1, 0);
-          rewardHint.x = dlgX + dlgW - scaled(8, layout);
-          rewardHint.y = choiceY + scaled(7, layout);
+          rewardHint.anchor.set(1, 0.5);
+          rewardHint.x = dlgX + dlgW - scaled(20, layout);
+          rewardHint.y = choiceY + choiceBtnH / 2;
           contentContainer.addChild(rewardHint);
         }
       }
 
+      // Touch feedback on choices
+      choiceBg.on('pointerover', () => { choiceBg.alpha = 0.9; });
+      choiceBg.on('pointerout', () => { choiceBg.alpha = 1; });
       choiceBg.on('pointerdown', () => {
+        choiceBg.alpha = 0.7;
         // Grant rewards
         if (choice.reward) {
           const champ = GameManager.shared.champion;
@@ -352,86 +362,89 @@ export function showShopPanel(
   panel.zIndex = 10000;
 
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.5 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   panel.addChild(overlay);
 
-  const panelW = Math.min(scaled(300, layout), screenW - 40);
-  const panelH = scaled(280, layout);
+  const radius = panelRadius(layout);
+  const panelW = Math.min(scaled(320, layout), screenW - 40);
+  const itemH = scaled(38, layout);
+  const panelH = scaled(70, layout) + 5 * itemH + buttonHeight(layout) + scaled(20, layout);
   const px = (screenW - panelW) / 2;
   const py = (screenH - panelH) / 2;
 
   const bg = new Graphics();
-  bg.roundRect(px, py, panelW, panelH, 12)
-    .fill({ color: 0x0a0815, alpha: 0.95 })
+  bg.roundRect(px, py, panelW, panelH, radius + 2)
+    .fill({ color: UI_COLORS.panelBgAlt, alpha: 0.96 })
     .stroke({ color: 0x886633, width: 2, alpha: 0.8 });
   bg.eventMode = 'static';
   panel.addChild(bg);
 
   const title = new Text({
     text: 'BOUTIQUE',
-    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(16, layout), fill: 0xe6cc66, fontWeight: 'bold' }),
+    style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(18, layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
   });
   title.anchor.set(0.5);
   title.x = screenW / 2;
-  title.y = py + scaled(18, layout);
+  title.y = py + scaled(20, layout);
   panel.addChild(title);
 
   const goldLabel = new Text({
     text: `Or: ${champ.gold}`,
-    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(12, layout), fill: 0xe6cc33 }),
+    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(13, layout), fill: UI_COLORS.textGoldBright, fontWeight: 'bold' }),
   });
   goldLabel.anchor.set(0.5);
   goldLabel.x = screenW / 2;
-  goldLabel.y = py + scaled(38, layout);
+  goldLabel.y = py + scaled(42, layout);
   panel.addChild(goldLabel);
 
   const shopItems = [
     { name: 'Potion de soin', cost: 20, effect: 'hp', value: 50 },
     { name: 'Potion d\'investiture', cost: 25, effect: 'inv', value: 40 },
-    { name: 'Élixir de force', cost: 40, effect: 'str', value: 2 },
-    { name: 'Élixir d\'agilité', cost: 40, effect: 'agi', value: 2 },
-    { name: 'Élixir d\'esprit', cost: 45, effect: 'spi', value: 2 },
+    { name: '\u00C9lixir de force', cost: 40, effect: 'str', value: 2 },
+    { name: '\u00C9lixir d\'agilit\u00E9', cost: 40, effect: 'agi', value: 2 },
+    { name: '\u00C9lixir d\'esprit', cost: 45, effect: 'spi', value: 2 },
   ];
 
   shopItems.forEach((item, i) => {
-    const itemY = py + scaled(58, layout) + i * scaled(36, layout);
+    const itemY = py + scaled(62, layout) + i * itemH;
     const itemBg = new Graphics();
-    itemBg.roundRect(px + 10, itemY, panelW - 20, scaled(30, layout), 6)
-      .fill({ color: 0x1a1528, alpha: 0.8 })
-      .stroke({ color: 0x443322, width: 1, alpha: 0.5 });
+    itemBg.roundRect(px + 12, itemY, panelW - 24, itemH - scaled(4, layout), 6)
+      .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+      .stroke({ color: 0x443322, width: 1, alpha: UI_ALPHA.panelBorder });
     itemBg.eventMode = 'static';
     itemBg.cursor = 'pointer';
     panel.addChild(itemBg);
 
     const itemName = new Text({
       text: item.name,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: 0xddddcc }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: UI_COLORS.textPrimary }),
     });
-    itemName.x = px + 18;
+    itemName.x = px + 20;
     itemName.y = itemY + scaled(4, layout);
     panel.addChild(itemName);
 
     const canBuy = champ.gold >= item.cost;
     const costText = new Text({
       text: `${item.cost} or`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: canBuy ? 0xe6cc33 : 0x884444 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: canBuy ? UI_COLORS.textGoldBright : 0x884444, fontWeight: 'bold' }),
     });
     costText.anchor.set(1, 0);
-    costText.x = px + panelW - 18;
+    costText.x = px + panelW - 20;
     costText.y = itemY + scaled(4, layout);
     panel.addChild(costText);
 
     const buyLabel = new Text({
       text: canBuy ? 'Acheter' : 'Pas assez d\'or',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: canBuy ? 0x66cc44 : 0x666666 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: canBuy ? UI_COLORS.success : UI_COLORS.textMuted }),
     });
-    buyLabel.x = px + 18;
-    buyLabel.y = itemY + scaled(17, layout);
+    buyLabel.x = px + 20;
+    buyLabel.y = itemY + scaled(19, layout);
     panel.addChild(buyLabel);
 
     if (canBuy) {
       itemBg.on('pointerdown', () => {
+        itemBg.alpha = 0.7;
         champ.gold -= item.cost;
         switch (item.effect) {
           case 'hp': champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + item.value); break;
@@ -441,17 +454,17 @@ export function showShopPanel(
           case 'spi': champ.baseStats.spirit += item.value; break;
         }
         onClose();
-        showFloatingText(playerPos.x, playerPos.y - 40, `${item.name} acheté!`, 0x66cc44);
+        showFloatingText(playerPos.x, playerPos.y - 40, `${item.name} achet\u00E9!`, UI_COLORS.success);
       });
     }
   });
 
-  const closeBtnW = scaled(80, layout);
-  const closeBtnH = scaled(24, layout);
+  const closeBtnW = scaled(90, layout);
+  const closeBtnH = buttonHeight(layout);
   const closeBg = new Graphics();
-  closeBg.roundRect(px + panelW / 2 - closeBtnW / 2, py + panelH - scaled(32, layout), closeBtnW, closeBtnH, 6)
-    .fill({ color: 0x553322, alpha: 0.8 })
-    .stroke({ color: 0x886644, width: 1 });
+  closeBg.roundRect(px + panelW / 2 - closeBtnW / 2, py + panelH - scaled(38, layout), closeBtnW, closeBtnH, 8)
+    .fill({ color: 0x553322, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: 0x886644, width: 1.5 });
   closeBg.eventMode = 'static';
   closeBg.cursor = 'pointer';
   closeBg.on('pointerdown', onClose);
@@ -459,11 +472,11 @@ export function showShopPanel(
 
   const closeLabel = new Text({
     text: 'Fermer',
-    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: 0xeeddcc }),
+    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(12, layout), fill: UI_COLORS.textPrimary, fontWeight: 'bold' }),
   });
   closeLabel.anchor.set(0.5);
   closeLabel.x = px + panelW / 2;
-  closeLabel.y = py + panelH - scaled(20, layout);
+  closeLabel.y = py + panelH - scaled(38, layout) + closeBtnH / 2;
   panel.addChild(closeLabel);
 
   overlay.on('pointerdown', onClose);

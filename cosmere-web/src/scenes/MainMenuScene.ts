@@ -12,7 +12,7 @@ import { gameData } from '../data/DataLoader';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass } from '../data/types';
 import { CLASS_INFO } from '../data/types';
-import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, panelRadius, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const SHOWCASE_CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
@@ -236,8 +236,8 @@ export class MainMenuScene extends Container implements GameScene {
     // Version
     const verSize = fontSize(9, layout);
     const ver = new Text({
-      text: 'v1.1 — Prototype Web',
-      style: new TextStyle({ fontFamily: 'monospace', fontSize: verSize, fill: 0x333333 }),
+      text: 'v1.2 — Prototype Web',
+      style: new TextStyle({ fontFamily: 'monospace', fontSize: verSize, fill: 0x444444 }),
     });
     ver.anchor.set(0.5);
     ver.x = w / 2;
@@ -284,15 +284,23 @@ export class MainMenuScene extends Container implements GameScene {
     btn.y = y;
 
     const bg = new Graphics();
-    const radius = scaled(8, layout);
+    const radius = panelRadius(layout);
+    // Shadow
+    bg.roundRect(-bw / 2 + 2, -bh / 2 + 3, bw, bh, radius)
+      .fill({ color: 0x000000, alpha: 0.2 });
+    // Button body
     bg.roundRect(-bw / 2, -bh / 2, bw, bh, radius)
-      .fill({ color, alpha: 0.85 })
-      .stroke({ color: 0x998033, width: 1.5, alpha: 0.8 });
+      .fill({ color, alpha: UI_ALPHA.buttonBg })
+      .stroke({ color: UI_COLORS.borderGold, width: 1.5, alpha: 0.8 });
+    // Top highlight
+    bg.roundRect(-bw / 2 + 4, -bh / 2 + 2, bw - 8, bh * 0.35, radius)
+      .fill({ color: 0xffffff, alpha: 0.06 });
     btn.addChild(bg);
 
-    const btnFontSize = fontSize(14, layout);
+    const btnFontSize = fontSize(15, layout);
     const style = new TextStyle({
-      fontFamily: 'Georgia, serif', fontSize: btnFontSize, fill: 0xeeddcc,
+      fontFamily: 'Georgia, serif', fontSize: btnFontSize, fill: UI_COLORS.textPrimary,
+      fontWeight: 'bold',
     });
     const txt = new Text({ text: label, style });
     txt.anchor.set(0.5);
@@ -300,9 +308,9 @@ export class MainMenuScene extends Container implements GameScene {
 
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.on('pointerdown', () => { btn.scale.set(0.95); });
-    btn.on('pointerup', () => { btn.scale.set(1); onClick(); });
-    btn.on('pointerupoutside', () => { btn.scale.set(1); });
+    btn.on('pointerdown', () => { btn.scale.set(0.96); btn.alpha = 0.9; });
+    btn.on('pointerup', () => { btn.scale.set(1); btn.alpha = 1; onClick(); });
+    btn.on('pointerupoutside', () => { btn.scale.set(1); btn.alpha = 1; });
 
     this.addChild(btn);
   }

@@ -7,7 +7,7 @@ import { MainMenuScene } from './MainMenuScene';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
-import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import { getLayoutInfo, fontSize, scaled, panelRadius, touchTarget, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
