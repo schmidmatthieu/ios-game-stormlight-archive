@@ -117,7 +117,7 @@ class InventoryNode: SKNode {
         let equipSection = CGPoint(x: -screenSize.width / 4, y: 0)
 
         for (slot, x, y) in equipSlotPositions {
-            let slotNode = SKShapeNode(rectOf: CGSize(width: 40, height: 40), cornerRadius: 6)
+            let slotNode = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 6)
             slotNode.fillColor = SKColor(white: 0.12, alpha: 1.0)
             slotNode.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
             slotNode.lineWidth = 1.5
@@ -128,7 +128,7 @@ class InventoryNode: SKNode {
             // Slot label
             let label = SKLabelNode(fontNamed: "Helvetica")
             label.text = slotAbbreviation(slot)
-            label.fontSize = 8
+            label.fontSize = 10
             label.fontColor = SKColor(white: 0.3, alpha: 0.5)
             label.verticalAlignmentMode = .center
             label.name = "equip_\(slot.rawValue)"
