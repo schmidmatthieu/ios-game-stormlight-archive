@@ -78,8 +78,8 @@ export function createAchievementToast(
     const nameText = new Text({
       text: achievement.name,
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 10, fontWeight: 'bold',
-        fill: CATEGORY_COLORS[achievement.category] ?? 0xe6cc66,
+        fontFamily: 'Georgia, serif', fontSize: fontSize(11, layout), fontWeight: 'bold',
+        fill: CATEGORY_COLORS[achievement.category] ?? UI_COLORS.textGold,
       }),
     });
     nameText.x = tx + 38;
@@ -89,7 +89,7 @@ export function createAchievementToast(
     // Description
     const descText = new Text({
       text: achievement.description,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x999999 }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary }),
     });
     descText.x = tx + 38;
     descText.y = 32;
@@ -156,10 +156,11 @@ export function showAchievementPanel(
 ): Container {
   const panel = new Container();
   panel.zIndex = 10000;
+  const panelLayout = getLayoutInfo(screenW, screenH);
 
   // Overlay
   const overlay = new Graphics();
-  overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: 0.6 });
+  overlay.rect(0, 0, screenW, screenH).fill({ color: UI_COLORS.overlayDark, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
   overlay.on('pointerdown', onClose);
   panel.addChild(overlay);
