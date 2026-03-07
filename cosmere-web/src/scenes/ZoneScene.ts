@@ -36,6 +36,7 @@ import { rollAffixes, createAffixState, updateAffixState, getAffixHPMultiplier, 
 import type { EnemyAffixState } from '../game/EliteAffixes';
 import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
 import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
+import { AmbientAtmosphereManager } from '../rendering/AmbientAtmosphere';
 import { DayNightManager, createDayNightOverlay } from '../rendering/DayNightCycle';
 import type { BlendedTimeConfig } from '../rendering/DayNightCycle';
 import { BestiaryManager } from '../game/BestiarySystem';
@@ -303,9 +304,10 @@ export class ZoneScene extends Container implements GameScene {
   private dayNightManager!: DayNightManager;
   private dayNightOverlay: { overlay: Graphics; stars: Container; timeLabel: Text; update: (config: BlendedTimeConfig) => void } | null = null;
 
-  // Weather
+  // Weather & Atmosphere
   private weatherManager!: WeatherManager;
   private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
+  private ambientAtmosphere: AmbientAtmosphereManager | null = null;
   private achievementToast: { update: (dt: number) => void } | null = null;
 
   // Kill streak tracking
@@ -509,6 +511,11 @@ export class ZoneScene extends Container implements GameScene {
     // Dynamic weather
     this.weatherManager = new WeatherManager(this.zone.worldID);
     this.weatherOverlay = createWeatherOverlay(this.uiContainer, w, h);
+
+    // Ambient atmosphere (world-specific floating motes and fog layers)
+    this.ambientAtmosphere = new AmbientAtmosphereManager(
+      this.worldContainer, this.zone.worldID, w, h,
+    );
 
     // Achievement toast
     this.achievementToast = createAchievementToast(this.uiContainer, w);
@@ -2821,6 +2828,11 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private updateWeather(dt: number): void {
+    // Update ambient atmosphere motes and fog
+    if (this.ambientAtmosphere) {
+      this.ambientAtmosphere.update(dt, this.worldContainer.x, this.worldContainer.y);
+    }
+
     const result = this.weatherManager.update(dt);
     if (result.changed && result.message) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, result.message, 0xaaddff);
