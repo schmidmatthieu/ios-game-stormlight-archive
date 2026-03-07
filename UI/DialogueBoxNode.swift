@@ -32,16 +32,16 @@ class DialogueBoxNode: SKNode {
     init(screenSize: CGSize) {
         self.boxSize = CGSize(width: screenSize.width - 40, height: 160)
 
-        // Background box
-        backgroundNode = SKShapeNode(rectOf: boxSize, cornerRadius: 12)
-        backgroundNode.fillColor = SKColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 0.92)
-        backgroundNode.strokeColor = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 1.0)
-        backgroundNode.lineWidth = 2
+        // Background box with refined styling
+        backgroundNode = SKShapeNode(rectOf: boxSize, cornerRadius: 14)
+        backgroundNode.fillColor = SKColor(red: 0.04, green: 0.04, blue: 0.1, alpha: 0.94)
+        backgroundNode.strokeColor = SKColor(red: 0.45, green: 0.38, blue: 0.18, alpha: 1.0)
+        backgroundNode.lineWidth = 2.5
         backgroundNode.zPosition = 5000
 
-        // Portrait frame
-        portraitFrame = SKShapeNode(rectOf: CGSize(width: portraitSize.width + 4, height: portraitSize.height + 4), cornerRadius: 6)
-        portraitFrame.fillColor = SKColor(white: 0.1, alpha: 1.0)
+        // Portrait frame with inner glow
+        portraitFrame = SKShapeNode(rectOf: CGSize(width: portraitSize.width + 6, height: portraitSize.height + 6), cornerRadius: 8)
+        portraitFrame.fillColor = SKColor(white: 0.08, alpha: 1.0)
         portraitFrame.strokeColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 1.0)
         portraitFrame.lineWidth = 2
         portraitFrame.position = CGPoint(x: -boxSize.width / 2 + portraitSize.width / 2 + 15, y: 20)
