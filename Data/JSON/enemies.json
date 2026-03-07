@@ -745,5 +745,127 @@
       { "itemID": "splinter_of_devotion", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 },
       { "itemID": "seons_light", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
     ]
+  },
+  {
+    "id": "cognitive_shade",
+    "name": "Ombre Cognitive",
+    "description": "Un vestige de conscience piégé dans Shadesmar. Attaque par réflexe plus que par volonté.",
+    "worldID": "shadesmar",
+    "tier": "minion",
+    "level": 7,
+    "maxHP": 55,
+    "damage": 12,
+    "defense": 4,
+    "speed": 1.4,
+    "detectionRange": 6.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_cognitive_shade",
+    "spriteScale": 1.0,
+    "xpReward": 30,
+    "goldMin": 5,
+    "goldMax": 12,
+    "lootTable": [
+      { "itemID": "cognitive_bead", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 2 }
+    ]
+  },
+  {
+    "id": "hostile_spren",
+    "name": "Spren Hostile",
+    "description": "Un spren devenu agressif après avoir été corrompu par Odium. Sa forme fluctue sans cesse.",
+    "worldID": "shadesmar",
+    "tier": "soldier",
+    "level": 8,
+    "maxHP": 80,
+    "damage": 16,
+    "defense": 6,
+    "speed": 1.6,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": ["phase_shift"],
+    "spriteName": "enemy_hostile_spren",
+    "spriteScale": 1.0,
+    "xpReward": 45,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      { "itemID": "spren_essence", "dropChance": 0.25, "minQuantity": 1, "maxQuantity": 1 }
+    ]
+  },
+  {
+    "id": "fused_errant",
+    "name": "Fusionné Errant",
+    "description": "Un ancien chanteur fusionné avec un pouvoir voidique, perdu et enragé dans le royaume cognitif.",
+    "worldID": "shadesmar",
+    "tier": "elite",
+    "level": 9,
+    "maxHP": 140,
+    "damage": 22,
+    "defense": 10,
+    "speed": 1.3,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "guard",
+    "abilities": ["voidlight_blast", "gravity_shift"],
+    "spriteName": "enemy_fused_errant",
+    "spriteScale": 1.2,
+    "xpReward": 75,
+    "goldMin": 15,
+    "goldMax": 30,
+    "lootTable": [
+      { "itemID": "voidlight_crystal", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
+      { "itemID": "fused_carapace", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+    ]
+  },
+  {
+    "id": "unmade_shard",
+    "name": "Éclat d'Inami",
+    "description": "Un fragment d'un Défait (Unmade), force primordiale corrompue par Odium.",
+    "worldID": "shadesmar",
+    "tier": "elite",
+    "level": 10,
+    "maxHP": 180,
+    "damage": 28,
+    "defense": 12,
+    "speed": 1.1,
+    "detectionRange": 9.0,
+    "attackRange": 3.0,
+    "behavior": "guard",
+    "abilities": ["corruption_aura", "fear_pulse"],
+    "spriteName": "enemy_unmade_shard",
+    "spriteScale": 1.5,
+    "xpReward": 100,
+    "goldMin": 20,
+    "goldMax": 40,
+    "lootTable": [
+      { "itemID": "unmade_fragment", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+    ]
+  },
+  {
+    "id": "shattered_shard_avatar",
+    "name": "Avatar de l'Éclat Brisé",
+    "description": "La manifestation physique de l'Éclat fragmenté qui corrompt le Cosmere. Son pouvoir est immense et ses formes multiples.",
+    "worldID": "shadesmar",
+    "tier": "boss",
+    "level": 12,
+    "maxHP": 500,
+    "damage": 35,
+    "defense": 18,
+    "speed": 1.0,
+    "detectionRange": 12.0,
+    "attackRange": 4.0,
+    "behavior": "boss",
+    "abilities": ["shard_beam", "reality_tear", "summon_shades", "phase_ultimate"],
+    "spriteName": "enemy_shattered_shard",
+    "spriteScale": 2.0,
+    "xpReward": 500,
+    "goldMin": 100,
+    "goldMax": 200,
+    "lootTable": [
+      { "itemID": "shard_fragment", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
+      { "itemID": "cosmere_nexus_gem", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 }
+    ]
   }
 ]

@@ -959,5 +959,89 @@
     ],
     "spriteName": "item_splinter_devotion",
     "worldOrigin": "sel"
+  },
+  {
+    "id": "cognitive_bead",
+    "name": "Perle Cognitive",
+    "description": "Une bille de verre représentant un objet du monde physique. Elle pulse doucement dans Shadesmar.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_cognitive_bead",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "spren_essence",
+    "name": "Essence de Spren",
+    "description": "L'essence cristallisée d'un spren vaincu. Irradie d'Investiture pure.",
+    "rarity": "uncommon",
+    "slot": "ring",
+    "requiredLevel": 8,
+    "statBonuses": [{ "stat": "spirit", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_spren_essence",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "voidlight_crystal",
+    "name": "Cristal de Vide-lumière",
+    "description": "Un cristal sombre pulsant de vide-lumière. Sa présence met mal à l'aise.",
+    "rarity": "rare",
+    "slot": "weapon",
+    "requiredLevel": 9,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "spirit", "value": 3 }],
+    "traits": ["void_touch"],
+    "spriteName": "item_voidlight_crystal",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "fused_carapace",
+    "name": "Carapace de Fusionné",
+    "description": "Armure naturelle arrachée à un Fusionné. Incroyablement résistante et légère.",
+    "rarity": "epic",
+    "slot": "chest",
+    "requiredLevel": 9,
+    "statBonuses": [{ "stat": "vigor", "value": 5 }, { "stat": "agility", "value": 3 }],
+    "traits": ["voidbound_resilience"],
+    "spriteName": "item_fused_carapace",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "unmade_fragment",
+    "name": "Fragment de Défait",
+    "description": "Un morceau cristallisé d'un Défait. Pulse d'une énergie corrompue mais puissante.",
+    "rarity": "epic",
+    "slot": "amulet",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "spirit", "value": 6 }, { "stat": "luck", "value": 3 }],
+    "traits": ["corruption_mastery", "fear_aura"],
+    "spriteName": "item_unmade_fragment",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "shard_fragment",
+    "name": "Fragment d'Éclat Divin",
+    "description": "Un fragment de l'Éclat brisé. Contient une parcelle du pouvoir de la Création elle-même.",
+    "rarity": "legendary",
+    "slot": "weapon",
+    "requiredLevel": 12,
+    "statBonuses": [{ "stat": "strength", "value": 8 }, { "stat": "spirit", "value": 6 }, { "stat": "vigor", "value": 4 }],
+    "traits": ["divine_power", "shard_resonance"],
+    "spriteName": "item_shard_fragment",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "cosmere_nexus_gem",
+    "name": "Gemme du Nexus Cosmérique",
+    "description": "La gemme ultime, forgée par la convergence de tous les pouvoirs du Cosmere. Transcende les limites d'un seul système magique.",
+    "rarity": "cosmeric",
+    "slot": "ring",
+    "requiredLevel": 12,
+    "statBonuses": [{ "stat": "strength", "value": 5 }, { "stat": "spirit", "value": 5 }, { "stat": "vigor", "value": 5 }, { "stat": "agility", "value": 5 }, { "stat": "luck", "value": 5 }],
+    "traits": ["cosmere_transcendence", "worldhopper_mastery"],
+    "spriteName": "item_cosmere_nexus",
+    "worldOrigin": "shadesmar"
   }
 ]
