@@ -15,6 +15,7 @@ import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
 import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../game/WorldMechanics';
 import type { WorldEffect } from '../game/WorldMechanics';
+import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
@@ -58,6 +59,7 @@ interface EnemyInstance {
   sprite: Container;
   hpBar: Graphics;
   nameText: Text;
+  bossState?: BossState;
   isDead: boolean;
   attackCooldown: number;
   state: 'idle' | 'chasing' | 'attacking' | 'dead';
@@ -233,6 +235,10 @@ export class ZoneScene extends Container implements GameScene {
   private secretAreas: SecretArea[] = [];
   private nearbyBuilding: EnterableBuilding | null = null;
   private nearbySecret: SecretArea | null = null;
+
+  // Boss fight
+  private activeBoss: EnemyInstance | null = null;
+  private bossHPBar: { container: Container; update: (hp: number, phase: string) => void; destroy: () => void } | null = null;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -1393,7 +1399,7 @@ export class ZoneScene extends Container implements GameScene {
       container.y = pos.y;
       this.worldContainer.addChild(container);
 
-      this.enemies.push({
+      const enemy: EnemyInstance = {
         data, spawn,
         hp: data.maxHP,
         position: { ...pos },
@@ -1406,7 +1412,14 @@ export class ZoneScene extends Container implements GameScene {
         state: 'idle',
         respawnTimer: 0,
         animTimer: Math.random() * Math.PI * 2,
-      });
+      };
+
+      // Initialize boss state for boss enemies
+      if (data.tier === 'boss') {
+        enemy.bossState = new BossState(data.id);
+      }
+
+      this.enemies.push(enemy);
     }
   }
 
@@ -1724,6 +1737,51 @@ export class ZoneScene extends Container implements GameScene {
 
       enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
 
+      // Boss mechanics
+      if (enemy.bossState && dist < detRange) {
+        if (!enemy.bossState.announced) {
+          enemy.bossState.announced = true;
+          this.activeBoss = enemy;
+          this.showFloatingText(enemy.position.x, enemy.position.y - 50,
+            enemy.bossState.config.entranceMessage, 0xff6644);
+          this.bossHPBar = createBossHPBar(this.uiContainer, this.app.screen.width, enemy.data.name);
+          this.shakeCamera(5, 0.3);
+        }
+
+        const hpPct = enemy.hp / enemy.data.maxHP;
+        const result = enemy.bossState.update(dt, hpPct);
+
+        if (result.phaseChanged && result.message) {
+          this.showFloatingText(enemy.position.x, enemy.position.y - 50, result.message, 0xff4444);
+          this.shakeCamera(4, 0.2);
+        }
+
+        if (result.canSpecialAttack && dist < detRange) {
+          const phase = enemy.bossState.getCurrentPhase(hpPct);
+          const effect = createBossSpecialEffect(
+            this.worldContainer, enemy.position.x, enemy.position.y,
+            playerPos.x, playerPos.y, phase.specialAttack,
+          );
+          const champ = GameManager.shared.champion;
+          if (champ) {
+            const dmg = Math.floor(effect.damage * phase.damageMultiplier);
+            champ.currentHP -= dmg;
+            this.showDamageNumber(playerPos.x, playerPos.y - 40, dmg, false, 0xff4444);
+            this.shakeCamera(3, 0.15);
+            if (champ.currentHP <= 0) {
+              champ.currentHP = 0;
+              this.handlePlayerDeath();
+            }
+          }
+        }
+
+        this.bossHPBar?.update(hpPct, enemy.bossState.config.phases[enemy.bossState.currentPhase].name);
+      }
+
+      // Speed multiplier for boss phases
+      const speedMult = enemy.bossState
+        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).speedMultiplier : 1;
+
       if (dist < atkRange && enemy.attackCooldown <= 0) {
         enemy.state = 'attacking';
         enemy.attackCooldown = 1.5;
@@ -1731,7 +1789,7 @@ export class ZoneScene extends Container implements GameScene {
       } else if (dist < detRange) {
         enemy.state = 'chasing';
         const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
-        const speed = enemy.data.speed * 30 * dt;
+        const speed = enemy.data.speed * 30 * dt * speedMult;
         enemy.position.x += Math.cos(angle) * speed;
         enemy.position.y += Math.sin(angle) * speed;
         enemy.sprite.x = enemy.position.x;
@@ -1963,7 +2021,9 @@ export class ZoneScene extends Container implements GameScene {
     const defense = champ.baseStats.vigor / 2;
     const nightmareMult = this.worldMechanics instanceof KomashiMechanics
       ? (this.worldMechanics as KomashiMechanics).getDamageMultiplier() : 1;
-    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult));
+    const bossMult = enemy.bossState
+      ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).damageMultiplier : 1;
+    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult));
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
@@ -1982,6 +2042,18 @@ export class ZoneScene extends Container implements GameScene {
     enemy.state = 'dead';
     enemy.sprite.visible = false;
     enemy.respawnTimer = enemy.spawn.respawnTime ?? 999;
+
+    // Boss defeat
+    if (enemy.bossState) {
+      this.showFloatingText(enemy.position.x, enemy.position.y - 60,
+        enemy.bossState.config.defeatMessage, 0xffcc44);
+      this.shakeCamera(6, 0.4);
+      if (this.bossHPBar) {
+        this.bossHPBar.destroy();
+        this.bossHPBar = null;
+      }
+      this.activeBoss = null;
+    }
 
     // Death particles
     for (let i = 0; i < 6; i++) {
