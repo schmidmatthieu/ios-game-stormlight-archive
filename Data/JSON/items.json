@@ -688,5 +688,276 @@
     ],
     "spriteName": "item_painters_masterwork",
     "worldOrigin": "komashi"
+  },
+  {
+    "id": "breath_essence",
+    "name": "Essence de Souffle",
+    "description": "Un fragment cristallisé de Souffle BioChroma. Vibre doucement de couleurs changeantes.",
+    "rarity": "common",
+    "slot": "ring2",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_breath_essence",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "chromatic_thread",
+    "name": "Fil Chromatique",
+    "description": "Fil tissé avec du Souffle résiduel. Les couleurs se déplacent le long de sa surface.",
+    "rarity": "uncommon",
+    "slot": "offhand",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_chromatic_thread",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "awakened_blade",
+    "name": "Lame Éveillée",
+    "description": "Une épée Éveillée par le Souffle. Elle s'anime à chaque coup, frappant avec une volonté propre.",
+    "rarity": "rare",
+    "slot": "mainWeapon",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "spirit", "value": 3 }],
+    "traits": [
+      {
+        "id": "trait_animate_on_hit",
+        "name": "Animation au Contact",
+        "description": "Chaque coup a 15% de chance d'animer la lame pour une attaque bonus",
+        "effectType": "critChance",
+        "effectValue": 0.15
+      }
+    ],
+    "spriteName": "item_awakened_blade",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "returned_bloom",
+    "name": "Fleur du Retourné",
+    "description": "Une fleur éternelle née du Souffle Divin d'un Retourné. Ses pétales irradient une aura de couleurs divines.",
+    "rarity": "epic",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "spirit", "value": 5 },
+      { "stat": "investiture", "value": 4 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_divine_color_aura",
+        "name": "Aura de Couleur Divine",
+        "description": "Émet une aura qui draine les couleurs ennemies, réduisant leurs dégâts de 10%",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": -0.10
+      },
+      {
+        "id": "trait_returned_vitality",
+        "name": "Vitalité du Retourné",
+        "description": "Régénère 2% PV par seconde hors combat",
+        "effectType": "lifesteal",
+        "effectValue": 0.02
+      }
+    ],
+    "spriteName": "item_returned_bloom",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "god_king_scepter",
+    "name": "Sceptre du Roi-Dieu",
+    "description": "Le sceptre royal de Hallandren, imprégné de milliers de Souffles. Commande les Sans-Vie d'un simple geste.",
+    "rarity": "legendary",
+    "slot": "mainWeapon",
+    "requiredLevel": 8,
+    "statBonuses": [
+      { "stat": "strength", "value": 7 },
+      { "stat": "spirit", "value": 6 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_command_lifeless",
+        "name": "Commandement des Sans-Vie",
+        "description": "Invoque un Sans-Vie allié temporaire toutes les 45s",
+        "effectType": "summonDuration",
+        "effectValue": 0.3
+      }
+    ],
+    "spriteName": "item_god_king_scepter",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "divine_breath_crystal",
+    "name": "Cristal de Souffle Divin",
+    "description": "Un cristal contenant l'essence pure du Dixième Accroissement. Les couleurs du monde se plient à la volonté de son porteur.",
+    "rarity": "cosmeric",
+    "slot": "ring1",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 8 },
+      { "stat": "investiture", "value": 7 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_tenth_heightening",
+        "name": "Dixième Accroissement",
+        "description": "Commande absolu sur la couleur et le Souffle — +50% dégâts d'Éveil et Investiture infinie pendant 10s (cooldown 60s)",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.5
+      },
+      {
+        "id": "trait_nalthis_resonance",
+        "name": "Résonance de Nalthis",
+        "description": "+20% toutes stats sur Nalthis, +10% sur les autres mondes",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_divine_breath_crystal",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "aon_glyph_stone",
+    "name": "Pierre Glyphique Aon",
+    "description": "Une pierre gravée d'un Aon ancien. Faiblement luminescente, elle conserve un écho du Dor.",
+    "rarity": "common",
+    "slot": "ring2",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_aon_glyph_stone",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "elantrian_robe",
+    "name": "Robe d'Élantrien",
+    "description": "Une robe autrefois portée par un Élantrien. Le tissu conserve des traces de l'ancienne gloire d'Elantris.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }, { "stat": "investiture", "value": 3 }],
+    "traits": [],
+    "spriteName": "item_elantrian_robe",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "dakhor_bone_charm",
+    "name": "Charme d'Os Dakhor",
+    "description": "Un charme taillé dans les os tordus d'un moine Dakhor. Pulse d'une énergie sombre et puissante.",
+    "rarity": "rare",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "vigor", "value": 3 }],
+    "traits": [
+      {
+        "id": "trait_bone_power",
+        "name": "Pouvoir Osseux",
+        "description": "Les attaques de mêlée ont 12% de chance de briser l'armure ennemie",
+        "effectType": "critChance",
+        "effectValue": 0.12
+      }
+    ],
+    "spriteName": "item_dakhor_bone_charm",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "seons_light",
+    "name": "Lumière de Séon",
+    "description": "L'essence lumineuse d'un Séon, spren d'Aon Dor. Guide son porteur et amplifie sa connexion aux Aons.",
+    "rarity": "epic",
+    "slot": "ring2",
+    "requiredLevel": 8,
+    "statBonuses": [
+      { "stat": "spirit", "value": 5 },
+      { "stat": "investiture", "value": 4 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_aon_guidance",
+        "name": "Guide des Aons",
+        "description": "Les compétences basées sur les Aons coûtent 20% moins d'Investiture et ont +15% de précision",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.2
+      },
+      {
+        "id": "trait_seon_bond",
+        "name": "Lien de Séon",
+        "description": "Révèle les ennemis et trésors cachés dans un rayon de 10 unités",
+        "effectType": "investitureRegen",
+        "effectValue": 2.0
+      }
+    ],
+    "spriteName": "item_seons_light",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "pool_of_devotion_vial",
+    "name": "Fiole du Pool de Dévotion",
+    "description": "Une fiole contenant l'eau luminescente du Pool de Dévotion. L'essence même du Dor concentrée sous forme liquide.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 7 },
+      { "stat": "investiture", "value": 6 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_devotions_blessing",
+        "name": "Bénédiction de Dévotion",
+        "description": "Régénère 5% d'Investiture par seconde et soigne les alliés proches de 2% PV/s",
+        "effectType": "investitureRegen",
+        "effectValue": 5.0
+      }
+    ],
+    "spriteName": "item_pool_devotion_vial",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "splinter_of_devotion",
+    "name": "Éclat de Dévotion",
+    "description": "Un Éclat brisé du Shard Dévotion lui-même. Son pouvoir transcende les royaumes et bénit son porteur d'une connexion divine au Dor.",
+    "rarity": "cosmeric",
+    "slot": "offhand",
+    "requiredLevel": 10,
+    "statBonuses": [
+      { "stat": "spirit", "value": 9 },
+      { "stat": "investiture", "value": 8 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_devotions_blessing_cosmeric",
+        "name": "Bénédiction de Dévotion",
+        "description": "Tous les Aons sont perfectionés — +40% dégâts et effets des compétences Aon Dor",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": 0.4
+      },
+      {
+        "id": "trait_sel_resonance",
+        "name": "Résonance de Sel",
+        "description": "+20% toutes stats sur Sel, +10% sur les autres mondes",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_splinter_devotion",
+    "worldOrigin": "sel"
   }
 ]
