@@ -450,6 +450,7 @@ export class ZoneScene extends Container implements GameScene {
     this.actionButtons.onAttack = () => this.handleAttack();
     this.actionButtons.onSkill = (i) => this.handleSkill(i);
     this.actionButtons.onInteract = (mode) => this.handleInteraction(mode);
+    this.actionButtons.onUltimate = () => this.handleUltimate();
     this.uiContainer.addChild(this.actionButtons);
 
     // Auto-equip skills for class
@@ -2456,9 +2457,24 @@ export class ZoneScene extends Container implements GameScene {
       if (enemy.isDead) continue;
       const dist = Math.hypot(enemy.position.x - this.playerScreenPos.x, enemy.position.y - this.playerScreenPos.y);
       if (dist < range) {
-        const damage = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
-        enemy.hp -= damage;
-        this.showDamageNumber(enemy.position.x, enemy.position.y - 30, damage, false);
+        // Apply talent magic damage bonus and investiture cost reduction
+        const talents = GameManager.shared.talentSystem;
+        const magicBonus = 1 + (talents?.getBonus('magicDamagePercent') ?? 0);
+        const baseDmg = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
+        const damage = Math.floor(baseDmg * magicBonus);
+        // Apply skill-specific effects
+        const isCrit = Math.random() < (champ.baseStats.luck * 0.01 + (talents?.getBonus('critChancePercent') ?? 0));
+        const critMult = 2 * (1 + (talents?.getBonus('critDamagePercent') ?? 0));
+        const finalDmg = isCrit ? Math.floor(damage * critMult) : damage;
+        enemy.hp -= finalDmg;
+        this.showDamageNumber(enemy.position.x, enemy.position.y - 30, finalDmg, isCrit);
+        if (isCrit) {
+          createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
+          triggerHitStop(0.05);
+        }
+        createHitImpact(this.worldContainer, enemy.position.x, enemy.position.y, champ.championClass, isCrit, this.particles as any);
+        animateEnemyHit(enemy.sprite);
+        if (enemy.enemyAnim) triggerEnemyHurt(enemy.enemyAnim);
         this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
         if (enemy.hp <= 0) this.killEnemy(enemy);
       }
@@ -2478,6 +2494,60 @@ export class ZoneScene extends Container implements GameScene {
       this.playerScreenPos.x, this.playerScreenPos.y,
       range, cls,
     );
+  }
+
+  // ─── Ultimate Ability ────────────────────────────────────────
+
+  private handleUltimate(): void {
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    // Ultimate costs 50% of max investiture
+    const cost = Math.floor(GameManager.shared.maxInvestiture * 0.5);
+    if (champ.currentInvestiture < cost) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, 'Investiture insuffisante!', 0xff4444);
+      return;
+    }
+    champ.currentInvestiture -= cost;
+
+    // Cast animation
+    this.playerAnimator.setState('cast');
+    MusicManager.shared.playSFX('magic_surgebinding');
+
+    // Ultimate: massive AOE damage based on class
+    const cls = champ.championClass;
+    const baseDmg = 80 + champ.level * 10 + champ.baseStats.spirit * 2;
+    const talents = GameManager.shared.talentSystem;
+    const magicBonus = 1 + (talents?.getBonus('magicDamagePercent') ?? 0);
+    const ultimateDmg = Math.floor(baseDmg * magicBonus);
+    const range = 200; // Large AOE radius
+
+    // Visual effect
+    this.showSkillEffect(range);
+    createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
+    this.shakeCamera(8, 0.4);
+
+    // Hit all enemies in range
+    let killCount = 0;
+    for (const enemy of this.enemies) {
+      if (enemy.isDead) continue;
+      const dist = Math.hypot(enemy.position.x - this.playerScreenPos.x, enemy.position.y - this.playerScreenPos.y);
+      if (dist < range) {
+        enemy.hp -= ultimateDmg;
+        this.showDamageNumber(enemy.position.x, enemy.position.y - 30, ultimateDmg, true, 0xffdd44);
+        animateEnemyHit(enemy.sprite);
+        if (enemy.enemyAnim) triggerEnemyHurt(enemy.enemyAnim);
+        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
+        if (enemy.hp <= 0) {
+          this.killEnemy(enemy);
+          killCount++;
+        }
+      }
+    }
+
+    if (killCount > 0) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 80, `ULTIME! ${killCount} éliminé(s)!`, 0xffcc33);
+    }
   }
 
   private enemyAttacksPlayer(enemy: EnemyInstance): void {
