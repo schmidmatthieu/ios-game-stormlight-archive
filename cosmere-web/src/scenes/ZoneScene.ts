@@ -116,6 +116,16 @@ import {
   applyCraftResult as applyCraftResultModule,
 } from './zone/ZoneUI';
 import type { PanelHost } from './zone/ZoneUI';
+import {
+  killEnemy as killEnemyModule,
+  updateStatusEffects as updateStatusEffectsModule,
+  updateCombat as updateCombatModule,
+} from './zone/ZoneCombat';
+import type { KillHost } from './zone/ZoneCombat';
+import {
+  updateEnemyAI as updateEnemyAIModule,
+} from './zone/ZoneEnemyAI';
+import type { AIHost, CachedPath } from './zone/ZoneEnemyAI';
 
 // ─── Zone Scene ────────────────────────────────────────────────
 export class ZoneScene extends Container implements GameScene {
@@ -211,7 +221,7 @@ export class ZoneScene extends Container implements GameScene {
   private enterableBuildings: EnterableBuilding[] = [];
   private secretAreas: SecretArea[] = [];
   private pathfinder: Pathfinder | null = null;
-  private enemyPaths: Map<string, { waypoints: { x: number; y: number }[]; idx: number; targetCol: number; targetRow: number; age: number }> = new Map();
+  private enemyPaths: Map<string, CachedPath> = new Map();
   private nearbyBuilding: EnterableBuilding | null = null;
   private nearbySecret: SecretArea | null = null;
   private environmentObjects: EnvironmentObject[] = [];
@@ -1477,260 +1487,36 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Enemy AI ────────────────────────────────────────────────
 
   private updateEnemyAI(dt: number): void {
-    const playerPos = this.playerScreenPos;
+    const ah = this.aiHost;
+    updateEnemyAIModule(dt, ah);
+    // Sync mutable state back
+    this.activeBoss = ah.activeBoss;
+    this.bossHPBar = ah.bossHPBar as any;
+  }
 
-    for (const enemy of this.enemies) {
-      if (enemy.isDead) {
-        enemy.respawnTimer -= dt;
-        if (enemy.respawnTimer <= 0 && enemy.spawn.respawnTime) {
-          enemy.hp = enemy.maxHP;
-          enemy.isDead = false;
-          enemy.state = 'idle';
-          enemy.sprite.visible = true;
-          const pos = isoToScreen(enemy.spawn.position.col, enemy.spawn.position.row);
-          enemy.position = { ...pos };
-          enemy.sprite.x = pos.x;
-          enemy.sprite.y = pos.y;
-          this.drawEnemyHP(enemy.hpBar, 1);
-        }
-        continue;
-      }
-
-      // Animate enemy idle (breathing, sway)
-      if (enemy.enemyAnim) {
-        updateEnemyIdle(enemy.sprite, enemy.enemyAnim, dt, enemy.data.tier);
-        // Boss aura animation
-        if (enemy.data.tier === 'boss' && enemy.bossState?.announced) {
-          const phase = enemy.bossState.currentPhase + 1;
-          enemy.bossAuraGfx = drawBossAura(enemy.sprite, enemy.enemyAnim.timer, WORLD_ENEMY_COLORS[enemy.data.worldID]?.boss ?? 0xcc5500, phase, enemy.bossAuraGfx);
-        }
-      }
-
-      const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
-      const mistMult = this.worldMechanics instanceof ScadrialMechanics
-        ? (this.worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
-      // Night: ambush enemies detect further, others detect shorter
-      const nightMult = enemy.data.behavior === 'ambush' ? (2 - this.dayNightManager.lightLevel) : this.dayNightManager.lightLevel;
-      const detRange = enemy.data.detectionRange * 32 * mistMult * Math.max(0.5, nightMult);
-      const atkRange = enemy.data.attackRange * 32;
-
-      enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
-
-      // Boss mechanics
-      if (enemy.bossState && dist < detRange) {
-        if (!enemy.bossState.announced) {
-          enemy.bossState.announced = true;
-          this.activeBoss = enemy;
-          this.showFloatingText(enemy.position.x, enemy.position.y - 50,
-            enemy.bossState.config.entranceMessage, 0xff6644);
-          this.bossHPBar = createBossHPBar(this.uiContainer, this.app.screen.width, enemy.data.name);
-          this.shakeCamera(5, 0.3);
-        }
-
-        const hpPct = enemy.hp / enemy.maxHP;
-        const result = enemy.bossState.update(dt, hpPct);
-
-        if (result.phaseChanged && result.message) {
-          this.showFloatingText(enemy.position.x, enemy.position.y - 50, result.message, 0xff4444);
-          this.shakeCamera(4, 0.2);
-        }
-
-        if (result.canSpecialAttack && dist < detRange) {
-          const phase = enemy.bossState.getCurrentPhase(hpPct);
-          const effect = createBossSpecialEffect(
-            this.worldContainer, enemy.position.x, enemy.position.y,
-            playerPos.x, playerPos.y, phase.specialAttack,
-          );
-          const champ = GameManager.shared.champion;
-          if (champ) {
-            const shieldReduct = 1 - this.playerStatusEffects.getDamageReduction();
-            const dmg = Math.max(1, Math.floor(effect.damage * phase.damageMultiplier * shieldReduct));
-            champ.currentHP -= dmg;
-            this.showDamageNumber(playerPos.x, playerPos.y - 40, dmg, false, 0xff4444);
-            this.shakeCamera(3, 0.15);
-            this.playerAnimator.setState('hurt');
-
-            // Boss attacks can inflict status effects
-            const statusByAttack: Record<string, { type: 'poison' | 'burning' | 'frozen' | 'weakened' | 'blinded'; dur: number; mag: number }> = {
-              spike_barrage: { type: 'poison', dur: 8, mag: 5 },
-              dark_sand: { type: 'blinded', dur: 5, mag: 1 },
-              void_consume: { type: 'weakened', dur: 10, mag: 1 },
-              stomp_wave: { type: 'frozen', dur: 2, mag: 1 },
-              fear_pulse: { type: 'weakened', dur: 6, mag: 1 },
-            };
-            const statusInfo = statusByAttack[phase.specialAttack];
-            if (statusInfo) {
-              const msg = this.playerStatusEffects.apply(statusInfo.type, statusInfo.dur, statusInfo.mag);
-              if (msg) this.showFloatingText(playerPos.x, playerPos.y - 55, msg, 0xff8844);
-            }
-
-            if (champ.currentHP <= 0) {
-              champ.currentHP = 0;
-              this.playerAnimator.setState('death');
-              this.handlePlayerDeath();
-            }
-          }
-        }
-
-        this.bossHPBar?.update(hpPct, enemy.bossState.config.phases[enemy.bossState.currentPhase].name);
-      }
-
-      // Affix mechanics update
-      if (enemy.affixState) {
-        const affixResult = updateAffixState(enemy.affixState, dt, enemy.maxHP, enemy.hp);
-        if (affixResult.regenHP > 0 && enemy.hp < enemy.maxHP) {
-          enemy.hp = Math.min(enemy.maxHP, enemy.hp + affixResult.regenHP);
-          this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
-        }
-        if (affixResult.shouldTeleport && dist < detRange) {
-          const ox = (Math.random() - 0.5) * 80;
-          const oy = (Math.random() - 0.5) * 80;
-          enemy.position.x += ox;
-          enemy.position.y += oy;
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-        }
-        // Shield visual
-        if (affixResult.shieldChanged) {
-          const gfx = enemy.sprite.children[1] as Graphics;
-          if (gfx) gfx.alpha = enemy.affixState.shieldActive ? 0.4 : 1.0;
-        }
-      }
-
-      // Speed multiplier for boss phases and affixes
-      const bossSpeedMult = enemy.bossState
-        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).speedMultiplier : 1;
-      const affixSpeedMult = enemy.affixState ? getAffixSpeedMultiplier(enemy.affixState) : 1;
-      const speedMult = bossSpeedMult * affixSpeedMult;
-
-      // Behavior-specific AI
-      const behaviorKey = enemy.data.id + '_' + enemy.spawn.position.col + '_' + enemy.spawn.position.row;
-      const behaviorState = this.enemyBehaviors.get(behaviorKey);
-      const hpPct = enemy.hp / (enemy.maxHP || enemy.data.maxHP);
-      const patrolWaypoints = enemy.spawn.patrolPath
-        ? enemy.spawn.patrolPath.map(p => isoToScreen(p.col, p.row))
-        : null;
-      const enemyIdx = this.enemies.indexOf(enemy);
-      const bResult = behaviorState
-        ? updateBehavior(behaviorState, dt, enemy.position.x, enemy.position.y,
-            playerPos.x, playerPos.y, dist, detRange, atkRange, hpPct,
-            this.enemies, enemyIdx, patrolWaypoints)
-        : null;
-
-      // Apply behavior detection modifier
-      const effectiveDetRange = bResult ? detRange * bResult.detectionMult : detRange;
-
-      // Support heal logic
-      if (bResult?.shouldHealAlly && bResult.healTargetIndex >= 0 && bResult.healTargetIndex < this.enemies.length) {
-        const ally = this.enemies[bResult.healTargetIndex];
-        if (!ally.isDead) {
-          const healAmt = Math.floor((enemy.maxHP || enemy.data.maxHP) * 0.1);
-          ally.hp = Math.min(ally.maxHP || ally.data.maxHP, ally.hp + healAmt);
-          this.drawEnemyHP(ally.hpBar, ally.hp / (ally.maxHP || ally.data.maxHP));
-          this.showFloatingText(ally.position.x, ally.position.y - 30, `+${healAmt}`, 0x44ff44);
-          MusicManager.shared.playSFX('heal');
-        }
-      }
-
-      // Flee behavior override
-      if (bResult?.shouldFlee) {
-        enemy.state = 'chasing'; // Still 'chasing' state visually, but running away
-        const speed = enemy.data.speed * 35 * dt * speedMult;
-        enemy.position.x += bResult.moveX * speed;
-        enemy.position.y += bResult.moveY * speed;
-        enemy.sprite.x = enemy.position.x;
-        enemy.sprite.y = enemy.position.y;
-      } else if (dist < atkRange && enemy.attackCooldown <= 0) {
-        // Ranged enemies back away when too close instead of attacking
-        if (bResult && enemy.data.behavior === 'ranged' && bResult.shouldMove) {
-          const speed = enemy.data.speed * 25 * dt * speedMult;
-          enemy.position.x += bResult.moveX * speed;
-          enemy.position.y += bResult.moveY * speed;
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-        } else {
-          enemy.state = 'attacking';
-          const atkSpeedMult = bResult?.attackSpeedMult ?? 1;
-          enemy.attackCooldown = 1.5 / atkSpeedMult;
-          this.enemyAttacksPlayer(enemy, bResult?.damageMult ?? 1);
-        }
-      } else if (dist < effectiveDetRange) {
-        if (enemy.state !== 'chasing') {
-          BestiaryManager.shared.registerEncounter(enemy.data);
-          if (enemy.enemyAnim) setEnemyAlert(enemy.enemyAnim);
-        }
-        enemy.state = 'chasing';
-        const speed = enemy.data.speed * 30 * dt * speedMult;
-
-        // Guard behavior: return to post if too far
-        if (bResult?.shouldMove && enemy.data.behavior === 'guard') {
-          enemy.position.x += bResult.moveX * speed;
-          enemy.position.y += bResult.moveY * speed;
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-        } else {
-          // A* pathfinding movement
-          const pathKey = behaviorKey;
-          let cached = this.enemyPaths.get(pathKey);
-          const eGrid = screenToIso(enemy.position.x, enemy.position.y);
-          const pGrid = screenToIso(playerPos.x, playerPos.y);
-          const eCol = Math.round(eGrid.col);
-          const eRow = Math.round(eGrid.row);
-          const pCol = Math.round(pGrid.col);
-          const pRow = Math.round(pGrid.row);
-
-          const needsPath = !cached || cached.age > 0.8 ||
-            cached.targetCol !== pCol || cached.targetRow !== pRow ||
-            cached.idx >= cached.waypoints.length;
-
-          if (needsPath && this.pathfinder) {
-            const gridPath = this.pathfinder.findPath(eCol, eRow, pCol, pRow);
-            if (gridPath && gridPath.length > 1) {
-              const smooth = smoothPath(gridPath);
-              cached = { waypoints: smooth.map(g => isoToScreen(g.col, g.row)), idx: 1, targetCol: pCol, targetRow: pRow, age: 0 };
-              this.enemyPaths.set(pathKey, cached);
-            } else {
-              cached = undefined;
-            }
-          }
-
-          if (cached) {
-            cached.age += dt;
-            if (cached.idx < cached.waypoints.length) {
-              const wp = cached.waypoints[cached.idx];
-              const dx = wp.x - enemy.position.x;
-              const dy = wp.y - enemy.position.y;
-              if (Math.hypot(dx, dy) < 8) {
-                cached.idx++;
-              } else {
-                const a = Math.atan2(dy, dx);
-                enemy.position.x += Math.cos(a) * speed;
-                enemy.position.y += Math.sin(a) * speed;
-              }
-            }
-          } else {
-            const angle = Math.atan2(playerPos.y - enemy.position.y, playerPos.x - enemy.position.x);
-            enemy.position.x += Math.cos(angle) * speed;
-            enemy.position.y += Math.sin(angle) * speed;
-          }
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-        }
-      } else {
-        // Idle: behavior-specific idle movement (patrol, wander)
-        if (bResult?.shouldMove && !bResult.shouldFlee) {
-          const speed = enemy.data.speed * 15 * dt;
-          enemy.position.x += bResult.moveX * speed;
-          enemy.position.y += bResult.moveY * speed;
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-          enemy.state = 'idle';
-        } else {
-          enemy.state = 'idle';
-        }
-        this.enemyPaths.delete(behaviorKey);
-      }
-    }
+  private get aiHost(): AIHost {
+    return {
+      worldContainer: this.worldContainer,
+      uiContainer: this.uiContainer,
+      screenWidth: this.app.screen.width,
+      playerScreenPos: this.playerScreenPos,
+      enemies: this.enemies,
+      worldMechanics: this.worldMechanics,
+      dayNightManager: this.dayNightManager,
+      playerStatusEffects: this.playerStatusEffects,
+      playerAnimator: this.playerAnimator,
+      enemyBehaviors: this.enemyBehaviors,
+      enemyPaths: this.enemyPaths,
+      pathfinder: this.pathfinder,
+      activeBoss: this.activeBoss,
+      bossHPBar: this.bossHPBar,
+      showFloatingText: (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      showDamageNumber: (x, y, amt, crit, col, style) => this.showDamageNumber(x, y, amt, crit, col, style as any),
+      shakeCamera: (i, d) => this.shakeCamera(i, d),
+      drawEnemyHP: (hpBar, pct) => this.drawEnemyHP(hpBar, pct),
+      enemyAttacksPlayer: (enemy, dmgMult) => this.enemyAttacksPlayer(enemy, dmgMult),
+      handlePlayerDeath: () => this.handlePlayerDeath(),
+    };
   }
 
   // ─── NPC Proximity ───────────────────────────────────────────
@@ -2237,187 +2023,43 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private killEnemy(enemy: EnemyInstance): void {
-    enemy.isDead = true;
-    enemy.state = 'dead';
-    if (enemy.enemyAnim) triggerEnemyDeath(enemy.enemyAnim);
-    if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); enemy.bossAuraGfx = undefined; }
-    MusicManager.shared.playSFX('death');
-
-    // Kill burst visual
-    const worldColor = WORLD_ENEMY_COLORS[enemy.data.worldID]?.[enemy.data.tier] ?? 0x888888;
-    createKillBurst(this.worldContainer, enemy.position.x, enemy.position.y, enemy.data.tier, worldColor);
-
-    // Ground crack for elite/boss kills
-    if (enemy.data.tier === 'elite' || enemy.data.tier === 'boss') {
-      createGroundCrack(this.worldContainer, enemy.position.x, enemy.position.y, enemy.data.tier === 'boss' ? 30 : 18);
-    }
-
-    // Kill streak tracking
-    this.killStreak++;
-    this.killStreakTimer = 5;
-    if ([3, 5, 7, 10, 15].includes(this.killStreak)) {
-      showKillStreakBanner(this.uiContainer, this.app.screen.width, this.app.screen.height, this.killStreak);
-    }
-
-    // Track in bestiary & achievements
-    BestiaryManager.shared.registerKill(enemy.data);
-    AchievementManager.shared.recordKill(enemy.data.tier);
-    AchievementManager.shared.recordCreatureDiscovered(BestiaryManager.shared.totalDiscovered);
-
-    // Hidden quest: rare enemy kills
-    if (enemy.data.tier === 'elite' || enemy.data.tier === 'boss') {
-      const hqNotifs = HiddenQuestManager.shared.reportTrigger('kill_rare_enemy', 'nightmare_rare', this.zone.worldID);
-      for (const n of hqNotifs) {
-        this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 70, n.message, n.completed ? 0xffdd44 : 0x88ccff);
-      }
-    }
-
-    // Animated death instead of instant hide
-    animateEnemyDeath(enemy.sprite, this.worldContainer, enemy.position.x, enemy.position.y);
-    setTimeout(() => { enemy.sprite.visible = false; }, 500);
-    enemy.respawnTimer = enemy.spawn.respawnTime ?? 999;
-
-    // Boss defeat
-    if (enemy.bossState) {
-      this.showFloatingText(enemy.position.x, enemy.position.y - 60,
-        enemy.bossState.config.defeatMessage, 0xffcc44);
-      this.shakeCamera(6, 0.4);
-      if (this.bossHPBar) {
-        this.bossHPBar.destroy();
-        this.bossHPBar = null;
-      }
-      this.activeBoss = null;
-    }
-
-    // Death particles (pooled)
-    for (let i = 0; i < 6; i++) {
-      const p = this.particlePool.acquire();
-      p.circle(0, 0, 2).fill({ color: 0xff6644, alpha: 0.6 });
-      p.x = enemy.position.x;
-      p.y = enemy.position.y;
-      this.worldContainer.addChild(p);
-
-      const angle = (i / 6) * Math.PI * 2;
-      const speed = 30 + Math.random() * 20;
-      this.particles.push({
-        sprite: p, x: p.x, y: p.y,
-        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 20,
-        life: 0.5, maxLife: 0.5, size: 2,
-      });
-    }
-
-    const gm = GameManager.shared;
-    const champ = gm.champion;
-    if (!champ) return;
-
-    const ngpRewards = NewGamePlusManager.shared.applyToRewards(
-      enemy.data.xpReward,
-      enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1)),
-    );
-    const baseGold = ngpRewards.gold;
-    const gold = Math.floor(baseGold * getEventGoldBonus(this.activeEventEffect));
-    champ.gold += gold;
-
-    // Apply reputation XP bonus + event bonus + NG+ bonus
-    const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
-    const finalXP = Math.floor(ngpRewards.xp * xpMultiplier * getCompanionXPBonus() * getEventXPBonus(this.activeEventEffect));
-    const leveledUp = gm.grantXP(finalXP);
-    if (leveledUp) MusicManager.shared.playSFX('level_up');
-
-    // Grant reputation based on enemy tier
-    const repByTier: Record<string, number> = { minion: 1, soldier: 2, elite: 4, boss: 15 };
-    const repGain = repByTier[enemy.data.tier] ?? 1;
-    const repResult = addReputation(this.zone.worldID, repGain);
-    if (repResult.rankUp) {
-      showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, repResult.rankName, this.zone.worldID);
-    }
-    if (this.repBadge) this.repBadge.refresh();
-
-    this.showDamageNumber(enemy.position.x, enemy.position.y - 10, finalXP, false, 0x66cc44);
-    setTimeout(() => {
-      this.showDamageNumber(enemy.position.x + 10, enemy.position.y, gold, false, 0xe6cc33);
-    }, 200);
-
-    // Track achievements
-    AchievementManager.shared.recordGold(gold);
-    AchievementManager.shared.recordXP(finalXP);
-    if (leveledUp) AchievementManager.shared.recordLevel(champ.level);
-    AchievementManager.shared.check();
-
-    // Chance to drop potions (20% for normal, 50% for elite, 100% for boss)
-    const potionDropChance = enemy.data.tier === 'boss' ? 1 : enemy.data.tier === 'elite' ? 0.5 : 0.2;
-    if (Math.random() < potionDropChance) {
-      const potionPool = ['potion_heal_small', 'potion_investiture', 'potion_heal_small', 'potion_strength', 'potion_haste', 'potion_shield', 'potion_regen'];
-      const potionID = potionPool[Math.floor(Math.random() * potionPool.length)];
-      if (PotionManager.shared.addPotion(potionID)) {
-        this.showFloatingText(enemy.position.x, enemy.position.y - 50, `+1 Potion!`, 0xff88cc);
-        if (this.potionHotbar) this.potionHotbar.refresh();
-      }
-    }
-
-    // Animated gold burst and XP orbs
-    spawnGoldBurst(this.worldContainer, enemy.position.x, enemy.position.y, gold);
-    spawnXPOrbs(this.worldContainer, enemy.position.x, enemy.position.y,
-      this.playerScreenPos.x, this.playerScreenPos.y, finalXP);
-
-    // Drop loot from loot table
-    let dropIndex = 0;
-    for (const lootEntry of enemy.data.lootTable) {
-      if (Math.random() < lootEntry.dropChance) {
-        const item = gameData.item(lootEntry.itemID);
-        if (item && champ) {
-          champ.inventoryItemIDs.push(lootEntry.itemID);
-          QuestManager.shared.onItemCollected(lootEntry.itemID);
-          BestiaryManager.shared.registerDrop(enemy.data.id, lootEntry.itemID);
-          AchievementManager.shared.recordItemCollect();
-
-          // Loot SFX based on rarity
-          const lootSfxMap: Record<string, string> = {
-            common: 'loot_common', uncommon: 'loot_common',
-            rare: 'loot_rare', epic: 'loot_epic',
-            legendary: 'loot_legendary', cosmeric: 'loot_legendary',
-          };
-          MusicManager.shared.playSFX(lootSfxMap[item.rarity] ?? 'loot_common');
-
-          // Animated loot drop
-          spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
-            item.name, item.rarity, dropIndex);
-          dropIndex++;
-
-          setTimeout(() => {
-            this.showFloatingText(
-              enemy.position.x, enemy.position.y - 30,
-              `${item.name} obtenu!`, 0xaa88ff,
-            );
-          }, 400);
-        }
-      }
-    }
-
-    // Track quest progress
-    QuestManager.shared.onEnemyKilled(enemy.data.id);
-    this.checkQuestCompletion();
-
-    // Komashi: killing enemies reduces nightmare aura
-    if (this.worldMechanics instanceof KomashiMechanics) {
-      const msg = (this.worldMechanics as KomashiMechanics).onEnemyKilled();
-      if (msg) this.showFloatingText(enemy.position.x, enemy.position.y - 40, msg, 0xaa77ee);
-    }
-
-    if (leveledUp) {
-      this.showLevelUp();
-      // Auto-equip new skills on level up
-      GameManager.shared.autoEquipSkills(gameData.skills);
-      // Refresh skill button labels
-      for (let i = 0; i < champ.equippedSkillIDs.length && i < 4; i++) {
-        const skill = gameData.skill(champ.equippedSkillIDs[i]);
-        if (skill) {
-          const shortName = skill.name.length > 5 ? skill.name.substring(0, 5) : skill.name;
-          this.actionButtons.setSkill(i, skill.id, shortName);
-        }
-      }
-    }
+    const kh = this.killHost;
+    killEnemyModule(enemy, kh);
+    // Sync mutable state back
+    this.killStreak = kh.killStreak;
+    this.killStreakTimer = kh.killStreakTimer;
+    this.activeBoss = kh.activeBoss;
+    this.bossHPBar = kh.bossHPBar as any;
   }
+
+  private get killHost(): KillHost {
+    return {
+      worldContainer: this.worldContainer,
+      uiContainer: this.uiContainer,
+      screenWidth: this.app.screen.width,
+      screenHeight: this.app.screen.height,
+      worldID: this.zone.worldID,
+      playerScreenPos: this.playerScreenPos,
+      particles: this.particles,
+      particlePool: this.particlePool,
+      killStreak: this.killStreak,
+      killStreakTimer: this.killStreakTimer,
+      activeBoss: this.activeBoss,
+      bossHPBar: this.bossHPBar,
+      worldMechanics: this.worldMechanics,
+      activeEventEffect: this.activeEventEffect,
+      repBadge: this.repBadge,
+      potionHotbar: this.potionHotbar,
+      actionButtons: this.actionButtons,
+      showFloatingText: (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      showDamageNumber: (x, y, amt, crit, col, style, combo) => this.showDamageNumber(x, y, amt, crit, col, style as any, combo),
+      showLevelUp: () => this.showLevelUp(),
+      shakeCamera: (i, d) => this.shakeCamera(i, d),
+      drawEnemyHP: (hpBar, pct) => this.drawEnemyHP(hpBar, pct),
+      checkQuestCompletion: () => this.checkQuestCompletion(),
+    };
+  }
+
 
   private updateCombat(dt: number): void {
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
