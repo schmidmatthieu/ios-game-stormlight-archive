@@ -42,6 +42,12 @@ class ZoneScene: SKScene {
     // Zone transition safety
     private var isTransitioning = false
 
+    // Regen
+    private var regenAccumulator: TimeInterval = 0
+    private let regenInterval: TimeInterval = 1.0  // Régénère toutes les secondes
+    private let hpRegenBase: Int = 1               // PV/s de base
+    private let investitureRegenBase: Int = 2       // Investiture/s de base
+
     // Theme
     private let worldTheme: WorldTheme
 
@@ -1196,6 +1202,20 @@ class ZoneScene: SKScene {
             if i < enemyInstances.count {
                 minimap.updateEnemyPosition(index: i, gridPos: enemyInstances[i].gridPosition,
                                              isAlive: enemyInstances[i].isAlive)
+            }
+        }
+
+        // Régénération passive HP/Investiture
+        regenAccumulator += deltaTime
+        if regenAccumulator >= regenInterval {
+            regenAccumulator -= regenInterval
+            GameManager.shared.mutateChampion { champ in
+                if champ.currentHP < champ.maxHP {
+                    champ.currentHP = min(champ.maxHP, champ.currentHP + self.hpRegenBase)
+                }
+                if champ.currentInvestiture < champ.maxInvestiture {
+                    champ.currentInvestiture = min(champ.maxInvestiture, champ.currentInvestiture + self.investitureRegenBase)
+                }
             }
         }
 
