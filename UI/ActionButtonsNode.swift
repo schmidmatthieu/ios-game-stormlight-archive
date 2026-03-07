@@ -1,16 +1,16 @@
 import SpriteKit
 
 /// Boutons d'action style Wild Rift — attaque de base + 4 compétences + ultime
+/// Supporte le mode contextuel (attaque, parler, entrer, ramasser)
 class ActionButtonsNode: SKNode {
 
-    // MARK: - Button Data
+    // MARK: - Context Mode
 
-    struct AbilitySlot {
-        let index: Int
-        let skillID: String?
-        let iconName: String
-        var cooldownRemaining: TimeInterval = 0
-        var isOnCooldown: Bool { cooldownRemaining > 0 }
+    enum ActionMode: Equatable {
+        case attack
+        case talk(npcID: String)
+        case enter(zoneID: String)
+        case loot
     }
 
     // MARK: - Configuration
@@ -22,6 +22,7 @@ class ActionButtonsNode: SKNode {
     // MARK: - Nodes
 
     private var attackButton: SKShapeNode!
+    private var attackLabel: SKLabelNode!
     private var abilityButtons: [SKShapeNode] = []
     private var ultimateButton: SKShapeNode!
     private var cooldownOverlays: [Int: SKShapeNode] = [:]
@@ -30,12 +31,13 @@ class ActionButtonsNode: SKNode {
     // MARK: - Callbacks
 
     var onAttackPressed: (() -> Void)?
-    var onAbilityPressed: ((Int) -> Void)?   // Index 0-3
+    var onAbilityPressed: ((Int) -> Void)?
     var onUltimatePressed: (() -> Void)?
+    var onInteractPressed: ((ActionMode) -> Void)?
 
     // MARK: - State
 
-    private var slots: [AbilitySlot] = []
+    private(set) var currentMode: ActionMode = .attack
 
     // MARK: - Init
 
@@ -51,10 +53,48 @@ class ActionButtonsNode: SKNode {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Context Mode Switching
+
+    func setMode(_ mode: ActionMode) {
+        guard mode != currentMode else { return }
+        currentMode = mode
+
+        switch mode {
+        case .attack:
+            attackButton.fillColor = SKColor(red: 0.7, green: 0.15, blue: 0.1, alpha: 0.85)
+            attackButton.strokeColor = SKColor(red: 1.0, green: 0.3, blue: 0.2, alpha: 1.0)
+            attackLabel.text = "ATK"
+            attackLabel.fontSize = 14
+
+        case .talk:
+            attackButton.fillColor = SKColor(red: 0.15, green: 0.5, blue: 0.7, alpha: 0.85)
+            attackButton.strokeColor = SKColor(red: 0.2, green: 0.7, blue: 0.9, alpha: 1.0)
+            attackLabel.text = "Parler"
+            attackLabel.fontSize = 11
+
+        case .enter:
+            attackButton.fillColor = SKColor(red: 0.15, green: 0.6, blue: 0.3, alpha: 0.85)
+            attackButton.strokeColor = SKColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 1.0)
+            attackLabel.text = "Entrer"
+            attackLabel.fontSize = 11
+
+        case .loot:
+            attackButton.fillColor = SKColor(red: 0.6, green: 0.5, blue: 0.1, alpha: 0.85)
+            attackButton.strokeColor = SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 1.0)
+            attackLabel.text = "Ramasser"
+            attackLabel.fontSize = 10
+        }
+
+        // Bounce animation on mode change
+        attackButton.run(SKAction.sequence([
+            SKAction.scale(to: 1.15, duration: 0.08),
+            SKAction.scale(to: 1.0, duration: 0.1)
+        ]))
+    }
+
     // MARK: - Setup
 
     private func setupAttackButton() {
-        // Gros bouton d'attaque auto (comme Wild Rift — en bas à droite)
         attackButton = SKShapeNode(circleOfRadius: attackButtonRadius)
         attackButton.fillColor = SKColor(red: 0.7, green: 0.15, blue: 0.1, alpha: 0.85)
         attackButton.strokeColor = SKColor(red: 1.0, green: 0.3, blue: 0.2, alpha: 1.0)
@@ -63,19 +103,35 @@ class ActionButtonsNode: SKNode {
         attackButton.zPosition = 1000
         attackButton.name = "attack"
 
-        // Icône épée
-        let attackIcon = SKLabelNode(fontNamed: "Helvetica-Bold")
-        attackIcon.text = "ATK"
-        attackIcon.fontSize = 14
-        attackIcon.fontColor = .white
-        attackIcon.verticalAlignmentMode = .center
-        attackIcon.name = "attack"
-        attackButton.addChild(attackIcon)
+        // Shadow
+        let shadow = SKShapeNode(circleOfRadius: attackButtonRadius)
+        shadow.fillColor = SKColor(white: 0, alpha: 0.3)
+        shadow.strokeColor = .clear
+        shadow.position = CGPoint(x: 2, y: -2)
+        shadow.zPosition = 999
+        addChild(shadow)
 
-        // Pulse animation
+        // Label
+        attackLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        attackLabel.text = "ATK"
+        attackLabel.fontSize = 14
+        attackLabel.fontColor = .white
+        attackLabel.verticalAlignmentMode = .center
+        attackLabel.name = "attackLabel"
+        attackButton.addChild(attackLabel)
+
+        // Shine highlight
+        let shine = SKShapeNode(ellipseOf: CGSize(width: attackButtonRadius * 1.2, height: attackButtonRadius * 0.5))
+        shine.fillColor = SKColor(white: 1, alpha: 0.12)
+        shine.strokeColor = .clear
+        shine.position = CGPoint(x: 0, y: attackButtonRadius * 0.3)
+        shine.zPosition = 1001
+        attackButton.addChild(shine)
+
+        // Subtle pulse
         let pulse = SKAction.repeatForever(SKAction.sequence([
-            SKAction.scale(to: 1.05, duration: 0.8),
-            SKAction.scale(to: 1.0, duration: 0.8)
+            SKAction.scale(to: 1.03, duration: 1.0),
+            SKAction.scale(to: 1.0, duration: 1.0)
         ]))
         attackButton.run(pulse)
 
@@ -83,15 +139,13 @@ class ActionButtonsNode: SKNode {
     }
 
     private func setupAbilityButtons() {
-        // 4 boutons de compétences disposés en arc autour du bouton d'attaque
-        // Layout style Wild Rift : arc de cercle au-dessus et à gauche
         let angles: [CGFloat] = [.pi * 0.8, .pi * 0.55, .pi * 0.35, .pi * 0.15]
         let distanceFromCenter: CGFloat = 85
         let colors: [SKColor] = [
-            SKColor(red: 0.2, green: 0.5, blue: 0.8, alpha: 0.85),  // Q - bleu
-            SKColor(red: 0.1, green: 0.7, blue: 0.4, alpha: 0.85),  // W - vert
-            SKColor(red: 0.7, green: 0.5, blue: 0.1, alpha: 0.85),  // E - orange
-            SKColor(red: 0.6, green: 0.2, blue: 0.7, alpha: 0.85),  // R - violet
+            SKColor(red: 0.2, green: 0.5, blue: 0.8, alpha: 0.85),
+            SKColor(red: 0.1, green: 0.7, blue: 0.4, alpha: 0.85),
+            SKColor(red: 0.7, green: 0.5, blue: 0.1, alpha: 0.85),
+            SKColor(red: 0.6, green: 0.2, blue: 0.7, alpha: 0.85),
         ]
         let labels = ["1", "2", "3", "4"]
 
@@ -100,28 +154,43 @@ class ActionButtonsNode: SKNode {
             let x = cos(angle) * distanceFromCenter
             let y = sin(angle) * distanceFromCenter
 
+            // Button shadow
+            let shadow = SKShapeNode(circleOfRadius: abilityButtonRadius)
+            shadow.fillColor = SKColor(white: 0, alpha: 0.25)
+            shadow.strokeColor = .clear
+            shadow.position = CGPoint(x: x + 1.5, y: y - 1.5)
+            shadow.zPosition = 999
+            addChild(shadow)
+
             let button = SKShapeNode(circleOfRadius: abilityButtonRadius)
             button.fillColor = colors[i]
-            button.strokeColor = colors[i].withAlphaComponent(1.0)
-            button.lineWidth = 2
+            button.strokeColor = SKColor(red: 0.8, green: 0.7, blue: 0.3, alpha: 0.6)
+            button.lineWidth = 1.5
             button.position = CGPoint(x: x, y: y)
             button.zPosition = 1000
             button.name = "ability_\(i)"
 
-            // Label
-            let label = SKLabelNode(fontNamed: "Helvetica-Bold")
+            // Shine
+            let shine = SKShapeNode(ellipseOf: CGSize(width: abilityButtonRadius * 1.1, height: abilityButtonRadius * 0.4))
+            shine.fillColor = SKColor(white: 1, alpha: 0.1)
+            shine.strokeColor = .clear
+            shine.position = CGPoint(x: 0, y: abilityButtonRadius * 0.3)
+            shine.zPosition = 1001
+            button.addChild(shine)
+
+            let label = SKLabelNode(fontNamed: "Copperplate-Bold")
             label.text = labels[i]
-            label.fontSize = 16
+            label.fontSize = 14
             label.fontColor = .white
             label.verticalAlignmentMode = .center
             label.name = "ability_\(i)"
             button.addChild(label)
 
-            // Overlay de cooldown (caché par défaut)
+            // Cooldown overlay
             let cooldownOverlay = SKShapeNode(circleOfRadius: abilityButtonRadius)
             cooldownOverlay.fillColor = SKColor(white: 0, alpha: 0.7)
             cooldownOverlay.strokeColor = .clear
-            cooldownOverlay.zPosition = 1001
+            cooldownOverlay.zPosition = 1002
             cooldownOverlay.isHidden = true
             cooldownOverlay.name = "cooldown_\(i)"
             button.addChild(cooldownOverlay)
@@ -130,7 +199,7 @@ class ActionButtonsNode: SKNode {
             cdLabel.fontSize = 14
             cdLabel.fontColor = .white
             cdLabel.verticalAlignmentMode = .center
-            cdLabel.zPosition = 1002
+            cdLabel.zPosition = 1003
             cdLabel.isHidden = true
             cdLabel.name = "cd_label_\(i)"
             button.addChild(cdLabel)
@@ -144,9 +213,16 @@ class ActionButtonsNode: SKNode {
     }
 
     private func setupUltimateButton() {
-        // Bouton ultime — plus grand, au-dessus des compétences
         let angle: CGFloat = .pi * 0.5
         let distance: CGFloat = 130
+
+        // Shadow
+        let shadow = SKShapeNode(circleOfRadius: ultimateButtonRadius)
+        shadow.fillColor = SKColor(white: 0, alpha: 0.25)
+        shadow.strokeColor = .clear
+        shadow.position = CGPoint(x: cos(angle) * distance + 1.5, y: sin(angle) * distance - 1.5)
+        shadow.zPosition = 999
+        addChild(shadow)
 
         ultimateButton = SKShapeNode(circleOfRadius: ultimateButtonRadius)
         ultimateButton.fillColor = SKColor(red: 0.9, green: 0.7, blue: 0.1, alpha: 0.9)
@@ -158,21 +234,17 @@ class ActionButtonsNode: SKNode {
 
         let ultLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         ultLabel.text = "ULT"
-        ultLabel.fontSize = 12
+        ultLabel.fontSize = 11
         ultLabel.fontColor = .black
         ultLabel.verticalAlignmentMode = .center
         ultLabel.name = "ultimate"
         ultimateButton.addChild(ultLabel)
 
-        // Glow doré
+        // Glow
         let glow = SKAction.repeatForever(SKAction.sequence([
-            SKAction.run { [weak self] in
-                self?.ultimateButton.glowWidth = 8
-            },
+            SKAction.run { [weak self] in self?.ultimateButton.glowWidth = 6 },
             SKAction.wait(forDuration: 1.0),
-            SKAction.run { [weak self] in
-                self?.ultimateButton.glowWidth = 2
-            },
+            SKAction.run { [weak self] in self?.ultimateButton.glowWidth = 2 },
             SKAction.wait(forDuration: 1.0)
         ]))
         ultimateButton.run(glow)
@@ -186,10 +258,15 @@ class ActionButtonsNode: SKNode {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
 
-        // Check attack button
+        // Check attack / interaction button
         if distance(from: location, to: attackButton.position) <= attackButtonRadius * 1.2 {
             pressAnimation(attackButton)
-            onAttackPressed?()
+            switch currentMode {
+            case .attack:
+                onAttackPressed?()
+            default:
+                onInteractPressed?(currentMode)
+            }
             return
         }
 
@@ -226,15 +303,12 @@ class ActionButtonsNode: SKNode {
         let key = "cooldown_\(abilityIndex)"
 
         removeAction(forKey: key)
+        removeAction(forKey: "\(key)_stop")
 
         let countdown = SKAction.repeatForever(SKAction.sequence([
             SKAction.run { [weak label] in
                 remaining -= 0.1
                 label?.text = String(format: "%.1f", max(0, remaining))
-                if remaining <= 0 {
-                    overlay?.isHidden = true
-                    label?.isHidden = true
-                }
             },
             SKAction.wait(forDuration: 0.1)
         ]))
@@ -256,7 +330,7 @@ class ActionButtonsNode: SKNode {
 
     func updateAbilityIcon(index: Int, text: String, color: SKColor? = nil) {
         guard index < abilityButtons.count else { return }
-        if let label = abilityButtons[index].children.first(where: { $0 is SKLabelNode }) as? SKLabelNode {
+        if let label = abilityButtons[index].children.first(where: { $0 is SKLabelNode && $0.name == "ability_\(index)" }) as? SKLabelNode {
             label.text = text
         }
         if let color = color {
