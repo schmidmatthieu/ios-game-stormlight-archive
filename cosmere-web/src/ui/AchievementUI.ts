@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { AchievementManager } from '../game/AchievementSystem';
+import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { AchievementDef, AchievementCategory } from '../game/AchievementSystem';
 
 // ─── Category Info ───────────────────────────────────────────
@@ -29,6 +31,7 @@ export function createAchievementToast(
   const toastContainer = new Container();
   toastContainer.zIndex = 9999;
   toastContainer.y = -50; // Start off-screen
+  const layout = getLayoutInfo(screenW, screenW); // Approximate layout for toast sizing
   uiContainer.addChild(toastContainer);
 
   let activeToast: Container | null = null;
@@ -49,7 +52,7 @@ export function createAchievementToast(
     // Background
     const bg = new Graphics();
     bg.roundRect(tx, 0, toastW, toastH, 8)
-      .fill({ color: 0x0a0815, alpha: 0.92 })
+      .fill({ color: UI_COLORS.panelBgAlt, alpha: UI_ALPHA.panelBg })
       .stroke({ color: CATEGORY_COLORS[achievement.category] ?? 0xaa8844, width: 2, alpha: 0.8 });
     toast.addChild(bg);
 
@@ -65,7 +68,7 @@ export function createAchievementToast(
     // "Achievement Unlocked" header
     const header = new Text({
       text: 'Succès Débloqué!',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xaaaa55, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.warning, fontWeight: 'bold' }),
     });
     header.x = tx + 38;
     header.y = 6;

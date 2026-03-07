@@ -179,7 +179,7 @@ export function showCraftingPanel(
 
       const tabLabel = new Text({
         text: cat.label,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: isActive ? 0xe6cc66 : 0x888888 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: isActive ? UI_COLORS.textGold : UI_COLORS.textMuted }),
       });
       tabLabel.anchor.set(0.5);
       tabLabel.x = tabX + tabW / 2 - 1;
@@ -216,7 +216,7 @@ export function showCraftingPanel(
       // Recipe name
       const nameText = new Text({
         text: recipe.name,
-        style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 10, fill: rarityColor, fontWeight: 'bold' }),
+        style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(11, layout), fill: rarityColor, fontWeight: 'bold' }),
       });
       nameText.x = px + 18;
       nameText.y = iy + 4;
@@ -225,7 +225,7 @@ export function showCraftingPanel(
       // Description
       const descText = new Text({
         text: recipe.description,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x999988, wordWrap: true, wordWrapWidth: panelW - 100 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary, wordWrap: true, wordWrapWidth: panelW - 100 }),
       });
       descText.x = px + 18;
       descText.y = iy + 18;
@@ -234,7 +234,7 @@ export function showCraftingPanel(
       // Cost
       const costText = new Text({
         text: `${recipe.goldCost} or`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: canAfford ? 0xe6cc33 : 0xff4444 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: canAfford ? UI_COLORS.textGoldBright : UI_COLORS.danger }),
       });
       costText.x = px + 18;
       costText.y = iy + 32;
@@ -248,15 +248,15 @@ export function showCraftingPanel(
 
       const craftBtn = new Graphics();
       craftBtn.roundRect(btnX, btnY, btnW, btnH, 4)
-        .fill({ color: canAfford ? 0x224433 : 0x332222, alpha: 0.9 })
-        .stroke({ color: canAfford ? 0x44aa66 : 0x663333, width: 1, alpha: 0.6 });
+        .fill({ color: canAfford ? UI_COLORS.btnSuccess : UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+        .stroke({ color: canAfford ? UI_COLORS.success : UI_COLORS.danger, width: 1, alpha: 0.6 });
       craftBtn.eventMode = 'static';
       craftBtn.cursor = canAfford ? 'pointer' : 'default';
       contentContainer.addChild(craftBtn);
 
       const craftLabel = new Text({
         text: 'Créer',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: canAfford ? 0x66cc88 : 0x664444 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: canAfford ? UI_COLORS.success : UI_COLORS.textMuted }),
       });
       craftLabel.anchor.set(0.5);
       craftLabel.x = btnX + btnW / 2;
@@ -278,7 +278,7 @@ export function showCraftingPanel(
         text: activeTab === 'enchant'
           ? 'Aucun enchantement disponible\npour ce monde.'
           : 'Aucune recette disponible\nà votre niveau.',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x666666, align: 'center' }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textMuted, align: 'center' }),
       });
       emptyText.anchor.set(0.5);
       emptyText.x = screenW / 2;
@@ -289,9 +289,9 @@ export function showCraftingPanel(
 
   // Close button
   const closeBtn = new Graphics();
-  closeBtn.roundRect(px + panelW - 28, py + 4, 22, 18, 4)
-    .fill({ color: 0x552222, alpha: 0.7 })
-    .stroke({ color: 0x883333, width: 1, alpha: 0.4 });
+  closeBtn.roundRect(px + panelW - 28, py + 4, buttonHeight(layout), buttonHeight(layout) * 0.6, 4)
+    .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
+    .stroke({ color: UI_COLORS.danger, width: 1, alpha: 0.4 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
   closeBtn.on('pointerdown', onClose);
@@ -299,7 +299,7 @@ export function showCraftingPanel(
 
   const closeX = new Text({
     text: '✕',
-    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0xcc6666 }),
+    style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, layout), fill: UI_COLORS.danger }),
   });
   closeX.anchor.set(0.5);
   closeX.x = px + panelW - 17;
