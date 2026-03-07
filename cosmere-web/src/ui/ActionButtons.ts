@@ -181,7 +181,7 @@ export class ActionButtons extends Container {
     for (let i = 0; i < this.slots.length; i++) {
       const slot = this.slots[i];
       if (!slot || slot.cooldown <= 0) continue;
-      slot.cooldown -= dt / 60;
+      slot.cooldown -= dt;
       if (slot.cooldown <= 0) {
         slot.cooldown = 0;
         this.skillButtons[i].alpha = 1;

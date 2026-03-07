@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { AchievementManager } from '../game/AchievementSystem';
 import type { AchievementDef, AchievementCategory } from '../game/AchievementSystem';
+import { MusicManager } from '../game/MusicSystem';
 
 // ─── Category Info ───────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export function createAchievementToast(
   let toastPhase: 'idle' | 'slide_in' | 'display' | 'slide_out' = 'idle';
 
   function showToast(achievement: AchievementDef): void {
+    MusicManager.shared.playSFX('achievement');
     if (activeToast) {
       toastContainer.removeChild(activeToast);
       activeToast.destroy({ children: true });

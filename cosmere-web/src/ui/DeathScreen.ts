@@ -130,8 +130,12 @@ export function showDeathScreen(
 
   // Fade-in button after delay
   let elapsed = 0;
+  let lastTime = performance.now();
   const fadeIn = () => {
-    elapsed += 1 / 60;
+    const now = performance.now();
+    const frameDt = (now - lastTime) / 1000;
+    lastTime = now;
+    elapsed += frameDt;
     if (elapsed < 1.5) {
       requestAnimationFrame(fadeIn);
       return;

@@ -41,6 +41,13 @@ export class Minimap extends Container {
   private trailPoints: { x: number; y: number }[] = [];
   private trailTimer = 0;
 
+  // Position lock - persists across worlds
+  private locked = false;
+  private lockIcon: Text | null = null;
+
+  private static readonly POS_KEY = 'minimap_position';
+  private static readonly LOCK_KEY = 'minimap_locked';
+
   constructor(screenWidth: number, screenHeight: number) {
     super();
 
@@ -55,23 +62,28 @@ export class Minimap extends Container {
       this.MAP_SIZE = 120;
     }
 
-    // Position adapts to screen size and orientation
-    const m = scaled(this.MARGIN, this.layout);
-    const safeLeft = Math.max(this.layout.safeArea.left, m);
-    const safeBottom = Math.max(this.layout.safeArea.bottom, m);
-
-    if (this.layout.device === 'mobile' && this.layout.orientation === 'portrait') {
-      // Mobile portrait: bottom-left, above joystick area, smaller size
-      this.x = safeLeft + m;
-      this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(110, this.layout);
-    } else if (this.layout.device === 'mobile' && this.layout.orientation === 'landscape') {
-      // Mobile landscape: bottom-left, adjusted for landscape proportions
-      this.x = safeLeft + m;
-      this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(90, this.layout);
+    // Try to restore saved position and lock state
+    const savedPos = this.loadPosition();
+    if (savedPos) {
+      this.x = savedPos.x;
+      this.y = savedPos.y;
+      this.locked = savedPos.locked;
     } else {
-      // Tablet / desktop: bottom-left with comfortable margin
-      this.x = safeLeft + m;
-      this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(100, this.layout);
+      // Default position
+      const m = scaled(this.MARGIN, this.layout);
+      const safeLeft = Math.max(this.layout.safeArea.left, m);
+      const safeBottom = Math.max(this.layout.safeArea.bottom, m);
+
+      if (this.layout.device === 'mobile' && this.layout.orientation === 'portrait') {
+        this.x = safeLeft + m;
+        this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(110, this.layout);
+      } else if (this.layout.device === 'mobile' && this.layout.orientation === 'landscape') {
+        this.x = safeLeft + m;
+        this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(90, this.layout);
+      } else {
+        this.x = safeLeft + m;
+        this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(100, this.layout);
+      }
     }
 
     // Background
@@ -108,6 +120,21 @@ export class Minimap extends Container {
     label.y = 2;
     this.addChild(label);
 
+    // Lock icon (top-left corner of minimap)
+    this.lockIcon = new Text({
+      text: this.locked ? '🔒' : '🔓',
+      style: new TextStyle({ fontSize: 8 }),
+    });
+    this.lockIcon.x = 3;
+    this.lockIcon.y = 1;
+    this.lockIcon.eventMode = 'static';
+    this.lockIcon.cursor = 'pointer';
+    this.lockIcon.on('pointerdown', (e) => {
+      e.stopPropagation();
+      this.toggleLock();
+    });
+    this.addChild(this.lockIcon);
+
     // Compass directions
     const compassStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 5, fill: 0x556677, fontWeight: 'bold' });
     const dirs: [string, number, number][] = [['N', this.MAP_SIZE / 2, 10], ['S', this.MAP_SIZE / 2, this.MAP_SIZE - 4], ['E', this.MAP_SIZE - 5, this.MAP_SIZE / 2], ['O', 5, this.MAP_SIZE / 2]];
@@ -134,26 +161,65 @@ export class Minimap extends Container {
     this.addChild(this.legendContainer);
     this.renderLegend();
 
-    // Make draggable
+    // Make draggable (respects lock state)
     this.eventMode = 'static';
-    this.cursor = 'grab';
+    this.cursor = this.locked ? 'default' : 'grab';
     let dragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
     this.on('pointerdown', (e) => {
+      if (this.locked) return;
       dragging = true;
       this.cursor = 'grabbing';
       dragOffsetX = e.globalX - this.x;
       dragOffsetY = e.globalY - this.y;
     });
     this.on('globalpointermove', (e) => {
-      if (!dragging) return;
+      if (!dragging || this.locked) return;
       this.x = e.globalX - dragOffsetX;
       this.y = e.globalY - dragOffsetY;
     });
-    this.on('pointerup', () => { dragging = false; this.cursor = 'grab'; });
-    this.on('pointerupoutside', () => { dragging = false; this.cursor = 'grab'; });
+    this.on('pointerup', () => {
+      if (dragging) {
+        dragging = false;
+        this.cursor = this.locked ? 'default' : 'grab';
+        this.savePosition();
+      }
+    });
+    this.on('pointerupoutside', () => {
+      if (dragging) {
+        dragging = false;
+        this.cursor = this.locked ? 'default' : 'grab';
+        this.savePosition();
+      }
+    });
+  }
+
+  private toggleLock(): void {
+    this.locked = !this.locked;
+    if (this.lockIcon) {
+      this.lockIcon.text = this.locked ? '🔒' : '🔓';
+    }
+    this.cursor = this.locked ? 'default' : 'grab';
+    this.savePosition();
+  }
+
+  private savePosition(): void {
+    const data = { x: this.x, y: this.y, locked: this.locked };
+    localStorage.setItem(Minimap.POS_KEY, JSON.stringify(data));
+  }
+
+  private loadPosition(): { x: number; y: number; locked: boolean } | null {
+    const raw = localStorage.getItem(Minimap.POS_KEY);
+    if (!raw) return null;
+    try {
+      const data = JSON.parse(raw);
+      if (typeof data.x === 'number' && typeof data.y === 'number') {
+        return { x: data.x, y: data.y, locked: !!data.locked };
+      }
+    } catch { /* ignore */ }
+    return null;
   }
 
   private renderLegend(): void {

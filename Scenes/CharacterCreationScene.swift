@@ -16,6 +16,7 @@ class CharacterCreationScene: SKScene {
     private var previewContainer: SKNode!
     private var nameLabel: SKLabelNode!
     private var orderSelector: SKNode?
+    private var statsPanel: SKNode?
     private var classParticles: SKNode?
 
     private let classData: [(cls: ChampionClass, icon: String)] = [
@@ -325,6 +326,9 @@ class CharacterCreationScene: SKScene {
             worldLabel.text = "Monde d'origine: \(selectedClass.startingWorld)"
         }
 
+        // Stats preview
+        updateStatsPanel()
+
         // Show/hide Radiant order selector
         orderSelector?.removeFromParent()
         orderSelector = nil
@@ -442,6 +446,53 @@ class CharacterCreationScene: SKScene {
 
         addChild(container)
         classParticles = container
+    }
+
+    private func updateStatsPanel() {
+        statsPanel?.removeFromParent()
+
+        let panel = SKNode()
+        let centerX = size.width / 2
+        let baseY = size.height - 540
+
+        let stats = ChampionStats.baseStats
+        let maxHP = stats.vigor * 10 + 50
+        let maxInv = stats.investiture * 8 + 30
+
+        let magicName: String
+        switch selectedClass {
+        case .mistborn:         magicName = "Allomancie"
+        case .radiant:          magicName = "Surgebinding"
+        case .awakener:         magicName = "Eveil"
+        case .elantrian:        magicName = "AonDor"
+        case .sandMaster:       magicName = "Sable"
+        case .nightmarePainter: magicName = "Peinture"
+        }
+
+        let lines = [
+            "PV: \(maxHP)  |  Investiture: \(maxInv)",
+            "FOR: \(stats.strength)  AGI: \(stats.agility)  ESP: \(stats.spirit)  VIG: \(stats.vigor)  CHC: \(stats.luck)",
+            "Magie: \(magicName)"
+        ]
+
+        let bg = SKShapeNode(rectOf: CGSize(width: size.width - 40, height: 56), cornerRadius: 6)
+        bg.fillColor = SKColor(white: 0.08, alpha: 0.9)
+        bg.strokeColor = SKColor(red: 0.5, green: 0.45, blue: 0.25, alpha: 0.6)
+        bg.lineWidth = 1
+        bg.position = CGPoint(x: centerX, y: baseY - 10)
+        panel.addChild(bg)
+
+        for (i, text) in lines.enumerated() {
+            let label = SKLabelNode(fontNamed: "Helvetica")
+            label.text = text
+            label.fontSize = i == 1 ? 10 : 11
+            label.fontColor = i == 2 ? SKColor(red: 0.6, green: 0.85, blue: 1.0, alpha: 1.0) : .lightGray
+            label.position = CGPoint(x: centerX, y: baseY + 8 - CGFloat(i) * 16)
+            panel.addChild(label)
+        }
+
+        addChild(panel)
+        statsPanel = panel
     }
 
     // MARK: - Radiant Order Selector

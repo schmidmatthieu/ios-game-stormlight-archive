@@ -37,10 +37,19 @@
     "reward": {
       "xp": 100,
       "gold": 50,
-      "items": ["steel_vial", "iron_vial"],
-      "reputationChanges": [{"worldID": "scadrial", "amount": 10}]
+      "items": [
+        "steel_vial",
+        "iron_vial"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_scadrial_main_1"
+    "dialogueTreeID": "dialogue_scadrial_main_1",
+    "actNumber": 1
   },
   {
     "id": "scadrial_main_2",
@@ -49,7 +58,9 @@
     "type": "main",
     "worldID": "scadrial",
     "requiredLevel": 3,
-    "prerequisites": ["scadrial_main_1"],
+    "prerequisites": [
+      "scadrial_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -88,10 +99,20 @@
     "reward": {
       "xp": 200,
       "gold": 120,
-      "items": ["tin_vial", "pewter_vial", "koloss_blade_shard"],
-      "reputationChanges": [{"worldID": "scadrial", "amount": 15}]
+      "items": [
+        "tin_vial",
+        "pewter_vial",
+        "koloss_blade_shard"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_scadrial_main_2"
+    "dialogueTreeID": "dialogue_scadrial_main_2",
+    "actNumber": 1
   },
   {
     "id": "scadrial_main_3",
@@ -100,7 +121,9 @@
     "type": "main",
     "worldID": "scadrial",
     "requiredLevel": 5,
-    "prerequisites": ["scadrial_main_2"],
+    "prerequisites": [
+      "scadrial_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -131,10 +154,20 @@
     "reward": {
       "xp": 500,
       "gold": 300,
-      "items": ["inquisitor_spike", "atium_bead", "guard_armor_piece"],
-      "reputationChanges": [{"worldID": "scadrial", "amount": 25}]
+      "items": [
+        "inquisitor_spike",
+        "atium_bead",
+        "guard_armor_piece"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 25
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_scadrial_main_3"
+    "dialogueTreeID": "dialogue_scadrial_main_3",
+    "actNumber": 1
   },
   {
     "id": "scadrial_side_1",
@@ -143,7 +176,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 2,
-    "prerequisites": ["scadrial_main_1"],
+    "prerequisites": [
+      "scadrial_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -182,10 +217,18 @@
     "reward": {
       "xp": 80,
       "gold": 40,
-      "items": ["tin_vial"],
-      "reputationChanges": [{"worldID": "scadrial", "amount": 10}]
+      "items": [
+        "tin_vial"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_scadrial_side_1"
+    "dialogueTreeID": "dialogue_scadrial_side_1",
+    "actNumber": 1
   },
   {
     "id": "scadrial_side_2",
@@ -194,7 +237,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 2,
-    "prerequisites": ["scadrial_main_1"],
+    "prerequisites": [
+      "scadrial_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -233,10 +278,19 @@
     "reward": {
       "xp": 60,
       "gold": 100,
-      "items": ["pewter_vial", "pewter_vial"],
-      "reputationChanges": [{"worldID": "scadrial", "amount": 5}]
+      "items": [
+        "pewter_vial",
+        "pewter_vial"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 5
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_scadrial_side_2"
+    "dialogueTreeID": "dialogue_scadrial_side_2",
+    "actNumber": 1
   },
   {
     "id": "roshar_main_1",
@@ -245,7 +299,9 @@
     "type": "main",
     "worldID": "roshar",
     "requiredLevel": 5,
-    "prerequisites": ["scadrial_main_3"],
+    "prerequisites": [
+      "scadrial_main_3"
+    ],
     "status": "available",
     "objectives": [
       {
@@ -276,10 +332,20 @@
     "reward": {
       "xp": 250,
       "gold": 150,
-      "items": ["stormlight_chip", "stormlight_chip", "stormlight_mark"],
-      "reputationChanges": [{"worldID": "roshar", "amount": 10}]
+      "items": [
+        "stormlight_chip",
+        "stormlight_chip",
+        "stormlight_mark"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_roshar_main_1"
+    "dialogueTreeID": "dialogue_roshar_main_1",
+    "actNumber": 1
   },
   {
     "id": "roshar_main_2",
@@ -288,7 +354,9 @@
     "type": "main",
     "worldID": "roshar",
     "requiredLevel": 7,
-    "prerequisites": ["roshar_main_1"],
+    "prerequisites": [
+      "roshar_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -327,10 +395,20 @@
     "reward": {
       "xp": 400,
       "gold": 250,
-      "items": ["stormlight_mark", "carapace_armor_piece", "voidspren_essence"],
-      "reputationChanges": [{"worldID": "roshar", "amount": 20}]
+      "items": [
+        "stormlight_mark",
+        "carapace_armor_piece",
+        "voidspren_essence"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 20
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_roshar_main_2"
+    "dialogueTreeID": "dialogue_roshar_main_2",
+    "actNumber": 1
   },
   {
     "id": "roshar_main_3",
@@ -339,7 +417,9 @@
     "type": "main",
     "worldID": "roshar",
     "requiredLevel": 9,
-    "prerequisites": ["roshar_main_2"],
+    "prerequisites": [
+      "roshar_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -370,10 +450,20 @@
     "reward": {
       "xp": 750,
       "gold": 500,
-      "items": ["thunderclast_heart", "honorblade_shard", "stormlight_broam"],
-      "reputationChanges": [{"worldID": "roshar", "amount": 30}]
+      "items": [
+        "thunderclast_heart",
+        "honorblade_shard",
+        "stormlight_broam"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 30
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_roshar_main_3"
+    "dialogueTreeID": "dialogue_roshar_main_3",
+    "actNumber": 1
   },
   {
     "id": "roshar_side_1",
@@ -382,7 +472,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 6,
-    "prerequisites": ["roshar_main_1"],
+    "prerequisites": [
+      "roshar_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -413,10 +505,19 @@
     "reward": {
       "xp": 300,
       "gold": 350,
-      "items": ["gemheart_fragment", "carapace_plate"],
-      "reputationChanges": [{"worldID": "roshar", "amount": 15}]
+      "items": [
+        "gemheart_fragment",
+        "carapace_plate"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_roshar_side_1"
+    "dialogueTreeID": "dialogue_roshar_side_1",
+    "actNumber": 1
   },
   {
     "id": "roshar_side_2",
@@ -425,7 +526,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 6,
-    "prerequisites": ["roshar_main_1"],
+    "prerequisites": [
+      "roshar_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -456,10 +559,19 @@
     "reward": {
       "xp": 200,
       "gold": 150,
-      "items": ["stormlight_mark", "stormlight_chip"],
-      "reputationChanges": [{"worldID": "roshar", "amount": 10}]
+      "items": [
+        "stormlight_mark",
+        "stormlight_chip"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_roshar_side_2"
+    "dialogueTreeID": "dialogue_roshar_side_2",
+    "actNumber": 1
   },
   {
     "id": "taldain_main_1",
@@ -468,7 +580,9 @@
     "type": "main",
     "worldID": "taldain",
     "requiredLevel": 10,
-    "prerequisites": ["roshar_main_3"],
+    "prerequisites": [
+      "roshar_main_3"
+    ],
     "status": "available",
     "objectives": [
       {
@@ -507,10 +621,20 @@
     "reward": {
       "xp": 400,
       "gold": 250,
-      "items": ["desert_water_flask", "white_sand_pouch", "raider_scimitar"],
-      "reputationChanges": [{"worldID": "taldain", "amount": 10}]
+      "items": [
+        "desert_water_flask",
+        "white_sand_pouch",
+        "raider_scimitar"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_taldain_main_1"
+    "dialogueTreeID": "dialogue_taldain_main_1",
+    "actNumber": 2
   },
   {
     "id": "taldain_main_2",
@@ -519,7 +643,9 @@
     "type": "main",
     "worldID": "taldain",
     "requiredLevel": 12,
-    "prerequisites": ["taldain_main_1"],
+    "prerequisites": [
+      "taldain_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -566,10 +692,20 @@
     "reward": {
       "xp": 550,
       "gold": 350,
-      "items": ["wyrm_scale", "sandling_carapace", "white_sand_pouch"],
-      "reputationChanges": [{"worldID": "taldain", "amount": 20}]
+      "items": [
+        "wyrm_scale",
+        "sandling_carapace",
+        "white_sand_pouch"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 20
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_taldain_main_2"
+    "dialogueTreeID": "dialogue_taldain_main_2",
+    "actNumber": 2
   },
   {
     "id": "taldain_main_3",
@@ -578,7 +714,9 @@
     "type": "main",
     "worldID": "taldain",
     "requiredLevel": 14,
-    "prerequisites": ["taldain_main_2"],
+    "prerequisites": [
+      "taldain_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -609,10 +747,20 @@
     "reward": {
       "xp": 800,
       "gold": 550,
-      "items": ["sand_lord_crown", "dark_sand_core", "darkside_shard"],
-      "reputationChanges": [{"worldID": "taldain", "amount": 30}]
+      "items": [
+        "sand_lord_crown",
+        "dark_sand_core",
+        "darkside_shard"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 30
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_taldain_main_3"
+    "dialogueTreeID": "dialogue_taldain_main_3",
+    "actNumber": 2
   },
   {
     "id": "taldain_side_1",
@@ -621,7 +769,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 11,
-    "prerequisites": ["taldain_main_1"],
+    "prerequisites": [
+      "taldain_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -660,10 +810,19 @@
     "reward": {
       "xp": 300,
       "gold": 200,
-      "items": ["desert_water_flask", "wyrm_scale"],
-      "reputationChanges": [{"worldID": "taldain", "amount": 10}]
+      "items": [
+        "desert_water_flask",
+        "wyrm_scale"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_taldain_side_1"
+    "dialogueTreeID": "dialogue_taldain_side_1",
+    "actNumber": 2
   },
   {
     "id": "taldain_side_2",
@@ -672,7 +831,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 11,
-    "prerequisites": ["taldain_main_1"],
+    "prerequisites": [
+      "taldain_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -711,10 +872,20 @@
     "reward": {
       "xp": 350,
       "gold": 200,
-      "items": ["white_sand_pouch", "sandling_carapace", "sandling_carapace"],
-      "reputationChanges": [{"worldID": "taldain", "amount": 15}]
+      "items": [
+        "white_sand_pouch",
+        "sandling_carapace",
+        "sandling_carapace"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_taldain_side_2"
+    "dialogueTreeID": "dialogue_taldain_side_2",
+    "actNumber": 2
   },
   {
     "id": "komashi_main_1",
@@ -723,7 +894,9 @@
     "type": "main",
     "worldID": "komashi",
     "requiredLevel": 15,
-    "prerequisites": ["taldain_main_3"],
+    "prerequisites": [
+      "taldain_main_3"
+    ],
     "status": "available",
     "objectives": [
       {
@@ -762,10 +935,20 @@
     "reward": {
       "xp": 550,
       "gold": 350,
-      "items": ["nightmare_ink", "hion_shard", "shadow_fabric"],
-      "reputationChanges": [{"worldID": "komashi", "amount": 10}]
+      "items": [
+        "nightmare_ink",
+        "hion_shard",
+        "shadow_fabric"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 10
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_komashi_main_1"
+    "dialogueTreeID": "dialogue_komashi_main_1",
+    "actNumber": 2
   },
   {
     "id": "komashi_main_2",
@@ -774,7 +957,9 @@
     "type": "main",
     "worldID": "komashi",
     "requiredLevel": 17,
-    "prerequisites": ["komashi_main_1"],
+    "prerequisites": [
+      "komashi_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -813,10 +998,20 @@
     "reward": {
       "xp": 700,
       "gold": 450,
-      "items": ["shadow_cloak_piece", "shadow_fabric", "nightmare_ink"],
-      "reputationChanges": [{"worldID": "komashi", "amount": 20}]
+      "items": [
+        "shadow_cloak_piece",
+        "shadow_fabric",
+        "nightmare_ink"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 20
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_komashi_main_2"
+    "dialogueTreeID": "dialogue_komashi_main_2",
+    "actNumber": 2
   },
   {
     "id": "komashi_main_3",
@@ -825,7 +1020,9 @@
     "type": "main",
     "worldID": "komashi",
     "requiredLevel": 19,
-    "prerequisites": ["komashi_main_2"],
+    "prerequisites": [
+      "komashi_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -864,10 +1061,20 @@
     "reward": {
       "xp": 1000,
       "gold": 700,
-      "items": ["nightmare_heart", "sentinel_core", "painters_masterwork"],
-      "reputationChanges": [{"worldID": "komashi", "amount": 30}]
+      "items": [
+        "nightmare_heart",
+        "sentinel_core",
+        "painters_masterwork"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 30
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_komashi_main_3"
+    "dialogueTreeID": "dialogue_komashi_main_3",
+    "actNumber": 2
   },
   {
     "id": "komashi_side_1",
@@ -876,7 +1083,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 16,
-    "prerequisites": ["komashi_main_1"],
+    "prerequisites": [
+      "komashi_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -915,10 +1124,20 @@
     "reward": {
       "xp": 450,
       "gold": 300,
-      "items": ["hion_shard", "hion_shard", "nightmare_ink"],
-      "reputationChanges": [{"worldID": "komashi", "amount": 15}]
+      "items": [
+        "hion_shard",
+        "hion_shard",
+        "nightmare_ink"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_komashi_side_1"
+    "dialogueTreeID": "dialogue_komashi_side_1",
+    "actNumber": 2
   },
   {
     "id": "komashi_side_2",
@@ -927,7 +1146,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 16,
-    "prerequisites": ["komashi_main_1"],
+    "prerequisites": [
+      "komashi_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -966,10 +1187,20 @@
     "reward": {
       "xp": 400,
       "gold": 350,
-      "items": ["machine_core_fragment", "hion_shard", "shadow_fabric"],
-      "reputationChanges": [{"worldID": "komashi", "amount": 15}]
+      "items": [
+        "machine_core_fragment",
+        "hion_shard",
+        "shadow_fabric"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_komashi_side_2"
+    "dialogueTreeID": "dialogue_komashi_side_2",
+    "actNumber": 2
   },
   {
     "id": "nalthis_main_1",
@@ -978,7 +1209,9 @@
     "type": "main",
     "worldID": "nalthis",
     "requiredLevel": 20,
-    "prerequisites": ["komashi_main_3"],
+    "prerequisites": [
+      "komashi_main_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1001,10 +1234,18 @@
     "reward": {
       "xp": 600,
       "gold": 400,
-      "items": ["stormlight_broam"],
-      "reputationChanges": [{"worldID": "nalthis", "amount": 15}]
+      "items": [
+        "stormlight_broam"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_nalthis_main_1"
+    "dialogueTreeID": "dialogue_nalthis_main_1",
+    "actNumber": 2
   },
   {
     "id": "sel_main_1",
@@ -1012,8 +1253,10 @@
     "description": "Sel, le monde de l'AonDor et du Dakhor, est le prochain sur votre route. La cité d'Elantris, autrefois radieuse, porte encore les cicatrices du Reod. Explorez ses ruines et découvrez comment la menace cosmérique a commencé à s'infiltrer dans le Dor lui-même.",
     "type": "main",
     "worldID": "sel",
-    "requiredLevel": 21,
-    "prerequisites": ["nalthis_main_1"],
+    "requiredLevel": 22,
+    "prerequisites": [
+      "nalthis_main_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1036,10 +1279,19 @@
     "reward": {
       "xp": 650,
       "gold": 450,
-      "items": ["stormlight_broam", "darkside_shard"],
-      "reputationChanges": [{"worldID": "sel", "amount": 15}]
+      "items": [
+        "stormlight_broam",
+        "darkside_shard"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 15
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_sel_main_1"
+    "dialogueTreeID": "dialogue_sel_main_1",
+    "actNumber": 2
   },
   {
     "id": "cosmere_main_1",
@@ -1047,8 +1299,10 @@
     "description": "Les indices récoltés à travers le Cosmère convergent : une force ancienne, antérieure aux Éclats eux-mêmes, s'éveille dans le Shadesmar. Elle corrompt l'Investiture de chaque monde, transformant les créatures et les humains en serviteurs du néant. Traversez le Shadesmar pour comprendre l'ampleur de la menace.",
     "type": "main",
     "worldID": "shadesmar",
-    "requiredLevel": 22,
-    "prerequisites": ["sel_main_1"],
+    "requiredLevel": 25,
+    "prerequisites": [
+      "sel_main_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1079,15 +1333,32 @@
     "reward": {
       "xp": 900,
       "gold": 600,
-      "items": ["voidspren_essence", "nightmare_ink", "stormlight_broam"],
+      "items": [
+        "voidspren_essence",
+        "nightmare_ink",
+        "stormlight_broam"
+      ],
       "reputationChanges": [
-        {"worldID": "roshar", "amount": 10},
-        {"worldID": "scadrial", "amount": 10},
-        {"worldID": "taldain", "amount": 10},
-        {"worldID": "komashi", "amount": 10}
+        {
+          "worldID": "roshar",
+          "amount": 10
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        },
+        {
+          "worldID": "taldain",
+          "amount": 10
+        },
+        {
+          "worldID": "komashi",
+          "amount": 10
+        }
       ]
     },
-    "dialogueTreeID": "dialogue_cosmere_main_1"
+    "dialogueTreeID": "dialogue_cosmere_main_1",
+    "actNumber": 3
   },
   {
     "id": "cosmere_main_2",
@@ -1095,8 +1366,10 @@
     "description": "Pour forger l'arme capable de vaincre la menace cosmique, vous devez rassembler les reliques les plus puissantes de chaque monde : le Pic d'Inquisiteur de Scadrial, le Fragment de Lame d'Honneur de Roshar, la Couronne du Seigneur du Sable de Taldain, et le Cœur de Cauchemar de Komashi. Retournez sur chaque monde et affrontez les gardiens de ces artefacts.",
     "type": "main",
     "worldID": "shadesmar",
-    "requiredLevel": 24,
-    "prerequisites": ["cosmere_main_1"],
+    "requiredLevel": 26,
+    "prerequisites": [
+      "cosmere_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1143,15 +1416,33 @@
     "reward": {
       "xp": 1200,
       "gold": 800,
-      "items": ["atium_bead", "stormlight_broam", "dark_sand_core", "painters_masterwork"],
+      "items": [
+        "atium_bead",
+        "stormlight_broam",
+        "dark_sand_core",
+        "painters_masterwork"
+      ],
       "reputationChanges": [
-        {"worldID": "roshar", "amount": 15},
-        {"worldID": "scadrial", "amount": 15},
-        {"worldID": "taldain", "amount": 15},
-        {"worldID": "komashi", "amount": 15}
+        {
+          "worldID": "roshar",
+          "amount": 15
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 15
+        },
+        {
+          "worldID": "taldain",
+          "amount": 15
+        },
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
       ]
     },
-    "dialogueTreeID": "dialogue_cosmere_main_2"
+    "dialogueTreeID": "dialogue_cosmere_main_2",
+    "actNumber": 3
   },
   {
     "id": "cosmere_main_3",
@@ -1159,8 +1450,10 @@
     "description": "L'arme forgée à partir des reliques du Cosmère est prête. Il est temps d'affronter l'entité primordiale au cœur du Shadesmar. Rassemblez vos alliés de chaque monde, traversez les ténèbres ultimes et livrez le combat final pour sauver le Cosmère tout entier. La destinée de tous les mondes repose entre vos mains.",
     "type": "main",
     "worldID": "shadesmar",
-    "requiredLevel": 25,
-    "prerequisites": ["cosmere_main_2"],
+    "requiredLevel": 28,
+    "prerequisites": [
+      "cosmere_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1199,17 +1492,42 @@
     "reward": {
       "xp": 2000,
       "gold": 1500,
-      "items": ["atium_bead", "honorblade_shard", "sand_lord_crown", "nightmare_heart", "painters_masterwork"],
+      "items": [
+        "atium_bead",
+        "honorblade_shard",
+        "sand_lord_crown",
+        "nightmare_heart",
+        "painters_masterwork"
+      ],
       "reputationChanges": [
-        {"worldID": "roshar", "amount": 25},
-        {"worldID": "scadrial", "amount": 25},
-        {"worldID": "taldain", "amount": 25},
-        {"worldID": "komashi", "amount": 25},
-        {"worldID": "nalthis", "amount": 25},
-        {"worldID": "sel", "amount": 25}
+        {
+          "worldID": "roshar",
+          "amount": 25
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 25
+        },
+        {
+          "worldID": "taldain",
+          "amount": 25
+        },
+        {
+          "worldID": "komashi",
+          "amount": 25
+        },
+        {
+          "worldID": "nalthis",
+          "amount": 25
+        },
+        {
+          "worldID": "sel",
+          "amount": 25
+        }
       ]
     },
-    "dialogueTreeID": "dialogue_cosmere_main_3"
+    "dialogueTreeID": "dialogue_cosmere_main_3",
+    "actNumber": 3
   },
   {
     "id": "hidden_shadesmar_passage",
@@ -1218,7 +1536,9 @@
     "type": "hidden",
     "worldID": "shadesmar",
     "requiredLevel": 8,
-    "prerequisites": ["roshar_main_2"],
+    "prerequisites": [
+      "roshar_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1249,13 +1569,23 @@
     "reward": {
       "xp": 500,
       "gold": 400,
-      "items": ["stormlight_broam", "atium_bead"],
+      "items": [
+        "stormlight_broam",
+        "atium_bead"
+      ],
       "reputationChanges": [
-        {"worldID": "roshar", "amount": 10},
-        {"worldID": "scadrial", "amount": 10}
+        {
+          "worldID": "roshar",
+          "amount": 10
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
       ]
     },
-    "dialogueTreeID": null
+    "dialogueTreeID": null,
+    "actNumber": 2
   },
   {
     "id": "hidden_ancient_allomancer",
@@ -1264,7 +1594,9 @@
     "type": "hidden",
     "worldID": "scadrial",
     "requiredLevel": 4,
-    "prerequisites": ["scadrial_main_2"],
+    "prerequisites": [
+      "scadrial_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1295,10 +1627,22 @@
     "reward": {
       "xp": 350,
       "gold": 500,
-      "items": ["atium_bead", "steel_vial", "iron_vial", "tin_vial", "pewter_vial"],
-      "reputationChanges": [{"worldID": "scadrial", "amount": 20}]
+      "items": [
+        "atium_bead",
+        "steel_vial",
+        "iron_vial",
+        "tin_vial",
+        "pewter_vial"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 20
+        }
+      ]
     },
-    "dialogueTreeID": null
+    "dialogueTreeID": null,
+    "actNumber": 1
   },
   {
     "id": "hidden_painters_secret",
@@ -1307,7 +1651,9 @@
     "type": "hidden",
     "worldID": "komashi",
     "requiredLevel": 18,
-    "prerequisites": ["komashi_main_2"],
+    "prerequisites": [
+      "komashi_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -1346,9 +1692,634 @@
     "reward": {
       "xp": 600,
       "gold": 500,
-      "items": ["painters_masterwork", "shadow_cloak_piece", "nightmare_ink"],
-      "reputationChanges": [{"worldID": "komashi", "amount": 25}]
+      "items": [
+        "painters_masterwork",
+        "shadow_cloak_piece",
+        "nightmare_ink"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 25
+        }
+      ]
     },
-    "dialogueTreeID": "dialogue_hidden_painter"
+    "dialogueTreeID": "dialogue_hidden_painter",
+    "actNumber": 2
+  },
+  {
+    "id": "nalthis_main_2",
+    "name": "Le Tribunal des Souffles",
+    "description": "Le Roi-Dieu a été corrompu par un fragment d'Éclat. Les Retournés du tribunal sont divisés. Infiltrez la Cour des Dieux et découvrez qui détient le fragment corrupteur.",
+    "type": "main",
+    "worldID": "nalthis",
+    "requiredLevel": 21,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_main_2_obj1",
+        "description": "Infiltrer la Cour des Dieux",
+        "type": "explore",
+        "targetID": "nalthis_court",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_2_obj2",
+        "description": "Interroger les Retournés du tribunal",
+        "type": "talkTo",
+        "targetID": "returned_councilor",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_2_obj3",
+        "description": "Éliminer les Voleurs de Souffle corrompus",
+        "type": "kill",
+        "targetID": "breath_thief",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_2_obj4",
+        "description": "Récupérer les fils chromatiques volés",
+        "type": "collect",
+        "targetID": "chromatic_thread",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 200,
+      "items": [
+        "awakened_blade",
+        "chromatic_thread"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 20
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_main_2"
+  },
+  {
+    "id": "nalthis_main_3",
+    "name": "Le Champion Retourné",
+    "description": "Le fragment d'Éclat a fusionné avec un ancien Champion Retourné, lui conférant un pouvoir divin dévastateur. Affrontez-le dans le Temple du Souffle Divin.",
+    "type": "main",
+    "worldID": "nalthis",
+    "requiredLevel": 22,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_main_3_obj1",
+        "description": "Entrer dans le Temple du Souffle Divin",
+        "type": "explore",
+        "targetID": "nalthis_temple",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_3_obj2",
+        "description": "Vaincre les Gardes Royaux Sans-Vie",
+        "type": "kill",
+        "targetID": "royal_lifeless_guard",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_3_obj3",
+        "description": "Terrasser le Champion Retourné",
+        "type": "defeat",
+        "targetID": "returned_champion",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 700,
+      "gold": 400,
+      "items": [
+        "returned_bloom",
+        "god_king_scepter",
+        "divine_breath_crystal"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 30
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_main_3"
+  },
+  {
+    "id": "nalthis_side_1",
+    "name": "Le Tisserand de Couleurs",
+    "description": "Un artisan Éveilleur a perdu ses Souffles après une attaque de Voleurs. Aidez-le à retrouver ses créations Éveillées dispersées dans T'Telir.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 20,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_1_obj1",
+        "description": "Parler au tisserand Éveilleur",
+        "type": "talkTo",
+        "targetID": "awakener_weaver",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_1_obj2",
+        "description": "Retrouver les créations Éveillées",
+        "type": "collect",
+        "targetID": "breath_essence",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_1_obj3",
+        "description": "Vaincre les Bêtes Éveillées sauvages",
+        "type": "kill",
+        "targetID": "awakened_beast",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 120,
+      "gold": 80,
+      "items": [
+        "chromatic_thread",
+        "breath_essence"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 10
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_1"
+  },
+  {
+    "id": "nalthis_side_2",
+    "name": "Les Sans-Vie Déserteurs",
+    "description": "Des Sans-Vie se sont libérés de leur contrôle et terrorisent les quartiers pauvres. Neutralisez-les avant que la panique ne se propage.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 21,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_2_obj1",
+        "description": "Parler à l'Éveilleur paniqué",
+        "type": "talkTo",
+        "targetID": "panicked_awakener",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_2_obj2",
+        "description": "Neutraliser les Sans-Vie déserteurs",
+        "type": "kill",
+        "targetID": "lifeless_soldier",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_2_obj3",
+        "description": "Rapporter les preuves",
+        "type": "collect",
+        "targetID": "breath_essence",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 100,
+      "gold": 60,
+      "items": [
+        "breath_essence"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 10
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_2"
+  },
+  {
+    "id": "sel_main_2",
+    "name": "Les Moines de Dakhor",
+    "description": "Les Moines Dakhor ont lancé un assaut contre Elantris restaurée. Repoussez leur invasion et découvrez le lien entre leurs rituels et le fragment d'Éclat.",
+    "type": "main",
+    "worldID": "sel",
+    "requiredLevel": 23,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_main_2_obj1",
+        "description": "Défendre les portes d'Elantris",
+        "type": "kill",
+        "targetID": "dakhor_monk",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_2_obj2",
+        "description": "Vaincre les Touchés par les Skazes",
+        "type": "kill",
+        "targetID": "skaze_touched",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_2_obj3",
+        "description": "Récupérer les glyphes d'Aon brisés",
+        "type": "collect",
+        "targetID": "aon_glyph_stone",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_2_obj4",
+        "description": "Parler au sage Élantrien",
+        "type": "talkTo",
+        "targetID": "elantrian_sage",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 400,
+      "gold": 250,
+      "items": [
+        "dakhor_bone_charm",
+        "aon_glyph_stone",
+        "elantrian_robe"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 20
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_main_2"
+  },
+  {
+    "id": "sel_main_3",
+    "name": "L'Avatar de Domination",
+    "description": "Le fragment d'Éclat de Dominion a pris forme. Les Aons se brisent, le Dor se déchaîne. Affrontez l'Avatar dans les ruines du Pool de Dévotion.",
+    "type": "main",
+    "worldID": "sel",
+    "requiredLevel": 24,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_main_3_obj1",
+        "description": "Traverser les ruines corrompues",
+        "type": "explore",
+        "targetID": "sel_ruins",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_3_obj2",
+        "description": "Vaincre les Élantrien Corrompus",
+        "type": "kill",
+        "targetID": "corrupted_elantrian",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_3_obj3",
+        "description": "Terrasser l'Avatar de Domination",
+        "type": "defeat",
+        "targetID": "dominion_avatar",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 900,
+      "gold": 500,
+      "items": [
+        "pool_of_devotion_vial",
+        "splinter_of_devotion",
+        "seons_light"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 30
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_main_3"
+  },
+  {
+    "id": "sel_side_1",
+    "name": "Le Séon Perdu",
+    "description": "Un Séon erre sans maître dans les ruines d'Elantris. Retrouvez-le et protégez-le des Skazes.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 22,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_1_obj1",
+        "description": "Parler à l'archiviste d'Elantris",
+        "type": "talkTo",
+        "targetID": "elantris_archivist",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_1_obj2",
+        "description": "Retrouver le Séon dans les ruines",
+        "type": "explore",
+        "targetID": "sel_ruins",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_1_obj3",
+        "description": "Protéger le Séon des guerriers Derethi",
+        "type": "kill",
+        "targetID": "derethi_warrior",
+        "requiredCount": 6,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 130,
+      "gold": 80,
+      "items": [
+        "seons_light",
+        "aon_glyph_stone"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 10
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_1"
+  },
+  {
+    "id": "sel_side_2",
+    "name": "Les Glyphes Interdits",
+    "description": "Un Élantrien reclus prétend avoir redécouvert des Aons oubliés capables de guérir la corruption.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 23,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_2_obj1",
+        "description": "Rencontrer l'Élantrien reclus",
+        "type": "talkTo",
+        "targetID": "recluse_elantrian",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_2_obj2",
+        "description": "Collecter des pierres de glyphe rares",
+        "type": "collect",
+        "targetID": "aon_glyph_stone",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_2_obj3",
+        "description": "Vaincre les Élantrien Corrompus attirés",
+        "type": "kill",
+        "targetID": "corrupted_elantrian",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 150,
+      "gold": 100,
+      "items": [
+        "elantrian_robe",
+        "pool_of_devotion_vial"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 15
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_2"
+  },
+  {
+    "id": "hidden_breath_collector",
+    "name": "Le Collecteur de Souffles",
+    "description": "Dans les souterrains de T'Telir, une légende parle d'un Éveilleur ancien qui a accumulé dix mille Souffles. Son trésor attend celui qui résoudra l'énigme des couleurs.",
+    "type": "hidden",
+    "worldID": "nalthis",
+    "requiredLevel": 21,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_breath_obj1",
+        "description": "Découvrir l'entrée secrète du caveau",
+        "type": "explore",
+        "targetID": "nalthis_temple",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_breath_obj2",
+        "description": "Résoudre l'énigme chromatique",
+        "type": "collect",
+        "targetID": "chromatic_thread",
+        "requiredCount": 7,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_breath_obj3",
+        "description": "Vaincre le gardien Éveillé",
+        "type": "defeat",
+        "targetID": "royal_lifeless_guard",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 500,
+      "gold": 300,
+      "items": [
+        "divine_breath_crystal",
+        "returned_bloom"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 20
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_hidden_breath"
+  },
+  {
+    "id": "hidden_aon_rao",
+    "name": "Le Véritable Aon Rao",
+    "description": "Les archives cachées d'Elantris mentionnent un Aon Rao parfait — le glyphe originel qui pourrait restaurer le Dor.",
+    "type": "hidden",
+    "worldID": "sel",
+    "requiredLevel": 24,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_aon_obj1",
+        "description": "Déchiffrer les archives secrètes",
+        "type": "talkTo",
+        "targetID": "elantrian_sage",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_aon_obj2",
+        "description": "Collecter les fragments d'Aon dispersés",
+        "type": "collect",
+        "targetID": "aon_glyph_stone",
+        "requiredCount": 10,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_aon_obj3",
+        "description": "Activer le glyphe dans les ruines anciennes",
+        "type": "explore",
+        "targetID": "sel_ruins",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 350,
+      "items": [
+        "splinter_of_devotion",
+        "pool_of_devotion_vial"
+      ],
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 25
+        }
+      ]
+    },
+    "dialogueTreeID": "dialogue_hidden_aon"
+  },
+  {
+    "id": "hidden_worldhopper_legacy",
+    "name": "L'Héritage du Salteur",
+    "description": "Des indices disséminés à travers les mondes pointent vers un ancien Salteur qui a caché un artefact cosmique. Trouvez les 3 clés cachées.",
+    "type": "hidden",
+    "worldID": "shadesmar",
+    "requiredLevel": 25,
+    "actNumber": 3,
+    "prerequisites": [
+      "cosmere_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_hopper_obj1",
+        "description": "Trouver la Clé des Brumes (Scadrial)",
+        "type": "collect",
+        "targetID": "atium_bead",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_hopper_obj2",
+        "description": "Trouver la Clé des Tempêtes (Roshar)",
+        "type": "collect",
+        "targetID": "perfect_gemheart",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_hopper_obj3",
+        "description": "Trouver la Clé des Couleurs (Nalthis)",
+        "type": "collect",
+        "targetID": "divine_breath_crystal",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_hopper_obj4",
+        "description": "Ouvrir le Coffre du Salteur à Shadesmar",
+        "type": "explore",
+        "targetID": "shadesmar_nexus",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1000,
+      "items": [
+        "cosmere_nexus_gem",
+        "shard_fragment"
+      ],
+      "reputationChanges": []
+    },
+    "dialogueTreeID": "dialogue_hidden_hopper"
   }
 ]
