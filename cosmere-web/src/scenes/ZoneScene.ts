@@ -6,12 +6,8 @@ import { gameData } from '../data/DataLoader';
 import { VirtualJoystick } from '../ui/VirtualJoystick';
 import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
-import { InventoryPanel } from '../ui/InventoryPanel';
 import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
-import { showCraftingPanel, getRecipeEffect } from '../ui/CraftingPanel';
-import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
-import { showQuestJournal } from '../ui/QuestJournal';
 import { Minimap } from '../ui/Minimap';
 import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
@@ -26,7 +22,7 @@ import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyH
 import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer';
 import { createEnemyAnimState, updateEnemyIdle, triggerEnemyHurt, triggerEnemyDeath, drawBossAura, drawAlertIndicator, setEnemyAlert } from '../rendering/EnemyAnimations';
 import type { EnemyAnimState } from '../rendering/EnemyAnimations';
-import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle, createSkillGroundMark } from '../rendering/SpellEffects';
+import { createAttackEffect, createSkillEffect, createHitImpact, createSkillGroundMark } from '../rendering/SpellEffects';
 import { createDirectionalSlash, createCritFlash, createKillBurst, showKillStreakBanner, triggerHitStop, updateHitStop, createGroundCrack } from '../rendering/CombatFeedback';
 import { FloatingDamageManager } from '../rendering/FloatingDamage';
 import type { DamageStyle } from '../rendering/FloatingDamage';
@@ -40,11 +36,8 @@ import { AmbientAtmosphereManager } from '../rendering/AmbientAtmosphere';
 import { DayNightManager, createDayNightOverlay } from '../rendering/DayNightCycle';
 import type { BlendedTimeConfig } from '../rendering/DayNightCycle';
 import { BestiaryManager } from '../game/BestiarySystem';
-import { showBestiaryPanel } from '../ui/BestiaryPanel';
 import { AchievementManager } from '../game/AchievementSystem';
-import { createAchievementToast, showAchievementPanel } from '../ui/AchievementUI';
-import { showSkillTreePanel } from '../ui/SkillTreePanel';
-import { showTalentTreePanel } from '../ui/TalentTreePanel';
+import { createAchievementToast } from '../ui/AchievementUI';
 import { createZoneToolbar } from './ZoneToolbar';
 import { createMobileMenu } from '../ui/MobileMenu';
 import { TutorialManager } from '../ui/TutorialSystem';
@@ -59,7 +52,6 @@ import { ObjectPool } from '../systems/ObjectPool';
 import { updateSkillVFX, clearSkillVFX } from '../systems/SkillAnimations';
 import { NewGamePlusManager } from '../systems/NewGamePlus';
 import { CompanionManager } from '../game/CompanionSystem';
-import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
 import { ComboManager, createComboDisplay } from '../game/ComboSystem';
 import { WorldEventManager } from '../game/WorldEvents';
@@ -70,8 +62,6 @@ import { NPCScheduleManager } from '../game/NPCScheduleSystem';
 import { PotionManager } from '../game/PotionSystem';
 import { createPotionHotbar } from '../ui/PotionHotbar';
 import { showBuildingInterior } from './BuildingInteriorScene';
-import { showProfessionPanel } from '../ui/ProfessionPanel';
-import { moveNPCTo, teleportNPC, updateNPCAnimation, showActivityIndicator, setNPCSleeping, clearNPCAnimations } from '../rendering/NPCAnimator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import { renderEnhancedTilemap } from '../rendering/TileRenderer';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -90,6 +80,42 @@ import {
 import type {
   EnemyInstance, NPCInstance, LootInstance, Particle, WorldTheme,
 } from './zone/ZoneTypes';
+import {
+  spawnDecorations as spawnDecorationsModule,
+  renderMapEdge as renderMapEdgeModule,
+} from './zone/ZoneDecorations';
+import {
+  createCompanionState, spawnCompanionSprite as spawnCompanionSpriteModule,
+  updateCompanion as updateCompanionModule,
+  getCompanionDamageBonus, getCompanionDefenseBonus,
+  getCompanionSpeedBonus, getCompanionXPBonus,
+} from './zone/ZoneCompanion';
+import {
+  updateFog as updateFogModule,
+  updateDayNight as updateDayNightModule,
+  initNPCSchedules as initNPCSchedulesModule,
+  updateNPCSchedules as updateNPCSchedulesModule,
+  updateWeather as updateWeatherModule,
+  updateWorldMechanics as updateWorldMechanicsModule,
+  updateWorldEvents as updateWorldEventsModule,
+  updateAchievements as updateAchievementsModule,
+  getEventXPBonus, getEventGoldBonus,
+  spawnAmbientParticles as spawnAmbientParticlesModule,
+} from './zone/ZoneEnvironment';
+import {
+  toggleInventory as toggleInventoryModule,
+  toggleProfessions as toggleProfessionsModule,
+  toggleCrafting as toggleCraftingModule,
+  toggleBestiary as toggleBestiaryModule,
+  toggleAchievements as toggleAchievementsModule,
+  toggleSkillTree as toggleSkillTreeModule,
+  toggleTalentTree as toggleTalentTreeModule,
+  toggleCompanion as toggleCompanionModule,
+  toggleQuestJournal as toggleQuestJournalModule,
+  togglePause as togglePauseModule,
+  applyCraftResult as applyCraftResultModule,
+} from './zone/ZoneUI';
+import type { PanelHost } from './zone/ZoneUI';
 
 // ─── Zone Scene ────────────────────────────────────────────────
 export class ZoneScene extends Container implements GameScene {
@@ -219,9 +245,7 @@ export class ZoneScene extends Container implements GameScene {
   private killStreakTimer = 0;
 
   // Companion
-  private companionSprite: Graphics | null = null;
-  private companionPos = { x: 0, y: 0 };
-  private companionAnimTimer = 0;
+  private companionState = createCompanionState();
 
   // Combo system
   private comboDisplay: { update: () => void } | null = null;
@@ -229,7 +253,7 @@ export class ZoneScene extends Container implements GameScene {
   // World events
   private eventBanner: { update: (dt: number) => void } | null = null;
   private activeEventEffect: WorldEventEffect | null = null;
-  private classAmbientTimer = 0;
+  private classAmbientTimerRef = { value: 0 };
 
   // Floating damage
   private floatingDmg!: FloatingDamageManager;
@@ -502,471 +526,23 @@ export class ZoneScene extends Container implements GameScene {
     const tileGraphics = renderEnhancedTilemap(
       this.zone.gridWidth, this.zone.gridHeight,
       this.zone.worldID, this.theme,
-      isoToScreen, this.darkenColor.bind(this),
+      isoToScreen, darken,
     );
     this.worldContainer.addChild(tileGraphics);
   }
 
   private renderMapEdge(): void {
-    const gw = this.zone.gridWidth;
-    const gh = this.zone.gridHeight;
-    const edge = new Graphics();
-    edge.zIndex = -999;
-
-    // Draw glowing border around entire map
-    const corners = [
-      isoToScreen(0, 0),           // top
-      isoToScreen(gw - 1, 0),      // right
-      isoToScreen(gw - 1, gh - 1), // bottom
-      isoToScreen(0, gh - 1),       // left
-    ];
-
-    // Outer glow
-    edge.poly([
-      { x: corners[0].x, y: corners[0].y - 16 },
-      { x: corners[1].x + 32, y: corners[1].y },
-      { x: corners[2].x, y: corners[2].y + 16 },
-      { x: corners[3].x - 32, y: corners[3].y },
-    ]).stroke({ color: this.theme.edgeGlow, width: 3, alpha: 0.5 });
-
-    this.worldContainer.addChild(edge);
+    renderMapEdgeModule(this.worldContainer, this.zone, this.theme);
   }
 
-  // ─── Decorations ─────────────────────────────────────────────
+  // ─── Decorations (delegated to ZoneDecorations module) ──────
 
   private spawnDecorations(): void {
-    const gw = this.zone.gridWidth;
-    const gh = this.zone.gridHeight;
-    const density = this.zone.type === 'hub' ? 0.14 : 0.10;
-
-    for (let col = 0; col < gw; col++) {
-      for (let row = 0; row < gh; row++) {
-        const seed = col * 1337 + row * 7919;
-        const rand = seededRandom(seed);
-        if (rand > density) continue;
-
-        // Don't place near spawn
-        const spawnDist = Math.hypot(col - this.zone.playerSpawnPosition.col, row - this.zone.playerSpawnPosition.row);
-        if (spawnDist < 3) continue;
-
-        // Don't place on NPCs or enemies or exits
-        const occupiedByNPC = this.zone.npcSpawns.some(n => Math.abs(n.position.col - col) < 2 && Math.abs(n.position.row - row) < 2);
-        const occupiedByEnemy = this.zone.enemySpawns.some(e => Math.abs(e.position.col - col) < 2 && Math.abs(e.position.row - row) < 2);
-        const occupiedByExit = this.zone.connections.some(c => Math.abs(c.exitPosition.col - col) < 2 && Math.abs(c.exitPosition.row - row) < 2);
-        if (occupiedByNPC || occupiedByEnemy || occupiedByExit) continue;
-
-        const pos = isoToScreen(col, row);
-        const decoType = Math.floor(seededRandom(seed + 42) * 8);
-        const deco = this.createDecoration(decoType, pos, seed);
-        if (deco) {
-          deco.zIndex = pos.y;
-          this.worldContainer.addChild(deco);
-        }
-      }
-    }
-
-    // Spawn buildings in hub zones
-    if (this.zone.type === 'hub') {
-      this.spawnBuildings();
-    }
-
-    // Spawn terrain relief
-    this.spawnTerrainRelief();
+    spawnDecorationsModule(this.worldContainer, this.zone, this.theme);
   }
 
-  private spawnBuildings(): void {
-    const gw = this.zone.gridWidth;
-    const gh = this.zone.gridHeight;
-
-    // Place 3-5 buildings deterministically
-    const buildingCount = 3 + Math.floor(seededRandom(gw * gh) * 3);
-    for (let i = 0; i < buildingCount; i++) {
-      const seed = i * 3571 + gw * 97;
-      const col = 2 + Math.floor(seededRandom(seed) * (gw - 4));
-      const row = 2 + Math.floor(seededRandom(seed + 1) * (gh - 4));
-
-      // Don't place on spawn, NPCs, enemies
-      const spawnDist = Math.hypot(col - this.zone.playerSpawnPosition.col, row - this.zone.playerSpawnPosition.row);
-      if (spawnDist < 4) continue;
-      const occupied = this.zone.npcSpawns.some(n => Math.abs(n.position.col - col) < 3 && Math.abs(n.position.row - row) < 3) ||
-                       this.zone.enemySpawns.some(e => Math.abs(e.position.col - col) < 3 && Math.abs(e.position.row - row) < 3);
-      if (occupied) continue;
-
-      const pos = isoToScreen(col, row);
-      const buildingType = Math.floor(seededRandom(seed + 7) * 4);
-      const building = this.createBuilding(buildingType, pos, seed);
-      building.zIndex = pos.y;
-      this.worldContainer.addChild(building);
-    }
-  }
-
-  private createBuilding(type: number, pos: { x: number; y: number }, seed: number): Graphics {
-    const g = new Graphics();
-    const worldID = this.zone.worldID;
-    const wallColor = worldID === 'scadrial' ? 0x3a3028 : worldID === 'roshar' ? 0x445566 :
-                      worldID === 'nalthis' ? 0x446644 : worldID === 'taldain' ? 0x554433 :
-                      worldID === 'shadesmar' ? 0x222244 : 0x443344;
-    const roofColor = worldID === 'scadrial' ? 0x554433 : worldID === 'roshar' ? 0x556688 :
-                      worldID === 'nalthis' ? 0x338844 : worldID === 'taldain' ? 0x887755 :
-                      worldID === 'shadesmar' ? 0x443366 : 0x554455;
-
-    switch (type) {
-      case 0: // Small house
-        // Wall
-        g.poly([
-          { x: pos.x - 16, y: pos.y }, { x: pos.x, y: pos.y - 8 },
-          { x: pos.x + 16, y: pos.y }, { x: pos.x + 16, y: pos.y - 24 },
-          { x: pos.x, y: pos.y - 32 }, { x: pos.x - 16, y: pos.y - 24 },
-        ]).fill({ color: wallColor, alpha: 0.85 });
-        // Front face
-        g.poly([
-          { x: pos.x - 16, y: pos.y }, { x: pos.x, y: pos.y - 8 },
-          { x: pos.x, y: pos.y - 32 }, { x: pos.x - 16, y: pos.y - 24 },
-        ]).fill({ color: this.darkenColor(wallColor, 0.15), alpha: 0.85 });
-        // Roof
-        g.poly([
-          { x: pos.x - 18, y: pos.y - 24 }, { x: pos.x, y: pos.y - 38 },
-          { x: pos.x + 18, y: pos.y - 24 }, { x: pos.x, y: pos.y - 32 },
-        ]).fill({ color: roofColor, alpha: 0.9 });
-        // Door
-        g.roundRect(pos.x - 10, pos.y - 12, 5, 8, 1).fill({ color: 0x332211, alpha: 0.8 });
-        // Window
-        g.rect(pos.x + 2, pos.y - 24, 4, 4).fill({ color: 0xeebb44, alpha: 0.4 });
-        break;
-
-      case 1: // Tower
-        g.rect(pos.x - 8, pos.y - 40, 16, 40).fill({ color: wallColor, alpha: 0.85 });
-        g.rect(pos.x - 8, pos.y - 40, 8, 40).fill({ color: this.darkenColor(wallColor, 0.1), alpha: 0.85 });
-        // Battlement
-        for (let b = 0; b < 4; b++) {
-          g.rect(pos.x - 9 + b * 5, pos.y - 46, 4, 6).fill({ color: wallColor, alpha: 0.8 });
-        }
-        // Window slits
-        g.rect(pos.x - 2, pos.y - 30, 2, 5).fill({ color: 0xeebb44, alpha: 0.3 });
-        g.rect(pos.x - 2, pos.y - 18, 2, 5).fill({ color: 0xeebb44, alpha: 0.3 });
-        break;
-
-      case 2: // Market stall
-        // Posts
-        g.rect(pos.x - 14, pos.y - 16, 2, 16).fill({ color: 0x553322, alpha: 0.8 });
-        g.rect(pos.x + 12, pos.y - 16, 2, 16).fill({ color: 0x553322, alpha: 0.8 });
-        // Canopy
-        g.poly([
-          { x: pos.x - 16, y: pos.y - 16 }, { x: pos.x, y: pos.y - 22 },
-          { x: pos.x + 16, y: pos.y - 16 },
-        ]).fill({ color: 0xcc7733, alpha: 0.7 });
-        // Table
-        g.rect(pos.x - 10, pos.y - 6, 20, 4).fill({ color: 0x664422, alpha: 0.8 });
-        // Items on table
-        g.circle(pos.x - 4, pos.y - 8, 2).fill({ color: 0xee4444, alpha: 0.6 });
-        g.circle(pos.x + 2, pos.y - 8, 2).fill({ color: 0x44ee44, alpha: 0.6 });
-        g.circle(pos.x + 6, pos.y - 8, 1.5).fill({ color: 0xeeee44, alpha: 0.6 });
-        break;
-
-      case 3: // Ruins/broken wall
-        g.poly([
-          { x: pos.x - 18, y: pos.y }, { x: pos.x - 18, y: pos.y - 20 },
-          { x: pos.x - 12, y: pos.y - 26 }, { x: pos.x - 6, y: pos.y - 18 },
-          { x: pos.x, y: pos.y - 22 }, { x: pos.x + 6, y: pos.y - 14 },
-          { x: pos.x + 10, y: pos.y },
-        ]).fill({ color: this.darkenColor(wallColor, 0.2), alpha: 0.7 });
-        // Rubble
-        g.circle(pos.x + 8, pos.y - 2, 3).fill({ color: this.darkenColor(wallColor, 0.3), alpha: 0.5 });
-        g.circle(pos.x + 12, pos.y - 1, 2).fill({ color: this.darkenColor(wallColor, 0.25), alpha: 0.5 });
-        break;
-    }
-
-    return g;
-  }
-
-  private spawnTerrainRelief(): void {
-    const gw = this.zone.gridWidth;
-    const gh = this.zone.gridHeight;
-
-    // Place elevated terrain patches
-    const patchCount = 3 + Math.floor(seededRandom(gw + gh * 13) * 4);
-    for (let i = 0; i < patchCount; i++) {
-      const seed = i * 4517 + gw * 31;
-      const col = 1 + Math.floor(seededRandom(seed) * (gw - 2));
-      const row = 1 + Math.floor(seededRandom(seed + 1) * (gh - 2));
-      const spawnDist = Math.hypot(col - this.zone.playerSpawnPosition.col, row - this.zone.playerSpawnPosition.row);
-      if (spawnDist < 3) continue;
-
-      const pos = isoToScreen(col, row);
-      const size = 10 + seededRandom(seed + 2) * 18;
-      const height = 3 + seededRandom(seed + 3) * 6;
-
-      const g = new Graphics();
-      const t = this.theme;
-
-      // Elevated terrain (darker shade)
-      g.ellipse(pos.x, pos.y, size, size * 0.5)
-        .fill({ color: this.darkenColor(t.tileBase, 0.25), alpha: 0.5 });
-      // Height indicator (shadow beneath)
-      g.ellipse(pos.x, pos.y + height, size * 0.9, size * 0.45)
-        .fill({ color: 0x000000, alpha: 0.15 });
-      // Top surface
-      g.ellipse(pos.x, pos.y - height, size * 0.8, size * 0.4)
-        .fill({ color: this.lightenColor(t.tileBase, 0.15), alpha: 0.4 });
-
-      g.zIndex = pos.y - 100;
-      this.worldContainer.addChild(g);
-    }
-  }
-
-  private createDecoration(type: number, pos: { x: number; y: number }, seed: number): Graphics | null {
-    const g = new Graphics();
-    const worldID = this.zone.worldID;
-
-    if (worldID === 'scadrial') {
-      switch (type) {
-        case 0: // Ash pile
-          g.ellipse(pos.x, pos.y, 8 + seededRandom(seed + 1) * 6, 4).fill({ color: 0x444038, alpha: 0.6 });
-          g.ellipse(pos.x + 3, pos.y - 1, 4, 2.5).fill({ color: 0x555048, alpha: 0.4 });
-          break;
-        case 1: // Dead tree
-          g.rect(pos.x - 1.5, pos.y - 22, 3, 22).fill({ color: 0x3a2a1a, alpha: 0.8 });
-          g.moveTo(pos.x, pos.y - 18).lineTo(pos.x - 8, pos.y - 26).stroke({ color: 0x3a2a1a, width: 1.5, alpha: 0.7 });
-          g.moveTo(pos.x, pos.y - 14).lineTo(pos.x + 6, pos.y - 22).stroke({ color: 0x3a2a1a, width: 1.5, alpha: 0.7 });
-          g.moveTo(pos.x, pos.y - 10).lineTo(pos.x - 5, pos.y - 16).stroke({ color: 0x3a2a1a, width: 1, alpha: 0.5 });
-          break;
-        case 2: // Metal shard
-          g.poly([
-            { x: pos.x, y: pos.y - 12 },
-            { x: pos.x + 4, y: pos.y - 2 },
-            { x: pos.x + 2, y: pos.y },
-            { x: pos.x - 2, y: pos.y },
-            { x: pos.x - 3, y: pos.y - 4 },
-          ]).fill({ color: 0x667788, alpha: 0.6 });
-          g.poly([
-            { x: pos.x, y: pos.y - 12 },
-            { x: pos.x + 1, y: pos.y - 3 },
-            { x: pos.x - 1, y: pos.y - 2 },
-          ]).fill({ color: 0x8899aa, alpha: 0.3 }); // Shine
-          break;
-        case 3: // Ruined wall
-          g.rect(pos.x - 10, pos.y - 14, 20, 14).fill({ color: 0x3a3030, alpha: 0.7 });
-          g.rect(pos.x - 8, pos.y - 18, 6, 4).fill({ color: 0x3a3030, alpha: 0.5 });
-          g.rect(pos.x + 2, pos.y - 16, 4, 2).fill({ color: 0x3a3030, alpha: 0.4 });
-          break;
-        case 4: // Barrel
-          g.ellipse(pos.x, pos.y - 3, 6, 4).fill({ color: 0x443322, alpha: 0.8 });
-          g.rect(pos.x - 6, pos.y - 12, 12, 9).fill({ color: 0x553322, alpha: 0.8 });
-          g.ellipse(pos.x, pos.y - 12, 6, 4).fill({ color: 0x664433, alpha: 0.8 });
-          g.rect(pos.x - 6, pos.y - 7, 12, 1).fill({ color: 0x443322, alpha: 0.5 }); // Ring
-          break;
-        case 5: // Lantern post
-          g.rect(pos.x - 1, pos.y - 20, 2, 20).fill({ color: 0x444444, alpha: 0.7 });
-          g.rect(pos.x - 3, pos.y - 22, 6, 4).fill({ color: 0x555555, alpha: 0.7 });
-          g.circle(pos.x, pos.y - 22, 3).fill({ color: 0xffaa33, alpha: 0.4 });
-          g.circle(pos.x, pos.y - 22, 6).fill({ color: 0xffaa33, alpha: 0.08 }); // Light glow
-          break;
-        case 6: // Crate stack
-          g.rect(pos.x - 7, pos.y - 8, 14, 8).fill({ color: 0x554422, alpha: 0.8 });
-          g.rect(pos.x - 5, pos.y - 14, 10, 6).fill({ color: 0x665533, alpha: 0.8 });
-          g.rect(pos.x - 7, pos.y - 4, 14, 0.8).fill({ color: 0x443311, alpha: 0.5 });
-          break;
-        case 7: // Broken cart
-          g.rect(pos.x - 12, pos.y - 6, 24, 6).fill({ color: 0x443322, alpha: 0.7 });
-          g.circle(pos.x - 10, pos.y, 4).stroke({ color: 0x553322, width: 1.5, alpha: 0.6 });
-          g.circle(pos.x + 10, pos.y, 4).stroke({ color: 0x553322, width: 1.5, alpha: 0.6 });
-          g.rect(pos.x - 4, pos.y - 10, 2, 6).fill({ color: 0x443322, alpha: 0.6 });
-          break;
-      }
-    } else if (worldID === 'roshar') {
-      switch (type) {
-        case 0: // Rock formation
-          g.poly([
-            { x: pos.x - 8, y: pos.y },
-            { x: pos.x - 5, y: pos.y - 16 },
-            { x: pos.x + 2, y: pos.y - 20 },
-            { x: pos.x + 8, y: pos.y - 10 },
-            { x: pos.x + 6, y: pos.y },
-          ]).fill({ color: 0x556677, alpha: 0.7 });
-          // Crem buildup
-          g.ellipse(pos.x, pos.y, 10, 4).fill({ color: 0x445566, alpha: 0.3 });
-          break;
-        case 1: // Storm post
-          g.rect(pos.x - 2, pos.y - 28, 4, 28).fill({ color: 0x445566, alpha: 0.8 });
-          g.circle(pos.x, pos.y - 30, 4).fill({ color: 0x66aaff, alpha: 0.5 });
-          g.circle(pos.x, pos.y - 30, 8).fill({ color: 0x66aaff, alpha: 0.08 });
-          break;
-        case 2: // Chull shell
-          g.ellipse(pos.x, pos.y - 4, 8, 5).fill({ color: 0x667755, alpha: 0.6 });
-          g.ellipse(pos.x, pos.y - 6, 6, 3).fill({ color: 0x778866, alpha: 0.4 });
-          break;
-        case 3: // Stormlight sphere cluster
-          for (let i = 0; i < 3; i++) {
-            const sx = pos.x + (seededRandom(seed + i * 3) - 0.5) * 10;
-            const sy = pos.y - 2 + (seededRandom(seed + i * 3 + 1) - 0.5) * 6;
-            g.circle(sx, sy, 2).fill({ color: 0x66aaff, alpha: 0.5 });
-            g.circle(sx, sy, 4).fill({ color: 0x88ccff, alpha: 0.1 });
-          }
-          break;
-        case 4: // Vine cluster
-          for (let i = 0; i < 4; i++) {
-            const vx = pos.x + (seededRandom(seed + i * 5) - 0.5) * 12;
-            g.moveTo(vx, pos.y).lineTo(vx + (seededRandom(seed + i * 5 + 2) - 0.5) * 6, pos.y - 8 - seededRandom(seed + i * 5 + 1) * 10)
-              .stroke({ color: 0x446644, width: 1.2, alpha: 0.5 });
-          }
-          break;
-        case 5: // Highstorm shelter (stone arch)
-          g.rect(pos.x - 10, pos.y - 16, 3, 16).fill({ color: 0x556677, alpha: 0.7 });
-          g.rect(pos.x + 7, pos.y - 16, 3, 16).fill({ color: 0x556677, alpha: 0.7 });
-          g.roundRect(pos.x - 11, pos.y - 18, 22, 4, 2).fill({ color: 0x667788, alpha: 0.7 });
-          break;
-        default: // Cremling shelter
-          g.ellipse(pos.x, pos.y - 3, 6 + seededRandom(seed) * 4, 4).fill({ color: 0x445566, alpha: 0.6 });
-          break;
-      }
-    } else if (worldID === 'nalthis') {
-      switch (type) {
-        case 0: // Colored flower
-          const petalColor = [0xff4466, 0x44aaff, 0xffaa22, 0xaa44ff, 0x44ff66][Math.floor(seededRandom(seed + 1) * 5)];
-          g.circle(pos.x, pos.y - 6, 4).fill({ color: petalColor, alpha: 0.6 });
-          g.circle(pos.x - 3, pos.y - 4, 3).fill({ color: petalColor, alpha: 0.4 });
-          g.circle(pos.x + 3, pos.y - 4, 3).fill({ color: petalColor, alpha: 0.4 });
-          g.rect(pos.x - 0.5, pos.y - 4, 1, 4).fill({ color: 0x336622, alpha: 0.6 });
-          break;
-        case 1: // Garden bush
-          g.circle(pos.x, pos.y - 6, 7).fill({ color: 0x336633, alpha: 0.6 });
-          g.circle(pos.x - 4, pos.y - 4, 5).fill({ color: 0x448844, alpha: 0.5 });
-          g.circle(pos.x + 3, pos.y - 8, 5).fill({ color: 0x44aa44, alpha: 0.4 });
-          break;
-        case 2: // Statue
-          g.rect(pos.x - 4, pos.y - 18, 8, 18).fill({ color: 0x888888, alpha: 0.6 });
-          g.circle(pos.x, pos.y - 22, 4).fill({ color: 0x999999, alpha: 0.6 });
-          g.rect(pos.x - 6, pos.y - 2, 12, 3).fill({ color: 0x777777, alpha: 0.7 });
-          break;
-        case 3: // Fountain
-          g.ellipse(pos.x, pos.y, 10, 5).fill({ color: 0x556677, alpha: 0.6 });
-          g.ellipse(pos.x, pos.y - 1, 8, 4).fill({ color: 0x4488bb, alpha: 0.4 });
-          g.rect(pos.x - 1, pos.y - 10, 2, 10).fill({ color: 0x667788, alpha: 0.7 });
-          g.circle(pos.x, pos.y - 10, 3).fill({ color: 0x66aacc, alpha: 0.4 });
-          break;
-        default:
-          g.circle(pos.x, pos.y - 3, 4 + seededRandom(seed) * 3).fill({ color: 0x447744, alpha: 0.4 });
-          break;
-      }
-    } else if (worldID === 'taldain') {
-      switch (type) {
-        case 0: // Sand dune
-          g.ellipse(pos.x, pos.y - 2, 14 + seededRandom(seed + 1) * 8, 5).fill({ color: 0x554422, alpha: 0.4 });
-          g.ellipse(pos.x + 2, pos.y - 4, 8, 3).fill({ color: 0x665533, alpha: 0.3 });
-          break;
-        case 1: // Cactus
-          g.rect(pos.x - 2, pos.y - 16, 4, 16).fill({ color: 0x448833, alpha: 0.7 });
-          g.rect(pos.x - 8, pos.y - 12, 6, 3).fill({ color: 0x448833, alpha: 0.6 });
-          g.rect(pos.x - 8, pos.y - 16, 3, 7).fill({ color: 0x448833, alpha: 0.6 });
-          g.rect(pos.x + 4, pos.y - 10, 5, 3).fill({ color: 0x448833, alpha: 0.6 });
-          g.rect(pos.x + 6, pos.y - 14, 3, 7).fill({ color: 0x448833, alpha: 0.6 });
-          break;
-        case 2: // Sand rock
-          g.poly([
-            { x: pos.x - 6, y: pos.y }, { x: pos.x - 4, y: pos.y - 10 },
-            { x: pos.x + 3, y: pos.y - 8 }, { x: pos.x + 6, y: pos.y },
-          ]).fill({ color: 0x887755, alpha: 0.6 });
-          break;
-        default:
-          g.ellipse(pos.x, pos.y - 1, 6, 3).fill({ color: 0x554422, alpha: 0.3 });
-          break;
-      }
-    } else if (worldID === 'shadesmar') {
-      switch (type) {
-        case 0: // Bead pile
-          for (let i = 0; i < 5; i++) {
-            const bx = pos.x + (seededRandom(seed + i * 2) - 0.5) * 10;
-            const by = pos.y - 1 + (seededRandom(seed + i * 2 + 1) - 0.5) * 5;
-            g.circle(bx, by, 1.5 + seededRandom(seed + i) * 1).fill({ color: 0x8877cc, alpha: 0.5 });
-          }
-          break;
-        case 1: // Flamespren
-          g.circle(pos.x, pos.y - 8, 3).fill({ color: 0xff6633, alpha: 0.5 });
-          g.circle(pos.x, pos.y - 8, 6).fill({ color: 0xff4422, alpha: 0.1 });
-          g.poly([
-            { x: pos.x - 2, y: pos.y - 8 }, { x: pos.x, y: pos.y - 16 }, { x: pos.x + 2, y: pos.y - 8 },
-          ]).fill({ color: 0xff8844, alpha: 0.3 });
-          break;
-        case 2: // Glass tree
-          g.rect(pos.x - 1, pos.y - 20, 2, 20).fill({ color: 0x6655aa, alpha: 0.5 });
-          g.poly([
-            { x: pos.x - 8, y: pos.y - 16 }, { x: pos.x, y: pos.y - 28 }, { x: pos.x + 8, y: pos.y - 16 },
-          ]).fill({ color: 0x8877cc, alpha: 0.3 });
-          g.poly([
-            { x: pos.x - 6, y: pos.y - 20 }, { x: pos.x, y: pos.y - 30 }, { x: pos.x + 6, y: pos.y - 20 },
-          ]).fill({ color: 0xaa99dd, alpha: 0.2 });
-          break;
-        default:
-          g.circle(pos.x, pos.y - 3, 3).fill({ color: 0x7766bb, alpha: 0.3 });
-          break;
-      }
-    } else if (worldID === 'sel') {
-      switch (type) {
-        case 0: // Aon glyph on ground
-          g.circle(pos.x, pos.y - 2, 6).stroke({ color: 0xddaa44, width: 1, alpha: 0.3 });
-          g.moveTo(pos.x - 3, pos.y - 4).lineTo(pos.x + 3, pos.y).stroke({ color: 0xddaa44, width: 0.8, alpha: 0.25 });
-          g.moveTo(pos.x - 3, pos.y).lineTo(pos.x + 3, pos.y - 4).stroke({ color: 0xddaa44, width: 0.8, alpha: 0.25 });
-          break;
-        case 1: // Stone column
-          g.rect(pos.x - 4, pos.y - 22, 8, 22).fill({ color: 0x888877, alpha: 0.7 });
-          g.rect(pos.x - 5, pos.y - 24, 10, 3).fill({ color: 0x999988, alpha: 0.7 });
-          g.rect(pos.x - 5, pos.y - 1, 10, 2).fill({ color: 0x777766, alpha: 0.7 });
-          break;
-        case 2: // Shrine
-          g.rect(pos.x - 8, pos.y - 4, 16, 4).fill({ color: 0x888877, alpha: 0.7 });
-          g.poly([
-            { x: pos.x - 6, y: pos.y - 4 }, { x: pos.x, y: pos.y - 14 }, { x: pos.x + 6, y: pos.y - 4 },
-          ]).fill({ color: 0x999988, alpha: 0.6 });
-          g.circle(pos.x, pos.y - 8, 2).fill({ color: 0xddaa44, alpha: 0.5 });
-          break;
-        default:
-          g.ellipse(pos.x, pos.y - 1, 5, 3).fill({ color: 0x667755, alpha: 0.4 });
-          break;
-      }
-    } else if (worldID === 'komashi') {
-      switch (type) {
-        case 0: // Ink blot
-          g.ellipse(pos.x, pos.y, 6 + seededRandom(seed) * 5, 3 + seededRandom(seed + 1) * 3).fill({ color: 0x111122, alpha: 0.5 });
-          break;
-        case 1: // Paper lantern
-          g.rect(pos.x - 1, pos.y - 16, 2, 14).fill({ color: 0x554422, alpha: 0.6 });
-          g.ellipse(pos.x, pos.y - 18, 4, 5).fill({ color: 0xee8844, alpha: 0.5 });
-          g.ellipse(pos.x, pos.y - 18, 6, 7).fill({ color: 0xffaa44, alpha: 0.1 });
-          break;
-        case 2: // Stone cairn
-          g.ellipse(pos.x, pos.y - 1, 5, 3).fill({ color: 0x555555, alpha: 0.6 });
-          g.ellipse(pos.x, pos.y - 4, 4, 2.5).fill({ color: 0x666666, alpha: 0.6 });
-          g.ellipse(pos.x, pos.y - 7, 3, 2).fill({ color: 0x777777, alpha: 0.6 });
-          g.circle(pos.x, pos.y - 9.5, 1.5).fill({ color: 0x888888, alpha: 0.6 });
-          break;
-        default:
-          g.rect(pos.x - 3, pos.y - 5, 6, 5).fill({ color: 0x332233, alpha: 0.3 });
-          break;
-      }
-    } else {
-      // Generic decoration
-      switch (type) {
-        case 0: // Rock
-          g.circle(pos.x, pos.y - 4, 5 + seededRandom(seed) * 3).fill({ color: 0x555555, alpha: 0.5 });
-          break;
-        case 1: // Bush
-          g.circle(pos.x, pos.y - 5, 6).fill({ color: 0x335533, alpha: 0.5 });
-          g.circle(pos.x + 3, pos.y - 7, 5).fill({ color: 0x336633, alpha: 0.4 });
-          break;
-        case 2: // Grass tuft
-          for (let i = 0; i < 4; i++) {
-            const gx = pos.x + (seededRandom(seed + i) - 0.5) * 8;
-            g.moveTo(gx, pos.y).lineTo(gx + (seededRandom(seed + i + 10) - 0.5) * 3, pos.y - 5 - seededRandom(seed + i + 5) * 4)
-              .stroke({ color: 0x557744, width: 1, alpha: 0.5 });
-          }
-          break;
-        default:
-          return null;
-      }
-    }
-
-    return g;
-  }
+  // spawnBuildings, createBuilding, spawnTerrainRelief, createDecoration
+  // → extracted to ZoneDecorations.ts
 
   // ─── Player ──────────────────────────────────────────────────
 
@@ -1331,168 +907,90 @@ export class ZoneScene extends Container implements GameScene {
 
   // NOTE: Toolbar buttons have been extracted to ZoneToolbar.ts
 
-  private toggleInventory(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = new InventoryPanel(
-      this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
-    this.uiContainer.addChild(this.dialoguePanel);
+  private get panelHost(): PanelHost {
+    return {
+      dialoguePanel: this.dialoguePanel,
+      isPaused: this.isPaused,
+      uiContainer: this.uiContainer,
+      screenWidth: this.app.screen.width,
+      screenHeight: this.app.screen.height,
+      worldID: this.zone.worldID,
+      closeDialogue: () => this.closeDialogue(),
+      showFloatingText: (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      playerScreenPos: this.playerScreenPos,
+      router: this.router,
+      playerStatusEffects: this.playerStatusEffects,
+      onCompanionToggleClosed: () => this.spawnCompanionSprite(),
+    };
   }
 
+  private applyPanelHostState(host: PanelHost): void {
+    this.dialoguePanel = host.dialoguePanel;
+    this.isPaused = host.isPaused;
+  }
+
+  private toggleInventory(): void {
+    const h = this.panelHost;
+    toggleInventoryModule(h);
+    this.applyPanelHostState(h);
+  }
 
   private toggleProfessions(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showProfessionPanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
+    const h = this.panelHost;
+    toggleProfessionsModule(h);
+    this.applyPanelHostState(h);
   }
 
   private toggleCrafting(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showCraftingPanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      this.zone.worldID,
-      () => this.closeDialogue(),
-      (recipeID) => this.applyCraftResult(recipeID),
-    );
+    const h = this.panelHost;
+    toggleCraftingModule(h, (recipeID) => this.applyCraftResult(recipeID));
+    this.applyPanelHostState(h);
   }
 
   private toggleBestiary(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showBestiaryPanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
+    const h = this.panelHost;
+    toggleBestiaryModule(h);
+    this.applyPanelHostState(h);
   }
 
   private toggleAchievements(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showAchievementPanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
+    const h = this.panelHost;
+    toggleAchievementsModule(h);
+    this.applyPanelHostState(h);
   }
 
   private toggleSkillTree(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showSkillTreePanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
+    const h = this.panelHost;
+    toggleSkillTreeModule(h);
+    this.applyPanelHostState(h);
   }
 
   private toggleTalentTree(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showTalentTreePanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
+    const h = this.panelHost;
+    toggleTalentTreeModule(h);
+    this.applyPanelHostState(h);
   }
 
   private toggleCompanion(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showCompanionPanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => { this.closeDialogue(); this.spawnCompanionSprite(); },
-    );
+    const h = this.panelHost;
+    toggleCompanionModule(h);
+    this.applyPanelHostState(h);
   }
 
   private toggleQuestJournal(): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showQuestJournal(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-    );
+    const h = this.panelHost;
+    toggleQuestJournalModule(h);
+    this.applyPanelHostState(h);
   }
 
   private applyCraftResult(recipeID: string): void {
-    const effect = getRecipeEffect(recipeID);
-    if (!effect) return;
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    switch (effect.type) {
-      case 'heal_hp':
-        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + effect.value);
-        break;
-      case 'heal_inv':
-        champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + effect.value);
-        break;
-      case 'buff_strength':
-        this.playerStatusEffects.apply('strengthened', effect.duration, effect.value);
-        break;
-      case 'buff_shield':
-        this.playerStatusEffects.apply('shielded', effect.duration, effect.value);
-        break;
-      case 'buff_haste':
-        this.playerStatusEffects.apply('haste', effect.duration, effect.value);
-        break;
-      case 'buff_regen':
-        this.playerStatusEffects.apply('regenerating', effect.duration, effect.value);
-        break;
-      case 'multi_buff':
-        // World enchantments give multiple buffs
-        if (effect.value === 1) { // Mist
-          this.playerStatusEffects.apply('shielded', effect.duration, 1);
-          this.playerStatusEffects.apply('haste', effect.duration, 1);
-        } else if (effect.value === 2) { // Storm
-          this.playerStatusEffects.apply('strengthened', effect.duration, 1);
-          this.playerStatusEffects.apply('regenerating', effect.duration, 3);
-        } else if (effect.value === 3) { // Breath
-          this.playerStatusEffects.apply('regenerating', effect.duration, 4);
-          this.playerStatusEffects.apply('haste', effect.duration, 1);
-        } else if (effect.value === 4) { // Sand
-          this.playerStatusEffects.apply('strengthened', effect.duration, 1);
-          this.playerStatusEffects.apply('haste', effect.duration, 1);
-        }
-        break;
-    }
-
-    this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, effect.message, 0x66cc88);
+    applyCraftResultModule(recipeID, this.playerStatusEffects, (x, y, msg, c) => this.showFloatingText(x, y, msg, c), this.playerScreenPos);
   }
 
   private togglePause(): void {
-    if (this.pauseMenu) {
-      this.pauseMenu.destroy({ children: true });
-      this.pauseMenu = null;
-      this.isPaused = false;
-      return;
-    }
-    this.isPaused = true;
-    this.pauseMenu = showPauseMenu(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.togglePause(),
-      (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
-      this.playerScreenPos,
-      () => {
-        GameManager.shared.save();
-        BestiaryManager.shared.save();
-        AchievementManager.shared.save();
-        CompanionManager.shared.save();
-        NPCRelationshipManager.shared.save();
-        this.router.goto(WorldMapScene);
-      },
-    );
+    const h = this.panelHost;
+    this.pauseMenu = togglePauseModule(h, this.pauseMenu);
+    this.isPaused = h.isPaused;
   }
 
   // ─── Loot Points ─────────────────────────────────────────────
@@ -1792,125 +1290,16 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Particles & Weather ─────────────────────────────────────
 
   private spawnAmbientParticles(dt: number): void {
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-    const weather = this.zone.weatherEffect;
-
-    // Rate based on weather
-    let rate = 0.3;
-    if (weather === 'ashfall') rate = 1.5;
-    else if (weather === 'mist') rate = 2;
-    else if (weather === 'highstorm') rate = 3;
-    else if (weather === 'rain') rate = 2.5;
-
-    // Spawn (pooled)
-    if (Math.random() < rate * dt) {
-      const particle = this.particlePool.acquire();
-      let px = 0, py = 0, vx = 0, vy = 0, size = 2, life = 3;
-      const color = this.theme.ambientParticleColor;
-
-      if (weather === 'ashfall') {
-        px = (Math.random() - 0.5) * w * 2;
-        py = -h / 2 + (Math.random() - 0.5) * 100;
-        vx = -8 + Math.random() * 4;
-        vy = 15 + Math.random() * 10;
-        size = 1 + Math.random() * 2;
-        life = 4 + Math.random() * 2;
-        particle.circle(0, 0, size).fill({ color: 0x888077, alpha: 0.4 });
-      } else if (weather === 'mist') {
-        px = (Math.random() - 0.5) * w * 2;
-        py = (Math.random() - 0.5) * h * 2;
-        vx = -3 + Math.random() * 6;
-        vy = -1 + Math.random() * 2;
-        size = 8 + Math.random() * 15;
-        life = 5 + Math.random() * 5;
-        particle.circle(0, 0, size).fill({ color: 0xaaaaaa, alpha: 0.06 });
-      } else if (weather === 'highstorm') {
-        px = w / 2 + Math.random() * 100;
-        py = (Math.random() - 0.5) * h * 2;
-        vx = -80 - Math.random() * 40;
-        vy = 10 + Math.random() * 10;
-        size = 1 + Math.random();
-        life = 1.5 + Math.random();
-        particle.rect(-size * 2, -0.5, size * 4, 1).fill({ color: 0x8899aa, alpha: 0.5 });
-      } else {
-        // Gentle ambient sparkle
-        px = (Math.random() - 0.5) * w * 2;
-        py = (Math.random() - 0.5) * h * 2;
-        vx = (Math.random() - 0.5) * 4;
-        vy = -3 + Math.random() * 2;
-        size = 1 + Math.random();
-        life = 3 + Math.random() * 3;
-        particle.circle(0, 0, size).fill({ color, alpha: 0.2 });
-      }
-
-      // Position relative to camera
-      particle.x = px - this.worldContainer.x + w / 2;
-      particle.y = py - this.worldContainer.y + h / 2;
-      this.particleContainer.addChild(particle);
-
-      this.particles.push({
-        sprite: particle, x: particle.x, y: particle.y,
-        vx, vy, life, maxLife: life, size,
-      });
-    }
-
-    // Update existing
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-      p.life -= dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.sprite.x = p.x;
-      p.sprite.y = p.y;
-      p.sprite.alpha = Math.min(1, p.life / p.maxLife) * 0.6;
-
-      if (p.life <= 0) {
-        this.particlePool.release(p.sprite);
-        this.particles.splice(i, 1);
-      }
-    }
-
-    // Class-specific ambient particles
-    this.classAmbientTimer += dt;
-    if (this.classAmbientTimer >= 0.4) {
-      this.classAmbientTimer = 0;
-      const cls = GameManager.shared.champion?.championClass;
-      if (cls) {
-        const ox = (Math.random() - 0.5) * 30;
-        const oy = (Math.random() - 0.5) * 20;
-        spawnClassAmbientParticle(
-          this.worldContainer,
-          this.playerScreenPos.x + ox, this.playerScreenPos.y + oy,
-          cls, this.particles as any,
-        );
-      }
-    }
+    spawnAmbientParticlesModule(
+      dt, this.app.screen.width, this.app.screen.height,
+      this.zone.weatherEffect, this.theme, this.worldContainer,
+      this.particleContainer, this.particlePool, this.particles,
+      this.playerScreenPos, this.classAmbientTimerRef,
+    );
   }
 
   private updateFog(): void {
-    this.fogOverlay.clear();
-    // Vignette effect on UI layer
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-    const t = this.theme;
-
-    // Top fog
-    this.fogOverlay.rect(0, 0, w, h * 0.15).fill({
-      color: t.fogColor,
-      alpha: t.fogAlpha,
-    });
-
-    // Bottom fog
-    this.fogOverlay.rect(0, h * 0.85, w, h * 0.15).fill({
-      color: t.fogColor,
-      alpha: t.fogAlpha * 0.7,
-    });
-
-    this.fogOverlay.zIndex = 999;
-    if (!this.fogOverlay.parent) {
-      this.uiContainer.addChild(this.fogOverlay);
-    }
+    updateFogModule(this.fogOverlay, this.uiContainer, this.app.screen.width, this.app.screen.height, this.theme);
   }
 
   // ─── Scene Cleanup ──────────────────────────────────────────
@@ -1962,7 +1351,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateDayNight(delta);
     this.updateWeather(delta);
     this.updateAchievements(delta);
-    this.updateCompanion(delta);
+    updateCompanionModule(delta, this.companionState, this.playerScreenPos);
     this.updateWorldEvents(delta);
     this.floatingDmg.update(delta);
     updateSkillVFX(delta);
@@ -1982,7 +1371,7 @@ export class ZoneScene extends Container implements GameScene {
   private handleMovement(dt: number): void {
     if (!this.joystick.active || this.joystick.magnitude === 0) return;
 
-    const speedMult = this.playerStatusEffects.getSpeedMultiplier() * this.getCompanionSpeedBonus();
+    const speedMult = this.playerStatusEffects.getSpeedMultiplier() * getCompanionSpeedBonus();
     const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
     const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
 
@@ -2559,7 +1948,7 @@ export class ZoneScene extends Container implements GameScene {
     const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
     const statusDmgMult = this.playerStatusEffects.getDamageMultiplier();
     const comboResult = ComboManager.shared.registerHit();
-    const damage = Math.floor(baseDmg * statusDmgMult * comboResult.multiplier * this.getCompanionDamageBonus());
+    const damage = Math.floor(baseDmg * statusDmgMult * comboResult.multiplier * getCompanionDamageBonus());
     const isCrit = Math.random() < champ.baseStats.luck * 0.01;
     const totalDmg = isCrit ? damage * 2 : damage;
 
@@ -2926,12 +2315,12 @@ export class ZoneScene extends Container implements GameScene {
       enemy.data.goldMin + Math.floor(Math.random() * (enemy.data.goldMax - enemy.data.goldMin + 1)),
     );
     const baseGold = ngpRewards.gold;
-    const gold = Math.floor(baseGold * this.getEventGoldBonus());
+    const gold = Math.floor(baseGold * getEventGoldBonus(this.activeEventEffect));
     champ.gold += gold;
 
     // Apply reputation XP bonus + event bonus + NG+ bonus
     const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
-    const finalXP = Math.floor(ngpRewards.xp * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
+    const finalXP = Math.floor(ngpRewards.xp * xpMultiplier * getCompanionXPBonus() * getEventXPBonus(this.activeEventEffect));
     const leveledUp = gm.grantXP(finalXP);
     if (leveledUp) MusicManager.shared.playSFX('level_up');
 
@@ -3117,207 +2506,49 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private updateWorldMechanics(dt: number): void {
-    const msg = this.worldMechanics.tick(dt);
-    if (msg) {
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, msg, 0xaaddff);
-    }
+    updateWorldMechanicsModule(dt, this.worldMechanics, (x, y, msg, c) => this.showFloatingText(x, y, msg, c), this.playerScreenPos);
   }
 
   private updateWorldEvents(dt: number): void {
-    const result = WorldEventManager.shared.update(dt, this.zone.worldID);
-    this.activeEventEffect = result.effect;
-
-    if (this.eventBanner) this.eventBanner.update(dt);
-
-    // Apply healing/investiture effects from events
-    if (result.effect) {
-      const champ = GameManager.shared.champion;
-      if (champ) {
-        if (result.effect.healPerTick) {
-          champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + result.effect.healPerTick * dt);
-        }
-        if (result.effect.investiturePerTick) {
-          champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + result.effect.investiturePerTick * dt);
-        }
-      }
-    }
-
-    if (result.ended) {
-      this.showFloatingText(
-        this.playerScreenPos.x, this.playerScreenPos.y - 50,
-        'Événement terminé', 0xaaaaaa,
-      );
-    }
-  }
-
-  private getEventXPBonus(): number {
-    return this.activeEventEffect?.xpBonus ? 1 + this.activeEventEffect.xpBonus / 100 : 1;
-  }
-
-  private getEventGoldBonus(): number {
-    return this.activeEventEffect?.goldBonus ? 1 + this.activeEventEffect.goldBonus / 100 : 1;
+    this.activeEventEffect = updateWorldEventsModule(
+      dt, this.zone.worldID, this.eventBanner,
+      (x, y, msg, c) => this.showFloatingText(x, y, msg, c), this.playerScreenPos,
+    );
   }
 
   private updateDayNight(dt: number): void {
-    const result = this.dayNightManager.update(dt);
-    if (this.dayNightOverlay) {
-      this.dayNightOverlay.update(result.blendedConfig);
-    }
-    if (result.changed && result.message) {
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, result.message, 0xddddaa);
-      // Update NPC schedules on time change
-      this.updateNPCSchedules();
-    }
-    // Animate NPC movement each frame
-    for (const npc of this.npcs) {
-      updateNPCAnimation(npc, dt);
-    }
+    updateDayNightModule(
+      dt, this.dayNightManager, this.dayNightOverlay, this.npcs,
+      (x, y, msg, c) => this.showFloatingText(x, y, msg, c), this.playerScreenPos,
+      () => this.updateNPCSchedules(),
+    );
   }
 
   private initNPCSchedules(): void {
-    const schedMgr = NPCScheduleManager.shared;
-    schedMgr.initialize(this.dayNightManager.currentTime);
-
-    for (const npc of this.npcs) {
-      const entry = schedMgr.getScheduleEntry(npc.id, this.dayNightManager.currentTime);
-      if (entry) {
-        teleportNPC(npc, entry.position);
-        showActivityIndicator(npc, entry.activity);
-        setNPCSleeping(npc, entry.activity === 'sleeping');
-      }
-    }
+    initNPCSchedulesModule(this.npcs, this.dayNightManager.currentTime);
   }
 
   private updateNPCSchedules(): void {
-    const schedMgr = NPCScheduleManager.shared;
-    const movers = schedMgr.onTimeChange(this.dayNightManager.currentTime);
-
-    for (const move of movers) {
-      const npc = this.npcs.find(n => n.id === move.npcID);
-      if (!npc) continue;
-
-      moveNPCTo(npc, move.newPosition);
-      showActivityIndicator(npc, move.activity);
-      setNPCSleeping(npc, move.activity === 'sleeping');
-    }
+    updateNPCSchedulesModule(this.npcs, this.dayNightManager.currentTime);
   }
 
   private updateWeather(dt: number): void {
-    // Update ambient atmosphere motes and fog
-    if (this.ambientAtmosphere) {
-      this.ambientAtmosphere.update(dt, this.worldContainer.x, this.worldContainer.y);
-    }
-
-    const result = this.weatherManager.update(dt);
-    if (result.changed && result.message) {
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, result.message, 0xaaddff);
-    }
-    // Track surviving a highstorm
-    if (result.changed && this.weatherManager.currentWeather !== 'highstorm' && result.config.name !== 'Haute Tempête') {
-      const champ = GameManager.shared.champion;
-      if (champ && champ.currentHP > 0) {
-        AchievementManager.shared.recordHighstormSurvived();
-        AchievementManager.shared.check();
-      }
-    }
-    if (this.weatherOverlay) {
-      this.weatherOverlay.update(result.config, this.weatherManager.lightningFlash);
-    }
-    // Weather-based camera shake (highstorm, sandstorm, nightmare)
-    if (result.config.screenShake > 0) {
-      this.shakeCamera(result.config.screenShake * 0.5, 0.05);
-    }
-
-    // Weather damage (highstorm, sandstorm, nightmare)
-    if (result.config.damagePerTick > 0) {
-      const champ = GameManager.shared.champion;
-      if (champ) {
-        champ.currentHP -= result.config.damagePerTick * dt;
-        if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
-      }
-    }
+    updateWeatherModule(
+      dt, this.weatherManager, this.weatherOverlay, this.ambientAtmosphere,
+      this.worldContainer,
+      (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      (intensity, duration) => this.shakeCamera(intensity, duration),
+      () => this.handlePlayerDeath(), this.playerScreenPos,
+    );
   }
 
   private updateAchievements(dt: number): void {
-    AchievementManager.shared.updateCombo(dt);
-    if (this.achievementToast) this.achievementToast.update(dt);
+    updateAchievementsModule(dt, this.achievementToast);
   }
 
+  // Companion methods → delegated to ZoneCompanion module
   private spawnCompanionSprite(): void {
-    if (this.companionSprite) {
-      this.worldContainer.removeChild(this.companionSprite);
-      this.companionSprite.destroy();
-      this.companionSprite = null;
-    }
-    const comp = CompanionManager.shared.getActive();
-    if (!comp) return;
-
-    const sprite = new Graphics();
-    sprite.circle(0, 0, comp.size + 3).fill({ color: comp.glowColor, alpha: 0.15 });
-    sprite.circle(0, 0, comp.size).fill({ color: comp.color, alpha: 0.8 });
-    sprite.circle(0, -1, comp.size * 0.5).fill({ color: 0xffffff, alpha: 0.3 });
-    sprite.zIndex = 999;
-
-    this.companionPos.x = this.playerScreenPos.x + 20;
-    this.companionPos.y = this.playerScreenPos.y - 15;
-    sprite.x = this.companionPos.x;
-    sprite.y = this.companionPos.y;
-
-    this.worldContainer.addChild(sprite);
-    this.companionSprite = sprite;
-  }
-
-  private updateCompanion(dt: number): void {
-    if (!this.companionSprite) return;
-    const comp = CompanionManager.shared.getActive();
-    if (!comp) return;
-
-    this.companionAnimTimer += dt * 2.5;
-
-    // Smooth follow with orbit
-    const targetX = this.playerScreenPos.x + Math.cos(this.companionAnimTimer) * 22;
-    const targetY = this.playerScreenPos.y - 18 + Math.sin(this.companionAnimTimer * 1.3) * 6;
-
-    this.companionPos.x += (targetX - this.companionPos.x) * dt * 3;
-    this.companionPos.y += (targetY - this.companionPos.y) * dt * 3;
-
-    this.companionSprite.x = this.companionPos.x;
-    this.companionSprite.y = this.companionPos.y;
-
-    // Pulsing glow
-    this.companionSprite.alpha = 0.8 + Math.sin(this.companionAnimTimer * 2) * 0.15;
-
-    // Companion passive healing
-    if (comp.bonusType === 'heal') {
-      const champ = GameManager.shared.champion;
-      if (champ && champ.currentHP < GameManager.shared.maxHP) {
-        champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + comp.bonusValue * dt);
-      }
-    }
-  }
-
-  private getCompanionDamageBonus(): number {
-    const bonus = CompanionManager.shared.getBonus();
-    if (bonus && bonus.type === 'damage') return 1 + bonus.value / 100;
-    return 1;
-  }
-
-  private getCompanionDefenseBonus(): number {
-    const bonus = CompanionManager.shared.getBonus();
-    if (bonus && bonus.type === 'defense') return 1 - bonus.value / 100;
-    return 1;
-  }
-
-  private getCompanionSpeedBonus(): number {
-    const bonus = CompanionManager.shared.getBonus();
-    if (bonus && bonus.type === 'speed') return 1 + bonus.value / 100;
-    return 1;
-  }
-
-  private getCompanionXPBonus(): number {
-    const bonus = CompanionManager.shared.getBonus();
-    if (bonus && bonus.type === 'xp') return 1 + bonus.value / 100;
-    return 1;
+    spawnCompanionSpriteModule(this.worldContainer, this.companionState, this.playerScreenPos);
   }
 
   private handlePlayerDeath(): void {
@@ -3610,10 +2841,7 @@ export class ZoneScene extends Container implements GameScene {
     this.playerContainer.zIndex = this.playerContainer.y + 0.5;
   }
 
-  // ─── Utilities ───────────────────────────────────────────────
-
-  private darkenColor(color: number, amount: number): number { return darken(color, amount); }
-  private lightenColor(color: number, amount: number): number { return lighten(color, amount); }
+  // darkenColor/lightenColor extracted — use darken/lighten from ColorUtils directly
 
   // ─── Responsive Resize ──────────────────────────────────────────
   onResize(layout: LayoutInfo): void {
