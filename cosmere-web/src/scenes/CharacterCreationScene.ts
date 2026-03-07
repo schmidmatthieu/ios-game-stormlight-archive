@@ -1,9 +1,10 @@
-import { Application, Container, Text, Graphics, TextStyle, FederatedPointerEvent } from 'pixi.js';
+import { Application, Container, Text, Graphics, TextStyle } from 'pixi.js';
 import type { GameScene } from '../game/SceneRouter';
 import { SceneRouter } from '../game/SceneRouter';
 import { GameManager } from '../game/GameManager';
 import { ZoneScene } from './ZoneScene';
 import { MainMenuScene } from './MainMenuScene';
+import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
 
@@ -17,12 +18,21 @@ const ORDER_NAMES: Record<RadiantOrder, string> = {
 };
 
 const CLASS_COLORS: Record<ChampionClass, number> = {
-  mistborn: 0x888888,
+  mistborn: 0x888899,
   radiant: 0x4488ff,
   awakener: 0xff66aa,
   elantrian: 0xffcc33,
-  sandMaster: 0xffee88,
+  sandMaster: 0xddcc66,
   nightmarePainter: 0xaa44cc,
+};
+
+const WORLD_NAMES: Record<string, string> = {
+  scadrial: 'Scadrial — Le monde des brumes et des métaux',
+  roshar: 'Roshar — Le monde des tempêtes et des sprens',
+  nalthis: 'Nalthis — Le monde des couleurs et du Souffle',
+  sel: 'Sel — Le monde des Aons et du Dor',
+  taldain: 'Taldain — Le monde du sable et du soleil',
+  komashi: 'Komashi — Le monde des cauchemars et des peintures',
 };
 
 export class CharacterCreationScene extends Container implements GameScene {
@@ -36,6 +46,7 @@ export class CharacterCreationScene extends Container implements GameScene {
   private nameText!: Text;
   private classButtons: Container[] = [];
   private orderContainer: Container | null = null;
+  private previewContainer!: Container;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -49,77 +60,118 @@ export class CharacterCreationScene extends Container implements GameScene {
 
     // Background
     const bg = new Graphics();
-    bg.rect(0, 0, w, h).fill(0x080810);
+    bg.rect(0, 0, w, h).fill(0x060612);
     this.addChild(bg);
 
+    // Subtle pattern
+    const pattern = new Graphics();
+    for (let i = 0; i < 30; i++) {
+      const px = Math.random() * w;
+      const py = Math.random() * h;
+      pattern.circle(px, py, Math.random() * 1.5 + 0.5).fill({ color: 0x222233, alpha: 0.3 });
+    }
+    this.addChild(pattern);
+
     // Title
-    const titleStyle = new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 22, fill: 0xe6cc66, fontWeight: 'bold' });
-    const title = new Text({ text: 'Créer votre Salteur', style: titleStyle });
+    const title = new Text({
+      text: 'Créer votre Salteur',
+      style: new TextStyle({
+        fontFamily: 'Georgia, serif', fontSize: 20, fill: 0xe6cc66, fontWeight: 'bold',
+        dropShadow: { color: 0x000000, blur: 4, distance: 1 },
+      }),
+    });
     title.anchor.set(0.5);
     title.x = w / 2;
-    title.y = 40;
+    title.y = 30;
     this.addChild(title);
 
     // Name
-    const nameStyle = new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 15, fill: 0xffffff });
-    this.nameText = new Text({ text: `Nom: ${this.playerName}`, style: nameStyle });
+    this.nameText = new Text({
+      text: `Nom: ${this.playerName}`,
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xffffff }),
+    });
     this.nameText.anchor.set(0.5);
     this.nameText.x = w / 2;
-    this.nameText.y = 75;
+    this.nameText.y = 60;
     this.nameText.eventMode = 'static';
     this.nameText.cursor = 'pointer';
     this.nameText.on('pointerdown', () => this.promptName());
     this.addChild(this.nameText);
 
-    const hintStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x666666 });
-    const hint = new Text({ text: '(touchez pour modifier)', style: hintStyle });
+    const hint = new Text({
+      text: '(touchez pour modifier)',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x555555 }),
+    });
     hint.anchor.set(0.5);
     hint.x = w / 2;
-    hint.y = 93;
+    hint.y = 76;
     this.addChild(hint);
 
-    // Class buttons (2 rows of 3)
-    const btnSize = 60;
-    const gap = 12;
-    const totalW = btnSize * 3 + gap * 2;
-    const startX = w / 2 - totalW / 2 + btnSize / 2;
-    const startY = 130;
+    // Character preview (left side)
+    this.previewContainer = new Container();
+    this.previewContainer.x = w * 0.22;
+    this.previewContainer.y = 155;
+    this.addChild(this.previewContainer);
+
+    // Preview background
+    const previewBg = new Graphics();
+    previewBg.roundRect(-40, -55, 80, 90, 8)
+      .fill({ color: 0x0a0a1a, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    this.previewContainer.addChild(previewBg);
+
+    // Class buttons (right side, 2 columns x 3 rows)
+    const btnSize = 48;
+    const gap = 8;
+    const startX = w * 0.48;
+    const startY = 100;
 
     CLASSES.forEach((cls, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const x = startX + col * (btnSize + gap);
-      const y = startY + row * (btnSize + gap + 18);
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = startX + col * (btnSize + gap + 40);
+      const y = startY + row * (btnSize + gap + 4);
       const btn = this.createClassBtn(cls, x, y, btnSize);
       this.classButtons.push(btn);
       this.addChild(btn);
     });
 
-    // Description
-    const descStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xbbbbdd, wordWrap: true, wordWrapWidth: w - 40, align: 'center' });
-    this.descText = new Text({ text: '', style: descStyle });
+    // Description area below
+    const descY = startY + 3 * (btnSize + gap + 4) + 5;
+
+    this.descText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif', fontSize: 10, fill: 0xaaaacc,
+        wordWrap: true, wordWrapWidth: w - 30, align: 'center',
+      }),
+    });
     this.descText.anchor.set(0.5, 0);
     this.descText.x = w / 2;
-    this.descText.y = startY + 2 * (btnSize + gap + 18) + 10;
+    this.descText.y = descY;
     this.addChild(this.descText);
 
-    // World origin
-    const worldStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0x6699cc });
-    this.worldText = new Text({ text: '', style: worldStyle });
+    this.worldText = new Text({
+      text: '',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x6699cc }),
+    });
     this.worldText.anchor.set(0.5, 0);
     this.worldText.x = w / 2;
-    this.worldText.y = this.descText.y + 40;
+    this.worldText.y = descY + 30;
     this.addChild(this.worldText);
 
     // Start button
-    this.createActionBtn('Commencer l\'aventure', w / 2, h - 70, 0x336633, () => {
-      GameManager.shared.startNewGame(this.playerName, this.selectedClass,
-        this.selectedClass === 'radiant' ? this.selectedOrder : undefined);
+    this.createActionBtn('Commencer l\'aventure', w / 2, h - 60, 0x224422, () => {
+      GameManager.shared.startNewGame(
+        this.playerName,
+        this.selectedClass,
+        this.selectedClass === 'radiant' ? this.selectedOrder : undefined,
+      );
       this.router.goto(ZoneScene);
     });
 
     // Back button
-    this.createActionBtn('Retour', w / 2, h - 30, 0x442222, () => {
+    this.createActionBtn('Retour', w / 2, h - 22, 0x332222, () => {
       this.router.goto(MainMenuScene);
     });
 
@@ -133,30 +185,31 @@ export class CharacterCreationScene extends Container implements GameScene {
     (container as any)._cls = cls;
 
     const bg = new Graphics();
-    bg.roundRect(-size / 2, -size / 2, size, size, 8)
-      .fill({ color: 0x1a1a2a, alpha: 0.9 })
-      .stroke({ color: 0x665533, width: 2 });
+    bg.roundRect(-size / 2, -size / 2, size, size, 6)
+      .fill({ color: 0x111120, alpha: 0.9 })
+      .stroke({ color: 0x554433, width: 1.5 });
     container.addChild(bg);
 
-    // Class icon (colored circle)
-    const icon = new Graphics();
-    icon.circle(0, -5, size / 4).fill(CLASS_COLORS[cls]);
-    container.addChild(icon);
+    // Mini character preview in button
+    const miniChar = new Graphics();
+    drawPlayerCharacter(miniChar, cls);
+    miniChar.scale.set(1.2);
+    miniChar.y = -3;
+    container.addChild(miniChar);
 
-    // Label
+    // Label below button
     const lbl = new Text({
-      text: CLASS_INFO[cls].name.split(' ')[0],
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0xaaaaaa }),
+      text: CLASS_INFO[cls].name,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: CLASS_COLORS[cls] }),
     });
     lbl.anchor.set(0.5);
-    lbl.y = size / 2 + 8;
+    lbl.y = size / 2 + 6;
     container.addChild(lbl);
 
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.on('pointerdown', () => {
       this.selectedClass = cls;
-      if (cls !== 'radiant') this.selectedOrder = 'windrunner';
       this.updateSelection();
     });
 
@@ -164,8 +217,8 @@ export class CharacterCreationScene extends Container implements GameScene {
   }
 
   private createActionBtn(label: string, x: number, y: number, color: number, onClick: () => void): void {
-    const bw = 220;
-    const bh = 34;
+    const bw = 200;
+    const bh = 32;
     const btn = new Container();
     btn.x = x;
     btn.y = y;
@@ -173,12 +226,12 @@ export class CharacterCreationScene extends Container implements GameScene {
     const bg = new Graphics();
     bg.roundRect(-bw / 2, -bh / 2, bw, bh, 8)
       .fill({ color, alpha: 0.9 })
-      .stroke({ color: 0x998033, width: 1.5 });
+      .stroke({ color: 0x998033, width: 1, alpha: 0.7 });
     btn.addChild(bg);
 
     const txt = new Text({
       text: label,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xffffff }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 13, fill: 0xeeddcc }),
     });
     txt.anchor.set(0.5);
     btn.addChild(txt);
@@ -195,48 +248,67 @@ export class CharacterCreationScene extends Container implements GameScene {
   private updateSelection(): void {
     const info = CLASS_INFO[this.selectedClass];
     this.descText.text = info.description;
-    this.worldText.text = `Monde d'origine: ${info.startingWorld}`;
+    this.worldText.text = WORLD_NAMES[info.startingWorld] ?? info.startingWorld;
 
-    // Highlight selected
+    // Update preview
+    // Remove old preview character (keep background at index 0)
+    while (this.previewContainer.children.length > 1) {
+      this.previewContainer.removeChildAt(1);
+    }
+    const charSprite = new Graphics();
+    drawPlayerCharacter(charSprite, this.selectedClass);
+    charSprite.scale.set(3);
+    charSprite.y = -5;
+    this.previewContainer.addChild(charSprite);
+
+    // Glow ring
+    const glow = new Graphics();
+    glow.circle(0, 10, 20).fill({ color: CLASS_COLORS[this.selectedClass], alpha: 0.08 });
+    this.previewContainer.addChild(glow);
+
+    // Highlight selected class button
     for (const btn of this.classButtons) {
       const cls = (btn as any)._cls as ChampionClass;
       const bg = btn.children[0] as Graphics;
       bg.clear();
-      const size = 60;
-      bg.roundRect(-size / 2, -size / 2, size, size, 8)
-        .fill({ color: 0x1a1a2a, alpha: 0.9 })
-        .stroke({ color: cls === this.selectedClass ? 0xe6cc66 : 0x665533, width: cls === this.selectedClass ? 3 : 2 });
+      const size = 48;
+      const selected = cls === this.selectedClass;
+      bg.roundRect(-size / 2, -size / 2, size, size, 6)
+        .fill({ color: selected ? 0x1a1a30 : 0x111120, alpha: 0.9 })
+        .stroke({ color: selected ? 0xe6cc66 : 0x554433, width: selected ? 2.5 : 1.5 });
     }
 
-    // Order selector
+    // Order selector for radiant
     this.orderContainer?.destroy({ children: true });
     this.orderContainer = null;
 
     if (this.selectedClass === 'radiant') {
       const w = this.app.screen.width;
       const oc = new Container();
-      oc.y = this.worldText.y + 25;
+      oc.y = this.worldText.y + 20;
 
       const label = new Text({
         text: 'Ordre Radieux:',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x888888 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x777777 }),
       });
       label.anchor.set(0.5, 0);
       label.x = w / 2;
       oc.addChild(label);
 
       ORDERS.forEach((order, i) => {
-        const ox = w / 2 + (i - 1.5) * 75;
+        const ox = w / 2 + (i - 1.5) * 70;
+        const selected = this.selectedOrder === order;
         const txt = new Text({
           text: ORDER_NAMES[order],
           style: new TextStyle({
-            fontFamily: 'sans-serif', fontSize: 9,
-            fill: this.selectedOrder === order ? 0x66aaff : 0x666666,
+            fontFamily: 'sans-serif', fontSize: 8,
+            fill: selected ? 0x66aaff : 0x555555,
+            fontWeight: selected ? 'bold' : 'normal',
           }),
         });
         txt.anchor.set(0.5, 0);
         txt.x = ox;
-        txt.y = 16;
+        txt.y = 14;
         txt.eventMode = 'static';
         txt.cursor = 'pointer';
         txt.on('pointerdown', () => {
