@@ -46,6 +46,8 @@ import { StatusEffectManager, createStatusBar, spawnStatusParticle } from '../ga
 import type { ActiveStatusEffect } from '../game/StatusEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
+import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 // ─── Isometric Helpers ─────────────────────────────────────────
 const TILE_W = 64;
@@ -392,16 +394,21 @@ export class ZoneScene extends Container implements GameScene {
     // Status effect bar
     this.statusBar = createStatusBar(this.uiContainer, w);
 
+    // Responsive layout
+    const layout = getLayoutInfo(w, h);
+
     // Joystick
-    this.joystick = new VirtualJoystick();
-    this.joystick.x = 70;
-    this.joystick.y = h - 90;
+    this.joystick = new VirtualJoystick(layout);
+    const joyPos = joystickPosition(layout);
+    this.joystick.x = joyPos.x;
+    this.joystick.y = joyPos.y;
     this.uiContainer.addChild(this.joystick);
 
     // Action buttons
-    this.actionButtons = new ActionButtons();
-    this.actionButtons.x = w - 80;
-    this.actionButtons.y = h - 100;
+    this.actionButtons = new ActionButtons(layout);
+    const actPos = actionButtonsPosition(layout);
+    this.actionButtons.x = actPos.x;
+    this.actionButtons.y = actPos.y;
     this.actionButtons.onAttack = () => this.handleAttack();
     this.actionButtons.onSkill = (i) => this.handleSkill(i);
     this.actionButtons.onInteract = (mode) => this.handleInteraction(mode);
@@ -422,25 +429,25 @@ export class ZoneScene extends Container implements GameScene {
     }
 
     // Pause button (top center)
-    this.createPauseButton(w);
+    this.createPauseButton(w, layout);
 
     // Inventory button (next to pause)
-    this.createInventoryButton(w);
+    this.createInventoryButton(w, layout);
 
     // Crafting button (next to inventory)
-    this.createCraftingButton(w);
+    this.createCraftingButton(w, layout);
 
     // Bestiary button (next to crafting)
-    this.createBestiaryButton(w);
+    this.createBestiaryButton(w, layout);
 
     // Achievements button (next to bestiary)
-    this.createAchievementButton(w);
+    this.createAchievementButton(w, layout);
 
     // Skill tree button (next to achievements)
-    this.createSkillTreeButton(w);
+    this.createSkillTreeButton(w, layout);
 
     // Companion button
-    this.createCompanionButton(w);
+    this.createCompanionButton(w, layout);
 
     // Initialize companion
     CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
@@ -476,7 +483,7 @@ export class ZoneScene extends Container implements GameScene {
     QuestManager.shared.onZoneEntered(this.zone.id);
 
     // Quest tracker HUD
-    this.questTracker = new QuestTracker(w);
+    this.questTracker = new QuestTracker(w, h);
     this.questTracker.refresh();
     this.uiContainer.addChild(this.questTracker);
 
@@ -1337,40 +1344,45 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createPauseButton(screenWidth: number): void {
+  private createPauseButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnSize = toolbarButtonSize(layout);
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     const icon = new Graphics();
-    icon.rect(10, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
-    icon.rect(20, 6, 4, 16).fill({ color: 0xcccccc, alpha: 0.8 });
+    icon.rect(scaled(10, layout), scaled(6, layout), scaled(4, layout), scaled(16, layout)).fill({ color: 0xcccccc, alpha: 0.8 });
+    icon.rect(scaled(20, layout), scaled(6, layout), scaled(4, layout), scaled(16, layout)).fill({ color: 0xcccccc, alpha: 0.8 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 - 18;
-    btn.y = 10;
+    btn.x = screenWidth / 2 - btnW / 2;
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.togglePause());
     this.uiContainer.addChild(btn);
   }
 
-  private createInventoryButton(screenWidth: number): void {
+  private createInventoryButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Bag icon
     const icon = new Graphics();
-    icon.roundRect(10, 8, 16, 14, 3).fill({ color: 0xaa8855, alpha: 0.7 });
-    icon.roundRect(10, 8, 16, 14, 3).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
-    icon.arc(18, 8, 5, Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
+    icon.roundRect(scaled(10, layout), scaled(8, layout), scaled(16, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0xaa8855, alpha: 0.7 });
+    icon.roundRect(scaled(10, layout), scaled(8, layout), scaled(16, layout), scaled(14, layout), scaled(3, layout)).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
+    icon.arc(scaled(18, layout), scaled(8, layout), scaled(5, layout), Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + 24;
-    btn.y = 10;
+    btn.x = screenWidth / 2 + scaled(24, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleInventory());
@@ -1387,21 +1399,23 @@ export class ZoneScene extends Container implements GameScene {
     this.uiContainer.addChild(this.dialoguePanel);
   }
 
-  private createCraftingButton(screenWidth: number): void {
+  private createCraftingButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Anvil icon
     const icon = new Graphics();
-    icon.poly([{ x: 12, y: 20 }, { x: 18, y: 10 }, { x: 24, y: 20 }]).fill({ color: 0x888899, alpha: 0.7 });
-    icon.rect(10, 20, 16, 3).fill({ color: 0x666677, alpha: 0.8 });
-    icon.rect(16, 6, 4, 6).fill({ color: 0xaa8844, alpha: 0.7 });
+    icon.poly([{ x: scaled(12, layout), y: scaled(20, layout) }, { x: scaled(18, layout), y: scaled(10, layout) }, { x: scaled(24, layout), y: scaled(20, layout) }]).fill({ color: 0x888899, alpha: 0.7 });
+    icon.rect(scaled(10, layout), scaled(20, layout), scaled(16, layout), scaled(3, layout)).fill({ color: 0x666677, alpha: 0.8 });
+    icon.rect(scaled(16, layout), scaled(6, layout), scaled(4, layout), scaled(6, layout)).fill({ color: 0xaa8844, alpha: 0.7 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + 66;
-    btn.y = 10;
+    btn.x = screenWidth / 2 + scaled(66, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleCrafting());
@@ -1419,23 +1433,25 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createBestiaryButton(screenWidth: number): void {
+  private createBestiaryButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Book icon
     const icon = new Graphics();
-    icon.roundRect(10, 7, 16, 16, 2).fill({ color: 0x557744, alpha: 0.7 });
-    icon.rect(12, 9, 12, 1).fill({ color: 0xddddcc, alpha: 0.6 });
-    icon.rect(12, 12, 10, 1).fill({ color: 0xddddcc, alpha: 0.5 });
-    icon.rect(12, 15, 11, 1).fill({ color: 0xddddcc, alpha: 0.4 });
-    icon.rect(10, 7, 2, 16).fill({ color: 0x445533, alpha: 0.8 });
+    icon.roundRect(scaled(10, layout), scaled(7, layout), scaled(16, layout), scaled(16, layout), scaled(2, layout)).fill({ color: 0x557744, alpha: 0.7 });
+    icon.rect(scaled(12, layout), scaled(9, layout), scaled(12, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.6 });
+    icon.rect(scaled(12, layout), scaled(12, layout), scaled(10, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.5 });
+    icon.rect(scaled(12, layout), scaled(15, layout), scaled(11, layout), scaled(1, layout)).fill({ color: 0xddddcc, alpha: 0.4 });
+    icon.rect(scaled(10, layout), scaled(7, layout), scaled(2, layout), scaled(16, layout)).fill({ color: 0x445533, alpha: 0.8 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + 108;
-    btn.y = 10;
+    btn.x = screenWidth / 2 + scaled(108, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleBestiary());
@@ -1451,21 +1467,23 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createAchievementButton(screenWidth: number): void {
+  private createAchievementButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Trophy icon
     const icon = new Graphics();
-    icon.moveTo(14, 8).lineTo(22, 8).lineTo(21, 16).lineTo(15, 16).closePath().fill({ color: 0xe6cc66, alpha: 0.7 });
-    icon.rect(16, 16, 4, 3).fill({ color: 0xccaa44, alpha: 0.7 });
-    icon.rect(14, 19, 8, 2).fill({ color: 0xccaa44, alpha: 0.6 });
+    icon.moveTo(scaled(14, layout), scaled(8, layout)).lineTo(scaled(22, layout), scaled(8, layout)).lineTo(scaled(21, layout), scaled(16, layout)).lineTo(scaled(15, layout), scaled(16, layout)).closePath().fill({ color: 0xe6cc66, alpha: 0.7 });
+    icon.rect(scaled(16, layout), scaled(16, layout), scaled(4, layout), scaled(3, layout)).fill({ color: 0xccaa44, alpha: 0.7 });
+    icon.rect(scaled(14, layout), scaled(19, layout), scaled(8, layout), scaled(2, layout)).fill({ color: 0xccaa44, alpha: 0.6 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 + 150;
-    btn.y = 10;
+    btn.x = screenWidth / 2 + scaled(150, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleAchievements());
@@ -1481,24 +1499,26 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createSkillTreeButton(screenWidth: number): void {
+  private createSkillTreeButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Tree/branch icon
     const icon = new Graphics();
-    icon.rect(17, 8, 2, 14).fill({ color: 0x5588cc, alpha: 0.7 });
-    icon.circle(18, 8, 4).fill({ color: 0x5588cc, alpha: 0.6 });
-    icon.circle(12, 14, 3).fill({ color: 0x4477aa, alpha: 0.5 });
-    icon.circle(24, 14, 3).fill({ color: 0x4477aa, alpha: 0.5 });
-    icon.moveTo(18, 12).lineTo(12, 14).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
-    icon.moveTo(18, 12).lineTo(24, 14).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    icon.rect(scaled(17, layout), scaled(8, layout), scaled(2, layout), scaled(14, layout)).fill({ color: 0x5588cc, alpha: 0.7 });
+    icon.circle(scaled(18, layout), scaled(8, layout), scaled(4, layout)).fill({ color: 0x5588cc, alpha: 0.6 });
+    icon.circle(scaled(12, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.circle(scaled(24, layout), scaled(14, layout), scaled(3, layout)).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.moveTo(scaled(18, layout), scaled(12, layout)).lineTo(scaled(12, layout), scaled(14, layout)).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    icon.moveTo(scaled(18, layout), scaled(12, layout)).lineTo(scaled(24, layout), scaled(14, layout)).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 - 60;
-    btn.y = 10;
+    btn.x = screenWidth / 2 - scaled(60, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleSkillTree());
@@ -1514,21 +1534,23 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
-  private createCompanionButton(screenWidth: number): void {
+  private createCompanionButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
     const btn = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, 36, 28, 6)
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
       .fill({ color: 0x1a1528, alpha: 0.7 })
       .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
     btn.addChild(bg);
     // Companion orb icon
     const icon = new Graphics();
-    icon.circle(18, 15, 6).fill({ color: 0x88ccff, alpha: 0.5 });
-    icon.circle(18, 15, 4).fill({ color: 0xaaddff, alpha: 0.7 });
-    icon.circle(17, 14, 2).fill({ color: 0xffffff, alpha: 0.4 });
+    icon.circle(scaled(18, layout), scaled(15, layout), scaled(6, layout)).fill({ color: 0x88ccff, alpha: 0.5 });
+    icon.circle(scaled(18, layout), scaled(15, layout), scaled(4, layout)).fill({ color: 0xaaddff, alpha: 0.7 });
+    icon.circle(scaled(17, layout), scaled(14, layout), scaled(2, layout)).fill({ color: 0xffffff, alpha: 0.4 });
     btn.addChild(icon);
-    btn.x = screenWidth / 2 - 102;
-    btn.y = 10;
+    btn.x = screenWidth / 2 - scaled(102, layout);
+    btn.y = toolbarY(layout);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.on('pointerdown', () => this.toggleCompanion());
@@ -3094,4 +3116,26 @@ export class ZoneScene extends Container implements GameScene {
 
   private darkenColor(color: number, amount: number): number { return darken(color, amount); }
   private lightenColor(color: number, amount: number): number { return lighten(color, amount); }
+
+  // ─── Responsive Resize ──────────────────────────────────────────
+  onResize(layout: LayoutInfo): void {
+    const w = layout.width;
+    const h = layout.height;
+
+    if (this.joystick) {
+      const joyPos = joystickPosition(layout);
+      this.joystick.x = joyPos.x;
+      this.joystick.y = joyPos.y;
+    }
+    if (this.actionButtons) {
+      const actPos = actionButtonsPosition(layout);
+      this.actionButtons.x = actPos.x;
+      this.actionButtons.y = actPos.y;
+    }
+    // Recenter camera
+    if (this.worldContainer) {
+      this.worldContainer.x = w / 2 - this.playerScreenPos.x;
+      this.worldContainer.y = h / 2 - this.playerScreenPos.y;
+    }
+  }
 }
