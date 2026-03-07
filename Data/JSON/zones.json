@@ -699,5 +699,357 @@
     "ambientMusicTrack": "komashi_boss_ambient",
     "weatherEffect": "colorDrain",
     "recommendedLevel": 9
+  },
+  {
+    "id": "nalthis_hub",
+    "name": "T'Telir — Cour des Dieux",
+    "description": "La cité divine et colorée de T'Telir, où les Retournés règnent depuis la Cour des Dieux. Les couleurs vibrent d'Investiture et les marchands de Souffles arpentent les rues.",
+    "worldID": "nalthis",
+    "type": "hub",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "ttelir_court.sks",
+    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_jungle",
+        "entryPointName": "city_gate",
+        "exitPosition": { "col": 43, "row": 22 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_god_king_palace",
+        "entryPointName": "palace_entrance",
+        "exitPosition": { "col": 5, "row": 5 },
+        "requiredQuestID": "nalthis_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "breath_merchant",
+        "position": { "col": 18, "row": 30 },
+        "dialogueTreeID": "breath_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "vivenna_ally",
+        "position": { "col": 28, "row": 25 },
+        "dialogueTreeID": "vivenna_intro",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "returned_priest",
+        "position": { "col": 10, "row": 20 },
+        "dialogueTreeID": "returned_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [
+      {
+        "id": "ttelir_hidden_cache",
+        "position": { "col": 8, "row": 8 },
+        "lootTable": [
+          { "itemID": "breath_essence", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 }
+        ],
+        "isHidden": true,
+        "respawns": false
+      }
+    ],
+    "ambientMusicTrack": "nalthis_city_ambient",
+    "weatherEffect": "colorDrain",
+    "recommendedLevel": 5
+  },
+  {
+    "id": "nalthis_jungle",
+    "name": "Jungle de Hallandren",
+    "description": "La jungle dense et luxuriante aux abords de T'Telir. Des Sans-Vie patrouillent les sentiers et des bêtes éveillées rôdent dans les sous-bois.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "hallandren_jungle.sks",
+    "playerSpawnPosition": { "col": 5, "row": 30 },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_hub",
+        "entryPointName": "city_return",
+        "exitPosition": { "col": 0, "row": 30 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_god_king_palace",
+        "entryPointName": "jungle_path",
+        "exitPosition": { "col": 55, "row": 5 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "lifeless_soldier",
+        "position": { "col": 20, "row": 20 },
+        "patrolPath": [
+          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
+          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "lifeless_soldier",
+        "position": { "col": 40, "row": 35 },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "awakened_beast",
+        "position": { "col": 35, "row": 15 },
+        "patrolPath": [
+          { "col": 35, "row": 15 }, { "col": 40, "row": 10 }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "breath_thief",
+        "position": { "col": 50, "row": 40 },
+        "patrolPath": null,
+        "respawnTime": 240
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "jungle_breath_cache",
+        "position": { "col": 30, "row": 45 },
+        "lootTable": [
+          { "itemID": "breath_essence", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 3 },
+          { "itemID": "chromatic_thread", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_jungle_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 6
+  },
+  {
+    "id": "nalthis_god_king_palace",
+    "name": "Palais du Roi-Dieu",
+    "description": "Le palais somptueux du Roi-Dieu de Hallandren. Les gardes Sans-Vie d'élite protègent les couloirs dorés. Le Champion Retourné attend dans la salle du trône.",
+    "worldID": "nalthis",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "god_king_palace.sks",
+    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_hub",
+        "entryPointName": "palace_exit",
+        "exitPosition": { "col": 25, "row": 49 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "royal_lifeless_guard",
+        "position": { "col": 15, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "royal_lifeless_guard",
+        "position": { "col": 35, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "returned_champion",
+        "position": { "col": 25, "row": 8 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "nalthis_boss_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 8
+  },
+  {
+    "id": "sel_hub",
+    "name": "Elantris — La Cité Déchue",
+    "description": "Autrefois glorieuse, la cité d'Elantris est désormais en ruines. Les Aons ne fonctionnent plus et les Élantrians déchus errent dans les rues. Pourtant, un espoir de restauration persiste.",
+    "worldID": "sel",
+    "type": "hub",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "elantris_city.sks",
+    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "connections": [
+      {
+        "targetZoneID": "sel_fjorden",
+        "entryPointName": "east_gate",
+        "exitPosition": { "col": 43, "row": 22 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_spirit_pool",
+        "entryPointName": "hidden_passage",
+        "exitPosition": { "col": 5, "row": 5 },
+        "requiredQuestID": "sel_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "aon_scholar",
+        "position": { "col": 18, "row": 30 },
+        "dialogueTreeID": "aon_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "raoden_ally",
+        "position": { "col": 28, "row": 25 },
+        "dialogueTreeID": "raoden_intro",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "hrathen_priest",
+        "position": { "col": 10, "row": 20 },
+        "dialogueTreeID": "hrathen_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [
+      {
+        "id": "elantris_hidden_cache",
+        "position": { "col": 8, "row": 8 },
+        "lootTable": [
+          { "itemID": "aon_glyph_stone", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 }
+        ],
+        "isHidden": true,
+        "respawns": false
+      }
+    ],
+    "ambientMusicTrack": "sel_city_ambient",
+    "weatherEffect": "aonGlow",
+    "recommendedLevel": 6
+  },
+  {
+    "id": "sel_fjorden",
+    "name": "Fjorden — Terres du Shu-Dereth",
+    "description": "Les terres sombres du Fjorden, dominées par la religion du Shu-Dereth. Les moines Dakhor pratiquent des rituels de transformation osseuse et les guerriers Derethi patrouillent sans relâche.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "fjorden_lands.sks",
+    "playerSpawnPosition": { "col": 5, "row": 30 },
+    "connections": [
+      {
+        "targetZoneID": "sel_hub",
+        "entryPointName": "west_return",
+        "exitPosition": { "col": 0, "row": 30 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_spirit_pool",
+        "entryPointName": "mountain_pass",
+        "exitPosition": { "col": 55, "row": 5 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "derethi_warrior",
+        "position": { "col": 20, "row": 20 },
+        "patrolPath": [
+          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
+          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "derethi_warrior",
+        "position": { "col": 40, "row": 35 },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": { "col": 35, "row": 15 },
+        "patrolPath": [
+          { "col": 35, "row": 15 }, { "col": 40, "row": 10 }
+        ],
+        "respawnTime": 200
+      },
+      {
+        "enemyID": "skaze_touched",
+        "position": { "col": 50, "row": 40 },
+        "patrolPath": null,
+        "respawnTime": 250
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "fjorden_altar_cache",
+        "position": { "col": 30, "row": 45 },
+        "lootTable": [
+          { "itemID": "aon_glyph_stone", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 2 },
+          { "itemID": "dakhor_bone_charm", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_fjorden_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 7
+  },
+  {
+    "id": "sel_spirit_pool",
+    "name": "Le Pool de l'Esprit — Devotion's Well",
+    "description": "Le lieu sacré où le pouvoir de Dévotion se concentre. Les Aons brillent faiblement dans l'air et un Élantrien corrompu garde l'accès au puits. L'Avatar de Domination attend dans les profondeurs.",
+    "worldID": "sel",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "spirit_pool.sks",
+    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "connections": [
+      {
+        "targetZoneID": "sel_hub",
+        "entryPointName": "pool_exit",
+        "exitPosition": { "col": 25, "row": 49 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "corrupted_elantrian",
+        "position": { "col": 15, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "corrupted_elantrian",
+        "position": { "col": 35, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "dominion_avatar",
+        "position": { "col": 25, "row": 8 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "sel_boss_ambient",
+    "weatherEffect": "aonGlow",
+    "recommendedLevel": 9
   }
 ]
