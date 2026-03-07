@@ -101,7 +101,8 @@ export class CombatManager {
     actionButtons: ActionButtons,
     onKill: (enemy: EnemyInstance) => void,
   ): void {
-    const champ = GameManager.shared.champion;
+    const gm = GameManager.shared;
+    const champ = gm.champion;
     if (!champ || index >= champ.equippedSkillIDs.length) return;
 
     const skillID = champ.equippedSkillIDs[index];
@@ -109,6 +110,34 @@ export class CombatManager {
     if (!skill) return;
 
     if (champ.currentInvestiture < skill.investitureCost) return;
+
+    // Use magic system for enhanced results if available
+    const magicManager = gm.magicManager;
+    let magicDamageBonus = 0;
+    let magicHealing = 0;
+    let magicDescription = '';
+
+    if (magicManager) {
+      const result = magicManager.useAbility(skillID, champ.baseStats.spirit, {});
+      if (result.success) {
+        magicDamageBonus = result.damage;
+        magicHealing = result.healing;
+        magicDescription = result.description;
+
+        // Apply healing from magic result
+        if (magicHealing > 0) {
+          const maxHP = gm.maxHP;
+          champ.currentHP = Math.min(maxHP, champ.currentHP + magicHealing);
+          this.vfx.showDamageNumber(playerPos.x, playerPos.y - 50, magicHealing, false, 0x44ff44);
+        }
+
+        // Show magic description
+        if (magicDescription) {
+          this.vfx.showFloatingText(playerPos.x, playerPos.y - 70, magicDescription, 0xffcc44);
+        }
+      }
+    }
+
     champ.currentInvestiture -= skill.investitureCost;
     actionButtons.startCooldown(index, skill.cooldown);
 
@@ -123,7 +152,8 @@ export class CombatManager {
       if (enemy.isDead) continue;
       const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
       if (dist < range) {
-        const damage = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
+        const baseDamage = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
+        const damage = baseDamage + magicDamageBonus;
         enemy.hp -= damage;
         this.vfx.showDamageNumber(enemy.position.x, enemy.position.y - 30, damage, false);
         drawEnemyHP(enemy.hpBar, enemy.hp / enemy.data.maxHP);

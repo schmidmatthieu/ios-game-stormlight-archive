@@ -1,6 +1,7 @@
 import type { Champion, ChampionClass, ChampionStats, RadiantOrder, MagicSystemType } from '../data/types';
 import { CLASS_INFO } from '../data/types';
 import { gameData } from '../data/DataLoader';
+import { MagicSystemManager } from './magic/MagicSystemManager';
 
 const BASE_STATS: ChampionStats = { vigor: 10, investiture: 10, strength: 10, agility: 10, spirit: 10, luck: 5 };
 
@@ -22,6 +23,7 @@ export class GameManager {
   }
 
   champion: Champion | null = null;
+  magicManager: MagicSystemManager | null = null;
 
   // MARK: - New Game
 
@@ -54,6 +56,8 @@ export class GameManager {
       completedQuestIDs: [],
       reputation: {},
     };
+
+    this.magicManager = new MagicSystemManager(cls, order);
   }
 
   // Auto-equip available skills based on level and class
@@ -214,6 +218,12 @@ export class GameManager {
     const data = localStorage.getItem('cosmere_save');
     if (!data) return false;
     this.champion = JSON.parse(data);
+    if (this.champion) {
+      this.magicManager = new MagicSystemManager(
+        this.champion.championClass,
+        this.champion.radiantOrder ?? undefined,
+      );
+    }
     return true;
   }
 
