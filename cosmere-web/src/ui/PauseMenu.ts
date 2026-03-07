@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { BestiaryManager } from '../game/BestiarySystem';
+import { AchievementManager } from '../game/AchievementSystem';
 
 export function showPauseMenu(
   uiContainer: Container,
@@ -49,6 +50,7 @@ export function showPauseMenu(
       action: () => {
         GameManager.shared.save();
         BestiaryManager.shared.save();
+        AchievementManager.shared.save();
         showFloatingText(playerPos.x, playerPos.y - 40, 'Partie sauvegardée!', 0x66cc44);
         onResume();
       },
@@ -67,6 +69,7 @@ export function showPauseMenu(
     action: () => {
       GameManager.shared.save();
       BestiaryManager.shared.save();
+      AchievementManager.shared.save();
       window.location.reload();
     },
   });

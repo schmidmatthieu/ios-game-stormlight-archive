@@ -25,6 +25,8 @@ import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAni
 import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
 import { BestiaryManager } from '../game/BestiarySystem';
 import { showBestiaryPanel } from '../ui/BestiaryPanel';
+import { AchievementManager } from '../game/AchievementSystem';
+import { createAchievementToast, showAchievementPanel } from '../ui/AchievementUI';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -263,6 +265,7 @@ export class ZoneScene extends Container implements GameScene {
   // Weather
   private weatherManager!: WeatherManager;
   private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
+  private achievementToast: { update: (dt: number) => void } | null = null;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -404,12 +407,22 @@ export class ZoneScene extends Container implements GameScene {
     // Bestiary button (next to crafting)
     this.createBestiaryButton(w);
 
+    // Achievements button (next to bestiary)
+    this.createAchievementButton(w);
+
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
 
     // Dynamic weather
     this.weatherManager = new WeatherManager(this.zone.worldID);
     this.weatherOverlay = createWeatherOverlay(this.uiContainer, w, h);
+
+    // Achievement toast
+    this.achievementToast = createAchievementToast(this.uiContainer, w);
+    AchievementManager.shared.recordZoneVisit(this.zone.id, this.zone.worldID);
+    AchievementManager.shared.recordLevel(GameManager.shared.champion?.level ?? 1);
+    AchievementManager.shared.recordCreatureDiscovered(BestiaryManager.shared.totalDiscovered);
+    AchievementManager.shared.check();
 
     // Quest system
     QuestManager.shared.init();
@@ -1366,6 +1379,36 @@ export class ZoneScene extends Container implements GameScene {
     );
   }
 
+  private createAchievementButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Trophy icon
+    const icon = new Graphics();
+    icon.moveTo(14, 8).lineTo(22, 8).lineTo(21, 16).lineTo(15, 16).closePath().fill({ color: 0xe6cc66, alpha: 0.7 });
+    icon.rect(16, 16, 4, 3).fill({ color: 0xccaa44, alpha: 0.7 });
+    icon.rect(14, 19, 8, 2).fill({ color: 0xccaa44, alpha: 0.6 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 + 150;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleAchievements());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleAchievements(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showAchievementPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
+
   private applyCraftResult(recipeID: string): void {
     const effect = getRecipeEffect(recipeID);
     if (!effect) return;
@@ -1428,6 +1471,7 @@ export class ZoneScene extends Container implements GameScene {
       () => {
         GameManager.shared.save();
         BestiaryManager.shared.save();
+        AchievementManager.shared.save();
         this.router.goto(WorldMapScene);
       },
     );
@@ -1794,6 +1838,7 @@ export class ZoneScene extends Container implements GameScene {
     this.spawnAmbientParticles(delta);
     this.updateWorldMechanics(delta);
     this.updateWeather(delta);
+    this.updateAchievements(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -2277,8 +2322,10 @@ export class ZoneScene extends Container implements GameScene {
     enemy.isDead = true;
     enemy.state = 'dead';
 
-    // Track in bestiary
+    // Track in bestiary & achievements
     BestiaryManager.shared.registerKill(enemy.data);
+    AchievementManager.shared.recordKill(enemy.data.tier);
+    AchievementManager.shared.recordCreatureDiscovered(BestiaryManager.shared.totalDiscovered);
 
     // Animated death instead of instant hide
     animateEnemyDeath(enemy.sprite, this.worldContainer, enemy.position.x, enemy.position.y);
@@ -2340,6 +2387,12 @@ export class ZoneScene extends Container implements GameScene {
       this.showDamageNumber(enemy.position.x + 10, enemy.position.y, gold, false, 0xe6cc33);
     }, 200);
 
+    // Track achievements
+    AchievementManager.shared.recordGold(gold);
+    AchievementManager.shared.recordXP(finalXP);
+    if (leveledUp) AchievementManager.shared.recordLevel(champ.level);
+    AchievementManager.shared.check();
+
     // Animated gold burst and XP orbs
     spawnGoldBurst(this.worldContainer, enemy.position.x, enemy.position.y, gold);
     spawnXPOrbs(this.worldContainer, enemy.position.x, enemy.position.y,
@@ -2354,6 +2407,7 @@ export class ZoneScene extends Container implements GameScene {
           champ.inventoryItemIDs.push(lootEntry.itemID);
           QuestManager.shared.onItemCollected(lootEntry.itemID);
           BestiaryManager.shared.registerDrop(enemy.data.id, lootEntry.itemID);
+          AchievementManager.shared.recordItemCollect();
 
           // Animated loot drop
           spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
@@ -2479,6 +2533,14 @@ export class ZoneScene extends Container implements GameScene {
     if (result.changed && result.message) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, result.message, 0xaaddff);
     }
+    // Track surviving a highstorm
+    if (result.changed && this.weatherManager.currentWeather !== 'highstorm' && result.config.name !== 'Haute Tempête') {
+      const champ = GameManager.shared.champion;
+      if (champ && champ.currentHP > 0) {
+        AchievementManager.shared.recordHighstormSurvived();
+        AchievementManager.shared.check();
+      }
+    }
     if (this.weatherOverlay) {
       this.weatherOverlay.update(result.config, this.weatherManager.lightningFlash);
     }
@@ -2492,9 +2554,16 @@ export class ZoneScene extends Container implements GameScene {
     }
   }
 
+  private updateAchievements(dt: number): void {
+    AchievementManager.shared.updateCombo(dt);
+    if (this.achievementToast) this.achievementToast.update(dt);
+  }
+
   private handlePlayerDeath(): void {
     if (this.deathScreen) return;
     this.isPaused = true;
+    AchievementManager.shared.recordDeath();
+    AchievementManager.shared.check();
 
     this.deathScreen = showDeathScreen(
       this.uiContainer,
@@ -2722,6 +2791,7 @@ export class ZoneScene extends Container implements GameScene {
               champ.gridPosition = { ...targetZone.playerSpawnPosition };
               GameManager.shared.save();
               BestiaryManager.shared.save();
+              AchievementManager.shared.save();
               this.router.goto(ZoneScene);
             }
           };

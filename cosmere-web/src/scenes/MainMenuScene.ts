@@ -3,6 +3,7 @@ import type { GameScene } from '../game/SceneRouter';
 import { SceneRouter } from '../game/SceneRouter';
 import { GameManager } from '../game/GameManager';
 import { BestiaryManager } from '../game/BestiarySystem';
+import { AchievementManager } from '../game/AchievementSystem';
 import { CharacterCreationScene } from './CharacterCreationScene';
 import { ZoneScene } from './ZoneScene';
 import { gameData } from '../data/DataLoader';
@@ -146,6 +147,7 @@ export class MainMenuScene extends Container implements GameScene {
       this.createButton(label, w / 2, btnY + 50, 0x224433, () => {
         GameManager.shared.load();
         BestiaryManager.shared.load();
+        AchievementManager.shared.load();
         this.router.goto(ZoneScene);
       });
     }
