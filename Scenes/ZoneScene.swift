@@ -39,6 +39,14 @@ class ZoneScene: SKScene {
     private var damageNodePool: [SKLabelNode] = []
     private let maxPoolSize = 20
 
+    // Cached magic system instances (avoid per-call allocations)
+    private let allomancy = AllomancySystem()
+    private let surgebinding = SurgebindingSystem()
+    private let awakening = AwakeningSystem()
+    private let aonDor = AonDorSystem()
+    private let sandMastery = SandMasterySystem()
+    private let painting = PaintingSystem()
+
     // MARK: - Init
 
     init(zone: Zone, size: CGSize) {
@@ -404,10 +412,16 @@ class ZoneScene: SKScene {
     // MARK: - Joystick Movement
 
     private func handleJoystickInput(direction: CGVector, magnitude: CGFloat) {
-        // Direction du joystick → direction isométrique
-        // Le joystick donne un vecteur screen-space, on le convertit en iso-space
-        // En iso : droite = (+1, -1), haut = (-1, -1), etc.
-        // On garde le mouvement fluide en pixels plutôt qu'en tiles
+        // Movement is handled continuously in movePlayerContinuous() via the update loop.
+        // This callback is used only for triggering walk animation on first input.
+        guard magnitude > 0.1 else { return }
+        if playerSprite.action(forKey: "walkAnimation") == nil {
+            let walkAnim = SKAction.sequence([
+                SKAction.scaleX(to: 1.05, duration: 0.15),
+                SKAction.scaleX(to: 0.95, duration: 0.15)
+            ])
+            playerSprite.run(SKAction.repeatForever(walkAnim), withKey: "walkAnimation")
+        }
     }
 
     private func movePlayerContinuous(deltaTime: TimeInterval) {
@@ -480,23 +494,9 @@ class ZoneScene: SKScene {
             ])
             target.sprite.run(flash)
 
-            // Dégâts flottants
+            // Dégâts flottants (pooled)
             let damage = champion.baseStats.strength + 5
-            let dmgLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
-            dmgLabel.text = "\(damage)"
-            dmgLabel.fontSize = 14
-            dmgLabel.fontColor = .white
-            dmgLabel.position = target.sprite.position
-            dmgLabel.zPosition = 500
-            worldNode.addChild(dmgLabel)
-
-            dmgLabel.run(SKAction.sequence([
-                SKAction.group([
-                    SKAction.moveBy(x: CGFloat.random(in: -15...15), y: 40, duration: 0.6),
-                    SKAction.fadeOut(withDuration: 0.5)
-                ]),
-                SKAction.removeFromParent()
-            ]))
+            showFloatingDamage(damage, at: target.sprite.position)
 
             AudioManager.shared.playSFX("attack_hit", on: self)
         } else {
@@ -516,7 +516,6 @@ class ZoneScene: SKScene {
         case .mistborn:
             let metals: [SkillResourceType] = [.steel, .iron, .pewter, .tin]
             let metal = metals[index]
-            let allomancy = AllomancySystem()
             let result = allomancy.burnMetal(metal, champion: &champion, targetPosition: nil)
             GameManager.shared.champion = champion
 
@@ -526,7 +525,6 @@ class ZoneScene: SKScene {
             }
 
         case .radiant:
-            let surgebinding = SurgebindingSystem()
             let surges: [SurgebindingSystem.Surge] = [.gravitation, .adhesion, .abrasion, .progression]
             let surge = index < surges.count ? surges[index] : .gravitation
             let result = surgebinding.useSurge(surge, champion: &champion, targetPosition: nil)
@@ -541,9 +539,74 @@ class ZoneScene: SKScene {
                 }
             }
 
-        default:
-            showAbilityEffect(description: "Compétence \(index + 1) activée")
-            actionButtons.startCooldown(abilityIndex: index, duration: 4.0)
+        case .awakener:
+            let commands: [AwakeningSystem.AwakeningCommand] = [.animateCloth, .animateWeapon, .chromaAura, .lifeleecher]
+            let command = index < commands.count ? commands[index] : .animateCloth
+            let result = awakening.useCommand(command, champion: &champion, targetPosition: nil)
+            GameManager.shared.champion = champion
+
+            if result.success {
+                showAbilityEffect(description: result.description)
+                actionButtons.startCooldown(abilityIndex: index, duration: 4.0)
+
+                if result.healing > 0 {
+                    showHealEffect(amount: result.healing)
+                }
+                if result.damage > 0 {
+                    showFloatingDamage(result.damage, at: playerSprite.position, color: .magenta)
+                }
+            }
+
+        case .elantrian:
+            let aons: [AonDorSystem.Aon] = [.rao, .ashe, .tia, .ien]
+            let aon = index < aons.count ? aons[index] : .rao
+            let result = aonDor.drawAon(aon, champion: &champion, targetPosition: nil)
+            GameManager.shared.champion = champion
+
+            if result.success {
+                showAbilityEffect(description: result.description)
+                actionButtons.startCooldown(abilityIndex: index, duration: 4.5)
+
+                if result.healing > 0 {
+                    showHealEffect(amount: result.healing)
+                }
+                if result.damage > 0 {
+                    showFloatingDamage(result.damage, at: playerSprite.position, color: result.glyphColor)
+                }
+            }
+
+        case .sandMaster:
+            let forms: [SandMasterySystem.SandForm] = [.lash, .shield, .swarm, .platform]
+            let form = index < forms.count ? forms[index] : .lash
+            let result = sandMastery.useSandForm(form, champion: &champion, targetPosition: nil)
+            GameManager.shared.champion = champion
+
+            if result.success {
+                showAbilityEffect(description: result.description)
+                actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+
+                if result.damage > 0 {
+                    showFloatingDamage(result.damage, at: playerSprite.position, color: SKColor(red: 0.9, green: 0.8, blue: 0.5, alpha: 1.0))
+                }
+            }
+
+        case .nightmarePainter:
+            let techniques: [PaintingSystem.PaintingTechnique] = [.ink_slash, .capture, .nightmare_ward, .banish]
+            let technique = index < techniques.count ? techniques[index] : .ink_slash
+            let result = painting.usePaintingTechnique(technique, champion: &champion, targetPosition: nil)
+            GameManager.shared.champion = champion
+
+            if result.success {
+                showAbilityEffect(description: result.description)
+                actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+
+                if result.healing > 0 {
+                    showHealEffect(amount: result.healing)
+                }
+                if result.damage > 0 {
+                    showFloatingDamage(result.damage, at: playerSprite.position, color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1.0))
+                }
+            }
         }
     }
 
@@ -588,6 +651,45 @@ class ZoneScene: SKScene {
         }
 
         showAbilityEffect(description: ultText)
+    }
+
+    // MARK: - Damage Label Pool
+
+    /// Get a label from the pool or create one if pool is empty
+    private func obtainDamageLabel() -> SKLabelNode {
+        if let recycled = damageNodePool.popLast() {
+            recycled.alpha = 1.0
+            recycled.setScale(1.0)
+            recycled.removeAllActions()
+            return recycled
+        }
+        let label = SKLabelNode(fontNamed: "Helvetica-Bold")
+        label.fontSize = 14
+        label.zPosition = 500
+        return label
+    }
+
+    /// Show floating damage text using pooled nodes
+    private func showFloatingDamage(_ damage: Int, at position: CGPoint, color: SKColor = .white) {
+        let label = obtainDamageLabel()
+        label.text = "\(damage)"
+        label.fontColor = color
+        label.position = position
+        worldNode.addChild(label)
+
+        label.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.moveBy(x: CGFloat.random(in: -15...15), y: 40, duration: 0.6),
+                SKAction.fadeOut(withDuration: 0.5)
+            ]),
+            SKAction.run { [weak self] in
+                label.removeFromParent()
+                guard let self else { return }
+                if self.damageNodePool.count < self.maxPoolSize {
+                    self.damageNodePool.append(label)
+                }
+            }
+        ]))
     }
 
     // MARK: - Visual Effects
