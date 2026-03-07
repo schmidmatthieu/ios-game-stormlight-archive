@@ -7,6 +7,7 @@ export function showPauseMenu(
   onResume: () => void,
   showFloatingText: (x: number, y: number, msg: string, color: number) => void,
   playerPos: { x: number; y: number },
+  onWorldMap?: () => void,
 ): Container {
   const menu = new Container();
   menu.zIndex = 10000;
@@ -17,7 +18,7 @@ export function showPauseMenu(
   menu.addChild(overlay);
 
   const panelW = 200;
-  const panelH = 220;
+  const panelH = onWorldMap ? 270 : 220;
   const px = (screenW - panelW) / 2;
   const py = (screenH - panelH) / 2;
 
@@ -37,7 +38,7 @@ export function showPauseMenu(
   title.y = py + 24;
   menu.addChild(title);
 
-  const buttons = [
+  const buttons: { label: string; y: number; color?: number; action: () => void }[] = [
     {
       label: 'Reprendre', y: py + 60,
       action: onResume,
@@ -50,14 +51,22 @@ export function showPauseMenu(
         onResume();
       },
     },
-    {
-      label: 'Quitter', y: py + 150, color: 0x552222,
-      action: () => {
-        GameManager.shared.save();
-        window.location.reload();
-      },
-    },
   ];
+
+  if (onWorldMap) {
+    buttons.push({
+      label: 'Carte du Cosmere', y: py + 150, color: 0x1a2840,
+      action: onWorldMap,
+    });
+  }
+
+  buttons.push({
+    label: 'Quitter', y: onWorldMap ? py + 195 : py + 150, color: 0x552222,
+    action: () => {
+      GameManager.shared.save();
+      window.location.reload();
+    },
+  });
 
   for (const b of buttons) {
     const btnBg = new Graphics();

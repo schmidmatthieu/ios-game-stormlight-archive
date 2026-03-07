@@ -20,6 +20,7 @@ import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRendere
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
+import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
@@ -1283,6 +1284,10 @@ export class ZoneScene extends Container implements GameScene {
       () => this.togglePause(),
       (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
       this.playerScreenPos,
+      () => {
+        GameManager.shared.save();
+        this.router.goto(WorldMapScene);
+      },
     );
   }
 
