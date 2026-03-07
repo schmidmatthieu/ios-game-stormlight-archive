@@ -1134,14 +1134,22 @@ class ZoneScene: SKScene {
 
     private func toggleInventory() {
         if let existing = inventoryNode {
-            existing.removeFromParent()
-            inventoryNode = nil
+            existing.hide()
+            existing.onClose = { [weak self] in
+                existing.removeFromParent()
+                self?.inventoryNode = nil
+            }
             return
         }
 
         let inv = InventoryNode(screenSize: size)
         inv.zPosition = 6001
+        inv.onClose = { [weak self] in
+            inv.removeFromParent()
+            self?.inventoryNode = nil
+        }
         cameraNode.addChild(inv)
+        inv.show()
         inventoryNode = inv
     }
 
