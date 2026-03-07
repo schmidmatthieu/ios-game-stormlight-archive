@@ -7,6 +7,7 @@ final class SaveManager {
     private let saveFileName = "cosmere_save.json"
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let saveQueue = DispatchQueue(label: "com.cosmere.saveManager")
 
     private static let currentSaveVersion = 1
 
@@ -24,33 +25,36 @@ final class SaveManager {
     // MARK: - Save
 
     func save() -> Bool {
-        guard let champion = GameManager.shared.champion else { return false }
-        guard let url = saveURL else {
-            print("⚠️ Impossible d'accéder au répertoire de sauvegarde")
-            return false
-        }
+        return saveQueue.sync {
+            guard let champion = GameManager.shared.champion else { return false }
+            guard let url = saveURL else {
+                print("⚠️ Impossible d'accéder au répertoire de sauvegarde")
+                return false
+            }
 
-        let saveData = SaveData(
-            version: SaveManager.currentSaveVersion,
-            champion: champion,
-            activeQuests: GameManager.shared.activeQuests,
-            timestamp: Date()
-        )
+            let saveData = SaveData(
+                version: SaveManager.currentSaveVersion,
+                champion: champion,
+                activeQuests: GameManager.shared.activeQuests,
+                timestamp: Date()
+            )
 
-        do {
-            let data = try encoder.encode(saveData)
-            try data.write(to: url, options: .atomic)
-            print("💾 Partie sauvegardée")
-            return true
-        } catch {
-            print("⚠️ Erreur sauvegarde: \(error)")
-            return false
+            do {
+                let data = try encoder.encode(saveData)
+                try data.write(to: url, options: .atomic)
+                print("💾 Partie sauvegardée")
+                return true
+            } catch {
+                print("⚠️ Erreur sauvegarde: \(error)")
+                return false
+            }
         }
     }
 
     // MARK: - Load
 
     func load() -> Bool {
+        return saveQueue.sync {
         guard let url = saveURL else { return false }
         guard FileManager.default.fileExists(atPath: url.path) else {
             print("Aucune sauvegarde trouvée")
@@ -90,6 +94,7 @@ final class SaveManager {
         } catch {
             print("⚠️ Erreur chargement: \(error)")
             return false
+        }
         }
     }
 

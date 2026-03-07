@@ -392,6 +392,17 @@ final class SpellEffectsSystem {
         }
     }
 
+    // MARK: - Weather Cleanup
+
+    /// Remove all running actions from a weather emitter before removing from parent
+    static func cleanupWeatherEmitter(_ emitter: SKNode) {
+        emitter.removeAllActions()
+        emitter.children.forEach { child in
+            child.removeAllActions()
+        }
+        emitter.removeFromParent()
+    }
+
     // MARK: - Weather Particles
 
     static func createWeatherEmitter(effect: WeatherEffect, sceneSize: CGSize) -> SKNode? {
