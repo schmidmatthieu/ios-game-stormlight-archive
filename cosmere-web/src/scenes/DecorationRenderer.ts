@@ -4,7 +4,7 @@ import { Container, Graphics } from 'pixi.js';
 import { isoToScreen, seededRandom } from './IsoUtils';
 import type { WorldTheme } from './WorldThemes';
 import type { Zone } from '../data/types';
-import { darken, lighten } from '../rendering/PlayerRenderer';
+import { darken, lighten } from '../utils/ColorUtils';
 
 // ─── Tilemap ─────────────────────────────────────────────────
 

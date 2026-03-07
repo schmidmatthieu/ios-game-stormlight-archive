@@ -1,6 +1,6 @@
 import { Graphics } from 'pixi.js';
 import type { Enemy } from '../data/types';
-import { lighten, darken } from './PlayerRenderer';
+import { lighten, darken } from '../utils/ColorUtils';
 
 // World-specific enemy body colors
 const WORLD_ENEMY_COLORS: Record<string, Record<string, number>> = {
