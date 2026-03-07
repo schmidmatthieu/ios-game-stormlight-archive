@@ -55,6 +55,8 @@ import type { BehaviorState } from '../systems/EnemyBehaviors';
 import { generateEnvironmentObjects, createEnvironmentSprite, interactWith, checkTrapTrigger } from '../systems/EnvironmentInteractions';
 import type { EnvironmentObject } from '../systems/EnvironmentInteractions';
 import { HiddenQuestManager } from '../systems/HiddenQuests';
+import { ObjectPool } from '../systems/ObjectPool';
+import { updateSkillVFX, clearSkillVFX } from '../systems/SkillAnimations';
 import { NewGamePlusManager } from '../systems/NewGamePlus';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
@@ -81,135 +83,13 @@ import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionCla
 import type { ActionMode } from '../ui/ActionButtons';
 import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize, touchTarget, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
-
-// ─── Isometric Helpers ─────────────────────────────────────────
-const TILE_W = 64;
-const TILE_H = 32;
-
-function isoToScreen(col: number, row: number): { x: number; y: number } {
-  return {
-    x: (col - row) * (TILE_W / 2),
-    y: (col + row) * (TILE_H / 2),
-  };
-}
-
-function screenToIso(sx: number, sy: number): { col: number; row: number } {
-  return {
-    col: sx / TILE_W + sy / TILE_H,
-    row: sy / TILE_H - sx / TILE_W,
-  };
-}
-
-// Seeded random for deterministic decoration placement
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed * 9301 + 49297) * 49297;
-  return x - Math.floor(x);
-}
-
-// ─── Interfaces ────────────────────────────────────────────────
-interface EnemyInstance {
-  data: Enemy;
-  spawn: EnemySpawn;
-  hp: number;
-  maxHP: number;
-  position: { x: number; y: number };
-  gridPos: GridPosition;
-  sprite: Container;
-  hpBar: Graphics;
-  nameText: Text;
-  bossState?: BossState;
-  isDead: boolean;
-  attackCooldown: number;
-  state: 'idle' | 'chasing' | 'attacking' | 'dead';
-  respawnTimer: number;
-  animTimer: number;
-  affixState?: EnemyAffixState;
-  affixLabel?: Text;
-  enemyAnim?: EnemyAnimState;
-  bossAuraGfx?: Graphics;
-  statusGfx?: Graphics;
-}
-
-interface NPCInstance {
-  id: string;
-  position: { x: number; y: number };
-  sprite: Container;
-  nameText: Text;
-  isShopkeeper: boolean;
-}
-
-interface LootInstance {
-  id: string;
-  position: { x: number; y: number };
-  sprite: Container;
-  collected: boolean;
-  isHidden: boolean;
-}
-
-interface Particle {
-  sprite: Graphics;
-  x: number; y: number;
-  vx: number; vy: number;
-  life: number; maxLife: number;
-  size: number;
-}
-
-// ─── World Theme Definitions ───────────────────────────────────
-interface WorldTheme {
-  tileBase: number;
-  tileAlt: number;
-  tileBorder: number;
-  edgeGlow: number;
-  ambientParticleColor: number;
-  decorations: string[];
-  fogColor: number;
-  fogAlpha: number;
-}
-
-const WORLD_THEMES: Record<string, WorldTheme> = {
-  scadrial: {
-    tileBase: 0x302822, tileAlt: 0x3a322a, tileBorder: 0x44382e,
-    edgeGlow: 0x553322, ambientParticleColor: 0x888077,
-    decorations: ['ashPile', 'deadTree', 'metalShard', 'ruinedWall', 'barrel'],
-    fogColor: 0x332211, fogAlpha: 0.15,
-  },
-  roshar: {
-    tileBase: 0x1e2830, tileAlt: 0x263340, tileBorder: 0x344455,
-    edgeGlow: 0x2244aa, ambientParticleColor: 0x66aaff,
-    decorations: ['rockFormation', 'cremalingShelter', 'chullPath', 'stormPost', 'vine'],
-    fogColor: 0x112244, fogAlpha: 0.12,
-  },
-  taldain: {
-    tileBase: 0x3a3420, tileAlt: 0x44402a, tileBorder: 0x554a33,
-    edgeGlow: 0xaa8833, ambientParticleColor: 0xddcc88,
-    decorations: ['sandDune', 'cactus', 'oasis', 'sandRock'],
-    fogColor: 0x332200, fogAlpha: 0.08,
-  },
-  nalthis: {
-    tileBase: 0x1a2820, tileAlt: 0x223a28, tileBorder: 0x2e4433,
-    edgeGlow: 0x22aa44, ambientParticleColor: 0x88ff99,
-    decorations: ['coloredFlower', 'gardenBush', 'statue', 'fountain'],
-    fogColor: 0x002211, fogAlpha: 0.08,
-  },
-  shadesmar: {
-    tileBase: 0x0e0e20, tileAlt: 0x161630, tileBorder: 0x222244,
-    edgeGlow: 0x4422aa, ambientParticleColor: 0xaa88ff,
-    decorations: ['beadPile', 'flamespren', 'glassTree', 'shardPillar'],
-    fogColor: 0x110033, fogAlpha: 0.2,
-  },
-  komashi: {
-    tileBase: 0x281828, tileAlt: 0x322032, tileBorder: 0x442e44,
-    edgeGlow: 0x8822aa, ambientParticleColor: 0xcc66ff,
-    decorations: ['inkBlot', 'paperLantern', 'nightmareResidue', 'brush'],
-    fogColor: 0x220033, fogAlpha: 0.15,
-  },
-  sel: {
-    tileBase: 0x282820, tileAlt: 0x303020, tileBorder: 0x3a3a2a,
-    edgeGlow: 0xaaaa33, ambientParticleColor: 0xdddd88,
-    decorations: ['aonGlyph', 'stoneColumn', 'mossTile', 'shrine'],
-    fogColor: 0x222200, fogAlpha: 0.1,
-  },
-};
+import {
+  TILE_W, TILE_H, isoToScreen, screenToIso, seededRandom,
+  WORLD_THEMES,
+} from './zone/ZoneTypes';
+import type {
+  EnemyInstance, NPCInstance, LootInstance, Particle, WorldTheme,
+} from './zone/ZoneTypes';
 
 // ─── Zone Scene ────────────────────────────────────────────────
 export class ZoneScene extends Container implements GameScene {
@@ -243,9 +123,14 @@ export class ZoneScene extends Container implements GameScene {
   // Loot
   private lootPoints: LootInstance[] = [];
 
-  // Particles
+  // Particles (pooled to avoid per-frame allocations)
   private particles: Particle[] = [];
   private particleContainer = new Container();
+  private particlePool = new ObjectPool<Graphics>(
+    () => new Graphics(),
+    (g) => { g.clear(); g.alpha = 1; g.scale.set(1); g.rotation = 0; g.visible = true; g.removeFromParent(); },
+    20,
+  );
 
   // Decorations
   private decoContainer = new Container();
@@ -1918,9 +1803,9 @@ export class ZoneScene extends Container implements GameScene {
     else if (weather === 'highstorm') rate = 3;
     else if (weather === 'rain') rate = 2.5;
 
-    // Spawn
+    // Spawn (pooled)
     if (Math.random() < rate * dt) {
-      const particle = new Graphics();
+      const particle = this.particlePool.acquire();
       let px = 0, py = 0, vx = 0, vy = 0, size = 2, life = 3;
       const color = this.theme.ambientParticleColor;
 
@@ -1981,7 +1866,7 @@ export class ZoneScene extends Container implements GameScene {
       p.sprite.alpha = Math.min(1, p.life / p.maxLife) * 0.6;
 
       if (p.life <= 0) {
-        p.sprite.destroy();
+        this.particlePool.release(p.sprite);
         this.particles.splice(i, 1);
       }
     }
@@ -2028,6 +1913,32 @@ export class ZoneScene extends Container implements GameScene {
     }
   }
 
+  // ─── Scene Cleanup ──────────────────────────────────────────
+
+  onExit(): void {
+    // Clear pooled VFX animations to prevent orphan callbacks
+    clearSkillVFX();
+    // Clear floating damage
+    this.floatingDmg.clear();
+    // Release pooled particles
+    for (const p of this.particles) {
+      this.particlePool.release(p.sprite);
+    }
+    this.particles.length = 0;
+    // Destroy player aura
+    if (this.playerAuraSprite) {
+      this.playerAuraSprite.destroy();
+      this.playerAuraSprite = null;
+    }
+    // Destroy boss HP bar
+    if (this.bossHPBar) {
+      this.bossHPBar.destroy();
+      this.bossHPBar = null;
+    }
+    // Auto-save
+    SaveManager.shared.autoSave();
+  }
+
   // ─── Update Loop ─────────────────────────────────────────────
 
   update(dt: number): void {
@@ -2054,12 +1965,13 @@ export class ZoneScene extends Container implements GameScene {
     this.updateCompanion(delta);
     this.updateWorldEvents(delta);
     this.floatingDmg.update(delta);
+    updateSkillVFX(delta);
     MusicManager.shared.update(delta);
     if (this.musicIndicator) this.musicIndicator.update(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
-    this.actionButtons.update(dt);
+    this.actionButtons.update(delta);
     this.checkZoneExit();
     this.checkProximity();
     this.sortZOrder();
@@ -2125,22 +2037,22 @@ export class ZoneScene extends Container implements GameScene {
       }
     }
 
-    // Class aura effect
-    if (this.playerAuraSprite) {
-      this.playerAuraSprite.destroy();
-      this.playerAuraSprite = null;
-    }
+    // Class aura effect — reuse existing Graphics via clear() to avoid per-frame allocation
     const champ = GameManager.shared.champion;
     if (champ) {
       const aura = drawClassAura(
         this.worldContainer,
         this.playerScreenPos.x, this.playerScreenPos.y,
         champ.championClass, this.playerAnimator,
+        this.playerAuraSprite,
       );
-      if (aura) {
+      if (aura && !this.playerAuraSprite) {
         aura.zIndex = this.playerContainer.zIndex - 1;
         this.worldContainer.addChild(aura);
         this.playerAuraSprite = aura;
+      }
+      if (this.playerAuraSprite) {
+        this.playerAuraSprite.zIndex = this.playerContainer.zIndex - 1;
       }
     }
 
@@ -2200,9 +2112,8 @@ export class ZoneScene extends Container implements GameScene {
         updateEnemyIdle(enemy.sprite, enemy.enemyAnim, dt, enemy.data.tier);
         // Boss aura animation
         if (enemy.data.tier === 'boss' && enemy.bossState?.announced) {
-          if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); }
           const phase = enemy.bossState.currentPhase + 1;
-          enemy.bossAuraGfx = drawBossAura(enemy.sprite, enemy.enemyAnim.timer, WORLD_ENEMY_COLORS[enemy.data.worldID]?.boss ?? 0xcc5500, phase);
+          enemy.bossAuraGfx = drawBossAura(enemy.sprite, enemy.enemyAnim.timer, WORLD_ENEMY_COLORS[enemy.data.worldID]?.boss ?? 0xcc5500, phase, enemy.bossAuraGfx);
         }
       }
 
@@ -2989,9 +2900,9 @@ export class ZoneScene extends Container implements GameScene {
       this.activeBoss = null;
     }
 
-    // Death particles
+    // Death particles (pooled)
     for (let i = 0; i < 6; i++) {
-      const p = new Graphics();
+      const p = this.particlePool.acquire();
       p.circle(0, 0, 2).fill({ color: 0xff6644, alpha: 0.6 });
       p.x = enemy.position.x;
       p.y = enemy.position.y;

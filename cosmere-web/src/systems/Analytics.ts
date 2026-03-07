@@ -76,7 +76,6 @@ export class AnalyticsManager {
   private data: AnalyticsData;
   private sessionStart: number;
   private currentZone: string = '';
-  private zoneEnterTime: number = 0;
   private saveTimer: number = 0;
 
   constructor() {
@@ -118,13 +117,8 @@ export class AnalyticsManager {
   // ─── Events ──────────────────────────────────────────────────
 
   recordZoneEnter(zoneID: string): void {
-    // Save time in previous zone
-    if (this.currentZone && this.zoneEnterTime > 0) {
-      const spent = (Date.now() - this.zoneEnterTime) / 1000;
-      this.data.timePerZone[this.currentZone] = (this.data.timePerZone[this.currentZone] ?? 0) + spent;
-    }
+    // Zone time is tracked via update() dt accumulation — no Date.now() delta needed
     this.currentZone = zoneID;
-    this.zoneEnterTime = Date.now();
     this.data.zoneEntryCount[zoneID] = (this.data.zoneEntryCount[zoneID] ?? 0) + 1;
   }
 
@@ -146,12 +140,15 @@ export class AnalyticsManager {
   recordDamageDealt(amount: number): void { this.data.totalDamageDealt += amount; }
   recordDamageTaken(amount: number): void { this.data.totalDamageTaken += amount; }
 
+  private mostUsedCount = 0;
+
   recordSkillUse(skillID: string): void {
-    this.data.skillUsage[skillID] = (this.data.skillUsage[skillID] ?? 0) + 1;
-    // Update most used skill
-    let maxUses = 0;
-    for (const [id, uses] of Object.entries(this.data.skillUsage)) {
-      if (uses > maxUses) { maxUses = uses; this.data.mostUsedSkill = id; }
+    const newCount = (this.data.skillUsage[skillID] ?? 0) + 1;
+    this.data.skillUsage[skillID] = newCount;
+    // Incremental tracking: O(1) instead of O(n)
+    if (newCount > this.mostUsedCount) {
+      this.mostUsedCount = newCount;
+      this.data.mostUsedSkill = skillID;
     }
   }
 

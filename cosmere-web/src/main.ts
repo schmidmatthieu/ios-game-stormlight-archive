@@ -16,8 +16,8 @@ async function boot() {
   await app.init({
     resizeTo: window,
     backgroundColor: 0x0a0a1a,
-    antialias: true,
-    resolution: window.devicePixelRatio || 1,
+    antialias: false, // Pixel art: nearest-neighbor, no smoothing
+    resolution: Math.min(window.devicePixelRatio || 1, 2), // Cap at 2x to avoid huge framebuffers
     autoDensity: true,
   });
 

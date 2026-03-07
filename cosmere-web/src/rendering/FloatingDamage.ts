@@ -16,6 +16,9 @@ export type DamageStyle =
 
 interface FloatingNumber {
   container: Container;
+  mainText: Text;
+  glowGfx: Graphics | null;
+  comboLabel: Text | null;
   x: number;
   y: number;
   vx: number;
@@ -45,12 +48,72 @@ const STYLE_CONFIG: Record<DamageStyle, {
   investiture:  { color: 0x8866ff, fontSize: 12, prefix: '+', suffix: '', duration: 1.0, gravity: -45, fontFamily: 'sans-serif' },
 };
 
+// Pre-create TextStyle objects to avoid per-spawn allocations
+const TEXT_STYLES = new Map<DamageStyle, TextStyle>();
+for (const [key, cfg] of Object.entries(STYLE_CONFIG)) {
+  TEXT_STYLES.set(key as DamageStyle, new TextStyle({
+    fontFamily: cfg.fontFamily,
+    fontSize: cfg.fontSize,
+    fill: cfg.color,
+    fontWeight: 'bold',
+    dropShadow: { color: 0x000000, blur: 3, distance: 1 },
+  }));
+}
+
+const COMBO_STYLE = new TextStyle({
+  fontFamily: 'sans-serif', fontSize: 7,
+  fill: 0xddaaff, fontWeight: 'bold',
+});
+
 export class FloatingDamageManager {
   private numbers: FloatingNumber[] = [];
+  private pool: FloatingNumber[] = [];
   private worldContainer: Container;
 
   constructor(worldContainer: Container) {
     this.worldContainer = worldContainer;
+  }
+
+  private acquireNumber(): FloatingNumber {
+    if (this.pool.length > 0) {
+      const n = this.pool.pop()!;
+      n.container.alpha = 1;
+      n.container.visible = true;
+      n.container.scale.set(1);
+      n.container.rotation = 0;
+      return n;
+    }
+    // Create new
+    const container = new Container();
+    container.zIndex = 100001;
+    const mainText = new Text({ text: '', style: TEXT_STYLES.get('normal')! });
+    mainText.anchor.set(0.5);
+    container.addChild(mainText);
+
+    const glowGfx = new Graphics();
+    glowGfx.visible = false;
+    container.addChildAt(glowGfx, 0);
+
+    const comboLabel = new Text({ text: '', style: COMBO_STYLE });
+    comboLabel.anchor.set(0.5);
+    comboLabel.y = 10;
+    comboLabel.visible = false;
+    container.addChild(comboLabel);
+
+    return {
+      container, mainText, glowGfx, comboLabel,
+      x: 0, y: 0, vx: 0, vy: 0,
+      elapsed: 0, duration: 1, style: 'normal',
+      scale: 1, targetScale: 1, rotation: 0, rotSpeed: 0,
+    };
+  }
+
+  private releaseNumber(n: FloatingNumber): void {
+    n.container.removeFromParent();
+    n.container.visible = false;
+    n.glowGfx!.visible = false;
+    n.comboLabel!.visible = false;
+    this.pool.push(n);
   }
 
   spawn(
@@ -60,54 +123,39 @@ export class FloatingDamageManager {
     comboCount = 0,
   ): void {
     const cfg = STYLE_CONFIG[style];
-    const container = new Container();
-    container.zIndex = 100001;
+    const n = this.acquireNumber();
 
     const displayText = `${cfg.prefix}${amount}${cfg.suffix}`;
+    n.mainText.text = displayText;
+    n.mainText.style = TEXT_STYLES.get(style) ?? TEXT_STYLES.get('normal')!;
 
-    // Main text
-    const txt = new Text({
-      text: displayText,
-      style: new TextStyle({
-        fontFamily: cfg.fontFamily,
-        fontSize: cfg.fontSize,
-        fill: cfg.color,
-        fontWeight: 'bold',
-        dropShadow: { color: 0x000000, blur: 3, distance: 1 },
-      }),
-    });
-    txt.anchor.set(0.5);
-    container.addChild(txt);
-
-    // Crit: add outline glow
+    // Crit glow
     if (style === 'crit') {
-      const glow = new Graphics();
-      glow.circle(0, 0, 14).fill({ color: 0xffee44, alpha: 0.2 });
-      container.addChildAt(glow, 0);
+      n.glowGfx!.clear();
+      n.glowGfx!.circle(0, 0, 14).fill({ color: 0xffee44, alpha: 0.2 });
+      n.glowGfx!.visible = true;
+    } else {
+      n.glowGfx!.visible = false;
     }
 
-    // Combo: add multiplier label
+    // Combo label
     if (style === 'combo' && comboCount > 0) {
-      const comboLabel = new Text({
-        text: `×${comboCount}`,
-        style: new TextStyle({
-          fontFamily: 'sans-serif', fontSize: 7,
-          fill: 0xddaaff, fontWeight: 'bold',
-        }),
-      });
-      comboLabel.anchor.set(0.5);
-      comboLabel.y = 10;
-      container.addChild(comboLabel);
+      n.comboLabel!.text = `×${comboCount}`;
+      n.comboLabel!.visible = true;
+    } else {
+      n.comboLabel!.visible = false;
     }
 
-    // Position with random offset
+    // Position
     const ox = (Math.random() - 0.5) * 24;
-    container.x = x + ox;
-    container.y = y;
+    n.container.x = x + ox;
+    n.container.y = y;
+    n.x = n.container.x;
+    n.y = n.container.y;
 
-    this.worldContainer.addChild(container);
+    this.worldContainer.addChild(n.container);
 
-    // Velocity based on style
+    // Velocity
     let vx = 0;
     let vy = cfg.gravity;
     let rotSpeed = 0;
@@ -128,19 +176,17 @@ export class FloatingDamageManager {
       vy = -30;
     }
 
-    this.numbers.push({
-      container,
-      x: container.x,
-      y: container.y,
-      vx, vy,
-      elapsed: 0,
-      duration: cfg.duration,
-      style,
-      scale: style === 'crit' ? 2.0 : 1.0,
-      targetScale: 1.0,
-      rotation: 0,
-      rotSpeed,
-    });
+    n.vx = vx;
+    n.vy = vy;
+    n.elapsed = 0;
+    n.duration = cfg.duration;
+    n.style = style;
+    n.scale = style === 'crit' ? 2.0 : 1.0;
+    n.targetScale = 1.0;
+    n.rotation = 0;
+    n.rotSpeed = rotSpeed;
+
+    this.numbers.push(n);
   }
 
   update(dt: number): void {
@@ -156,7 +202,7 @@ export class FloatingDamageManager {
 
       // Gravity for arcing styles
       if (n.style === 'gold' || n.style === 'combo') {
-        n.vy += 120 * dt; // gravity pull
+        n.vy += 120 * dt;
       }
 
       // Wobble for poison
@@ -181,9 +227,9 @@ export class FloatingDamageManager {
         n.container.alpha = Math.max(0, 1 - (progress - 0.7) / 0.3);
       }
 
-      // Remove when done
+      // Release back to pool when done
       if (progress >= 1) {
-        n.container.destroy({ children: true });
+        this.releaseNumber(n);
         this.numbers.splice(i, 1);
       }
     }
@@ -191,7 +237,7 @@ export class FloatingDamageManager {
 
   clear(): void {
     for (const n of this.numbers) {
-      n.container.destroy({ children: true });
+      this.releaseNumber(n);
     }
     this.numbers.length = 0;
   }

@@ -227,8 +227,10 @@ export function drawBossAura(
   timer: number,
   bodyColor: number,
   phase: number,
+  existing?: Graphics,
 ): Graphics {
-  const g = new Graphics();
+  const g = existing ?? new Graphics();
+  g.clear();
   const pulseA = 0.5 + Math.sin(timer * 2) * 0.5;
   const pulseB = 0.5 + Math.sin(timer * 3 + 1) * 0.5;
 
@@ -261,7 +263,7 @@ export function drawBossAura(
   g.ellipse(0, 2, outerR * 0.8, outerR * 0.25)
     .fill({ color: bodyColor, alpha: 0.03 + pulseA * 0.02 });
 
-  container.addChild(g);
+  if (!existing) container.addChild(g);
   return g;
 }
 

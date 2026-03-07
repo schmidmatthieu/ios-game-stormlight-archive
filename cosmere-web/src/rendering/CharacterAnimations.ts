@@ -270,11 +270,17 @@ export function drawClassAura(
   x: number, y: number,
   cls: ChampionClass,
   animator: CharacterAnimator,
+  existing?: Graphics | null,
 ): Graphics | null {
-  if (animator.auraAlpha <= 0.005) return null;
+  if (animator.auraAlpha <= 0.005) {
+    if (existing) existing.visible = false;
+    return existing ?? null;
+  }
 
   const color = CLASS_AURA_COLORS[cls] ?? 0x8899cc;
-  const g = new Graphics();
+  const g = existing ?? new Graphics();
+  g.clear();
+  g.visible = true;
   g.zIndex = -1;
 
   // Inner glow

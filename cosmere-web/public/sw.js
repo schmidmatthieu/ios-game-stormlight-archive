@@ -1,7 +1,9 @@
 // ─── Cosmere Chronicles Service Worker ───────────────────────────
-// Enables offline play by caching game assets
+// Enables offline play by caching game assets.
+// Cache version is auto-incremented on each build deploy.
 
-const CACHE_NAME = 'cosmere-v1';
+const CACHE_VERSION = 2;
+const CACHE_NAME = `cosmere-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -26,7 +28,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: cache-first for assets, network-first for data
+// Fetch: hashed assets (immutable) → cache-first, data → network-first
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -44,7 +46,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets (JS, CSS, images)
+  // Vite hashed assets are immutable — cache forever
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Other static assets: cache-first
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
