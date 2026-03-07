@@ -47,16 +47,11 @@ class ZoneScene: SKScene {
     private let hpRegenDelay: TimeInterval = 5.0
     private let hpRegenPercent: Double = 0.01  // 1% maxHP per second
 
-    // Regen
-    private var regenAccumulator: TimeInterval = 0
-
     // Level up tracking
     private var previousLevel: Int = 1
 
     // Gameplay: low HP vignette
     private var lowHPVignette: SKShapeNode?
-    private var lowHPOverlay: SKShapeNode?
-    private var isShowingLowHPWarning = false
 
     // Ultimate cooldown
     private var ultimateCooldownRemaining: TimeInterval = 0
@@ -115,7 +110,6 @@ class ZoneScene: SKScene {
         setupLowHPVignette()
 
         previousLevel = GameManager.shared.champion?.level ?? 1
-        setupLowHPOverlay()
 
         if let track = zone.ambientMusicTrack {
             AudioManager.shared.playMusic(track)
@@ -2049,35 +2043,6 @@ class ZoneScene: SKScene {
         AudioManager.shared.playSFX("level_up", on: self)
     }
 
-    // MARK: - Regen Visual
-
-    private func showRegenTick(hpHealed: Int, invHealed: Int) {
-        guard let playerNode, (hpHealed > 0 || invHealed > 0) else { return }
-
-        if hpHealed > 0 {
-            let label = obtainDamageLabel()
-            label.text = "+\(hpHealed)"
-            label.fontColor = GameConstants.Colors.healGreen
-            label.fontSize = 12
-            label.position = CGPoint(x: playerNode.position.x - 15, y: playerNode.position.y + 20)
-            worldNode.addChild(label)
-
-            label.run(SKAction.sequence([
-                SKAction.group([
-                    SKAction.moveBy(x: 0, y: 25, duration: 0.6),
-                    SKAction.fadeOut(withDuration: 0.5)
-                ]),
-                SKAction.run { [weak self] in
-                    label.removeFromParent()
-                    guard let self else { return }
-                    if self.damageNodePool.count < self.maxPoolSize {
-                        self.damageNodePool.append(label)
-                    }
-                }
-            ]))
-        }
-    }
-
     // MARK: - Update Loop
 
     override func update(_ currentTime: TimeInterval) {
@@ -2094,27 +2059,6 @@ class ZoneScene: SKScene {
                 minimap.updateEnemyPosition(index: i, gridPos: enemyInstances[i].gridPosition,
                                              isAlive: enemyInstances[i].isAlive)
             }
-        }
-
-        // Régénération passive HP/Investiture
-        regenAccumulator += deltaTime
-        if regenAccumulator >= regenInterval {
-            regenAccumulator -= regenInterval
-            var hpHealed = 0
-            var invHealed = 0
-            GameManager.shared.mutateChampion { champ in
-                if champ.currentHP < champ.maxHP {
-                    let heal = min(self.hpRegenBase, champ.maxHP - champ.currentHP)
-                    champ.currentHP += heal
-                    hpHealed = heal
-                }
-                if champ.currentInvestiture < champ.maxInvestiture {
-                    let heal = min(self.investitureRegenBase, champ.maxInvestiture - champ.currentInvestiture)
-                    champ.currentInvestiture += heal
-                    invHealed = heal
-                }
-            }
-            showRegenTick(hpHealed: hpHealed, invHealed: invHealed)
         }
 
         if let champion = GameManager.shared.champion {

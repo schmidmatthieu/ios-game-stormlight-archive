@@ -633,7 +633,7 @@ class InventoryNode: SKNode {
             equipBtn.fillColor = SKColor(red: 0.15, green: 0.4, blue: 0.15, alpha: 0.9)
             equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.3, alpha: 1)
             equipBtn.position = CGPoint(x: screenSize.width / 6 - 48, y: btnY)
-            equipBtn.name = "equipButton"
+            equipBtn.name = "equipItem"
             detailPanel.addChild(equipBtn)
 
             let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
@@ -641,7 +641,7 @@ class InventoryNode: SKNode {
             equipLabel.fontSize = 12
             equipLabel.fontColor = .white
             equipLabel.verticalAlignmentMode = .center
-            equipLabel.name = "equipButton"
+            equipLabel.name = "equipItem"
             equipBtn.addChild(equipLabel)
         }
 
