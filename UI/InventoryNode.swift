@@ -54,15 +54,15 @@ class InventoryNode: SKNode {
         titleLabel.zPosition = 6002
 
         // Close button
-        closeButton = SKShapeNode(rectOf: CGSize(width: 30, height: 30), cornerRadius: 6)
+        closeButton = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 8)
         closeButton.fillColor = SKColor(red: 0.5, green: 0.1, blue: 0.1, alpha: 0.8)
         closeButton.strokeColor = .red
-        closeButton.position = CGPoint(x: panelSize.width / 2 - 25, y: panelSize.height / 2 - 25)
+        closeButton.position = CGPoint(x: panelSize.width / 2 - 30, y: panelSize.height / 2 - 30)
         closeButton.zPosition = 6002
         closeButton.name = "closeInventory"
         let xLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
         xLabel.text = "X"
-        xLabel.fontSize = 14
+        xLabel.fontSize = 18
         xLabel.fontColor = .white
         xLabel.verticalAlignmentMode = .center
         xLabel.name = "closeInventory"
