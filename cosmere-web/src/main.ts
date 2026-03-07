@@ -50,3 +50,12 @@ async function boot() {
 }
 
 boot().catch(console.error);
+
+// Register service worker for PWA offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // SW registration failed — offline mode unavailable
+    });
+  });
+}

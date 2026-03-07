@@ -198,7 +198,10 @@ export class GameManager {
   }
 
   get xpForNextLevel(): number {
-    return (this.champion?.level ?? 1) * 100 + 50;
+    const level = this.champion?.level ?? 1;
+    // Accelerating curve: linear base + quadratic scaling past level 10
+    if (level <= 10) return level * 100 + 50;
+    return level * 100 + 50 + Math.floor((level - 10) * (level - 10) * 15);
   }
 
   get maxHP(): number {
