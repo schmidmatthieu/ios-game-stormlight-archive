@@ -21,6 +21,7 @@ import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRendere
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
+import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -2287,13 +2288,25 @@ export class ZoneScene extends Container implements GameScene {
       this.showDamageNumber(enemy.position.x + 10, enemy.position.y, gold, false, 0xe6cc33);
     }, 200);
 
+    // Animated gold burst and XP orbs
+    spawnGoldBurst(this.worldContainer, enemy.position.x, enemy.position.y, gold);
+    spawnXPOrbs(this.worldContainer, enemy.position.x, enemy.position.y,
+      this.playerScreenPos.x, this.playerScreenPos.y, finalXP);
+
     // Drop loot from loot table
+    let dropIndex = 0;
     for (const lootEntry of enemy.data.lootTable) {
       if (Math.random() < lootEntry.dropChance) {
         const item = gameData.item(lootEntry.itemID);
         if (item && champ) {
           champ.inventoryItemIDs.push(lootEntry.itemID);
           QuestManager.shared.onItemCollected(lootEntry.itemID);
+
+          // Animated loot drop
+          spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
+            item.name, item.rarity, dropIndex);
+          dropIndex++;
+
           setTimeout(() => {
             this.showFloatingText(
               enemy.position.x, enemy.position.y - 30,
