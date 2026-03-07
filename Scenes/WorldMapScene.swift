@@ -125,7 +125,35 @@ class WorldMapScene: SKScene {
                 return
             }
 
-            if let worldID = node.name, worldNodes.keys.contains(worldID) {
+            if let worldID = node.name, let worldNode = worldNodes[worldID] {
+                // Vérifier si le monde est déverrouillé
+                let isLocked = worldNode.children.contains { $0 is SKLabelNode && ($0 as? SKLabelNode)?.text == "🔒" }
+                if isLocked {
+                    // Feedback visuel : shake + message
+                    let shake = SKAction.sequence([
+                        SKAction.moveBy(x: -5, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: 10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: -10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: 10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: -5, y: 0, duration: 0.05),
+                    ])
+                    worldNode.run(shake)
+
+                    let msg = SKLabelNode(fontNamed: "Copperplate")
+                    msg.text = "Monde verrouillé"
+                    msg.fontSize = 14
+                    msg.fontColor = .red
+                    msg.position = CGPoint(x: worldNode.position.x, y: worldNode.position.y + 55)
+                    msg.zPosition = 10
+                    addChild(msg)
+                    msg.run(SKAction.sequence([
+                        SKAction.wait(forDuration: 1.0),
+                        SKAction.fadeOut(withDuration: 0.3),
+                        SKAction.removeFromParent()
+                    ]))
+                    return
+                }
+
                 let hubZoneID = "\(worldID)_hub"
                 if let view = self.view {
                     SceneRouter(view: view).transitionToZone(hubZoneID)
