@@ -2,26 +2,45 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
 import type { Item, EquipmentSlot } from '../data/types';
-import { RARITY_COLORS } from '../data/types';
+import { RARITY_COLORS, CLASS_INFO } from '../data/types';
 import { getLayoutInfo, fontSize, scaled, panelSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import { MusicManager } from '../game/MusicSystem';
+import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 
 const SLOT_LABELS: Record<string, string> = {
-  helmet: 'Casque', shoulders: '\u00C9pauli\u00E8res', chest: 'Torse', cape: 'Cape',
-  gloves: 'Gants', belt: 'Ceinture', legs: 'Jambi\u00E8res', boots: 'Bottes',
-  mainWeapon: 'Arme', offhand: 'Main gauche', amulet: 'Amulette',
-  ring1: 'Anneau 1', ring2: 'Anneau 2',
+  helmet: 'Casque', shoulders: 'Épaul.', chest: 'Torse', cape: 'Cape',
+  gloves: 'Gants', belt: 'Ceint.', legs: 'Jamb.', boots: 'Bottes',
+  mainWeapon: 'Arme', offhand: 'M.gauche', amulet: 'Amul.', ring1: 'Ann.1', ring2: 'Ann.2',
 };
-
 const EQUIPMENT_SLOTS: EquipmentSlot[] = [
   'helmet', 'shoulders', 'chest', 'cape', 'mainWeapon',
   'offhand', 'gloves', 'belt', 'legs', 'boots', 'amulet', 'ring1', 'ring2',
 ];
+const STAT_LABELS: Record<string, string> = {
+  vigor: 'VIG', strength: 'FOR', agility: 'AGI', spirit: 'ESP', luck: 'CHA', investiture: 'INV',
+};
+
+function slotPositions(s: number): Record<string, { x: number; y: number }> {
+  return {
+    helmet: { x: 0, y: -58 * s }, shoulders: { x: -28 * s, y: -42 * s },
+    chest: { x: 28 * s, y: -36 * s }, cape: { x: -28 * s, y: -28 * s },
+    gloves: { x: -30 * s, y: -8 * s }, belt: { x: 28 * s, y: -16 * s },
+    legs: { x: 28 * s, y: 2 * s }, boots: { x: -28 * s, y: 10 * s },
+    mainWeapon: { x: 34 * s, y: -50 * s }, offhand: { x: -34 * s, y: -50 * s },
+    amulet: { x: 0, y: -32 * s }, ring1: { x: -30 * s, y: -2 * s }, ring2: { x: 30 * s, y: -2 * s },
+  };
+}
+
+function txt(text: string, size: number, fill: number, layout: LayoutInfo, bold = false): Text {
+  return new Text({ text, style: new TextStyle({
+    fontFamily: 'sans-serif', fontSize: fontSize(size, layout), fill, fontWeight: bold ? 'bold' : 'normal',
+  }) });
+}
 
 export class InventoryPanel extends Container {
   private onClose: () => void;
-  private contentContainer: Container;
+  private cc: Container; // content container
   private scrollMask: Graphics;
   private scrollY = 0;
   private scrollVelocity = 0;
@@ -31,7 +50,8 @@ export class InventoryPanel extends Container {
   private layout: LayoutInfo;
   private tabBgs: Graphics[] = [];
   private tabLabels: Text[] = [];
-  private contentArea: { x: number; y: number; w: number; h: number } = { x: 0, y: 0, w: 0, h: 0 };
+  private ca: { x: number; y: number; w: number; h: number } = { x: 0, y: 0, w: 0, h: 0 };
+  private tooltip: Container | null = null;
 
   constructor(screenW: number, screenH: number, onClose: () => void) {
     super();
@@ -40,185 +60,109 @@ export class InventoryPanel extends Container {
     this.onClose = onClose;
     this.zIndex = 10000;
     this.layout = getLayoutInfo(screenW, screenH);
-
-    const radius = panelRadius(this.layout);
-
-    // Overlay — fade in
+    const L = this.layout;
+    const radius = panelRadius(L);
     const overlay = new Graphics();
     overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: UI_ALPHA.overlay });
     overlay.eventMode = 'static';
+    overlay.on('pointerdown', () => this.hideTooltip());
     this.addChild(overlay);
 
-    // Main panel
-    const ps = panelSize(this.layout);
-    const panelW = ps.width;
-    const panelH = ps.height;
-    const px = (screenW - panelW) / 2;
-    const py = (screenH - panelH) / 2;
-
+    const ps = panelSize(L);
+    const [pW, pH] = [ps.width, ps.height];
+    const [px, py] = [(screenW - pW) / 2, (screenH - pH) / 2];
     const panel = new Graphics();
-    panel.roundRect(px, py, panelW, panelH, radius + 2)
+    panel.roundRect(px, py, pW, pH, radius + 2)
       .fill({ color: UI_COLORS.panelBgAlt, alpha: 0.96 })
       .stroke({ color: UI_COLORS.borderAccent, width: 2, alpha: 0.7 });
     panel.eventMode = 'static';
     this.addChild(panel);
 
-    // Title
-    const title = new Text({
-      text: 'INVENTAIRE',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(18, this.layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
-    });
+    const title = txt('INVENTAIRE', 18, UI_COLORS.textGold, L, true);
     title.anchor.set(0.5);
-    title.x = screenW / 2;
-    title.y = py + scaled(20, this.layout);
+    title.x = screenW / 2; title.y = py + scaled(20, L);
     this.addChild(title);
 
-    // Tabs — improved with active state
-    const tabs: Array<{ label: string; tab: 'equipment' | 'inventory' | 'skills' }> = [
-      { label: '\u00C9quipement', tab: 'equipment' },
-      { label: 'Objets', tab: 'inventory' },
-      { label: 'Comp\u00E9tences', tab: 'skills' },
+    // Tabs
+    const tabDefs = [
+      { label: 'Équipement', tab: 'equipment' as const },
+      { label: 'Objets', tab: 'inventory' as const },
+      { label: 'Compétences', tab: 'skills' as const },
     ];
-    const tabWidth = (panelW - 24) / 3;
-    const tabH = scaled(26, this.layout);
-    tabs.forEach((t, i) => {
-      const tx = px + 12 + i * tabWidth;
-      const ty = py + scaled(40, this.layout);
-      const isActive = this.currentTab === t.tab;
+    const tabW = (pW - 24) / 3, tabH = scaled(26, L);
+    tabDefs.forEach((t, i) => {
+      const tx = px + 12 + i * tabW, ty = py + scaled(40, L);
       const bg = new Graphics();
-      this.drawTab(bg, tx, ty, tabWidth - 6, tabH, isActive);
-      bg.eventMode = 'static';
-      bg.cursor = 'pointer';
+      this.drawTab(bg, tx, ty, tabW - 6, tabH, this.currentTab === t.tab);
+      bg.eventMode = 'static'; bg.cursor = 'pointer';
       bg.on('pointerdown', () => {
-        this.currentTab = t.tab;
-        this.scrollY = 0;
-        this.scrollVelocity = 0;
-        this.updateTabs();
-        this.refreshContent();
+        this.currentTab = t.tab; this.scrollY = 0; this.scrollVelocity = 0;
+        this.hideTooltip(); this.updateTabs(); this.refreshContent();
       });
-      this.addChild(bg);
-      this.tabBgs.push(bg);
-
-      const label = new Text({
-        text: t.label,
-        style: new TextStyle({
-          fontFamily: 'sans-serif',
-          fontSize: fontSize(10, this.layout),
-          fill: isActive ? UI_COLORS.textPrimary : UI_COLORS.textMuted,
-          fontWeight: isActive ? 'bold' : 'normal',
-        }),
-      });
-      label.anchor.set(0.5);
-      label.x = tx + (tabWidth - 6) / 2;
-      label.y = ty + tabH / 2;
-      this.addChild(label);
-      this.tabLabels.push(label);
+      this.addChild(bg); this.tabBgs.push(bg);
+      const label = txt(t.label, 10, this.currentTab === t.tab ? UI_COLORS.textPrimary : UI_COLORS.textMuted, L, this.currentTab === t.tab);
+      label.anchor.set(0.5); label.x = tx + (tabW - 6) / 2; label.y = ty + tabH / 2;
+      this.addChild(label); this.tabLabels.push(label);
     });
 
-    // Content area with scroll support
-    const contentY = py + scaled(72, this.layout);
-    const contentH = panelH - scaled(112, this.layout);
-    this.contentArea = { x: px, y: contentY, w: panelW, h: contentH };
-
-    this.contentContainer = new Container();
-    this.addChild(this.contentContainer);
-
-    // Scroll mask
+    const cY = py + scaled(72, L), cH = pH - scaled(112, L);
+    this.ca = { x: px, y: cY, w: pW, h: cH };
+    this.cc = new Container();
+    this.addChild(this.cc);
     this.scrollMask = new Graphics();
-    this.scrollMask.rect(px, contentY, panelW, contentH).fill(0xffffff);
+    this.scrollMask.rect(px, cY, pW, cH).fill(0xffffff);
     this.addChild(this.scrollMask);
-    this.contentContainer.mask = this.scrollMask;
+    this.cc.mask = this.scrollMask;
 
-    // Scroll handling with momentum
-    let dragStartY = 0;
-    let isDragging = false;
-    let lastDragY = 0;
-
-    this.contentContainer.eventMode = 'static';
-    this.contentContainer.hitArea = { contains: (x: number, y: number) => {
-      return x >= px && x <= px + panelW && y >= contentY && y <= contentY + contentH;
-    }};
-
-    this.contentContainer.on('pointerdown', (e) => {
-      isDragging = true;
-      dragStartY = e.globalY;
-      lastDragY = e.globalY;
-      this.scrollVelocity = 0;
-    });
-    this.contentContainer.on('globalpointermove', (e) => {
+    let isDragging = false, lastDY = 0;
+    this.cc.eventMode = 'static';
+    this.cc.hitArea = { contains: (x: number, y: number) => x >= px && x <= px + pW && y >= cY && y <= cY + cH };
+    this.cc.on('pointerdown', (e) => { isDragging = true; lastDY = e.globalY; this.scrollVelocity = 0; });
+    this.cc.on('globalpointermove', (e) => {
       if (!isDragging) return;
-      const dy = e.globalY - lastDragY;
-      this.scrollY += dy;
-      lastDragY = e.globalY;
-      this.scrollVelocity = dy;
+      const dy = e.globalY - lastDY; this.scrollY += dy; lastDY = e.globalY; this.scrollVelocity = dy;
       this.applyScroll();
     });
-    const endDrag = () => { isDragging = false; };
-    this.contentContainer.on('pointerup', endDrag);
-    this.contentContainer.on('pointerupoutside', endDrag);
-
+    const end = () => { isDragging = false; };
+    this.cc.on('pointerup', end); this.cc.on('pointerupoutside', end);
     this.refreshContent();
 
-    // Close button — bigger, centered
-    const closeBtnW = scaled(90, this.layout);
-    const closeBtnH = buttonHeight(this.layout);
-    const closeBg = new Graphics();
-    closeBg.roundRect(px + panelW / 2 - closeBtnW / 2, py + panelH - scaled(38, this.layout), closeBtnW, closeBtnH, 8)
-      .fill({ color: 0x553322, alpha: UI_ALPHA.buttonBg })
-      .stroke({ color: 0x886644, width: 1.5 });
-    closeBg.eventMode = 'static';
-    closeBg.cursor = 'pointer';
-    closeBg.on('pointerdown', () => this.onClose());
-    this.addChild(closeBg);
-
-    const closeLabel = new Text({
-      text: 'Fermer',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(12, this.layout), fill: UI_COLORS.textPrimary, fontWeight: 'bold' }),
-    });
-    closeLabel.anchor.set(0.5);
-    closeLabel.x = px + panelW / 2;
-    closeLabel.y = py + panelH - scaled(38, this.layout) + closeBtnH / 2;
-    this.addChild(closeLabel);
-
-    // Start momentum animation
-    this.startMomentumScroll();
+    // Close button
+    const cbW = scaled(90, L), cbH = buttonHeight(L);
+    const cb = new Graphics();
+    cb.roundRect(px + pW / 2 - cbW / 2, py + pH - scaled(38, L), cbW, cbH, 8)
+      .fill({ color: 0x553322, alpha: UI_ALPHA.buttonBg }).stroke({ color: 0x886644, width: 1.5 });
+    cb.eventMode = 'static'; cb.cursor = 'pointer'; cb.on('pointerdown', () => this.onClose());
+    this.addChild(cb);
+    const cl = txt('Fermer', 12, UI_COLORS.textPrimary, L, true);
+    cl.anchor.set(0.5); cl.x = px + pW / 2; cl.y = py + pH - scaled(38, L) + cbH / 2;
+    this.addChild(cl);
+    this.startMomentum();
   }
 
   private drawTab(g: Graphics, x: number, y: number, w: number, h: number, active: boolean): void {
     g.clear();
-    g.roundRect(x, y, w, h, 6)
-      .fill({ color: active ? 0x332244 : UI_COLORS.btnSecondary, alpha: active ? 0.9 : 0.6 });
-    if (active) {
-      g.roundRect(x, y + h - 3, w, 3, 2)
-        .fill({ color: UI_COLORS.textGold, alpha: 0.8 });
-    }
+    g.roundRect(x, y, w, h, 6).fill({ color: active ? 0x332244 : UI_COLORS.btnSecondary, alpha: active ? 0.9 : 0.6 });
+    if (active) g.roundRect(x, y + h - 3, w, 3, 2).fill({ color: UI_COLORS.textGold, alpha: 0.8 });
   }
 
   private updateTabs(): void {
-    const tabs: Array<'equipment' | 'inventory' | 'skills'> = ['equipment', 'inventory', 'skills'];
-    tabs.forEach((tab, i) => {
-      const isActive = this.currentTab === tab;
+    (['equipment', 'inventory', 'skills'] as const).forEach((tab, i) => {
+      const a = this.currentTab === tab;
       const ps = panelSize(this.layout);
-      const px = (this.screenW - ps.width) / 2;
-      const tabWidth = (ps.width - 24) / 3;
-      const tabH = scaled(26, this.layout);
-      const tx = px + 12 + i * tabWidth;
-      const ty = px + scaled(40, this.layout);
-      // Recalculate ty from panel position
-      const py = (this.screenH - ps.height) / 2;
-      this.drawTab(this.tabBgs[i], tx, py + scaled(40, this.layout), tabWidth - 6, tabH, isActive);
-      this.tabLabels[i].style.fill = isActive ? UI_COLORS.textPrimary : UI_COLORS.textMuted;
-      this.tabLabels[i].style.fontWeight = isActive ? 'bold' : 'normal';
+      const px = (this.screenW - ps.width) / 2, py = (this.screenH - ps.height) / 2;
+      const tw = (ps.width - 24) / 3;
+      this.drawTab(this.tabBgs[i], px + 12 + i * tw, py + scaled(40, this.layout), tw - 6, scaled(26, this.layout), a);
+      this.tabLabels[i].style.fill = a ? UI_COLORS.textPrimary : UI_COLORS.textMuted;
+      this.tabLabels[i].style.fontWeight = a ? 'bold' : 'normal';
     });
   }
 
-  private startMomentumScroll(): void {
+  private startMomentum(): void {
     const tick = () => {
       if (this.destroyed) return;
       if (Math.abs(this.scrollVelocity) > 0.5) {
-        this.scrollVelocity *= 0.92; // Friction
-        this.scrollY += this.scrollVelocity;
-        this.applyScroll();
+        this.scrollVelocity *= 0.92; this.scrollY += this.scrollVelocity; this.applyScroll();
       }
       requestAnimationFrame(tick);
     };
@@ -226,390 +170,359 @@ export class InventoryPanel extends Container {
   }
 
   private applyScroll(): void {
-    // Clamp scroll
-    const maxScroll = 0;
-    const contentHeight = this.getContentHeight();
-    const minScroll = Math.min(0, this.contentArea.h - contentHeight);
-    this.scrollY = Math.max(minScroll, Math.min(maxScroll, this.scrollY));
-
-    // Apply offset to content
-    for (const child of this.contentContainer.children) {
-      // Content items get offset; but we need to track original positions
-      // Simply offset the container
-    }
-    this.contentContainer.y = this.scrollY;
-  }
-
-  private getContentHeight(): number {
     let maxY = 0;
-    for (const child of this.contentContainer.children) {
-      const bottom = child.y + ((child as { height?: number }).height ?? 0);
-      if (bottom > maxY) maxY = bottom;
-    }
-    return maxY - this.contentArea.y;
+    for (const c of this.cc.children) { const b = c.y + ((c as { height?: number }).height ?? 0); if (b > maxY) maxY = b; }
+    const ch = maxY - this.ca.y;
+    this.scrollY = Math.max(Math.min(0, this.ca.h - ch), Math.min(0, this.scrollY));
+    this.cc.y = this.scrollY;
   }
 
   private refreshContent(): void {
-    this.contentContainer.removeChildren();
-    this.contentContainer.y = 0;
-    this.scrollY = 0;
-
-    const { x: cx, y: cy, w: cw, h: ch } = this.contentArea;
-
-    switch (this.currentTab) {
-      case 'equipment': this.renderEquipment(cx, cy, cw, ch); break;
-      case 'inventory': this.renderInventory(cx, cy, cw, ch); break;
-      case 'skills': this.renderSkills(cx, cy, cw, ch); break;
-    }
+    this.cc.removeChildren(); this.cc.y = 0; this.scrollY = 0;
+    const { x, y, w, h } = this.ca;
+    if (this.currentTab === 'equipment') this.renderEquipment(x, y, w, h);
+    else if (this.currentTab === 'inventory') this.renderInventory(x, y, w, h);
+    else this.renderSkills(x, y, w, h);
   }
 
-  private renderEquipment(cx: number, cy: number, cw: number, ch: number): void {
+  // ─── Equipment Tab ──────────────────────────────────────────────
+
+  private renderEquipment(cx: number, cy: number, cw: number, _ch: number): void {
     const champ = GameManager.shared.champion;
     if (!champ) return;
     const eq = champ.equipment as unknown as Record<string, string | null>;
-    const rowH = scaled(26, this.layout);
+    const L = this.layout;
+    const centerX = cx + cw / 2, centerY = cy + scaled(80, L);
 
-    let y = cy;
+    // Player preview (3x scale)
+    const pg = new Graphics();
+    drawPlayerCharacter(pg, champ.championClass);
+    pg.scale.set(3); pg.x = centerX; pg.y = centerY + scaled(40, L);
+    this.cc.addChild(pg);
+
+    // Class label
+    const info = CLASS_INFO[champ.championClass];
+    const cl = txt(`${champ.name} — ${info.name} Nv.${champ.level}`, 10, UI_COLORS.textGold, L, true);
+    cl.anchor.set(0.5, 0); cl.x = centerX; cl.y = cy + 2;
+    this.cc.addChild(cl);
+
+    // Equipment slots around character
+    const positions = slotPositions(L.scale);
+    const ss = scaled(18, L);
     for (const slot of EQUIPMENT_SLOTS) {
+      const p = positions[slot]; if (!p) continue;
+      const sx = centerX + p.x, sy = centerY + p.y;
       const itemID = eq[slot];
       const item = itemID ? gameData.item(itemID) : null;
+      const rc = item ? (RARITY_COLORS[item.rarity] ?? 0xaaaaaa) : 0x333344;
 
-      const row = new Graphics();
-      row.roundRect(cx + 10, y, cw - 20, rowH, 5)
-        .fill({ color: UI_COLORS.btnSecondary, alpha: 0.6 })
-        .stroke({ color: 0x332244, width: 0.8, alpha: 0.4 });
-      row.eventMode = 'static';
-      row.cursor = 'pointer';
+      const g = new Graphics();
+      g.roundRect(sx - ss / 2, sy - ss / 2, ss, ss, 3)
+        .fill({ color: 0x111122, alpha: 0.8 })
+        .stroke({ color: rc, width: item ? 1.5 : 0.8, alpha: item ? 0.9 : 0.4 });
+      if (item) g.roundRect(sx - ss / 2 + 2, sy - ss / 2 + 2, ss - 4, ss - 4, 2).fill({ color: rc, alpha: 0.25 });
+      g.eventMode = 'static'; g.cursor = 'pointer';
+      g.on('pointerdown', () => { if (item) this.showTooltip(item, slot, sx, sy); });
+      this.cc.addChild(g);
 
-      if (item) {
-        row.on('pointerdown', () => {
-          GameManager.shared.unequipItem(slot);
-          this.refreshContent();
-        });
-      }
+      const sl = txt(SLOT_LABELS[slot] ?? slot, 6, UI_COLORS.textMuted, L);
+      sl.anchor.set(0.5, 0); sl.x = sx; sl.y = sy + ss / 2 + 1;
+      this.cc.addChild(sl);
 
-      this.contentContainer.addChild(row);
-
-      // Slot label
-      const slotLabel = new Text({
-        text: SLOT_LABELS[slot] ?? slot,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: UI_COLORS.textMuted }),
-      });
-      slotLabel.x = cx + 16;
-      slotLabel.y = y + 5;
-      this.contentContainer.addChild(slotLabel);
-
-      // Item name or empty
-      if (item) {
-        const rarityColor = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
-        const itemLabel = new Text({
-          text: item.name,
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: rarityColor, fontWeight: 'bold' }),
-        });
-        itemLabel.anchor.set(1, 0);
-        itemLabel.x = cx + cw - 16;
-        itemLabel.y = y + 5;
-        this.contentContainer.addChild(itemLabel);
-
-        if (item.statBonuses.length > 0) {
-          const statsStr = item.statBonuses.map(b => `+${b.value} ${b.stat}`).join(' ');
-          const statsLabel = new Text({
-            text: statsStr,
-            style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: UI_COLORS.success }),
-          });
-          statsLabel.anchor.set(1, 0);
-          statsLabel.x = cx + cw - 16;
-          statsLabel.y = y + 15;
-          this.contentContainer.addChild(statsLabel);
-        }
-      } else {
-        const emptyLabel = new Text({
-          text: '- vide -',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: 0x555555 }),
-        });
-        emptyLabel.anchor.set(1, 0);
-        emptyLabel.x = cx + cw - 16;
-        emptyLabel.y = y + 5;
-        this.contentContainer.addChild(emptyLabel);
-      }
-
-      y += rowH + 3;
+      // Connection line
+      const ln = new Graphics();
+      ln.moveTo(sx, sy).lineTo(centerX, centerY + p.y * 0.3).stroke({ color: rc, width: 0.5, alpha: 0.2 });
+      this.cc.addChild(ln);
     }
+
+    // Stats summary
+    const sY = centerY + scaled(90, L);
+    const bg = new Graphics();
+    bg.roundRect(cx + 10, sY, cw - 20, scaled(50, L), 5)
+      .fill({ color: 0x111122, alpha: 0.7 }).stroke({ color: UI_COLORS.borderSubtle, width: 0.8, alpha: 0.4 });
+    this.cc.addChild(bg);
+    const st = txt('STATISTIQUES TOTALES', 8, UI_COLORS.textGold, L, true);
+    st.anchor.set(0.5, 0); st.x = cx + cw / 2; st.y = sY + 4;
+    this.cc.addChild(st);
+
+    const totals: Record<string, number> = { ...champ.baseStats };
+    for (const slot of EQUIPMENT_SLOTS) {
+      const id = eq[slot]; if (!id) continue;
+      const it = gameData.item(id); if (!it) continue;
+      for (const b of it.statBonuses) if (totals[b.stat] !== undefined) totals[b.stat] += b.value;
+    }
+    const base = champ.baseStats as unknown as Record<string, number>;
+    const colW = (cw - 40) / 3;
+    ['vigor', 'strength', 'agility', 'spirit', 'luck', 'investiture'].forEach((s, i) => {
+      const bonus = totals[s] - base[s];
+      const t = txt(`${STAT_LABELS[s]}: ${totals[s]}${bonus > 0 ? ` (+${bonus})` : ''}`, 8,
+        bonus > 0 ? UI_COLORS.success : UI_COLORS.textSecondary, L);
+      t.x = cx + 20 + (i % 3) * colW;
+      t.y = sY + 18 + Math.floor(i / 3) * scaled(14, L);
+      this.cc.addChild(t);
+    });
   }
 
-  private renderInventory(cx: number, cy: number, cw: number, ch: number): void {
+  // ─── Inventory Tab ──────────────────────────────────────────────
+
+  private renderInventory(cx: number, cy: number, cw: number, _ch: number): void {
     const champ = GameManager.shared.champion;
     if (!champ) return;
-
-    // Gold display
-    const goldLabel = new Text({
-      text: `Or: ${champ.gold}`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0xe6cc33, fontWeight: 'bold' }),
-    });
-    goldLabel.x = cx + 14;
-    goldLabel.y = cy;
-    this.contentContainer.addChild(goldLabel);
-
-    const itemCount = new Text({
-      text: `${champ.inventoryItemIDs.length} objets`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x888888 }),
-    });
-    itemCount.anchor.set(1, 0);
-    itemCount.x = cx + cw - 14;
-    itemCount.y = cy;
-    this.contentContainer.addChild(itemCount);
-
-    let y = cy + 16;
-
-    if (champ.inventoryItemIDs.length === 0) {
-      const empty = new Text({
-        text: 'Aucun objet dans l\'inventaire.\nTuez des ennemis et ouvrez des coffres\npour obtenir du butin!',
-        style: new TextStyle({
-          fontFamily: 'sans-serif', fontSize: fontSize(11, this.layout),
-          fill: UI_COLORS.textMuted, align: 'center', wordWrap: true, wordWrapWidth: cw - 40,
-        }),
-      });
-      empty.anchor.set(0.5, 0);
-      empty.x = cx + cw / 2;
-      empty.y = y + 20;
-      this.contentContainer.addChild(empty);
-      return;
-    }
-
-    const rowH = scaled(42, this.layout);
-    for (const itemID of [...champ.inventoryItemIDs]) {
-      if (y > cy + ch - 20) break;
-      const item = gameData.item(itemID);
-      if (!item) continue;
-
-      const rarityColor = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
-      const sellPrice = GameManager.getItemSellPrice(itemID);
-      const disenchantResult = GameManager.getDisenchantResult(itemID);
-
-      const row = new Graphics();
-      row.roundRect(cx + 10, y, cw - 20, rowH, 5)
-        .fill({ color: UI_COLORS.btnSecondary, alpha: 0.6 })
-        .stroke({ color: rarityColor, width: 0.8, alpha: 0.3 });
-      this.contentContainer.addChild(row);
-
-      // Item name
-      const nameLabel = new Text({
-        text: item.name,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: rarityColor, fontWeight: 'bold' }),
-      });
-      nameLabel.x = cx + 16;
-      nameLabel.y = y + 2;
-      this.contentContainer.addChild(nameLabel);
-
-      // Slot + stats
-      const slotName = SLOT_LABELS[item.slot] ?? item.slot;
-      const statsStr = item.statBonuses.map(b => `+${b.value} ${b.stat}`).join(' ');
-      const detailLabel = new Text({
-        text: `${slotName} | ${statsStr}`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: UI_COLORS.textMuted }),
-      });
-      detailLabel.x = cx + 16;
-      detailLabel.y = y + 14;
-      this.contentContainer.addChild(detailLabel);
-
-      // Action buttons row
-      const btnY = y + 25;
-      const btnH = 11;
-
-      // Equip button
-      const equipBtn = new Graphics();
-      equipBtn.roundRect(cx + 14, btnY, 50, btnH, 3)
-        .fill({ color: 0x224422, alpha: 0.8 })
-        .stroke({ color: 0x44aa44, width: 0.5, alpha: 0.5 });
-      equipBtn.eventMode = 'static';
-      equipBtn.cursor = 'pointer';
-      equipBtn.on('pointerdown', () => {
-        MusicManager.shared.playSFX('equip');
-        GameManager.shared.equipItem(itemID, item.slot);
-        this.refreshContent();
-      });
-      this.contentContainer.addChild(equipBtn);
-      const equipText = new Text({
-        text: '\u00C9quiper',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x66cc44 }),
-      });
-      equipText.x = cx + 20;
-      equipText.y = btnY + 1;
-      this.contentContainer.addChild(equipText);
-
-      // Sell button
-      const sellBtn = new Graphics();
-      sellBtn.roundRect(cx + 70, btnY, 60, btnH, 3)
-        .fill({ color: 0x332211, alpha: 0.8 })
-        .stroke({ color: 0xcc9933, width: 0.5, alpha: 0.5 });
-      sellBtn.eventMode = 'static';
-      sellBtn.cursor = 'pointer';
-      sellBtn.on('pointerdown', () => {
-        MusicManager.shared.playSFX('loot_common');
-        GameManager.shared.sellItem(itemID);
-        this.refreshContent();
-      });
-      this.contentContainer.addChild(sellBtn);
-      const sellText = new Text({
-        text: `Vendre ${sellPrice}g`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xe6cc33 }),
-      });
-      sellText.x = cx + 76;
-      sellText.y = btnY + 1;
-      this.contentContainer.addChild(sellText);
-
-      // Disenchant button
-      const disBtn = new Graphics();
-      disBtn.roundRect(cx + 136, btnY, 70, btnH, 3)
-        .fill({ color: 0x221133, alpha: 0.8 })
-        .stroke({ color: 0x9955ee, width: 0.5, alpha: 0.5 });
-      disBtn.eventMode = 'static';
-      disBtn.cursor = 'pointer';
-      disBtn.on('pointerdown', () => {
-        MusicManager.shared.playSFX('magic_aondor');
-        GameManager.shared.disenchantItem(itemID);
-        this.refreshContent();
-      });
-      this.contentContainer.addChild(disBtn);
-      const disText = new Text({
-        text: `D\u00E9chanter +${disenchantResult.amount}`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xbb88ee }),
-      });
-      disText.x = cx + 142;
-      disText.y = btnY + 1;
-      this.contentContainer.addChild(disText);
-
-      y += rowH + 3;
-    }
-  }
-
-  private renderSkills(cx: number, cy: number, cw: number, ch: number): void {
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
+    const L = this.layout;
     let y = cy;
 
-    // Header
-    const header = new Text({
-      text: `Points de comp\u00E9tence: ${champ.skillPoints}`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(11, this.layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
-    });
-    header.x = cx + 16;
-    header.y = y;
-    this.contentContainer.addChild(header);
-    y += scaled(22, this.layout);
+    // Gold
+    const gl = txt(`Or: ${champ.gold}`, 10, 0xe6cc33, L, true);
+    gl.x = cx + 14; gl.y = y; this.cc.addChild(gl);
+    const ic = txt(`${champ.inventoryItemIDs.length} objets`, 8, 0x888888, L);
+    ic.anchor.set(1, 0); ic.x = cx + cw - 14; ic.y = y; this.cc.addChild(ic);
+    y += scaled(18, L);
 
-    // Equipped skills
-    const equippedLabel = new Text({
-      text: 'Comp\u00E9tences \u00E9quip\u00E9es:',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: UI_COLORS.textSecondary }),
+    // Potion quick-slots
+    const potionIDs = champ.inventoryItemIDs.filter(id => {
+      const it = gameData.item(id); return it && (it.slot as string) === 'consumable';
     });
-    equippedLabel.x = cx + 16;
-    equippedLabel.y = y;
-    this.contentContainer.addChild(equippedLabel);
-    y += scaled(16, this.layout);
+    const pl = txt('Potions rapides', 9, UI_COLORS.textSecondary, L, true);
+    pl.x = cx + 14; pl.y = y; this.cc.addChild(pl);
+    y += scaled(14, L);
 
-    const slotH = scaled(30, this.layout);
+    const ps = scaled(32, L), pg = scaled(8, L);
+    for (let i = 0; i < 3; i++) {
+      const px = cx + 14 + i * (ps + pg);
+      const pid = potionIDs[i] ?? null;
+      const pot = pid ? gameData.item(pid) : null;
+      const rc = pot ? (RARITY_COLORS[pot.rarity] ?? 0xaaaaaa) : 0x333344;
+      const g = new Graphics();
+      g.roundRect(px, y, ps, ps, 4).fill({ color: 0x112211, alpha: 0.7 })
+        .stroke({ color: rc, width: pot ? 1.5 : 0.8, alpha: pot ? 0.8 : 0.3 });
+      if (pot) {
+        g.circle(px + ps / 2, y + ps / 2 - 3, ps / 4).fill({ color: rc, alpha: 0.5 });
+        g.eventMode = 'static'; g.cursor = 'pointer';
+        g.on('pointerdown', () => this.usePotion(pid!));
+      }
+      this.cc.addChild(g);
+      if (pot) {
+        const n = txt(pot.name.substring(0, 6), 6, rc, L);
+        n.anchor.set(0.5, 0); n.x = px + ps / 2; n.y = y + ps - scaled(8, L);
+        this.cc.addChild(n);
+      } else {
+        const e = txt('-', 10, 0x444444, L);
+        e.anchor.set(0.5); e.x = px + ps / 2; e.y = y + ps / 2; this.cc.addChild(e);
+      }
+    }
+    if (potionIDs.length > 0) {
+      const bx = cx + 14 + 3 * (ps + pg), bw = scaled(50, L);
+      const btn = new Graphics();
+      btn.roundRect(bx, y + ps / 4, bw, ps / 2, 4)
+        .fill({ color: 0x224422, alpha: 0.8 }).stroke({ color: 0x44aa44, width: 1 });
+      btn.eventMode = 'static'; btn.cursor = 'pointer';
+      btn.on('pointerdown', () => { if (potionIDs[0]) this.usePotion(potionIDs[0]); });
+      this.cc.addChild(btn);
+      const bt = txt('Utiliser', 8, 0x66cc44, L, true);
+      bt.anchor.set(0.5); bt.x = bx + bw / 2; bt.y = y + ps / 2;
+      this.cc.addChild(bt);
+    }
+    y += ps + scaled(12, L);
+
+    // Equipment grid
+    const eqItems = champ.inventoryItemIDs.filter(id => {
+      const it = gameData.item(id); return it && (it.slot as string) !== 'consumable';
+    });
+    if (eqItems.length === 0 && potionIDs.length === 0) {
+      const em = txt('Aucun objet. Tuez des ennemis pour du butin!', 11, UI_COLORS.textMuted, L);
+      em.anchor.set(0.5, 0); em.x = cx + cw / 2; em.y = y + 20; this.cc.addChild(em);
+      return;
+    }
+    const cols = 4, pad = 12, gap = scaled(6, L);
+    const cell = Math.floor((cw - pad * 2 - gap * (cols - 1)) / cols);
+    eqItems.forEach((itemID, idx) => {
+      const item = gameData.item(itemID); if (!item) return;
+      const col = idx % cols, row = Math.floor(idx / cols);
+      const cx2 = cx + pad + col * (cell + gap), cy2 = y + row * (cell + gap + scaled(10, L));
+      const rc = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
+      const g = new Graphics();
+      g.roundRect(cx2, cy2, cell, cell, 4).fill({ color: 0x111122, alpha: 0.75 })
+        .stroke({ color: rc, width: 1.2, alpha: 0.7 });
+      g.roundRect(cx2 + 3, cy2 + 3, cell - 6, cell - 6, 2).fill({ color: rc, alpha: 0.12 });
+      g.eventMode = 'static'; g.cursor = 'pointer';
+      g.on('pointerdown', () => this.showTooltip(item, item.slot, cx2 + cell / 2, cy2));
+      this.cc.addChild(g);
+      const ic = txt((SLOT_LABELS[item.slot] ?? 'X').charAt(0), 12, rc, L, true);
+      ic.anchor.set(0.5); ic.x = cx2 + cell / 2; ic.y = cy2 + cell / 2 - 4;
+      this.cc.addChild(ic);
+      const nm = txt(item.name.length > 8 ? item.name.substring(0, 7) + '…' : item.name, 6, UI_COLORS.textPrimary, L);
+      nm.anchor.set(0.5, 0); nm.x = cx2 + cell / 2; nm.y = cy2 + cell - scaled(10, L);
+      this.cc.addChild(nm);
+    });
+  }
+
+  // ─── Skills Tab ─────────────────────────────────────────────────
+
+  private renderSkills(cx: number, cy: number, cw: number, _ch: number): void {
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+    const L = this.layout;
+    let y = cy;
+    const h = txt(`Points de compétence: ${champ.skillPoints}`, 11, UI_COLORS.textGold, L, true);
+    h.x = cx + 16; h.y = y; this.cc.addChild(h);
+    y += scaled(22, L);
+    const el = txt('Compétences équipées:', 10, UI_COLORS.textSecondary, L);
+    el.x = cx + 16; el.y = y; this.cc.addChild(el);
+    y += scaled(16, L);
+    const sH = scaled(30, L);
     for (let i = 0; i < 4; i++) {
-      const skillID = champ.equippedSkillIDs[i];
-      const skill = skillID ? gameData.skill(skillID) : null;
-
-      const row = new Graphics();
-      row.roundRect(cx + 10, y, cw - 20, slotH, 5)
+      const sid = champ.equippedSkillIDs[i], skill = sid ? gameData.skill(sid) : null;
+      const r = new Graphics();
+      r.roundRect(cx + 10, y, cw - 20, sH, 5)
         .fill({ color: skill ? 0x1a2228 : UI_COLORS.btnSecondary, alpha: 0.6 })
         .stroke({ color: UI_COLORS.borderSubtle, width: 0.8, alpha: 0.4 });
-      this.contentContainer.addChild(row);
-
-      const slotNum = new Text({
-        text: `[${i + 1}]`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: 0x6688aa, fontWeight: 'bold' }),
-      });
-      slotNum.x = cx + 16;
-      slotNum.y = y + 4;
-      this.contentContainer.addChild(slotNum);
-
+      this.cc.addChild(r);
+      const sn = txt(`[${i + 1}]`, 10, 0x6688aa, L, true);
+      sn.x = cx + 16; sn.y = y + 4; this.cc.addChild(sn);
       if (skill) {
-        const nameL = new Text({
-          text: skill.name,
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: UI_COLORS.textPrimary }),
-        });
-        nameL.x = cx + 40;
-        nameL.y = y + 4;
-        this.contentContainer.addChild(nameL);
-
-        const detailL = new Text({
-          text: `DMG: ${skill.baseDamage} | INV: ${skill.investitureCost} | CD: ${skill.cooldown}s`,
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: UI_COLORS.textMuted }),
-        });
-        detailL.x = cx + 40;
-        detailL.y = y + 18;
-        this.contentContainer.addChild(detailL);
+        const n = txt(skill.name, 10, UI_COLORS.textPrimary, L);
+        n.x = cx + 40; n.y = y + 4; this.cc.addChild(n);
+        const d = txt(`DMG: ${skill.baseDamage} | INV: ${skill.investitureCost} | CD: ${skill.cooldown}s`, 8, UI_COLORS.textMuted, L);
+        d.x = cx + 40; d.y = y + 18; this.cc.addChild(d);
       } else {
-        const emptyL = new Text({
-          text: '- vide -',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: 0x555555 }),
-        });
-        emptyL.x = cx + 40;
-        emptyL.y = y + 8;
-        this.contentContainer.addChild(emptyL);
+        const e = txt('- vide -', 10, 0x555555, L);
+        e.x = cx + 40; e.y = y + 8; this.cc.addChild(e);
       }
-
-      y += slotH + 3;
+      y += sH + 3;
     }
-
-    // Available skills
     y += 8;
-    const availLabel = new Text({
-      text: 'Comp\u00E9tences disponibles:',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: UI_COLORS.textSecondary }),
-    });
-    availLabel.x = cx + 16;
-    availLabel.y = y;
-    this.contentContainer.addChild(availLabel);
-    y += scaled(16, this.layout);
-
-    for (const skillID of champ.unlockedSkillIDs) {
-      if (champ.equippedSkillIDs.includes(skillID)) continue;
-      const skill = gameData.skill(skillID);
-      if (!skill) continue;
-
-      const row = new Graphics();
-      row.roundRect(cx + 10, y, cw - 20, scaled(26, this.layout), 5)
+    const al = txt('Compétences disponibles:', 10, UI_COLORS.textSecondary, L);
+    al.x = cx + 16; al.y = y; this.cc.addChild(al);
+    y += scaled(16, L);
+    for (const sid of champ.unlockedSkillIDs) {
+      if (champ.equippedSkillIDs.includes(sid)) continue;
+      const skill = gameData.skill(sid); if (!skill) continue;
+      const r = new Graphics();
+      r.roundRect(cx + 10, y, cw - 20, scaled(26, L), 5)
         .fill({ color: UI_COLORS.btnSecondary, alpha: 0.5 })
         .stroke({ color: 0x332244, width: 0.8, alpha: 0.3 });
-      row.eventMode = 'static';
-      row.cursor = 'pointer';
-      row.on('pointerdown', () => {
-        const emptyIdx = champ.equippedSkillIDs.findIndex(id => !id);
-        if (emptyIdx >= 0) {
-          champ.equippedSkillIDs[emptyIdx] = skillID;
-        } else if (champ.equippedSkillIDs.length < 4) {
-          champ.equippedSkillIDs.push(skillID);
-        } else {
-          champ.equippedSkillIDs[3] = skillID;
-        }
+      r.eventMode = 'static'; r.cursor = 'pointer';
+      r.on('pointerdown', () => {
+        const ei = champ.equippedSkillIDs.findIndex(id => !id);
+        if (ei >= 0) champ.equippedSkillIDs[ei] = sid;
+        else if (champ.equippedSkillIDs.length < 4) champ.equippedSkillIDs.push(sid);
+        else champ.equippedSkillIDs[3] = sid;
         this.refreshContent();
       });
-      this.contentContainer.addChild(row);
-
-      const nameL = new Text({
-        text: `${skill.name} (Nv.${skill.requiredLevel})`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: UI_COLORS.textPrimary }),
-      });
-      nameL.x = cx + 16;
-      nameL.y = y + 5;
-      this.contentContainer.addChild(nameL);
-
-      const equipHint = new Text({
-        text: '\u00C9quiper',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: UI_COLORS.success, fontWeight: 'bold' }),
-      });
-      equipHint.anchor.set(1, 0);
-      equipHint.x = cx + cw - 16;
-      equipHint.y = y + 5;
-      this.contentContainer.addChild(equipHint);
-
-      y += scaled(28, this.layout);
+      this.cc.addChild(r);
+      const n = txt(`${skill.name} (Nv.${skill.requiredLevel})`, 9, UI_COLORS.textPrimary, L);
+      n.x = cx + 16; n.y = y + 5; this.cc.addChild(n);
+      const eq = txt('Équiper', 9, UI_COLORS.success, L, true);
+      eq.anchor.set(1, 0); eq.x = cx + cw - 16; eq.y = y + 5; this.cc.addChild(eq);
+      y += scaled(28, L);
     }
+  }
+
+  // ─── Item Tooltip ───────────────────────────────────────────────
+
+  private showTooltip(item: Item, slot: EquipmentSlot | string, ax: number, ay: number): void {
+    this.hideTooltip();
+    const champ = GameManager.shared.champion; if (!champ) return;
+    const L = this.layout;
+    const tw = scaled(200, L), th = scaled(180, L);
+    const tx = Math.max(10, Math.min(this.screenW - tw - 10, ax - tw / 2));
+    const ty = Math.max(10, Math.min(this.screenH - th - 10, ay - th - 10));
+    const rc = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
+    const c = new Container(); c.zIndex = 20000;
+
+    const bg = new Graphics();
+    bg.roundRect(tx, ty, tw, th, 8).fill({ color: 0x0a0815, alpha: 0.95 })
+      .stroke({ color: rc, width: 2, alpha: 0.8 });
+    bg.eventMode = 'static'; c.addChild(bg);
+
+    let ly = ty + 8;
+    const nm = txt(item.name, 11, rc, L, true); nm.x = tx + 10; nm.y = ly; c.addChild(nm);
+    ly += scaled(16, L);
+    const sl = txt(`Emplacement: ${SLOT_LABELS[item.slot] ?? item.slot}`, 8, UI_COLORS.textMuted, L);
+    sl.x = tx + 10; sl.y = ly; c.addChild(sl);
+    ly += scaled(14, L);
+
+    // Compare vs equipped
+    const eq = champ.equipment as unknown as Record<string, string | null>;
+    const eqID = eq[item.slot]; const eqItem = eqID ? gameData.item(eqID) : null;
+    for (const b of item.statBonuses) {
+      const eqB = eqItem?.statBonuses.find(e => e.stat === b.stat);
+      const diff = b.value - (eqB?.value ?? 0);
+      const ds = diff > 0 ? ` (+${diff})` : diff < 0 ? ` (${diff})` : '';
+      const dc = diff > 0 ? UI_COLORS.success : diff < 0 ? UI_COLORS.danger : UI_COLORS.textSecondary;
+      const t = txt(`+${b.value} ${STAT_LABELS[b.stat] ?? b.stat}${ds}`, 8, dc, L);
+      t.x = tx + 10; t.y = ly; c.addChild(t); ly += scaled(12, L);
+    }
+    if (eqItem) {
+      for (const eb of eqItem.statBonuses) {
+        if (!item.statBonuses.find(b => b.stat === eb.stat)) {
+          const t = txt(`0 ${STAT_LABELS[eb.stat] ?? eb.stat} (-${eb.value})`, 8, UI_COLORS.danger, L);
+          t.x = tx + 10; t.y = ly; c.addChild(t); ly += scaled(12, L);
+        }
+      }
+    }
+    ly += scaled(6, L);
+
+    // Action buttons
+    const bw = scaled(55, L), bh = scaled(18, L), bg2 = scaled(6, L);
+    const inInv = champ.inventoryItemIDs.includes(item.id);
+    if (inInv) {
+      this.addTooltipBtn(c, tx + 8, ly, bw, bh, 0x224422, 0x44aa44, 'Équiper', 8, 0x66cc44, L, () => {
+        MusicManager.shared.playSFX('equip');
+        GameManager.shared.equipItem(item.id, item.slot);
+        this.hideTooltip(); this.refreshContent();
+      });
+      const sp = GameManager.getItemSellPrice(item.id);
+      this.addTooltipBtn(c, tx + 8 + bw + bg2, ly, bw, bh, 0x332211, 0xcc9933, `Vendre ${sp}g`, 7, 0xe6cc33, L, () => {
+        MusicManager.shared.playSFX('loot_common');
+        GameManager.shared.sellItem(item.id);
+        this.hideTooltip(); this.refreshContent();
+      });
+      const dr = GameManager.getDisenchantResult(item.id);
+      this.addTooltipBtn(c, tx + 8 + 2 * (bw + bg2), ly, bw, bh, 0x221133, 0x9955ee, `Déch. +${dr.amount}`, 6, 0xbb88ee, L, () => {
+        MusicManager.shared.playSFX('magic_aondor');
+        GameManager.shared.disenchantItem(item.id);
+        this.hideTooltip(); this.refreshContent();
+      });
+    } else {
+      this.addTooltipBtn(c, tx + 8, ly, bw * 1.5, bh, 0x442222, 0xcc4444, 'Déséquiper', 8, 0xcc6644, L, () => {
+        GameManager.shared.unequipItem(slot);
+        this.hideTooltip(); this.refreshContent();
+      });
+    }
+    this.tooltip = c; this.addChild(c);
+  }
+
+  private addTooltipBtn(c: Container, x: number, y: number, w: number, h: number,
+    bg: number, border: number, label: string, fs: number, fc: number, L: LayoutInfo, cb: () => void): void {
+    const g = new Graphics();
+    g.roundRect(x, y, w, h, 4).fill({ color: bg, alpha: 0.9 }).stroke({ color: border, width: 1 });
+    g.eventMode = 'static'; g.cursor = 'pointer'; g.on('pointerdown', cb);
+    c.addChild(g);
+    const t = txt(label, fs, fc, L, true);
+    t.anchor.set(0.5); t.x = x + w / 2; t.y = y + h / 2; c.addChild(t);
+  }
+
+  private hideTooltip(): void {
+    if (this.tooltip) {
+      this.removeChild(this.tooltip); this.tooltip.destroy({ children: true }); this.tooltip = null;
+    }
+  }
+
+  private usePotion(itemID: string): void {
+    const champ = GameManager.shared.champion; if (!champ) return;
+    const item = gameData.item(itemID); if (!item) return;
+    const idx = champ.inventoryItemIDs.indexOf(itemID); if (idx < 0) return;
+    for (const b of item.statBonuses) {
+      if (b.stat === 'hp' || b.stat === 'vigor')
+        champ.currentHP = Math.min(champ.currentHP + b.value, GameManager.shared.maxHP);
+      else if (b.stat === 'investiture')
+        champ.currentInvestiture = Math.min(champ.currentInvestiture + b.value, GameManager.shared.maxInvestiture);
+    }
+    if (item.statBonuses.length === 0)
+      champ.currentHP = Math.min(champ.currentHP + 30, GameManager.shared.maxHP);
+    champ.inventoryItemIDs.splice(idx, 1);
+    MusicManager.shared.playSFX('loot_common');
+    this.refreshContent();
   }
 }

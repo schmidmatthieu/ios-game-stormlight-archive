@@ -57,6 +57,8 @@ import { WorldMapScene } from './WorldMapScene';
 import { NPCScheduleManager } from '../game/NPCScheduleSystem';
 import { PotionManager } from '../game/PotionSystem';
 import { createPotionHotbar } from '../ui/PotionHotbar';
+import { showBuildingInterior } from './BuildingInteriorScene';
+import { showProfessionPanel } from '../ui/ProfessionPanel';
 import { moveNPCTo, teleportNPC, updateNPCAnimation, showActivityIndicator, setNPCSleeping, clearNPCAnimations } from '../rendering/NPCAnimator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import { renderEnhancedTilemap } from '../rendering/TileRenderer';
@@ -483,6 +485,7 @@ export class ZoneScene extends Container implements GameScene {
       toggleTalentTree: () => this.toggleTalentTree(),
       toggleCompanion: () => this.toggleCompanion(),
       toggleQuestJournal: () => this.toggleQuestJournal(),
+      toggleProfessions: () => this.toggleProfessions(),
     });
 
     // Initialize companion
@@ -1186,85 +1189,33 @@ export class ZoneScene extends Container implements GameScene {
     if (this.dialoguePanel) return;
     this.isPaused = true;
 
-    const champ = GameManager.shared.champion;
-    const goldReward = 5 + Math.floor(Math.random() * 15);
-    const xpReward = 10 + Math.floor(Math.random() * 20);
-
-    const repGain = 3;
-    if (champ) {
-      champ.gold += goldReward;
-      GameManager.shared.grantXP(xpReward);
-      const repResult = addReputation(this.zone.worldID, repGain);
-      if (repResult.rankUp) {
-        showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, repResult.rankName, this.zone.worldID);
-      }
-      if (this.repBadge) this.repBadge.refresh();
-    }
-
-    const panel = new Container();
-    panel.zIndex = 10000;
-
     const w = this.app.screen.width;
     const h = this.app.screen.height;
 
-    const overlay = new Graphics();
-    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.5 });
-    overlay.eventMode = 'static';
-    panel.addChild(overlay);
+    // Use the new Baldur's Gate style interior system
+    this.dialoguePanel = showBuildingInterior(
+      this.uiContainer, w, h,
+      building.name, this.zone.worldID,
+      (rewards) => {
+        const champ = GameManager.shared.champion;
+        if (champ) {
+          champ.gold += rewards.gold;
+          GameManager.shared.grantXP(rewards.xp);
+          const repResult = addReputation(this.zone.worldID, 3);
+          if (repResult.rankUp) {
+            showRankUpEffect(this.uiContainer, w, h, repResult.rankName, this.zone.worldID);
+          }
+          if (this.repBadge) this.repBadge.refresh();
+          if (rewards.xp > 0 || rewards.gold > 0) {
+            this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 30,
+              `+${rewards.xp}XP +${rewards.gold}or`, 0x66cc44);
+          }
+        }
+        this.dialoguePanel = null;
+        this.isPaused = false;
+      },
+    );
 
-    const panelH = 120;
-    const panelY = h - panelH - 20;
-    const bg = new Graphics();
-    bg.roundRect(20, panelY, w - 40, panelH, 12)
-      .fill({ color: 0x0a0815, alpha: 0.92 })
-      .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
-    bg.eventMode = 'static';
-    panel.addChild(bg);
-
-    const title = new Text({
-      text: building.name,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 13, fill: 0xe6cc66, fontWeight: 'bold' }),
-    });
-    title.x = 36;
-    title.y = panelY + 10;
-    panel.addChild(title);
-
-    const desc = new Text({
-      text: `Vous explorez ${building.name}.\nVous trouvez quelques ressources utiles.`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0xccccbb, wordWrap: true, wordWrapWidth: w - 80 }),
-    });
-    desc.x = 36;
-    desc.y = panelY + 30;
-    panel.addChild(desc);
-
-    const reward = new Text({
-      text: `+${xpReward} XP  +${goldReward} or  +${repGain} rep`,
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
-    });
-    reward.anchor.set(1, 0);
-    reward.x = w - 36;
-    reward.y = panelY + 10;
-    panel.addChild(reward);
-
-    const closeHint = new Text({
-      text: 'Toucher pour fermer',
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x888888 }),
-    });
-    closeHint.anchor.set(0.5);
-    closeHint.x = w / 2;
-    closeHint.y = panelY + panelH - 14;
-    panel.addChild(closeHint);
-
-    const close = () => {
-      panel.destroy({ children: true });
-      this.dialoguePanel = null;
-      this.isPaused = false;
-    };
-    overlay.on('pointerdown', close);
-    bg.on('pointerdown', close);
-
-    this.dialoguePanel = panel;
-    this.uiContainer.addChild(panel);
   }
 
   private interactWithSecret(secret: SecretArea): void {
@@ -1402,6 +1353,15 @@ export class ZoneScene extends Container implements GameScene {
     this.uiContainer.addChild(this.dialoguePanel);
   }
 
+
+  private toggleProfessions(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showProfessionPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
 
   private toggleCrafting(): void {
     if (this.dialoguePanel) return;

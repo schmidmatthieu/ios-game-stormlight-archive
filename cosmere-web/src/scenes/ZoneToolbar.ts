@@ -15,6 +15,7 @@ export interface ToolbarCallbacks {
   toggleTalentTree: () => void;
   toggleCompanion: () => void;
   toggleQuestJournal: () => void;
+  toggleProfessions?: () => void;
 }
 
 function createToolbarButton(
@@ -129,8 +130,20 @@ export function createZoneToolbar(
       g.rect(w * 0.28, h * 0.22, w * 0.06, h * 0.56).fill({ color: 0x445533, alpha: 0.8 });
     }, cb.toggleBestiary);
 
+  // Professions
+  if (cb.toggleProfessions) {
+    createToolbarButton(uiContainer, cx + scaled(200, layout), layout,
+      (g, w, h) => {
+        // Pickaxe icon for professions
+        g.poly([{ x: w * 0.35, y: h * 0.65 }, { x: w * 0.6, y: h * 0.3 }])
+          .stroke({ color: 0xaa8855, width: 2, alpha: 0.8 });
+        g.poly([{ x: w * 0.55, y: h * 0.25 }, { x: w * 0.7, y: h * 0.2 }, { x: w * 0.65, y: h * 0.4 }])
+          .fill({ color: 0x888899, alpha: 0.7 });
+      }, cb.toggleProfessions);
+  }
+
   // Achievements (rightmost)
-  createToolbarButton(uiContainer, cx + scaled(200, layout), layout,
+  createToolbarButton(uiContainer, cx + scaled(244, layout), layout,
     (g, w, h) => {
       g.moveTo(w * 0.36, h * 0.25).lineTo(w * 0.64, h * 0.25).lineTo(w * 0.6, h * 0.55).lineTo(w * 0.4, h * 0.55).closePath().fill({ color: UI_COLORS.textGold, alpha: 0.7 });
       g.rect(w * 0.44, h * 0.55, w * 0.12, h * 0.12).fill({ color: 0xccaa44, alpha: 0.7 });
