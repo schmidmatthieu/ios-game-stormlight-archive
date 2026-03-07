@@ -118,6 +118,16 @@ final class EntityRenderer {
         nameLabel.zPosition = 10
         container.addChild(nameLabel)
 
+        // Level indicator
+        let levelColor = levelIndicatorColor(enemyLevel: enemy.level)
+        let levelLabel = SKLabelNode(fontNamed: "Helvetica")
+        levelLabel.text = "Nv.\(enemy.level)"
+        levelLabel.fontSize = 6
+        levelLabel.fontColor = levelColor
+        levelLabel.position = CGPoint(x: 0, y: bodyH + headR * 2 + (enemy.tier == .boss ? 12 : 4) + 14)
+        levelLabel.zPosition = 10
+        container.addChild(levelLabel)
+
         // Idle sway animation
         let sway = SKAction.repeatForever(SKAction.sequence([
             SKAction.moveBy(x: 1, y: 0, duration: 1.2),
@@ -331,6 +341,20 @@ final class EntityRenderer {
         case .soldier: return SKColor(red: 0.7, green: 0.2, blue: 0.2, alpha: 1)
         case .elite:   return SKColor(red: 0.6, green: 0.1, blue: 0.45, alpha: 1)
         case .boss:    return SKColor(red: 0.8, green: 0.1, blue: 0.1, alpha: 1)
+        }
+    }
+
+    private static func levelIndicatorColor(enemyLevel: Int) -> SKColor {
+        let playerLevel = GameManager.shared.champion?.level ?? 1
+        let diff = enemyLevel - playerLevel
+        if diff >= 3 {
+            return SKColor(red: 1, green: 0.2, blue: 0.2, alpha: 1)      // Red = dangerous
+        } else if diff >= 1 {
+            return SKColor(red: 1, green: 0.6, blue: 0.2, alpha: 1)      // Orange = challenging
+        } else if diff >= -2 {
+            return SKColor(red: 1, green: 1, blue: 0.4, alpha: 1)        // Yellow = fair
+        } else {
+            return SKColor(red: 0.4, green: 0.9, blue: 0.4, alpha: 1)    // Green = easy
         }
     }
 

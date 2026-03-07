@@ -19,6 +19,14 @@ final class EnemyAISystem {
 
     // MARK: - Enemy Instance (runtime)
 
+    struct StatusEffect {
+        let type: StatusEffectType
+        var remaining: TimeInterval
+        let tickInterval: TimeInterval
+        var lastTickTime: TimeInterval
+        let damagePerTick: Int
+    }
+
     struct EnemyInstance {
         let enemyData: Enemy
         let spawnData: EnemySpawn
@@ -31,9 +39,13 @@ final class EnemyAISystem {
         var respawnTimer: TimeInterval?
         var abilityCooldowns: [TimeInterval]
         var aggroTarget: CGPoint?
+        var activeEffects: [StatusEffect] = []
 
         var isAlive: Bool { currentHP > 0 }
         var healthPercent: Double { Double(currentHP) / Double(enemyData.maxHP) }
+        var isSlowed: Bool { activeEffects.contains { $0.type == .slowed } }
+        var isPoisoned: Bool { activeEffects.contains { $0.type == .poisoned } }
+        var isBurning: Bool { activeEffects.contains { $0.type == .burning } }
     }
 
     // MARK: - Configuration
@@ -97,10 +109,136 @@ final class EnemyAISystem {
             break
         }
 
+        // Process active status effects
+        updateStatusEffects(enemy: &enemy, deltaTime: deltaTime)
+
         // Check retreat threshold (sauf boss et berserk)
         if enemy.enemyData.tier != .boss && enemy.enemyData.behavior != .berserk {
             if enemy.healthPercent < retreatHealthThreshold {
                 enemy.state = .retreating
+            }
+        }
+    }
+
+    // MARK: - Status Effects
+
+    private func updateStatusEffects(enemy: inout EnemyInstance, deltaTime: TimeInterval) {
+        var i = 0
+        while i < enemy.activeEffects.count {
+            enemy.activeEffects[i].remaining -= deltaTime
+
+            // Tick damage (burning, poisoned)
+            if enemy.activeEffects[i].damagePerTick > 0 {
+                enemy.activeEffects[i].lastTickTime += deltaTime
+                if enemy.activeEffects[i].lastTickTime >= enemy.activeEffects[i].tickInterval {
+                    enemy.activeEffects[i].lastTickTime = 0
+                    enemy.currentHP -= enemy.activeEffects[i].damagePerTick
+
+                    // Visual tick feedback
+                    if let node = enemy.sprite {
+                        let tickColor: SKColor = enemy.activeEffects[i].type == .burning
+                            ? SKColor(red: 1, green: 0.4, blue: 0.1, alpha: 1)
+                            : SKColor(red: 0.3, green: 0.8, blue: 0.2, alpha: 1)
+                        let tickLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+                        tickLabel.text = "\(enemy.activeEffects[i].damagePerTick)"
+                        tickLabel.fontSize = 10
+                        tickLabel.fontColor = tickColor
+                        tickLabel.position = CGPoint(x: node.position.x + CGFloat.random(in: -8...8),
+                                                      y: node.position.y + 20)
+                        tickLabel.zPosition = 500
+                        node.parent?.addChild(tickLabel)
+                        tickLabel.run(SKAction.sequence([
+                            SKAction.group([
+                                SKAction.moveBy(x: 0, y: 20, duration: 0.4),
+                                SKAction.fadeOut(withDuration: 0.4)
+                            ]),
+                            SKAction.removeFromParent()
+                        ]))
+                    }
+
+                    if enemy.currentHP <= 0 {
+                        kill(enemy: &enemy)
+                        return
+                    }
+                }
+            }
+
+            // Remove expired effects
+            if enemy.activeEffects[i].remaining <= 0 {
+                // Remove visual indicator
+                if let node = enemy.sprite {
+                    node.childNode(withName: "fx_\(enemy.activeEffects[i].type.rawValue)")?.removeFromParent()
+                }
+                enemy.activeEffects.remove(at: i)
+            } else {
+                i += 1
+            }
+        }
+    }
+
+    func applyStatusEffect(enemy: inout EnemyInstance, type: StatusEffectType, duration: TimeInterval) {
+        // Don't stack same effect, refresh duration
+        if let idx = enemy.activeEffects.firstIndex(where: { $0.type == type }) {
+            enemy.activeEffects[idx].remaining = duration
+            return
+        }
+
+        let tickDamage: Int
+        let tickInterval: TimeInterval
+        switch type {
+        case .burning:
+            tickDamage = max(1, enemy.enemyData.maxHP / 20)  // 5% maxHP per tick
+            tickInterval = 1.0
+        case .poisoned:
+            tickDamage = max(1, enemy.enemyData.maxHP / 30)  // ~3.3% maxHP per tick
+            tickInterval = 1.5
+        default:
+            tickDamage = 0
+            tickInterval = 0
+        }
+
+        let effect = StatusEffect(type: type, remaining: duration, tickInterval: tickInterval,
+                                   lastTickTime: 0, damagePerTick: tickDamage)
+        enemy.activeEffects.append(effect)
+
+        // Visual indicator on sprite
+        if let sprite = enemy.sprite {
+            let fxName = "fx_\(type.rawValue)"
+            sprite.childNode(withName: fxName)?.removeFromParent()
+
+            switch type {
+            case .burning:
+                let flame = SKShapeNode(circleOfRadius: 8)
+                flame.fillColor = SKColor(red: 1, green: 0.3, blue: 0, alpha: 0.3)
+                flame.strokeColor = SKColor(red: 1, green: 0.5, blue: 0, alpha: 0.6)
+                flame.lineWidth = 1
+                flame.position = CGPoint(x: 0, y: 8)
+                flame.zPosition = 50
+                flame.name = fxName
+                sprite.addChild(flame)
+                flame.run(SKAction.repeatForever(SKAction.sequence([
+                    SKAction.scale(to: 1.3, duration: 0.3),
+                    SKAction.scale(to: 0.8, duration: 0.3)
+                ])))
+            case .poisoned:
+                let poison = SKShapeNode(circleOfRadius: 10)
+                poison.fillColor = SKColor(red: 0.2, green: 0.7, blue: 0.1, alpha: 0.2)
+                poison.strokeColor = SKColor(red: 0.3, green: 0.9, blue: 0.2, alpha: 0.5)
+                poison.lineWidth = 1
+                poison.position = CGPoint(x: 0, y: 8)
+                poison.zPosition = 50
+                poison.name = fxName
+                sprite.addChild(poison)
+            case .slowed:
+                let slow = SKShapeNode(circleOfRadius: 10)
+                slow.fillColor = SKColor(red: 0.3, green: 0.5, blue: 1, alpha: 0.2)
+                slow.strokeColor = SKColor(red: 0.4, green: 0.6, blue: 1, alpha: 0.5)
+                slow.lineWidth = 1
+                slow.position = CGPoint(x: 0, y: 8)
+                slow.zPosition = 50
+                slow.name = fxName
+                sprite.addChild(slow)
+            default: break
             }
         }
     }
@@ -172,8 +310,9 @@ final class EnemyAISystem {
             default:        speedMultiplier = 1.0
             }
 
-            enemy.position.x += cos(angle) * speed * speedMultiplier
-            enemy.position.y += sin(angle) * speed * speedMultiplier
+            let slowFactor: CGFloat = enemy.isSlowed ? 0.4 : 1.0
+            enemy.position.x += cos(angle) * speed * speedMultiplier * slowFactor
+            enemy.position.y += sin(angle) * speed * speedMultiplier * slowFactor
             enemy.sprite?.position = enemy.position
         }
     }

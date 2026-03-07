@@ -36,11 +36,21 @@ final class CombatSystem {
         let defense = defender.defense
         let mitigated = max(1, attackPower - defense / 2)
 
+        // Apply talent bonuses
+        let talents = GameManager.shared.talentTree
+        let atkBonus = talents.totalBonus(for: .attackDamagePercent)
+        let magicBonus = talents.totalBonus(for: .magicDamagePercent)
+        let damageBonus = skill != nil ? magicBonus : atkBonus
+        let boostedDamage = max(1, Int(Double(mitigated) * (1.0 + damageBonus)))
+
         // Critique
         let critRoll = Double.random(in: 0...100)
-        let critChance = Double(attacker.luck) * 1.5
+        let critBonusChance = talents.totalBonus(for: .critChancePercent) * 100
+        let critChance = Double(attacker.luck) * 1.5 + critBonusChance
         let isCrit = critRoll <= critChance
-        let finalDamage = isCrit ? mitigated * 2 : mitigated
+        let critDmgBonus = talents.totalBonus(for: .critDamagePercent)
+        let critMultiplier = 2.0 + critDmgBonus
+        let finalDamage = isCrit ? Int(Double(boostedDamage) * critMultiplier) : boostedDamage
 
         return DamageResult(
             rawDamage: attackPower,
@@ -56,7 +66,11 @@ final class CombatSystem {
     ) -> Int {
         let rawDamage = enemy.damage
         let defense = defenderStats.vigor / 2 + defenderStats.agility / 4
-        return max(1, rawDamage - defense)
+        let baseDmg = max(1, rawDamage - defense)
+
+        // Apply talent damage reduction
+        let dmgReduction = GameManager.shared.talentTree.totalBonus(for: .damageReductionPercent)
+        return max(1, Int(Double(baseDmg) * (1.0 - min(0.75, dmgReduction))))
     }
 
     // MARK: - Vérification portée

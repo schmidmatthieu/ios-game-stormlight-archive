@@ -570,6 +570,7 @@ class ZoneScene: SKScene {
             guard let self else { return }
             self.lastDamageTakenTime = self.lastUpdateTime
             self.showDamageIndicator(fromEnemy: enemyPosition)
+            self.playPlayerHitFeedback(fromEnemy: enemyPosition)
         }
 
         companionSystem.onEnemyHit = { [weak self] enemyID, damage, position in
@@ -723,7 +724,22 @@ class ZoneScene: SKScene {
         for loot in zone.lootPoints {
             let dist = abs(loot.position.col - gridPos.col) + abs(loot.position.row - gridPos.row)
             if dist <= 2 {
-                showAbilityEffect(description: "Butin recupere !")
+                let item = GameManager.shared.lootSystem.generateRandomItem(
+                    rarity: .common, level: champion.level
+                )
+                GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(item.id) }
+
+                showAbilityEffect(description: "Obtenu: \(item.name)")
+
+                // Gold bonus from loot point
+                let bonusGold = Int.random(in: 5...15) * champion.level
+                GameManager.shared.mutateChampion { $0.gold += bonusGold }
+
+                if let playerNode {
+                    showFloatingDamage(bonusGold,
+                        at: CGPoint(x: playerNode.position.x + 10, y: playerNode.position.y + 20),
+                        color: SKColor(red: 1, green: 0.85, blue: 0.3, alpha: 1))
+                }
                 break
             }
         }
@@ -1002,6 +1018,13 @@ class ZoneScene: SKScene {
         }
 
         showAbilityEffect(description: ultText)
+
+        // Ultimate AoE damage — massive hit on all enemies in range
+        let ultDamage = champion.baseStats.strength * 3 + champion.baseStats.spirit * 2
+        let ultRange: CGFloat = 200
+        applyAbilityDamage(ultDamage, range: ultRange, statusEffect: .stunned,
+                           statusDuration: 1.5, effectColor: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
+                           isAoE: true)
     }
 
     // MARK: - Damage Label Pool
@@ -1142,9 +1165,16 @@ class ZoneScene: SKScene {
             EntityRenderer.updateEnemyHP(node: node, ratio: ratio)
         }
 
-        // Apply status effect (stun)
-        if statusEffect == .stunned, statusDuration > 0 {
-            enemyAI.stun(enemy: &enemyInstances[idx], duration: statusDuration)
+        // Apply status effects
+        if let effect = statusEffect, statusDuration > 0 {
+            switch effect {
+            case .stunned:
+                enemyAI.stun(enemy: &enemyInstances[idx], duration: statusDuration)
+            case .burning, .poisoned, .slowed:
+                enemyAI.applyStatusEffect(enemy: &enemyInstances[idx], type: effect, duration: statusDuration)
+            default:
+                break
+            }
         }
 
         alertNearbyEnemies(aroundIndex: idx)
@@ -1250,6 +1280,27 @@ class ZoneScene: SKScene {
             SKAction.fadeOut(withDuration: 0.4),
             SKAction.removeFromParent()
         ]))
+    }
+
+    private func playPlayerHitFeedback(fromEnemy enemyPosition: CGPoint) {
+        guard let playerNode else { return }
+
+        // Red flash on player
+        let flash = SKAction.sequence([
+            SKAction.colorize(with: .red, colorBlendFactor: 0.8, duration: 0.05),
+            SKAction.colorize(withColorBlendFactor: 0.0, duration: 0.15)
+        ])
+        playerNode.run(flash)
+
+        // Knockback away from enemy
+        let angle = atan2(playerNode.position.y - enemyPosition.y,
+                          playerNode.position.x - enemyPosition.x)
+        let knockbackDist: CGFloat = 8
+        let knockback = SKAction.sequence([
+            SKAction.moveBy(x: cos(angle) * knockbackDist, y: sin(angle) * knockbackDist, duration: 0.05),
+            SKAction.moveBy(x: -cos(angle) * knockbackDist * 0.5, y: -sin(angle) * knockbackDist * 0.5, duration: 0.1)
+        ])
+        playerNode.run(knockback)
     }
 
     // MARK: - Isometric Helpers
