@@ -26,6 +26,7 @@ import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer'
 import { createEnemyAnimState, updateEnemyIdle, triggerEnemyHurt, triggerEnemyDeath, drawBossAura, drawAlertIndicator, setEnemyAlert } from '../rendering/EnemyAnimations';
 import type { EnemyAnimState } from '../rendering/EnemyAnimations';
 import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle } from '../rendering/SpellEffects';
+import { createDirectionalSlash, createCritFlash, createKillBurst, showKillStreakBanner, triggerHitStop, updateHitStop, createGroundCrack } from '../rendering/CombatFeedback';
 import { FloatingDamageManager } from '../rendering/FloatingDamage';
 import type { DamageStyle } from '../rendering/FloatingDamage';
 import { MusicManager } from '../game/MusicSystem';
@@ -304,6 +305,10 @@ export class ZoneScene extends Container implements GameScene {
   private weatherManager!: WeatherManager;
   private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
   private achievementToast: { update: (dt: number) => void } | null = null;
+
+  // Kill streak tracking
+  private killStreak = 0;
+  private killStreakTimer = 0;
 
   // Companion
   private companionSprite: Graphics | null = null;
@@ -1886,6 +1891,13 @@ export class ZoneScene extends Container implements GameScene {
   update(dt: number): void {
     if (this.isPaused || this.isTransitioning) return;
     const delta = dt / 60;
+    // Hit stop: skip frame if active
+    if (updateHitStop(delta)) return;
+    // Kill streak decay
+    if (this.killStreakTimer > 0) {
+      this.killStreakTimer -= delta;
+      if (this.killStreakTimer <= 0) this.killStreak = 0;
+    }
     this.handleMovement(delta);
     this.updateEnemyAI(delta);
     this.updateCombat(delta);
@@ -2362,6 +2374,18 @@ export class ZoneScene extends Container implements GameScene {
       this.worldContainer, closest.position.x, closest.position.y,
       champ.championClass, isCrit, this.particles as any,
     );
+
+    // Directional slash mark
+    const hitAngle = Math.atan2(closest.position.y - this.playerScreenPos.y, closest.position.x - this.playerScreenPos.x);
+    createDirectionalSlash(this.worldContainer, closest.position.x, closest.position.y, hitAngle, isCrit, isCrit ? 0xffdd44 : 0xcccccc);
+
+    // Crit flash and hit stop
+    if (isCrit) {
+      createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
+      triggerHitStop(0.05);
+      this.shakeCamera(4, 0.2);
+    }
+
     const innerSprite = closest.sprite.children[1] as Graphics;
     if (innerSprite) {
       innerSprite.tint = 0xff4444;
@@ -2469,6 +2493,22 @@ export class ZoneScene extends Container implements GameScene {
     if (enemy.enemyAnim) triggerEnemyDeath(enemy.enemyAnim);
     if (enemy.bossAuraGfx) { enemy.sprite.removeChild(enemy.bossAuraGfx); enemy.bossAuraGfx.destroy(); enemy.bossAuraGfx = undefined; }
     MusicManager.shared.playSFX('death');
+
+    // Kill burst visual
+    const worldColor = WORLD_ENEMY_COLORS[enemy.data.worldID]?.[enemy.data.tier] ?? 0x888888;
+    createKillBurst(this.worldContainer, enemy.position.x, enemy.position.y, enemy.data.tier, worldColor);
+
+    // Ground crack for elite/boss kills
+    if (enemy.data.tier === 'elite' || enemy.data.tier === 'boss') {
+      createGroundCrack(this.worldContainer, enemy.position.x, enemy.position.y, enemy.data.tier === 'boss' ? 30 : 18);
+    }
+
+    // Kill streak tracking
+    this.killStreak++;
+    this.killStreakTimer = 5;
+    if ([3, 5, 7, 10, 15].includes(this.killStreak)) {
+      showKillStreakBanner(this.uiContainer, this.app.screen.width, this.app.screen.height, this.killStreak);
+    }
 
     // Track in bestiary & achievements
     BestiaryManager.shared.registerKill(enemy.data);
