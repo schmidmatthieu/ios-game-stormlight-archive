@@ -25,6 +25,7 @@ class ZoneScene: SKScene {
     private var dialogueBox: DialogueBoxNode?
     private var pauseMenu: PauseMenuNode?
     private var inventoryNode: InventoryNode?
+    private var statsMenu: StatsMenuNode?
 
     // Enemy instances (runtime)
     private var enemyInstances: [EnemyAISystem.EnemyInstance] = []
@@ -301,6 +302,7 @@ class ZoneScene: SKScene {
         mpBg.strokeColor = .cyan
         mpBg.lineWidth = 1
         mpBg.position = CGPoint(x: -size.width / 2 + 80, y: size.height / 2 - 52)
+        mpBg.name = "mpBarBg"
         mpBg.zPosition = 2000
         cameraNode.addChild(mpBg)
 
@@ -1107,6 +1109,11 @@ class ZoneScene: SKScene {
                 toggleInventory()
                 return
             }
+            if node.name == "hpBarBg" || node.parent?.name == "hpBarBg"
+                || node.name == "mpBarBg" || node.parent?.name == "mpBarBg" {
+                toggleStatsMenu()
+                return
+            }
         }
     }
 
@@ -1151,6 +1158,27 @@ class ZoneScene: SKScene {
         cameraNode.addChild(inv)
         inv.show()
         inventoryNode = inv
+    }
+
+    private func toggleStatsMenu() {
+        if let existing = statsMenu {
+            existing.hide()
+            existing.onClose = { [weak self] in
+                existing.removeFromParent()
+                self?.statsMenu = nil
+            }
+            return
+        }
+
+        let menu = StatsMenuNode(screenSize: size)
+        menu.zPosition = 6001
+        menu.onClose = { [weak self] in
+            menu.removeFromParent()
+            self?.statsMenu = nil
+        }
+        cameraNode.addChild(menu)
+        menu.show()
+        statsMenu = menu
     }
 
     // MARK: - Update Loop
