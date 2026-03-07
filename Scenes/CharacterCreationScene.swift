@@ -9,6 +9,7 @@ class CharacterCreationScene: SKScene {
     private var selectedOrder: RadiantOrder? = nil
     private var playerName: String = "Salteur"
 
+    private var isTransitioning = false
     private var classButtons: [SKNode] = []
     private var descriptionLabel: SKLabelNode!
     private var previewSprite: SKSpriteNode!
@@ -313,7 +314,11 @@ class CharacterCreationScene: SKScene {
 
             // Start game
             if name == "startGame" {
-                startGame()
+                if SaveManager.shared.hasSave() {
+                    confirmNewGame()
+                } else {
+                    startGame()
+                }
                 return
             }
 
@@ -350,9 +355,33 @@ class CharacterCreationScene: SKScene {
         viewController.present(alert, animated: true)
     }
 
+    // MARK: - Confirmation
+
+    private func confirmNewGame() {
+        guard let viewController = view?.window?.rootViewController else {
+            startGame()
+            return
+        }
+
+        let alert = UIAlertController(
+            title: "Nouvelle Partie",
+            message: "Une sauvegarde existe déjà. Commencer une nouvelle partie écrasera la sauvegarde actuelle.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Commencer", style: .destructive) { [weak self] _ in
+            SaveManager.shared.deleteSave()
+            self?.startGame()
+        })
+        alert.addAction(UIAlertAction(title: "Annuler", style: .cancel))
+        viewController.present(alert, animated: true)
+    }
+
     // MARK: - Start Game
 
     private func startGame() {
+        guard !isTransitioning else { return }
+        isTransitioning = true
+
         GameManager.shared.startNewGame(name: playerName, championClass: selectedClass)
 
         // Set radiant order if applicable

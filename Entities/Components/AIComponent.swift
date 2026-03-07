@@ -135,9 +135,9 @@ class AIComponent: GKComponent {
     // MARK: - Patrol
 
     func nextPatrolTarget() -> GridPosition? {
-        guard !patrolPath.isEmpty, patrolWaitTimer <= 0 else { return nil }
+        guard patrolPath.count > 1, patrolWaitTimer <= 0 else { return nil }
         patrolIndex = (patrolIndex + 1) % patrolPath.count
-        patrolWaitTimer = 1.5  // Pause 1.5s between waypoints
+        patrolWaitTimer = GameConstants.EnemyAI.patrolPauseTime
         return patrolPath[patrolIndex]
     }
 }

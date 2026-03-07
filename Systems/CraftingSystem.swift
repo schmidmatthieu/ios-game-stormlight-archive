@@ -179,32 +179,31 @@ final class CraftingSystem {
     func craft(recipe: CraftingRecipe) -> CraftResult {
         let check = canCraft(recipe: recipe)
         guard check.success else { return check }
-
-        guard var champion = GameManager.shared.champion else {
-            return CraftResult(success: false, message: "Erreur")
+        guard recipe.resultQuantity > 0 else {
+            return CraftResult(success: false, message: "Recette invalide")
         }
 
-        // Consommer les ingrédients
-        for ingredient in recipe.ingredients {
-            var remaining = ingredient.quantity
-            champion.inventoryItemIDs.removeAll { itemID in
-                if itemID == ingredient.itemID && remaining > 0 {
-                    remaining -= 1
-                    return true
+        GameManager.shared.mutateChampion { champion in
+            // Consommer les ingrédients
+            for ingredient in recipe.ingredients {
+                var remaining = ingredient.quantity
+                champion.inventoryItemIDs.removeAll { itemID in
+                    if itemID == ingredient.itemID && remaining > 0 {
+                        remaining -= 1
+                        return true
+                    }
+                    return false
                 }
-                return false
+            }
+
+            // Consommer l'or
+            champion.gold -= recipe.goldCost
+
+            // Ajouter le résultat
+            for _ in 0..<recipe.resultQuantity {
+                champion.inventoryItemIDs.append(recipe.resultItemID)
             }
         }
-
-        // Consommer l'or
-        champion.gold -= recipe.goldCost
-
-        // Ajouter le résultat
-        for _ in 0..<recipe.resultQuantity {
-            champion.inventoryItemIDs.append(recipe.resultItemID)
-        }
-
-        GameManager.shared.champion = champion
 
         let itemName = GameManager.shared.allItems[recipe.resultItemID]?.name ?? recipe.resultItemID
         return CraftResult(success: true, message: "\(itemName) forgé !")

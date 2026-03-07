@@ -10,6 +10,11 @@ final class PathfindingSystem {
     private var width: Int = 0
     private var height: Int = 0
 
+    /// Coût orthogonal (x10 pour éviter les flottants)
+    private let orthogonalCost = 10
+    /// Coût diagonal ≈ 1.414 * 10
+    private let diagonalCost = 14
+
     func setupGrid(width: Int, height: Int, obstacles: Set<GridPosition>) {
         self.width = width
         self.height = height
@@ -47,10 +52,11 @@ final class PathfindingSystem {
 
             closedSet.insert(current.pos)
 
-            for neighbor in neighbors(of: current.pos) {
+            for (neighbor, cost) in neighbors(of: current.pos) {
                 guard !closedSet.contains(neighbor) else { continue }
 
-                let tentativeG = gScore[current.pos, default: .max] + 1
+                let tentativeG = (gScore[current.pos] ?? .max).addingReportingOverflow(cost).partialValue
+                guard tentativeG >= 0 else { continue }
 
                 if tentativeG < gScore[neighbor, default: .max] {
                     cameFrom[neighbor] = current.pos
@@ -68,25 +74,48 @@ final class PathfindingSystem {
     // MARK: - Helpers
 
     private func heuristic(_ a: GridPosition, _ b: GridPosition) -> Int {
-        abs(a.col - b.col) + abs(a.row - b.row) // Distance Manhattan
+        // Octile distance (scaled x10)
+        let dx = abs(a.col - b.col)
+        let dy = abs(a.row - b.row)
+        return orthogonalCost * (dx + dy) + (diagonalCost - 2 * orthogonalCost) * min(dx, dy)
     }
 
-    private func neighbors(of pos: GridPosition) -> [GridPosition] {
-        let directions = [
-            GridPosition(col: 0, row: -1),  // haut
-            GridPosition(col: 0, row: 1),   // bas
-            GridPosition(col: -1, row: 0),  // gauche
-            GridPosition(col: 1, row: 0),   // droite
-            GridPosition(col: -1, row: -1), // diag haut-gauche
-            GridPosition(col: 1, row: -1),  // diag haut-droite
-            GridPosition(col: -1, row: 1),  // diag bas-gauche
-            GridPosition(col: 1, row: 1)    // diag bas-droite
+    private func neighbors(of pos: GridPosition) -> [(GridPosition, Int)] {
+        let orthogonal = [
+            GridPosition(col: 0, row: -1),
+            GridPosition(col: 0, row: 1),
+            GridPosition(col: -1, row: 0),
+            GridPosition(col: 1, row: 0)
+        ]
+        let diagonal = [
+            GridPosition(col: -1, row: -1),
+            GridPosition(col: 1, row: -1),
+            GridPosition(col: -1, row: 1),
+            GridPosition(col: 1, row: 1)
         ]
 
-        return directions.compactMap { dir in
+        var result: [(GridPosition, Int)] = []
+
+        for dir in orthogonal {
             let next = GridPosition(col: pos.col + dir.col, row: pos.row + dir.row)
-            return isValid(next) && grid[next.row][next.col] ? next : nil
+            if isValid(next) && grid[next.row][next.col] {
+                result.append((next, orthogonalCost))
+            }
         }
+
+        for dir in diagonal {
+            let next = GridPosition(col: pos.col + dir.col, row: pos.row + dir.row)
+            // Diagonale : vérifier que les deux cases adjacentes sont aussi passables
+            let adj1 = GridPosition(col: pos.col + dir.col, row: pos.row)
+            let adj2 = GridPosition(col: pos.col, row: pos.row + dir.row)
+            if isValid(next) && grid[next.row][next.col]
+                && isValid(adj1) && grid[adj1.row][adj1.col]
+                && isValid(adj2) && grid[adj2.row][adj2.col] {
+                result.append((next, diagonalCost))
+            }
+        }
+
+        return result
     }
 
     private func isValid(_ pos: GridPosition) -> Bool {

@@ -54,15 +54,15 @@ class InventoryNode: SKNode {
         titleLabel.zPosition = 6002
 
         // Close button
-        closeButton = SKShapeNode(rectOf: CGSize(width: 30, height: 30), cornerRadius: 6)
+        closeButton = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 8)
         closeButton.fillColor = SKColor(red: 0.5, green: 0.1, blue: 0.1, alpha: 0.8)
         closeButton.strokeColor = .red
-        closeButton.position = CGPoint(x: panelSize.width / 2 - 25, y: panelSize.height / 2 - 25)
+        closeButton.position = CGPoint(x: panelSize.width / 2 - 30, y: panelSize.height / 2 - 30)
         closeButton.zPosition = 6002
         closeButton.name = "closeInventory"
         let xLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
         xLabel.text = "X"
-        xLabel.fontSize = 14
+        xLabel.fontSize = 18
         xLabel.fontColor = .white
         xLabel.verticalAlignmentMode = .center
         xLabel.name = "closeInventory"
@@ -117,7 +117,7 @@ class InventoryNode: SKNode {
         let equipSection = CGPoint(x: -screenSize.width / 4, y: 0)
 
         for (slot, x, y) in equipSlotPositions {
-            let slotNode = SKShapeNode(rectOf: CGSize(width: 40, height: 40), cornerRadius: 6)
+            let slotNode = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 6)
             slotNode.fillColor = SKColor(white: 0.12, alpha: 1.0)
             slotNode.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
             slotNode.lineWidth = 1.5
@@ -128,7 +128,7 @@ class InventoryNode: SKNode {
             // Slot label
             let label = SKLabelNode(fontNamed: "Helvetica")
             label.text = slotAbbreviation(slot)
-            label.fontSize = 8
+            label.fontSize = 10
             label.fontColor = SKColor(white: 0.3, alpha: 0.5)
             label.verticalAlignmentMode = .center
             label.name = "equip_\(slot.rawValue)"
@@ -144,6 +144,36 @@ class InventoryNode: SKNode {
             x: screenSize.width / 6,
             y: 80
         )
+
+        // Boutons de tri
+        let sortButtons: [(label: String, name: String)] = [
+            ("Rareté", "sort_rarity"),
+            ("Type", "sort_type"),
+            ("Nom", "sort_name")
+        ]
+
+        for (i, btn) in sortButtons.enumerated() {
+            let x = gridOrigin.x + CGFloat(i - 1) * 65
+            let y = gridOrigin.y + CGFloat(gridRows / 2) * (slotSize + 4) + 30
+
+            let bg = SKShapeNode(rectOf: CGSize(width: 58, height: 24), cornerRadius: 6)
+            bg.fillColor = SKColor(white: 0.12, alpha: 1.0)
+            bg.strokeColor = GameConstants.Colors.panelBorder
+            bg.lineWidth = 1
+            bg.position = CGPoint(x: x, y: y)
+            bg.zPosition = 6003
+            bg.name = btn.name
+
+            let label = SKLabelNode(fontNamed: "Helvetica")
+            label.text = btn.label
+            label.fontSize = 10
+            label.fontColor = SKColor(white: 0.7, alpha: 1.0)
+            label.verticalAlignmentMode = .center
+            label.name = btn.name
+            bg.addChild(label)
+
+            panel.addChild(bg)
+        }
 
         for row in 0..<gridRows {
             for col in 0..<gridCols {
@@ -224,7 +254,7 @@ class InventoryNode: SKNode {
                 let itemID = champion.inventoryItemIDs[i]
                 if let item = GameManager.shared.allItems[itemID] {
                     let nameLabel = SKLabelNode(fontNamed: "Helvetica")
-                    nameLabel.text = String(item.name.prefix(5))
+                    nameLabel.text = String(item.name.prefix(8))
                     nameLabel.fontSize = 9
                     nameLabel.fontColor = rarityColor(item.rarity)
                     nameLabel.verticalAlignmentMode = .center
@@ -238,10 +268,31 @@ class InventoryNode: SKNode {
 
         // Refresh equipment
         for (eqSlot, node) in equipmentSlots {
+            // Nettoyer les labels d'items précédents
+            node.children.filter { $0.name == "equippedItemName" }.forEach { $0.removeFromParent() }
+
             if let itemID = champion.equipment.itemID(for: eqSlot),
                let item = GameManager.shared.allItems[itemID] {
                 node.fillColor = rarityColor(item.rarity).withAlphaComponent(0.2)
                 node.strokeColor = rarityColor(item.rarity)
+
+                // Afficher le nom court de l'item équipé
+                let eqName = SKLabelNode(fontNamed: "Helvetica")
+                eqName.text = String(item.name.prefix(4))
+                eqName.fontSize = 8
+                eqName.fontColor = rarityColor(item.rarity)
+                eqName.verticalAlignmentMode = .center
+                eqName.position = CGPoint(x: 0, y: -18)
+                eqName.name = "equippedItemName"
+                node.addChild(eqName)
+
+                // Cacher le label d'emplacement vide
+                node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = true }
+            } else {
+                node.fillColor = SKColor(white: 0.12, alpha: 1.0)
+                node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
+                // Réafficher le label d'emplacement
+                node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = false }
             }
         }
     }
@@ -277,6 +328,26 @@ class InventoryNode: SKNode {
                 return
             }
 
+            if node.name == "equipItem" || node.parent?.name == "equipItem" {
+                equipSelectedItem()
+                return
+            }
+
+            // Tri de l'inventaire
+            if let name = node.name ?? node.parent?.name, name.hasPrefix("sort_") {
+                sortInventory(by: name)
+                return
+            }
+
+            // Déséquiper un slot d'équipement
+            if let name = node.name ?? node.parent?.name, name.hasPrefix("equip_") {
+                let slotRaw = name.replacingOccurrences(of: "equip_", with: "")
+                if let slot = EquipmentSlot(rawValue: slotRaw) {
+                    unequipSlot(slot)
+                }
+                return
+            }
+
             if let name = node.name, name.hasPrefix("slot_") {
                 let indexStr = name.replacingOccurrences(of: "slot_", with: "")
                 if let index = Int(indexStr) {
@@ -285,6 +356,90 @@ class InventoryNode: SKNode {
                 return
             }
         }
+    }
+
+    private func unequipSlot(_ slot: EquipmentSlot) {
+        guard var champion = GameManager.shared.champion else { return }
+        guard let itemID = champion.equipment.itemID(for: slot) else { return }
+
+        // Vérifier que l'inventaire n'est pas plein
+        guard champion.inventoryItemIDs.count < gridCols * gridRows else {
+            // Feedback : inventaire plein
+            if let node = equipmentSlots[slot] {
+                let shake = SKAction.sequence([
+                    SKAction.moveBy(x: -3, y: 0, duration: 0.03),
+                    SKAction.moveBy(x: 6, y: 0, duration: 0.03),
+                    SKAction.moveBy(x: -6, y: 0, duration: 0.03),
+                    SKAction.moveBy(x: 3, y: 0, duration: 0.03),
+                ])
+                node.run(shake)
+            }
+            return
+        }
+
+        champion.equipment.setItemID(nil, for: slot)
+        champion.inventoryItemIDs.append(itemID)
+        GameManager.shared.champion = champion
+        refresh()
+    }
+
+    private func equipSelectedItem() {
+        guard let index = selectedItemIndex,
+              var champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID] else { return }
+
+        let slot = item.slot
+        let previousItemID = champion.equipment.itemID(for: slot)
+
+        // Équiper le nouvel item
+        champion.equipment.setItemID(itemID, for: slot)
+        champion.inventoryItemIDs.remove(at: index)
+
+        // Remettre l'ancien item dans l'inventaire
+        if let prev = previousItemID {
+            champion.inventoryItemIDs.append(prev)
+        }
+
+        GameManager.shared.champion = champion
+        selectedItemIndex = nil
+
+        // Animation d'équipement — flash doré sur le slot
+        if let equipNode = equipmentSlots[slot] {
+            let originalColor = equipNode.strokeColor
+            let equipFlash = SKAction.sequence([
+                SKAction.run { equipNode.strokeColor = GameConstants.Colors.gold },
+                SKAction.scale(to: 1.2, duration: 0.1),
+                SKAction.scale(to: 1.0, duration: 0.1),
+                SKAction.run { equipNode.strokeColor = originalColor }
+            ])
+            equipNode.run(equipFlash)
+        }
+
+        // Texte flottant "Équipé !"
+        let equipText = SKLabelNode(fontNamed: "Copperplate-Bold")
+        equipText.text = "Équipé !"
+        equipText.fontSize = 16
+        equipText.fontColor = GameConstants.Colors.gold
+        equipText.position = CGPoint(x: 0, y: 0)
+        equipText.zPosition = 6010
+        panel.addChild(equipText)
+
+        equipText.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.moveBy(x: 0, y: 40, duration: 0.8),
+                SKAction.sequence([
+                    SKAction.fadeIn(withDuration: 0.1),
+                    SKAction.wait(forDuration: 0.5),
+                    SKAction.fadeOut(withDuration: 0.3)
+                ])
+            ]),
+            SKAction.removeFromParent()
+        ]))
+
+        refresh()
     }
 
     private func selectItem(at index: Int) {
@@ -321,7 +476,7 @@ class InventoryNode: SKNode {
 
         let descLabel = SKLabelNode(fontNamed: "Helvetica")
         descLabel.text = item.description
-        descLabel.fontSize = 10
+        descLabel.fontSize = 12
         descLabel.fontColor = .lightGray
         descLabel.preferredMaxLayoutWidth = 180
         descLabel.numberOfLines = 3
@@ -338,6 +493,52 @@ class InventoryNode: SKNode {
             statLabel.position = CGPoint(x: screenSize.width / 6, y: y - 50 - CGFloat(i) * 14)
             detailPanel.addChild(statLabel)
         }
+
+        // Bouton Équiper
+        let equipBtnY = y - 50 - CGFloat(item.statBonuses.count) * 14 - 25
+        let equipBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 36), cornerRadius: 8)
+        equipBtn.fillColor = SKColor(red: 0.2, green: 0.5, blue: 0.3, alpha: 0.9)
+        equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.4, alpha: 1.0)
+        equipBtn.lineWidth = 1.5
+        equipBtn.position = CGPoint(x: screenSize.width / 6, y: equipBtnY)
+        equipBtn.zPosition = 6003
+        equipBtn.name = "equipItem"
+
+        let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        equipLabel.text = "Équiper"
+        equipLabel.fontSize = 13
+        equipLabel.fontColor = .white
+        equipLabel.verticalAlignmentMode = .center
+        equipLabel.name = "equipItem"
+        equipBtn.addChild(equipLabel)
+
+        detailPanel.addChild(equipBtn)
+    }
+
+    // MARK: - Sorting
+
+    private func sortInventory(by sortType: String) {
+        GameManager.shared.mutateChampion { champ in
+            let items = GameManager.shared.allItems
+            champ.inventoryItemIDs.sort { a, b in
+                guard let itemA = items[a], let itemB = items[b] else { return false }
+                switch sortType {
+                case "sort_rarity":
+                    let rarityOrder: [ItemRarity] = [.cosmeric, .legendary, .epic, .rare, .uncommon, .common]
+                    let idxA = rarityOrder.firstIndex(of: itemA.rarity) ?? 99
+                    let idxB = rarityOrder.firstIndex(of: itemB.rarity) ?? 99
+                    return idxA < idxB
+                case "sort_type":
+                    return itemA.slot.rawValue < itemB.slot.rawValue
+                case "sort_name":
+                    return itemA.name < itemB.name
+                default:
+                    return false
+                }
+            }
+        }
+        selectedItemIndex = nil
+        refresh()
     }
 
     // MARK: - Helpers

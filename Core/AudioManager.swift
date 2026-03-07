@@ -7,7 +7,8 @@ final class AudioManager {
 
     private var musicPlayer: AVAudioPlayer?
     private var currentTrack: String?
-    private var sfxActions: [String: SKAction] = []
+    private static let maxSFXCacheSize = 50
+    private var sfxActions: [String: SKAction] = [:]
 
     var musicVolume: Float = 0.5 {
         didSet { musicPlayer?.volume = musicVolume }
@@ -20,6 +21,10 @@ final class AudioManager {
 
     func playMusic(_ trackName: String, loop: Bool = true) {
         guard trackName != currentTrack else { return }
+
+        // Stop previous player before creating new one
+        musicPlayer?.stop()
+        musicPlayer = nil
         currentTrack = trackName
 
         guard let url = Bundle.main.url(forResource: trackName, withExtension: "mp3") else {
@@ -47,11 +52,23 @@ final class AudioManager {
 
     // MARK: - Effets sonores (via SKAction pour performance)
 
+    func setMusicVolume(_ volume: Float) {
+        musicVolume = max(0, min(1, volume))
+    }
+
+    func setSFXVolume(_ volume: Float) {
+        sfxVolume = max(0, min(1, volume))
+    }
+
     func playSFX(_ name: String, on node: SKNode) {
         let action: SKAction
         if let cached = sfxActions[name] {
             action = cached
         } else {
+            // Evict oldest entries if cache is full
+            if sfxActions.count >= AudioManager.maxSFXCacheSize {
+                sfxActions.removeAll()
+            }
             action = SKAction.playSoundFileNamed("\(name).wav", waitForCompletion: false)
             sfxActions[name] = action
         }

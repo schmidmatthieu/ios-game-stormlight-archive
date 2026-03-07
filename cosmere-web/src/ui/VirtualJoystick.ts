@@ -1,11 +1,12 @@
 import { Container, Graphics, FederatedPointerEvent } from 'pixi.js';
+import { getLayoutInfo, joystickRadius, LayoutInfo } from '../ui/ResponsiveLayout';
 
 export class VirtualJoystick extends Container {
   private base: Graphics;
   private innerRing: Graphics;
   private thumb: Graphics;
-  private baseRadius = 50;
-  private thumbRadius = 18;
+  private baseRadius: number;
+  private thumbRadius: number;
   private deadzone = 0.1;
 
   // Output
@@ -15,8 +16,18 @@ export class VirtualJoystick extends Container {
 
   private pointerId: number | null = null;
 
-  constructor() {
+  constructor(layout?: LayoutInfo) {
     super();
+
+    const defaultBase = 50;
+    const defaultThumb = 18;
+    if (layout) {
+      this.baseRadius = joystickRadius(layout);
+      this.thumbRadius = defaultThumb * (this.baseRadius / defaultBase);
+    } else {
+      this.baseRadius = defaultBase;
+      this.thumbRadius = defaultThumb;
+    }
 
     // Outer ring
     this.base = new Graphics();

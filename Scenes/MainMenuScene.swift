@@ -35,6 +35,10 @@ class MainMenuScene: SKScene {
             addChild(continueButton)
         }
 
+        // Bouton Paramètres
+        let settingsButton = createButton(text: "Paramètres", position: CGPoint(x: size.width / 2, y: size.height * 0.34), name: "settings")
+        addChild(settingsButton)
+
         // Particules de brumes (ambiance Scadrial)
         if let mist = SKEmitterNode(fileNamed: "MistParticles") {
             mist.position = CGPoint(x: size.width / 2, y: size.height)
@@ -83,9 +87,23 @@ class MainMenuScene: SKScene {
                     router.transitionToZone(zoneID)
                 }
 
+            case "settings":
+                showSettings()
+
             default:
                 break
             }
         }
+    }
+
+    private func showSettings() {
+        guard childNode(withName: "settingsMenu") == nil else { return }
+        let settings = SettingsMenuNode(screenSize: size)
+        settings.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        settings.name = "settingsMenu"
+        settings.onClose = { [weak settings] in
+            settings?.removeFromParent()
+        }
+        addChild(settings)
     }
 }

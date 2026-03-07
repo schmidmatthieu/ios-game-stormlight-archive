@@ -5,8 +5,8 @@ class HUDNode: SKNode {
 
     // MARK: - Properties
 
-    private let barWidth: CGFloat = 140
-    private let barHeight: CGFloat = 10
+    private let barWidth = GameConstants.HUD.barWidth
+    private let barHeight = GameConstants.HUD.barHeight
     private let spacing: CGFloat = 4
 
     // Bars

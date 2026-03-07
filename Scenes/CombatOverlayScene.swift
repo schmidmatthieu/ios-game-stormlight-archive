@@ -158,6 +158,9 @@ class CombatOverlayNode: SKNode {
     func resetCombo() {
         comboCount = 0
         comboTimer = 0
+        comboLabel.removeAction(forKey: "comboWarning")
+        comboLabel.alpha = 1.0
+        comboLabel.fontColor = SKColor(red: 0.9, green: 0.7, blue: 0.2, alpha: 1.0)
         comboLabel.isHidden = true
     }
 
@@ -237,6 +240,27 @@ class CombatOverlayNode: SKNode {
         // Combo timeout
         if comboTimer > 0 {
             comboTimer -= deltaTime
+
+            // Feedback visuel quand le combo est sur le point d'expirer
+            let warningThreshold: TimeInterval = 1.0
+            if comboTimer <= warningThreshold && comboTimer > 0 && comboCount > 0 {
+                let urgency = 1.0 - (comboTimer / warningThreshold)
+                comboLabel.fontColor = SKColor(
+                    red: 0.9 + CGFloat(urgency) * 0.1,
+                    green: max(0.2, 0.7 - CGFloat(urgency) * 0.5),
+                    blue: 0.2,
+                    alpha: 1.0
+                )
+                // Clignotement de plus en plus rapide
+                if comboLabel.action(forKey: "comboWarning") == nil {
+                    let blink = SKAction.repeatForever(SKAction.sequence([
+                        SKAction.fadeAlpha(to: 0.4, duration: 0.15),
+                        SKAction.fadeAlpha(to: 1.0, duration: 0.15)
+                    ]))
+                    comboLabel.run(blink, withKey: "comboWarning")
+                }
+            }
+
             if comboTimer <= 0 {
                 resetCombo()
             }

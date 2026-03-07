@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
+import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 export function showDeathScreen(
   uiContainer: Container,
@@ -7,6 +9,7 @@ export function showDeathScreen(
   screenH: number,
   onRespawn: () => void,
 ): Container {
+  const layout = getLayoutInfo(screenW, screenH);
   const panel = new Container();
   panel.zIndex = 20000;
 
@@ -17,11 +20,13 @@ export function showDeathScreen(
   panel.addChild(overlay);
 
   // Blood vignette edges
+  const vignetteH = scaled(30, layout);
+  const vignetteW = scaled(20, layout);
   const vignette = new Graphics();
-  vignette.rect(0, 0, screenW, 30).fill({ color: 0x440000, alpha: 0.6 });
-  vignette.rect(0, screenH - 30, screenW, 30).fill({ color: 0x440000, alpha: 0.6 });
-  vignette.rect(0, 0, 20, screenH).fill({ color: 0x440000, alpha: 0.4 });
-  vignette.rect(screenW - 20, 0, 20, screenH).fill({ color: 0x440000, alpha: 0.4 });
+  vignette.rect(0, 0, screenW, vignetteH).fill({ color: 0x440000, alpha: 0.6 });
+  vignette.rect(0, screenH - vignetteH, screenW, vignetteH).fill({ color: 0x440000, alpha: 0.6 });
+  vignette.rect(0, 0, vignetteW, screenH).fill({ color: 0x440000, alpha: 0.4 });
+  vignette.rect(screenW - vignetteW, 0, vignetteW, screenH).fill({ color: 0x440000, alpha: 0.4 });
   panel.addChild(vignette);
 
   // Death title
@@ -29,7 +34,7 @@ export function showDeathScreen(
     text: 'VOUS ÊTES TOMBÉ',
     style: new TextStyle({
       fontFamily: 'Georgia, serif',
-      fontSize: 28,
+      fontSize: fontSize(28, layout),
       fill: 0xcc2222,
       fontWeight: 'bold',
       dropShadow: { color: 0x000000, blur: 4, distance: 2 },
@@ -37,7 +42,7 @@ export function showDeathScreen(
   });
   title.anchor.set(0.5);
   title.x = screenW / 2;
-  title.y = screenH / 2 - 60;
+  title.y = screenH / 2 - scaled(60, layout);
   panel.addChild(title);
 
   // Penalty info
@@ -49,13 +54,13 @@ export function showDeathScreen(
     text: `Pénalité: -${goldLost} or  -${xpLost} XP`,
     style: new TextStyle({
       fontFamily: 'sans-serif',
-      fontSize: 12,
+      fontSize: fontSize(12, layout),
       fill: 0xff6644,
     }),
   });
   penaltyText.anchor.set(0.5);
   penaltyText.x = screenW / 2;
-  penaltyText.y = screenH / 2 - 20;
+  penaltyText.y = screenH / 2 - scaled(20, layout);
   panel.addChild(penaltyText);
 
   // Apply penalties
@@ -80,27 +85,27 @@ export function showDeathScreen(
     text: flavorTexts[worldID] ?? flavorTexts.scadrial,
     style: new TextStyle({
       fontFamily: 'Georgia, serif',
-      fontSize: 10,
+      fontSize: fontSize(10, layout),
       fill: 0x886666,
       fontStyle: 'italic',
       wordWrap: true,
-      wordWrapWidth: screenW - 80,
+      wordWrapWidth: screenW - scaled(80, layout),
       align: 'center',
     }),
   });
   flavor.anchor.set(0.5);
   flavor.x = screenW / 2;
-  flavor.y = screenH / 2 + 10;
+  flavor.y = screenH / 2 + scaled(10, layout);
   panel.addChild(flavor);
 
   // Respawn button (appears after 1.5s delay)
-  const btnW = 160;
-  const btnH = 36;
+  const btnW = scaled(160, layout);
+  const btnH = scaled(36, layout);
   const btnContainer = new Container();
   btnContainer.alpha = 0;
 
   const btnBg = new Graphics();
-  btnBg.roundRect(screenW / 2 - btnW / 2, screenH / 2 + 50, btnW, btnH, 8)
+  btnBg.roundRect(screenW / 2 - btnW / 2, screenH / 2 + scaled(50, layout), btnW, btnH, 8)
     .fill({ color: 0x331111, alpha: 0.9 })
     .stroke({ color: 0xcc4444, width: 1.5, alpha: 0.7 });
   btnBg.eventMode = 'static';
@@ -111,14 +116,14 @@ export function showDeathScreen(
     text: 'Réapparaître',
     style: new TextStyle({
       fontFamily: 'Georgia, serif',
-      fontSize: 14,
+      fontSize: fontSize(14, layout),
       fill: 0xffcccc,
       fontWeight: 'bold',
     }),
   });
   btnLabel.anchor.set(0.5);
   btnLabel.x = screenW / 2;
-  btnLabel.y = screenH / 2 + 50 + btnH / 2;
+  btnLabel.y = screenH / 2 + scaled(50, layout) + btnH / 2;
   btnContainer.addChild(btnLabel);
 
   panel.addChild(btnContainer);

@@ -316,7 +316,7 @@ final class TalentTreeSystem {
         let currentRank = playerTalents.unlockedTalents[talent.id] ?? 0
         playerTalents.unlockedTalents[talent.id] = currentRank + 1
         playerTalents.totalPointsSpent += 1
-        GameManager.shared.champion?.skillPoints -= 1
+        GameManager.shared.mutateChampion { $0.skillPoints -= 1 }
 
         return true
     }
