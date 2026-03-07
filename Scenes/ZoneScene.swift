@@ -280,7 +280,7 @@ class ZoneScene: SKScene {
 
         let hpIcon = SKLabelNode(fontNamed: "Helvetica-Bold")
         hpIcon.text = "PV"
-        hpIcon.fontSize = 7
+        hpIcon.fontSize = 9
         hpIcon.fontColor = SKColor(red: 1, green: 0.6, blue: 0.6, alpha: 1)
         hpIcon.position = CGPoint(x: -65, y: -3)
         hpIcon.zPosition = 1
@@ -288,7 +288,7 @@ class ZoneScene: SKScene {
 
         let hpLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
         hpLabel.text = "\(champion.currentHP)/\(champion.maxHP)"
-        hpLabel.fontSize = 8
+        hpLabel.fontSize = 10
         hpLabel.fontColor = .white
         hpLabel.verticalAlignmentMode = .center
         hpLabel.name = "hpLabel"
@@ -311,7 +311,7 @@ class ZoneScene: SKScene {
 
         let mpIcon = SKLabelNode(fontNamed: "Helvetica-Bold")
         mpIcon.text = "INV"
-        mpIcon.fontSize = 7
+        mpIcon.fontSize = 9
         mpIcon.fontColor = SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1)
         mpIcon.position = CGPoint(x: -65, y: -3)
         mpIcon.zPosition = 1
@@ -319,7 +319,7 @@ class ZoneScene: SKScene {
 
         let mpLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
         mpLabel.text = "\(champion.currentInvestiture)/\(champion.maxInvestiture)"
-        mpLabel.fontSize = 8
+        mpLabel.fontSize = 10
         mpLabel.fontColor = .white
         mpLabel.verticalAlignmentMode = .center
         mpBg.addChild(mpLabel)
@@ -358,7 +358,7 @@ class ZoneScene: SKScene {
         zoneBg.addChild(zoneLabel)
 
         // XP bar
-        let xpBg = SKShapeNode(rectOf: CGSize(width: 120, height: 6), cornerRadius: 2)
+        let xpBg = SKShapeNode(rectOf: CGSize(width: 120, height: 10), cornerRadius: 2)
         xpBg.fillColor = SKColor(white: 0.1, alpha: 0.8)
         xpBg.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.4)
         xpBg.lineWidth = 0.5
@@ -368,7 +368,7 @@ class ZoneScene: SKScene {
 
         let xpLabel = SKLabelNode(fontNamed: "Helvetica")
         xpLabel.text = "XP \(champion.currentXP)/\(champion.xpForNextLevel)"
-        xpLabel.fontSize = 7
+        xpLabel.fontSize = 9
         xpLabel.fontColor = SKColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0)
         xpLabel.verticalAlignmentMode = .center
         xpBg.addChild(xpLabel)
@@ -413,7 +413,7 @@ class ZoneScene: SKScene {
     }
 
     private func setupPauseButton() {
-        let pauseBtn = SKShapeNode(rectOf: CGSize(width: 32, height: 32), cornerRadius: 6)
+        let pauseBtn = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 8)
         pauseBtn.fillColor = SKColor(white: 0.1, alpha: 0.6)
         pauseBtn.strokeColor = SKColor(white: 0.4, alpha: 0.5)
         pauseBtn.lineWidth = 1
@@ -424,7 +424,7 @@ class ZoneScene: SKScene {
 
         let pauseIcon = SKLabelNode(fontNamed: "Helvetica-Bold")
         pauseIcon.text = "||"
-        pauseIcon.fontSize = 14
+        pauseIcon.fontSize = 16
         pauseIcon.fontColor = .white
         pauseIcon.verticalAlignmentMode = .center
         pauseIcon.name = "pauseButton"
