@@ -23,6 +23,8 @@ import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
 import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
 import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
+import { DayNightManager, createDayNightOverlay } from '../rendering/DayNightCycle';
+import type { BlendedTimeConfig } from '../rendering/DayNightCycle';
 import { BestiaryManager } from '../game/BestiarySystem';
 import { showBestiaryPanel } from '../ui/BestiaryPanel';
 import { AchievementManager } from '../game/AchievementSystem';
@@ -265,6 +267,10 @@ export class ZoneScene extends Container implements GameScene {
   private statusBar: { container: Container; update: (effects: ActiveStatusEffect[]) => void } | null = null;
   private statusParticleTimer = 0;
 
+  // Day/Night cycle
+  private dayNightManager!: DayNightManager;
+  private dayNightOverlay: { overlay: Graphics; stars: Container; timeLabel: Text; update: (config: BlendedTimeConfig) => void } | null = null;
+
   // Weather
   private weatherManager!: WeatherManager;
   private weatherOverlay: { overlay: Graphics; label: Text; update: (config: any, lightning: number) => void } | null = null;
@@ -430,6 +436,10 @@ export class ZoneScene extends Container implements GameScene {
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
+
+    // Day/night cycle
+    this.dayNightManager = new DayNightManager(this.zone.worldID);
+    this.dayNightOverlay = createDayNightOverlay(this.uiContainer, w, h);
 
     // Dynamic weather
     this.weatherManager = new WeatherManager(this.zone.worldID);
@@ -1919,6 +1929,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateAnimations(delta);
     this.spawnAmbientParticles(delta);
     this.updateWorldMechanics(delta);
+    this.updateDayNight(delta);
     this.updateWeather(delta);
     this.updateAchievements(delta);
     this.updateCompanion(delta);
@@ -2063,7 +2074,9 @@ export class ZoneScene extends Container implements GameScene {
       const dist = Math.hypot(enemy.position.x - playerPos.x, enemy.position.y - playerPos.y);
       const mistMult = this.worldMechanics instanceof ScadrialMechanics
         ? (this.worldMechanics as ScadrialMechanics).getDetectionMultiplier() : 1;
-      const detRange = enemy.data.detectionRange * 32 * mistMult;
+      // Night: ambush enemies detect further, others detect shorter
+      const nightMult = enemy.data.behavior === 'ambush' ? (2 - this.dayNightManager.lightLevel) : this.dayNightManager.lightLevel;
+      const detRange = enemy.data.detectionRange * 32 * mistMult * Math.max(0.5, nightMult);
       const atkRange = enemy.data.attackRange * 32;
 
       enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
@@ -2608,6 +2621,16 @@ export class ZoneScene extends Container implements GameScene {
     const msg = this.worldMechanics.tick(dt);
     if (msg) {
       this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, msg, 0xaaddff);
+    }
+  }
+
+  private updateDayNight(dt: number): void {
+    const result = this.dayNightManager.update(dt);
+    if (this.dayNightOverlay) {
+      this.dayNightOverlay.update(result.blendedConfig);
+    }
+    if (result.changed && result.message) {
+      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, result.message, 0xddddaa);
     }
   }
 
