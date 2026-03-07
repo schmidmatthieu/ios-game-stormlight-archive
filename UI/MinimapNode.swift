@@ -11,6 +11,7 @@ class MinimapNode: SKNode {
     private var npcDots: [SKShapeNode] = []
     private var lootDots: [SKShapeNode] = []
     private var exitDots: [SKShapeNode] = []
+    private var arrowNodes: [SKLabelNode] = []
 
     private var zoneGridWidth: Int = 1
     private var zoneGridHeight: Int = 1
@@ -66,10 +67,12 @@ class MinimapNode: SKNode {
         npcDots.forEach { $0.removeFromParent() }
         lootDots.forEach { $0.removeFromParent() }
         exitDots.forEach { $0.removeFromParent() }
+        arrowNodes.forEach { $0.removeFromParent() }
         enemyDots.removeAll()
         npcDots.removeAll()
         lootDots.removeAll()
         exitDots.removeAll()
+        arrowNodes.removeAll()
 
         // NPC dots (jaune)
         for npc in zone.npcSpawns {
@@ -111,6 +114,7 @@ class MinimapNode: SKNode {
             arrow.position = dot.position
             arrow.zPosition = 4005
             mapContent.addChild(arrow)
+            arrowNodes.append(arrow)
         }
     }
 
