@@ -249,6 +249,102 @@ function drawRarityGlow(g: Graphics, rarity: ItemRarity): void {
 
 // ─── Main Equipment Overlay Function ─────────────────────────────
 
+/** Draw equipment visuals on specific body parts for multi-part body. */
+export function drawEquipmentOnParts(
+  parts: { head: Graphics; torso: Graphics; leftArm: Graphics; rightArm: Graphics; leftLeg: Graphics; rightLeg: Graphics; weapon: Graphics; cape: Graphics },
+  equipment: EquipmentLoadout,
+): void {
+  const rarityOrder: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'cosmeric'];
+  let bestRarity: ItemRarity = 'common';
+
+  const getItem = (itemID: string | null) => {
+    if (!itemID) return null;
+    const item = gameData.item(itemID);
+    if (!item) return null;
+    const color = RARITY_COLORS[item.rarity];
+    const visual = RARITY_VISUALS[item.rarity];
+    if (rarityOrder.indexOf(item.rarity) > rarityOrder.indexOf(bestRarity)) bestRarity = item.rarity;
+    return { item, color, visual };
+  };
+
+  // Helmet on head
+  const helmet = getItem(equipment.helmet);
+  if (helmet) {
+    parts.head.poly([{ x: -5, y: -6 }, { x: -4, y: -10 }, { x: 0, y: -11 }, { x: 4, y: -10 }, { x: 5, y: -6 }])
+      .fill({ color: helmet.color, alpha: 0.65 });
+    if (helmet.visual.detailLevel >= 1) {
+      parts.head.poly([{ x: -1, y: -11 }, { x: 0, y: -14 }, { x: 1, y: -11 }])
+        .fill({ color: lighten(helmet.color, 0.2), alpha: 0.6 });
+    }
+  }
+
+  // Chest armor on torso
+  const chest = getItem(equipment.chest);
+  if (chest) {
+    parts.torso.poly([{ x: -6, y: -2 }, { x: -7, y: -10 }, { x: 0, y: -12 }, { x: 7, y: -10 }, { x: 6, y: -2 }])
+      .fill({ color: chest.color, alpha: 0.5 });
+    parts.torso.moveTo(0, -11).lineTo(0, -3).stroke({ color: lighten(chest.color, 0.3), width: 0.8, alpha: 0.4 });
+    if (chest.visual.detailLevel >= 2) {
+      parts.torso.circle(0, -7, 1.5).fill({ color: 0xddaa33, alpha: 0.6 });
+    }
+  }
+
+  // Shoulders on arms
+  const shoulders = getItem(equipment.shoulders);
+  if (shoulders) {
+    parts.leftArm.ellipse(0, -3, 4, 2.5).fill({ color: shoulders.color, alpha: 0.65 });
+    parts.rightArm.ellipse(0, -3, 4, 2.5).fill({ color: shoulders.color, alpha: 0.65 });
+    if (shoulders.visual.detailLevel >= 2) {
+      parts.leftArm.poly([{ x: -3, y: -4 }, { x: -5, y: -7 }, { x: -2, y: -4 }]).fill({ color: lighten(shoulders.color, 0.1), alpha: 0.6 });
+      parts.rightArm.poly([{ x: 3, y: -4 }, { x: 5, y: -7 }, { x: 2, y: -4 }]).fill({ color: lighten(shoulders.color, 0.1), alpha: 0.6 });
+    }
+  }
+
+  // Gloves on arms
+  const gloves = getItem(equipment.gloves);
+  if (gloves) {
+    parts.leftArm.rect(-2, 4, 4, 3).fill({ color: gloves.color, alpha: 0.7 });
+    parts.rightArm.rect(-2, 4, 4, 3).fill({ color: gloves.color, alpha: 0.7 });
+  }
+
+  // Cape on cape part
+  const cape = getItem(equipment.cape);
+  if (cape) {
+    parts.cape.poly([{ x: -6, y: -2 }, { x: -10, y: 12 }, { x: 0, y: 10 }, { x: 10, y: 12 }, { x: 6, y: -2 }])
+      .fill({ color: cape.color, alpha: 0.6 });
+    if (cape.visual.detailLevel >= 1) {
+      parts.cape.moveTo(-10, 12).lineTo(0, 10).lineTo(10, 12)
+        .stroke({ color: lighten(cape.color, 0.3), width: 1, alpha: 0.5 });
+    }
+  }
+
+  // Legs on leg parts
+  const legs = getItem(equipment.legs);
+  if (legs) {
+    parts.leftLeg.rect(-2, -1, 4, 6).fill({ color: legs.color, alpha: 0.55 });
+    parts.rightLeg.rect(-2, -1, 4, 6).fill({ color: legs.color, alpha: 0.55 });
+  }
+
+  // Boots on leg parts (lower)
+  const boots = getItem(equipment.boots);
+  if (boots) {
+    parts.leftLeg.roundRect(-2.5, 5, 5, 4, 1.5).fill({ color: boots.color, alpha: 0.7 });
+    parts.rightLeg.roundRect(-2.5, 5, 5, 4, 1.5).fill({ color: boots.color, alpha: 0.7 });
+  }
+
+  // Weapon on weapon part
+  const weapon = getItem(equipment.mainWeapon);
+  if (weapon) {
+    const weaponType = guessWeaponType(weapon.item.id);
+    drawEquipWeapon(parts.weapon, weaponType, weapon.color, weapon.visual);
+  }
+
+  // Overall rarity glow on torso
+  if (rarityOrder.indexOf(bestRarity) >= 2) {
+    drawRarityGlow(parts.torso, bestRarity);
+  }
+}
+
 /** Draw equipment visuals over the player sprite. Call after drawPlayerCharacter. */
 export function drawEquipmentOverlay(g: Graphics, equipment: EquipmentLoadout): void {
   // Determine best rarity for glow effect

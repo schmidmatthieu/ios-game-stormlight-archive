@@ -20,7 +20,7 @@ import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
 import { drawPlayerCharacter, buildPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { PlayerBodyParts } from '../rendering/PlayerRenderer';
-import { drawEquipmentOverlay } from '../rendering/EquipmentVisuals';
+import { drawEquipmentOverlay, drawEquipmentOnParts } from '../rendering/EquipmentVisuals';
 import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer';
@@ -1053,7 +1053,7 @@ export class ZoneScene extends Container implements GameScene {
     this.playerBodyParts = buildPlayerCharacter(this.playerSprite, cls);
     // Equipment overlays on torso
     if (champ && this.playerBodyParts) {
-      drawEquipmentOverlay(this.playerBodyParts.torso, champ.equipment);
+      drawEquipmentOnParts(this.playerBodyParts, champ.equipment);
     }
     this.playerContainer.addChild(this.playerSprite);
 
@@ -1072,7 +1072,7 @@ export class ZoneScene extends Container implements GameScene {
     this.playerBodyParts = buildPlayerCharacter(this.playerSprite, cls);
     // Draw equipment overlays on torso Graphics
     if (champ && this.playerBodyParts) {
-      drawEquipmentOverlay(this.playerBodyParts.torso, champ.equipment);
+      drawEquipmentOnParts(this.playerBodyParts, champ.equipment);
     }
   }
 
