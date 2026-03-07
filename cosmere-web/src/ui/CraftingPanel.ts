@@ -5,6 +5,8 @@ import { RARITY_COLORS } from '../data/types';
 import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { ItemRarity } from '../data/types';
+import { getRecipesForWorld, getRecipeEffect as getSystemRecipeEffect, STATIONS, getStationForWorld } from '../game/CraftingSystem';
+import type { CraftingRecipe as SystemRecipe } from '../game/CraftingSystem';
 
 // ─── Crafting Recipes ────────────────────────────────────────────
 
@@ -316,11 +318,12 @@ export function showCraftingPanel(
 // ─── Recipe Effect Resolver ──────────────────────────────────────
 
 export function getRecipeEffect(recipeID: string): {
-  type: 'heal_hp' | 'heal_inv' | 'buff_strength' | 'buff_shield' | 'buff_haste' | 'buff_regen' | 'multi_buff';
+  type: 'heal_hp' | 'heal_inv' | 'buff_strength' | 'buff_shield' | 'buff_haste' | 'buff_regen' | 'buff_crit' | 'multi_buff';
   value: number;
   duration: number;
   message: string;
 } | null {
+  // Check legacy recipes first
   switch (recipeID) {
     case 'potion_hp': return { type: 'heal_hp', value: 50, duration: 0, message: '+50 PV!' };
     case 'potion_inv': return { type: 'heal_inv', value: 40, duration: 0, message: '+40 Investiture!' };
@@ -332,6 +335,27 @@ export function getRecipeEffect(recipeID: string): {
     case 'enchant_storm': return { type: 'multi_buff', value: 2, duration: 40, message: 'Bénédiction d\'Orage!' };
     case 'enchant_breath': return { type: 'multi_buff', value: 3, duration: 40, message: 'Souffle Éveillé!' };
     case 'enchant_sand': return { type: 'multi_buff', value: 4, duration: 40, message: 'Énergie Solaire!' };
-    default: return null;
   }
+
+  // Check new CraftingSystem recipes
+  const sysEffect = getSystemRecipeEffect(recipeID);
+  if (sysEffect) {
+    const messages: Record<string, string> = {
+      potion_sante: '+50 PV!',
+      elixir_investiture: '+40 Investiture!',
+      baume_guerrier: '+30% dégâts!',
+      elixir_supreme: 'Restauration suprême!',
+      philtre_critique: '+25% critique!',
+      ink_encre_cauchemar: 'Encre de cauchemar!',
+      aon_glyphe_puissance: 'Glyphe activé!',
+    };
+    return {
+      type: sysEffect.type as 'heal_hp' | 'heal_inv' | 'buff_strength' | 'buff_shield' | 'buff_haste' | 'buff_regen' | 'buff_crit' | 'multi_buff',
+      value: sysEffect.value,
+      duration: sysEffect.duration,
+      message: messages[recipeID] ?? 'Objet fabriqué!',
+    };
+  }
+
+  return null;
 }
