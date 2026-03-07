@@ -33,6 +33,7 @@ import { showSkillTreePanel } from '../ui/SkillTreePanel';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
+import { ComboManager, createComboDisplay } from '../game/ComboSystem';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -282,6 +283,9 @@ export class ZoneScene extends Container implements GameScene {
   private companionPos = { x: 0, y: 0 };
   private companionAnimTimer = 0;
 
+  // Combo system
+  private comboDisplay: { update: () => void } | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -434,6 +438,10 @@ export class ZoneScene extends Container implements GameScene {
     // Initialize companion
     CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
     this.spawnCompanionSprite();
+
+    // Combo display
+    this.comboDisplay = createComboDisplay(this.uiContainer, w, h);
+    ComboManager.shared.reset();
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -2341,7 +2349,8 @@ export class ZoneScene extends Container implements GameScene {
 
     const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
     const statusDmgMult = this.playerStatusEffects.getDamageMultiplier();
-    const damage = Math.floor(baseDmg * statusDmgMult);
+    const comboResult = ComboManager.shared.registerHit();
+    const damage = Math.floor(baseDmg * statusDmgMult * comboResult.multiplier * this.getCompanionDamageBonus());
     const isCrit = Math.random() < champ.baseStats.luck * 0.01;
     const totalDmg = isCrit ? damage * 2 : damage;
 
@@ -2574,6 +2583,14 @@ export class ZoneScene extends Container implements GameScene {
 
   private updateCombat(dt: number): void {
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+    const comboBroke = ComboManager.shared.update(dt);
+    if (comboBroke && ComboManager.shared.highestCombo >= 5) {
+      this.showFloatingText(
+        this.playerScreenPos.x, this.playerScreenPos.y - 60,
+        `Combo terminé: ${ComboManager.shared.highestCombo}×`, 0xff8844,
+      );
+    }
+    if (this.comboDisplay) this.comboDisplay.update();
   }
 
   private updateStatusEffects(dt: number): void {
