@@ -27,6 +27,7 @@ import { BestiaryManager } from '../game/BestiarySystem';
 import { showBestiaryPanel } from '../ui/BestiaryPanel';
 import { AchievementManager } from '../game/AchievementSystem';
 import { createAchievementToast, showAchievementPanel } from '../ui/AchievementUI';
+import { showSkillTreePanel } from '../ui/SkillTreePanel';
 import { WorldMapScene } from './WorldMapScene';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -409,6 +410,9 @@ export class ZoneScene extends Container implements GameScene {
 
     // Achievements button (next to bestiary)
     this.createAchievementButton(w);
+
+    // Skill tree button (next to achievements)
+    this.createSkillTreeButton(w);
 
     // World mechanics
     this.worldMechanics = createWorldMechanics(this.zone.worldID);
@@ -1404,6 +1408,39 @@ export class ZoneScene extends Container implements GameScene {
     if (this.dialoguePanel) return;
     this.isPaused = true;
     this.dialoguePanel = showAchievementPanel(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
+    );
+  }
+
+  private createSkillTreeButton(screenWidth: number): void {
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, 36, 28, 6)
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Tree/branch icon
+    const icon = new Graphics();
+    icon.rect(17, 8, 2, 14).fill({ color: 0x5588cc, alpha: 0.7 });
+    icon.circle(18, 8, 4).fill({ color: 0x5588cc, alpha: 0.6 });
+    icon.circle(12, 14, 3).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.circle(24, 14, 3).fill({ color: 0x4477aa, alpha: 0.5 });
+    icon.moveTo(18, 12).lineTo(12, 14).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    icon.moveTo(18, 12).lineTo(24, 14).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 - 60;
+    btn.y = 10;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleSkillTree());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleSkillTree(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showSkillTreePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       () => this.closeDialogue(),
     );
