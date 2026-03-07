@@ -19,6 +19,7 @@ import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../ga
 import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
 import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
+import { drawEquipmentOverlay } from '../rendering/EquipmentVisuals';
 import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
@@ -1075,6 +1076,10 @@ export class ZoneScene extends Container implements GameScene {
   private drawPlayer(): void {
     const champ = GameManager.shared.champion;
     drawPlayerCharacter(this.playerSprite, champ?.championClass ?? 'mistborn');
+    // Draw equipment visuals on top of base character
+    if (champ) {
+      drawEquipmentOverlay(this.playerSprite, champ.equipment);
+    }
   }
 
   // ─── NPCs ────────────────────────────────────────────────────
