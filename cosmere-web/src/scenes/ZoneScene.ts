@@ -9,6 +9,8 @@ import { HUD } from '../ui/HUD';
 import { InventoryPanel } from '../ui/InventoryPanel';
 import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
 import { showPauseMenu } from '../ui/PauseMenu';
+import { QuestTracker } from '../ui/QuestTracker';
+import { QuestManager } from '../game/QuestManager';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
@@ -207,6 +209,9 @@ export class ZoneScene extends Container implements GameScene {
   private pauseMenu: Container | null = null;
   private isPaused = false;
 
+  // Quest tracker
+  private questTracker!: QuestTracker;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -315,6 +320,15 @@ export class ZoneScene extends Container implements GameScene {
 
     // Inventory button (next to pause)
     this.createInventoryButton(w);
+
+    // Quest system
+    QuestManager.shared.init();
+    QuestManager.shared.onZoneEntered(this.zone.id);
+
+    // Quest tracker HUD
+    this.questTracker = new QuestTracker(w);
+    this.questTracker.refresh();
+    this.uiContainer.addChild(this.questTracker);
 
     // Center camera immediately
     this.worldContainer.x = w / 2 - this.playerScreenPos.x;
@@ -987,6 +1001,10 @@ export class ZoneScene extends Container implements GameScene {
   private showDialogue(npcID: string, _dialogueTreeID: string | null): void {
     if (this.dialoguePanel) return;
     this.isPaused = true;
+
+    // Track quest progress for NPC interaction
+    QuestManager.shared.onNPCTalkedTo(npcID);
+    this.checkQuestCompletion();
     const npcName = this.formatNPCName(npcID);
     this.dialoguePanel = showDialoguePanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
@@ -1162,10 +1180,12 @@ export class ZoneScene extends Container implements GameScene {
         const qty = entry.minQuantity + Math.floor(Math.random() * (entry.maxQuantity - entry.minQuantity + 1));
         for (let i = 0; i < qty; i++) {
           champ.inventoryItemIDs.push(entry.itemID);
+          QuestManager.shared.onItemCollected(entry.itemID);
         }
       }
     }
 
+    this.checkQuestCompletion();
     this.showFloatingText(instance.position.x, instance.position.y - 20,
       itemsFound > 0 ? `+${itemsFound} objet(s)!` : 'Vide...', 0xeedd88);
   }
@@ -1429,6 +1449,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateAnimations(delta);
     this.spawnAmbientParticles(delta);
     this.hud.refresh(this.zone.name);
+    this.questTracker.refresh();
     this.actionButtons.update(dt);
     this.checkZoneExit();
     this.checkProximity();
@@ -1798,6 +1819,7 @@ export class ZoneScene extends Container implements GameScene {
         const item = gameData.item(lootEntry.itemID);
         if (item && champ) {
           champ.inventoryItemIDs.push(lootEntry.itemID);
+          QuestManager.shared.onItemCollected(lootEntry.itemID);
           setTimeout(() => {
             this.showFloatingText(
               enemy.position.x, enemy.position.y - 30,
@@ -1807,6 +1829,10 @@ export class ZoneScene extends Container implements GameScene {
         }
       }
     }
+
+    // Track quest progress
+    QuestManager.shared.onEnemyKilled(enemy.data.id);
+    this.checkQuestCompletion();
 
     if (leveledUp) {
       this.showLevelUp();
@@ -1854,6 +1880,25 @@ export class ZoneScene extends Container implements GameScene {
       else txt.destroy();
     };
     requestAnimationFrame(anim);
+  }
+
+  private checkQuestCompletion(): void {
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    for (const qid of [...champ.activeQuestIDs]) {
+      if (QuestManager.shared.checkQuestCompletion(qid)) {
+        const result = QuestManager.shared.completeQuest(qid);
+        if (result) {
+          // Show quest completion reward
+          this.showFloatingText(
+            this.playerScreenPos.x, this.playerScreenPos.y - 50,
+            `Quête terminée! +${result.xp}XP +${result.gold}or`, 0xffcc44,
+          );
+          this.questTracker.refresh();
+        }
+      }
+    }
   }
 
   private showFloatingText(x: number, y: number, msg: string, color: number): void {
