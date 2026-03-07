@@ -11,6 +11,7 @@ import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
 import { showCraftingPanel, getRecipeEffect } from '../ui/CraftingPanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
+import { showQuestJournal } from '../ui/QuestJournal';
 import { Minimap } from '../ui/Minimap';
 import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
@@ -465,6 +466,9 @@ export class ZoneScene extends Container implements GameScene {
 
     // Companion button
     this.createCompanionButton(w, layout);
+
+    // Quest journal button
+    this.createQuestJournalButton(w, layout);
 
     // Initialize companion
     CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
@@ -1590,6 +1594,40 @@ export class ZoneScene extends Container implements GameScene {
     this.dialoguePanel = showCompanionPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       () => { this.closeDialogue(); this.spawnCompanionSprite(); },
+    );
+  }
+
+  private createQuestJournalButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Book icon
+    const icon = new Graphics();
+    icon.roundRect(scaled(10, layout), scaled(7, layout), scaled(16, layout), scaled(15, layout), scaled(2, layout)).fill({ color: 0x886633, alpha: 0.7 });
+    icon.rect(scaled(17, layout), scaled(7, layout), scaled(2, layout), scaled(15, layout)).fill({ color: 0x664422, alpha: 0.8 });
+    icon.rect(scaled(12, layout), scaled(10, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
+    icon.rect(scaled(12, layout), scaled(14, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
+    icon.rect(scaled(12, layout), scaled(18, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 - scaled(144, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleQuestJournal());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleQuestJournal(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showQuestJournal(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
     );
   }
 
