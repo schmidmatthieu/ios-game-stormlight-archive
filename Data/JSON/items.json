@@ -330,5 +330,363 @@
     ],
     "spriteName": "item_honorblade_shard",
     "worldOrigin": "roshar"
+  },
+  {
+    "id": "desert_water_flask",
+    "name": "Gourde du Désert",
+    "description": "Eau purifiée de Dayside. Essentielle pour la Maîtrise du Sable.",
+    "rarity": "common",
+    "slot": "belt",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_water_flask",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "white_sand_pouch",
+    "name": "Sacoche de Sable Blanc",
+    "description": "Sable blanc de Dayside, infusé par le soleil. Réagit à l'Investiture.",
+    "rarity": "uncommon",
+    "slot": "offhand",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_white_sand",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "wyrm_scale",
+    "name": "Écaille de Ver des Sables",
+    "description": "Écaille iridescente d'un ver des sables. Incroyablement résistante à la chaleur.",
+    "rarity": "rare",
+    "slot": "chest",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "agility", "value": 2 }, { "stat": "strength", "value": 1 }],
+    "traits": [
+      {
+        "id": "trait_sand_resistance",
+        "name": "Résistance du Désert",
+        "description": "Immunité aux effets de sable et réduction de 10% des dégâts physiques",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": -0.10
+      }
+    ],
+    "spriteName": "item_wyrm_scale",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "raider_scimitar",
+    "name": "Cimeterre de Pillard",
+    "description": "Lame courbe des nomades de Dayside. Rapide et tranchante.",
+    "rarity": "uncommon",
+    "slot": "mainWeapon",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "strength", "value": 3 }, { "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_raider_scimitar",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "sandling_carapace",
+    "name": "Carapace de Sablonite",
+    "description": "Carapace cristallisée d'une Sablonite. Le sable blanc s'y est solidifié en armure naturelle.",
+    "rarity": "epic",
+    "slot": "shoulders",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "vigor", "value": 5 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "spirit", "value": 2 },
+      { "stat": "investiture", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_sand_shield",
+        "name": "Bouclier de Sable",
+        "description": "15% de chance de bloquer une attaque avec un mur de sable automatique",
+        "effectType": "critChance",
+        "effectValue": 0.15
+      },
+      {
+        "id": "trait_solar_charge",
+        "name": "Charge Solaire",
+        "description": "Régénère l'Investiture en plein soleil (+3/s)",
+        "effectType": "investitureRegen",
+        "effectValue": 3.0
+      }
+    ],
+    "spriteName": "item_sandling_carapace",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "dark_sand_core",
+    "name": "Noyau de Sable Noir",
+    "description": "Cristal de sable noir de Darkside. Absorbe la lumière et l'énergie.",
+    "rarity": "rare",
+    "slot": "ring1",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "spirit", "value": 4 }, { "stat": "investiture", "value": 3 }, { "stat": "luck", "value": 1 }],
+    "traits": [
+      {
+        "id": "trait_dark_absorption",
+        "name": "Absorption Sombre",
+        "description": "Les attaques magiques reçues restaurent 5% d'Investiture",
+        "effectType": "investitureRegen",
+        "effectValue": 0.05
+      }
+    ],
+    "spriteName": "item_dark_sand_core",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "sand_lord_crown",
+    "name": "Couronne du Seigneur des Sables",
+    "description": "La couronne noire du maître de Darkside. Les grains de sable tourbillonnent autour d'elle.",
+    "rarity": "legendary",
+    "slot": "helmet",
+    "requiredLevel": 6,
+    "statBonuses": [
+      { "stat": "spirit", "value": 6 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_sand_lord_command",
+        "name": "Commandement du Sable",
+        "description": "Les compétences de Maîtrise du Sable coûtent 30% moins d'eau",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.3
+      }
+    ],
+    "spriteName": "item_sand_lord_crown",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "darkside_shard",
+    "name": "Éclat de Darkside",
+    "description": "Fragment du pouvoir primordial de Darkside. Pulse entre lumière et ténèbres.",
+    "rarity": "cosmeric",
+    "slot": "offhand",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "spirit", "value": 7 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "investiture", "value": 6 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_duality",
+        "name": "Dualité Lumière-Ombre",
+        "description": "Les attaques alternent entre dégâts de lumière et d'ombre (+40% dégâts)",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.4
+      },
+      {
+        "id": "trait_taldain_resonance",
+        "name": "Résonance de Taldain",
+        "description": "+20% toutes stats sur Taldain, +10% sur les autres mondes",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_darkside_shard",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "nightmare_ink",
+    "name": "Encre de Cauchemar",
+    "description": "Encre noire extraite de cauchemars vaincus. Utilisée par les Peintres pour leurs techniques.",
+    "rarity": "common",
+    "slot": "offhand",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_nightmare_ink",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "hion_shard",
+    "name": "Éclat de Hion",
+    "description": "Fragment d'une ligne de hion. Brille d'une douce lumière protectrice.",
+    "rarity": "uncommon",
+    "slot": "amulet",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "investiture", "value": 3 }, { "stat": "spirit", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_hion_shard",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "shadow_fabric",
+    "name": "Tissu d'Ombre",
+    "description": "Matière sombre arrachée à un Grand Cauchemar. Se fond dans l'obscurité.",
+    "rarity": "rare",
+    "slot": "cape",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "agility", "value": 4 }, { "stat": "luck", "value": 2 }, { "stat": "spirit", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_shadow_cloak",
+        "name": "Cape d'Ombre",
+        "description": "+20% esquive dans les zones sombres",
+        "effectType": "critChance",
+        "effectValue": 0.2
+      }
+    ],
+    "spriteName": "item_shadow_fabric",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "shadow_cloak_piece",
+    "name": "Fragment de Cape des Ombres",
+    "description": "Morceau de la cape d'un Chercheur d'Ombre. Se dissout partiellement à la lumière.",
+    "rarity": "epic",
+    "slot": "cape",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "agility", "value": 5 },
+      { "stat": "spirit", "value": 3 },
+      { "stat": "luck", "value": 3 },
+      { "stat": "investiture", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_phase_shift",
+        "name": "Décalage de Phase",
+        "description": "10% de chance de devenir intangible 1s après avoir été touché",
+        "effectType": "critChance",
+        "effectValue": 0.1
+      },
+      {
+        "id": "trait_nightmare_walker",
+        "name": "Marcheur de Cauchemars",
+        "description": "+25% dégâts contre les cauchemars",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.25
+      }
+    ],
+    "spriteName": "item_shadow_cloak",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "sentinel_core",
+    "name": "Noyau de Sentinelle",
+    "description": "Le cœur cristallisé d'une Sentinelle Cauchemardesque. Pulse d'une énergie sombre mais stable.",
+    "rarity": "rare",
+    "slot": "ring1",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "spirit", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_sentinel_ward",
+        "name": "Protection de Sentinelle",
+        "description": "Crée un bouclier absorbant 50 dégâts toutes les 30s",
+        "effectType": "investitureRegen",
+        "effectValue": 50.0
+      }
+    ],
+    "spriteName": "item_sentinel_core",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "nightmare_heart",
+    "name": "Cœur du Père des Cauchemars",
+    "description": "Le cœur-machine du Père des Cauchemars. Entre technologie et magie, il pulse d'une énergie qui défie la réalité.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 7 },
+      { "stat": "investiture", "value": 6 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_reality_painter",
+        "name": "Peintre de Réalité",
+        "description": "Les techniques de peinture coûtent 40% moins d'encre et font +30% de dégâts",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.4
+      }
+    ],
+    "spriteName": "item_nightmare_heart",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "machine_core_fragment",
+    "name": "Fragment du Noyau Machine",
+    "description": "Un fragment de la machine au cœur du Linceul. La technologie d'une civilisation oubliée.",
+    "rarity": "cosmeric",
+    "slot": "chest",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "vigor", "value": 8 },
+      { "stat": "spirit", "value": 6 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_machine_resonance",
+        "name": "Résonance Mécanique",
+        "description": "Les cooldowns de toutes les compétences sont réduits de 20%",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.2
+      },
+      {
+        "id": "trait_komashi_bond",
+        "name": "Lien de Komashi",
+        "description": "Les alliés invoqués (peintures, pierres) ont +50% de durée et de puissance",
+        "effectType": "summonDuration",
+        "effectValue": 0.5
+      }
+    ],
+    "spriteName": "item_machine_core",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "painters_masterwork",
+    "name": "Chef-d'Œuvre du Peintre",
+    "description": "La peinture ultime — un portrait qui capture l'essence même de la réalité. L'œuvre d'une vie.",
+    "rarity": "cosmeric",
+    "slot": "offhand",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 9 },
+      { "stat": "investiture", "value": 7 },
+      { "stat": "agility", "value": 4 },
+      { "stat": "luck", "value": 4 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "strength", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_reality_canvas",
+        "name": "Toile de Réalité",
+        "description": "Peut peindre des objets dans la réalité — crée des consommables aléatoires après chaque combat",
+        "effectType": "lifesteal",
+        "effectValue": 0.1
+      },
+      {
+        "id": "trait_dream_walker",
+        "name": "Marcheur de Rêves",
+        "description": "+20% toutes stats la nuit ou dans les zones sombres, accès au Shadesmar",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.2
+      }
+    ],
+    "spriteName": "item_painters_masterwork",
+    "worldOrigin": "komashi"
   }
 ]

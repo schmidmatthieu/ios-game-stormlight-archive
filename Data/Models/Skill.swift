@@ -7,6 +7,8 @@ enum MagicSystemType: String, Codable, CaseIterable {
     case surgebinding // Roshar — liens spren
     case awakening    // Nalthis — Souffle / BioChroma
     case aonDor       // Sel — glyphes lumineux
+    case sandMastery  // Taldain — contrôle du sable blanc
+    case painting     // Komashi — peinture de cauchemars + empilement de pierres
 }
 
 // MARK: - Skill Targeting

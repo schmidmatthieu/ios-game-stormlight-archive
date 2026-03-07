@@ -90,4 +90,9 @@ enum WeatherEffect: String, Codable {
     case rain
     case colorDrain     // Nalthis — couleurs qui s'estompent
     case aonGlow        // Sel — lueur mystique
+    case sandstorm      // Taldain — tempête de sable
+    case eternalSun     // Taldain Dayside — soleil permanent, lumière intense
+    case eternalNight   // Taldain Darkside — nuit permanente
+    case hionFlicker    // Komashi — lignes de hion vacillantes
+    case nightmareAura  // Komashi — aura de cauchemar, réalité qui se déforme
 }

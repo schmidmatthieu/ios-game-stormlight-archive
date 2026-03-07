@@ -2,6 +2,7 @@ import SpriteKit
 import GameplayKit
 
 /// Scène de jeu principale — zone isométrique explorable
+/// Contrôles style Wild Rift : joystick gauche + boutons d'action droite
 class ZoneScene: SKScene {
 
     // MARK: - Properties
@@ -9,14 +10,19 @@ class ZoneScene: SKScene {
     private let zone: Zone
     private let cameraNode = SKCameraNode()
     private let worldNode = SKNode()      // Contient tout le monde de jeu
-    private let hudNode = SKNode()        // UI par-dessus
 
     private var playerSprite: SKSpriteNode!
     private var enemySprites: [String: SKSpriteNode] = [:]
 
     private let pathfinding = PathfindingSystem()
-    private var currentPath: [GridPosition] = []
-    private var isMoving = false
+
+    // Contrôles Wild Rift
+    private var joystick: VirtualJoystickNode!
+    private var actionButtons: ActionButtonsNode!
+
+    // Mouvement continu via joystick
+    private var lastUpdateTime: TimeInterval = 0
+    private let playerSpeed: CGFloat = 120  // Points par seconde
 
     // Taille d'une tile isométrique
     private let tileSize = CGSize(width: 64, height: 32)
@@ -26,6 +32,7 @@ class ZoneScene: SKScene {
     init(zone: Zone, size: CGSize) {
         self.zone = zone
         super.init(size: size)
+        isMultipleTouchEnabled = true
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -42,6 +49,7 @@ class ZoneScene: SKScene {
         setupEnemies()
         setupNPCs()
         setupHUD()
+        setupControls()
         setupPathfinding()
 
         // Musique d'ambiance
@@ -100,7 +108,7 @@ class ZoneScene: SKScene {
         playerSprite.addChild(nameLabel)
 
         worldNode.addChild(playerSprite)
-        centerCamera(on: playerSprite.position)
+        centerCamera(on: playerSprite.position, animated: false)
     }
 
     private func setupEnemies() {
@@ -146,10 +154,9 @@ class ZoneScene: SKScene {
     }
 
     private func setupHUD() {
-        // HUD fixé à la caméra
         guard let champion = GameManager.shared.champion else { return }
 
-        // Barre de PV
+        // Barre de PV (haut gauche)
         let hpBg = SKShapeNode(rectOf: CGSize(width: 120, height: 12), cornerRadius: 3)
         hpBg.fillColor = SKColor(red: 0.3, green: 0, blue: 0, alpha: 0.8)
         hpBg.strokeColor = .red
@@ -191,6 +198,7 @@ class ZoneScene: SKScene {
         levelLabel.fontSize = 14
         levelLabel.fontColor = .white
         levelLabel.position = CGPoint(x: -size.width / 2 + 30, y: size.height / 2 - 20)
+        levelLabel.name = "levelLabel"
         cameraNode.addChild(levelLabel)
 
         // Nom de la zone
@@ -201,32 +209,120 @@ class ZoneScene: SKScene {
         zoneLabel.position = CGPoint(x: 0, y: size.height / 2 - 30)
         cameraNode.addChild(zoneLabel)
 
-        // Skill bar (4 boutons en bas)
-        for i in 0..<4 {
-            let btn = SKShapeNode(rectOf: CGSize(width: 50, height: 50), cornerRadius: 8)
-            btn.fillColor = SKColor(white: 0.15, alpha: 0.9)
-            btn.strokeColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 1.0)
-            btn.lineWidth = 2
-            btn.position = CGPoint(
-                x: CGFloat(i - 2) * 60 + 30,
-                y: -size.height / 2 + 50
-            )
-            btn.name = "skill_\(i)"
+        // XP bar (sous les barres PV/MP)
+        let xpBg = SKShapeNode(rectOf: CGSize(width: 120, height: 6), cornerRadius: 2)
+        xpBg.fillColor = SKColor(white: 0.1, alpha: 0.8)
+        xpBg.strokeColor = SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 0.6)
+        xpBg.position = CGPoint(x: -size.width / 2 + 80, y: size.height / 2 - 72)
+        cameraNode.addChild(xpBg)
 
-            let slotLabel = SKLabelNode(fontNamed: "Helvetica")
-            slotLabel.text = "\(i + 1)"
-            slotLabel.fontSize = 12
-            slotLabel.fontColor = .gray
-            slotLabel.verticalAlignmentMode = .center
-            btn.addChild(slotLabel)
+        let xpLabel = SKLabelNode(fontNamed: "Helvetica")
+        xpLabel.text = "XP \(champion.currentXP)/\(champion.xpForNextLevel)"
+        xpLabel.fontSize = 7
+        xpLabel.fontColor = SKColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0)
+        xpLabel.verticalAlignmentMode = .center
+        xpBg.addChild(xpLabel)
+    }
 
-            cameraNode.addChild(btn)
+    // MARK: - Controls Setup (Wild Rift Style)
+
+    private func setupControls() {
+        // --- Joystick (bas gauche) ---
+        joystick = VirtualJoystickNode()
+        joystick.position = CGPoint(
+            x: -size.width / 2 + 100,
+            y: -size.height / 2 + 110
+        )
+        joystick.zPosition = 2000
+
+        joystick.onDirectionChanged = { [weak self] direction, magnitude in
+            self?.handleJoystickInput(direction: direction, magnitude: magnitude)
+        }
+
+        joystick.onRelease = { [weak self] in
+            // Arrêter le mouvement, idle animation
+            self?.playerSprite?.removeAction(forKey: "walkAnimation")
+        }
+
+        cameraNode.addChild(joystick)
+
+        // --- Action Buttons (bas droite) ---
+        actionButtons = ActionButtonsNode()
+        actionButtons.position = CGPoint(
+            x: size.width / 2 - 100,
+            y: -size.height / 2 + 100
+        )
+        actionButtons.zPosition = 2000
+
+        actionButtons.onAttackPressed = { [weak self] in
+            self?.handleAttack()
+        }
+
+        actionButtons.onAbilityPressed = { [weak self] index in
+            self?.handleAbility(index: index)
+        }
+
+        actionButtons.onUltimatePressed = { [weak self] in
+            self?.handleUltimate()
+        }
+
+        // Configurer les icônes selon la classe
+        configureAbilityIcons()
+
+        cameraNode.addChild(actionButtons)
+    }
+
+    private func configureAbilityIcons() {
+        guard let champion = GameManager.shared.champion else { return }
+
+        switch champion.championClass {
+        case .mistborn:
+            actionButtons.updateAbilityIcon(index: 0, text: "Fe", color: SKColor(red: 0.5, green: 0.5, blue: 0.6, alpha: 0.85)) // Acier Push
+            actionButtons.updateAbilityIcon(index: 1, text: "Ir", color: SKColor(red: 0.4, green: 0.4, blue: 0.5, alpha: 0.85)) // Fer Pull
+            actionButtons.updateAbilityIcon(index: 2, text: "Pw", color: SKColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 0.85)) // Pewter
+            actionButtons.updateAbilityIcon(index: 3, text: "Sn", color: SKColor(red: 0.7, green: 0.7, blue: 0.8, alpha: 0.85)) // Étain
+
+        case .radiant:
+            let order = champion.radiantOrder ?? .windrunner
+            switch order {
+            case .windrunner:
+                actionButtons.updateAbilityIcon(index: 0, text: "GR", color: SKColor(red: 0.2, green: 0.6, blue: 0.9, alpha: 0.85)) // Gravitation
+                actionButtons.updateAbilityIcon(index: 1, text: "AD", color: SKColor(red: 0.3, green: 0.7, blue: 0.8, alpha: 0.85)) // Adhésion
+                actionButtons.updateAbilityIcon(index: 2, text: "LS", color: SKColor(red: 0.1, green: 0.5, blue: 0.7, alpha: 0.85)) // Lashing
+                actionButtons.updateAbilityIcon(index: 3, text: "SH", color: SKColor(red: 0.4, green: 0.8, blue: 1.0, alpha: 0.85)) // Shield
+            case .edgedancer:
+                actionButtons.updateAbilityIcon(index: 0, text: "AB", color: SKColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 1, text: "PR", color: SKColor(red: 0.3, green: 0.9, blue: 0.5, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 2, text: "SL", color: SKColor(red: 0.1, green: 0.7, blue: 0.3, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 3, text: "HL", color: SKColor(red: 0.4, green: 1.0, blue: 0.6, alpha: 0.85))
+            case .lightweaver:
+                actionButtons.updateAbilityIcon(index: 0, text: "IL", color: SKColor(red: 0.8, green: 0.6, blue: 0.9, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 1, text: "TR", color: SKColor(red: 0.7, green: 0.5, blue: 0.8, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 2, text: "LR", color: SKColor(red: 0.9, green: 0.7, blue: 1.0, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 3, text: "MM", color: SKColor(red: 0.6, green: 0.4, blue: 0.7, alpha: 0.85))
+            case .bondsmith:
+                actionButtons.updateAbilityIcon(index: 0, text: "TN", color: SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 1, text: "AD", color: SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 2, text: "UN", color: SKColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 0.85))
+                actionButtons.updateAbilityIcon(index: 3, text: "BN", color: SKColor(red: 0.7, green: 0.6, blue: 0.1, alpha: 0.85))
+            }
+
+        case .awakener:
+            actionButtons.updateAbilityIcon(index: 0, text: "AW", color: SKColor(red: 0.8, green: 0.3, blue: 0.6, alpha: 0.85))
+            actionButtons.updateAbilityIcon(index: 1, text: "AN", color: SKColor(red: 0.7, green: 0.2, blue: 0.5, alpha: 0.85))
+            actionButtons.updateAbilityIcon(index: 2, text: "AU", color: SKColor(red: 0.9, green: 0.4, blue: 0.7, alpha: 0.85))
+            actionButtons.updateAbilityIcon(index: 3, text: "DR", color: SKColor(red: 0.6, green: 0.1, blue: 0.4, alpha: 0.85))
+
+        case .elantrian:
+            actionButtons.updateAbilityIcon(index: 0, text: "Rao", color: SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 0.85))
+            actionButtons.updateAbilityIcon(index: 1, text: "Ash", color: SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 0.85))
+            actionButtons.updateAbilityIcon(index: 2, text: "Tia", color: SKColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 0.85))
+            actionButtons.updateAbilityIcon(index: 3, text: "Ien", color: SKColor(red: 0.7, green: 0.6, blue: 0.1, alpha: 0.85))
         }
     }
 
     private func setupPathfinding() {
         var obstacles = Set<GridPosition>()
-        // Ajouter les positions d'ennemis et de PNJ comme obstacles
         for enemy in zone.enemySpawns {
             obstacles.insert(enemy.position)
         }
@@ -234,6 +330,257 @@ class ZoneScene: SKScene {
             obstacles.insert(npc.position)
         }
         pathfinding.setupGrid(width: zone.gridWidth, height: zone.gridHeight, obstacles: obstacles)
+    }
+
+    // MARK: - Joystick Movement
+
+    private func handleJoystickInput(direction: CGVector, magnitude: CGFloat) {
+        // Direction du joystick → direction isométrique
+        // Le joystick donne un vecteur screen-space, on le convertit en iso-space
+        // En iso : droite = (+1, -1), haut = (-1, -1), etc.
+        // On garde le mouvement fluide en pixels plutôt qu'en tiles
+    }
+
+    private func movePlayerContinuous(deltaTime: TimeInterval) {
+        guard joystick.isActive, joystick.magnitude > 0 else { return }
+
+        let dir = joystick.direction
+        let speed = playerSpeed * joystick.magnitude * CGFloat(deltaTime)
+
+        // Convertir la direction du joystick (screen space) en isométrique
+        // Screen X → iso diagonal droite, Screen Y → iso diagonal haut
+        let isoX = dir.dx * speed
+        let isoY = dir.dy * speed
+
+        let newPos = CGPoint(
+            x: playerSprite.position.x + isoX,
+            y: playerSprite.position.y + isoY
+        )
+
+        // Vérifier les limites de la grille
+        let gridPos = gridFromIso(newPos)
+        guard gridPos.col >= 0, gridPos.col < zone.gridWidth,
+              gridPos.row >= 0, gridPos.row < zone.gridHeight else { return }
+
+        playerSprite.position = newPos
+        GameManager.shared.champion?.gridPosition = gridPos
+
+        // Smooth camera follow
+        centerCamera(on: newPos, animated: true)
+
+        // Vérifier les transitions de zone
+        checkZoneConnections(at: gridPos)
+
+        // Vérifier proximité avec PNJ/ennemis
+        checkProximityInteractions(at: gridPos)
+    }
+
+    // MARK: - Action Handlers
+
+    private func handleAttack() {
+        guard let champion = GameManager.shared.champion else { return }
+
+        // Trouver l'ennemi le plus proche dans le range d'attaque
+        let attackRange: CGFloat = 60
+        var closestEnemy: (name: String, sprite: SKSpriteNode, distance: CGFloat)?
+
+        for (name, sprite) in enemySprites {
+            let dist = hypot(
+                sprite.position.x - playerSprite.position.x,
+                sprite.position.y - playerSprite.position.y
+            )
+            if dist <= attackRange {
+                if closestEnemy == nil || dist < closestEnemy!.distance {
+                    closestEnemy = (name, sprite, dist)
+                }
+            }
+        }
+
+        if let target = closestEnemy {
+            // Animation d'attaque
+            let attackAnim = SKAction.sequence([
+                SKAction.scale(to: 1.2, duration: 0.05),
+                SKAction.scale(to: 1.0, duration: 0.1)
+            ])
+            playerSprite.run(attackAnim)
+
+            // Flash sur l'ennemi
+            let flash = SKAction.sequence([
+                SKAction.colorize(with: .white, colorBlendFactor: 0.8, duration: 0.05),
+                SKAction.colorize(withColorBlendFactor: 0, duration: 0.1)
+            ])
+            target.sprite.run(flash)
+
+            // Dégâts flottants
+            let damage = champion.baseStats.strength + 5
+            let dmgLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
+            dmgLabel.text = "\(damage)"
+            dmgLabel.fontSize = 14
+            dmgLabel.fontColor = .white
+            dmgLabel.position = target.sprite.position
+            dmgLabel.zPosition = 500
+            worldNode.addChild(dmgLabel)
+
+            dmgLabel.run(SKAction.sequence([
+                SKAction.group([
+                    SKAction.moveBy(x: CGFloat.random(in: -15...15), y: 40, duration: 0.6),
+                    SKAction.fadeOut(withDuration: 0.5)
+                ]),
+                SKAction.removeFromParent()
+            ]))
+
+            AudioManager.shared.playSFX("attack_hit", on: self)
+        } else {
+            // Attaque dans le vide — animation swing
+            let swing = SKAction.sequence([
+                SKAction.rotate(byAngle: 0.3, duration: 0.08),
+                SKAction.rotate(byAngle: -0.3, duration: 0.08)
+            ])
+            playerSprite.run(swing)
+        }
+    }
+
+    private func handleAbility(index: Int) {
+        guard var champion = GameManager.shared.champion else { return }
+
+        switch champion.championClass {
+        case .mistborn:
+            let metals: [SkillResourceType] = [.steel, .iron, .pewter, .tin]
+            let metal = metals[index]
+            let allomancy = AllomancySystem()
+            let result = allomancy.burnMetal(metal, champion: &champion, targetPosition: nil)
+            GameManager.shared.champion = champion
+
+            if result.success {
+                showAbilityEffect(description: result.effectDescription)
+                actionButtons.startCooldown(abilityIndex: index, duration: 3.0)
+            }
+
+        case .radiant:
+            let surgebinding = SurgebindingSystem()
+            let surges: [SurgebindingSystem.Surge] = [.gravitation, .adhesion, .abrasion, .progression]
+            let surge = index < surges.count ? surges[index] : .gravitation
+            let result = surgebinding.useSurge(surge, champion: &champion, targetPosition: nil)
+            GameManager.shared.champion = champion
+
+            if result.success {
+                showAbilityEffect(description: result.description)
+                actionButtons.startCooldown(abilityIndex: index, duration: 5.0)
+
+                if result.healing > 0 {
+                    showHealEffect(amount: result.healing)
+                }
+            }
+
+        default:
+            showAbilityEffect(description: "Compétence \(index + 1) activée")
+            actionButtons.startCooldown(abilityIndex: index, duration: 4.0)
+        }
+    }
+
+    private func handleUltimate() {
+        guard let champion = GameManager.shared.champion else { return }
+
+        // Effet ultime spectaculaire
+        let ultimateFlash = SKShapeNode(circleOfRadius: 150)
+        ultimateFlash.fillColor = .clear
+        ultimateFlash.strokeColor = SKColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0)
+        ultimateFlash.lineWidth = 4
+        ultimateFlash.position = playerSprite.position
+        ultimateFlash.zPosition = 400
+        ultimateFlash.setScale(0.1)
+        worldNode.addChild(ultimateFlash)
+
+        ultimateFlash.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.scale(to: 1.5, duration: 0.5),
+                SKAction.fadeOut(withDuration: 0.5)
+            ]),
+            SKAction.removeFromParent()
+        ]))
+
+        // Screen shake
+        let shake = SKAction.sequence([
+            SKAction.moveBy(x: 5, y: 3, duration: 0.03),
+            SKAction.moveBy(x: -10, y: -6, duration: 0.03),
+            SKAction.moveBy(x: 8, y: 4, duration: 0.03),
+            SKAction.moveBy(x: -3, y: -1, duration: 0.03)
+        ])
+        cameraNode.run(SKAction.repeat(shake, count: 4))
+
+        let ultText: String
+        switch champion.championClass {
+        case .mistborn:  ultText = "BRUME ETERNELLE !"
+        case .radiant:   ultText = "SERMENT RADIEUX !"
+        case .awakener:  ultText = "ÉVEIL SUPREME !"
+        case .elantrian: ultText = "AON ULTIME !"
+        }
+
+        showAbilityEffect(description: ultText)
+    }
+
+    // MARK: - Visual Effects
+
+    private func showAbilityEffect(description: String) {
+        let label = SKLabelNode(fontNamed: "Copperplate-Bold")
+        label.text = description
+        label.fontSize = 16
+        label.fontColor = SKColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 1.0)
+        label.position = CGPoint(x: 0, y: size.height / 4)
+        label.zPosition = 3000
+        cameraNode.addChild(label)
+
+        label.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.moveBy(x: 0, y: 30, duration: 1.5),
+                SKAction.sequence([
+                    SKAction.wait(forDuration: 0.8),
+                    SKAction.fadeOut(withDuration: 0.7)
+                ])
+            ]),
+            SKAction.removeFromParent()
+        ]))
+    }
+
+    private func showHealEffect(amount: Int) {
+        let healLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
+        healLabel.text = "+\(amount)"
+        healLabel.fontSize = 18
+        healLabel.fontColor = .green
+        healLabel.position = playerSprite.position
+        healLabel.zPosition = 500
+        worldNode.addChild(healLabel)
+
+        healLabel.run(SKAction.sequence([
+            SKAction.group([
+                SKAction.moveBy(x: 0, y: 50, duration: 0.8),
+                SKAction.fadeOut(withDuration: 0.7)
+            ]),
+            SKAction.removeFromParent()
+        ]))
+    }
+
+    // MARK: - Proximity Detection
+
+    private func checkProximityInteractions(at position: GridPosition) {
+        // Auto-interact avec PNJ proches
+        for npc in zone.npcSpawns {
+            let dist = abs(npc.position.col - position.col) + abs(npc.position.row - position.row)
+            if dist <= 2 {
+                // Afficher indicateur d'interaction
+                if let npcSprite = worldNode.childNode(withName: "npc_\(npc.npcID)") {
+                    if npcSprite.childNode(withName: "interact_hint") == nil {
+                        let hint = SKLabelNode(fontNamed: "Helvetica")
+                        hint.text = "Parler"
+                        hint.fontSize = 8
+                        hint.fontColor = SKColor(white: 0.8, alpha: 0.8)
+                        hint.position = CGPoint(x: 0, y: 30)
+                        hint.name = "interact_hint"
+                        npcSprite.addChild(hint)
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - Isometric Helpers
@@ -254,78 +601,13 @@ class ZoneScene: SKScene {
 
     // MARK: - Camera
 
-    private func centerCamera(on position: CGPoint) {
-        let moveAction = SKAction.move(to: position, duration: 0.2)
-        moveAction.timingMode = .easeOut
-        cameraNode.run(moveAction)
-    }
-
-    // MARK: - Touch Input
-
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
-
-        // Check HUD touches first (skill buttons)
-        let hudLocation = touch.location(in: cameraNode)
-        let hudNodes = cameraNode.nodes(at: hudLocation)
-        for node in hudNodes {
-            if let name = node.name, name.hasPrefix("skill_") {
-                handleSkillTap(name)
-                return
-            }
-        }
-
-        // World touches
-        let worldLocation = touch.location(in: worldNode)
-        let targetGrid = gridFromIso(worldLocation)
-
-        // Check if tapping on enemy
-        let worldNodes = worldNode.nodes(at: worldLocation)
-        for node in worldNodes {
-            if let name = node.name, name.hasPrefix("enemy_") {
-                handleEnemyTap(name: name)
-                return
-            }
-            if let name = node.name, name.hasPrefix("npc_") {
-                handleNPCTap(name: name)
-                return
-            }
-        }
-
-        // Move to position
-        movePlayer(to: targetGrid)
-    }
-
-    // MARK: - Player Movement
-
-    private func movePlayer(to target: GridPosition) {
-        guard let champion = GameManager.shared.champion else { return }
-
-        let path = pathfinding.findPath(from: champion.gridPosition, to: target)
-        guard !path.isEmpty else { return }
-
-        currentPath = path
-        isMoving = true
-        followPath()
-    }
-
-    private func followPath() {
-        guard !currentPath.isEmpty else {
-            isMoving = false
-            return
-        }
-
-        let next = currentPath.removeFirst()
-        let targetPos = isoPosition(col: next.col, row: next.row)
-
-        let moveAction = SKAction.move(to: targetPos, duration: 0.15)
-        moveAction.timingMode = .easeInEaseOut
-
-        playerSprite.run(moveAction) { [weak self] in
-            GameManager.shared.champion?.gridPosition = next
-            self?.centerCamera(on: targetPos)
-            self?.checkZoneConnections(at: next)
-            self?.followPath()
+    private func centerCamera(on position: CGPoint, animated: Bool) {
+        if animated {
+            let moveAction = SKAction.move(to: position, duration: 0.1)
+            moveAction.timingMode = .easeOut
+            cameraNode.run(moveAction, withKey: "cameraFollow")
+        } else {
+            cameraNode.position = position
         }
     }
 
@@ -345,26 +627,6 @@ class ZoneScene: SKScene {
         }
     }
 
-    // MARK: - Combat Interactions
-
-    private func handleEnemyTap(name: String) {
-        // TODO: Engager le combat avec l'ennemi
-        print("⚔️ Attaque: \(name)")
-    }
-
-    private func handleNPCTap(name: String) {
-        // TODO: Ouvrir le dialogue
-        let npcID = name.replacingOccurrences(of: "npc_", with: "")
-        GameManager.shared.questSystem.onNPCTalkedTo(npcID: npcID)
-        print("💬 Dialogue avec: \(npcID)")
-    }
-
-    private func handleSkillTap(_ name: String) {
-        guard let index = Int(name.replacingOccurrences(of: "skill_", with: "")) else { return }
-        print("✨ Compétence \(index + 1) activée")
-        // TODO: Activer la compétence correspondante
-    }
-
     // MARK: - Helpers
 
     private func enemyColor(for tier: EnemyTier) -> SKColor {
@@ -379,6 +641,12 @@ class ZoneScene: SKScene {
     // MARK: - Update Loop
 
     override func update(_ currentTime: TimeInterval) {
+        let deltaTime = lastUpdateTime == 0 ? 0 : currentTime - lastUpdateTime
+        lastUpdateTime = currentTime
+
+        // Mouvement continu via joystick
+        movePlayerContinuous(deltaTime: deltaTime)
+
         // TODO: Update IA ennemis, effets de statut, cooldowns
     }
 }

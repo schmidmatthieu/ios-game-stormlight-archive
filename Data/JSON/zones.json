@@ -350,5 +350,354 @@
     "ambientMusicTrack": "roshar_boss_ambient",
     "weatherEffect": "everstorm",
     "recommendedLevel": 7
+  },
+  {
+    "id": "taldain_hub",
+    "name": "Kezare — Cité des Sables",
+    "description": "La grande cité de Dayside, baignée par le soleil éternel. Les Maîtres du Sable s'entraînent dans les dojos tandis que les marchands vendent de l'eau précieuse.",
+    "worldID": "taldain",
+    "type": "hub",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "kezare_city.sks",
+    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "connections": [
+      {
+        "targetZoneID": "taldain_white_dunes",
+        "entryPointName": "city_gate",
+        "exitPosition": { "col": 40, "row": 22 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_darkside",
+        "entryPointName": "terminus",
+        "exitPosition": { "col": 5, "row": 5 },
+        "requiredQuestID": "taldain_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "water_merchant",
+        "position": { "col": 18, "row": 30 },
+        "dialogueTreeID": "water_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "sand_master_trainer",
+        "position": { "col": 28, "row": 25 },
+        "dialogueTreeID": "dojo_training",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "kenton_ally",
+        "position": { "col": 22, "row": 20 },
+        "dialogueTreeID": "kenton_intro",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [
+      {
+        "id": "kezare_hidden_well",
+        "position": { "col": 8, "row": 8 },
+        "lootTable": [
+          { "itemID": "desert_water_flask", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 }
+        ],
+        "isHidden": true,
+        "respawns": false
+      }
+    ],
+    "ambientMusicTrack": "taldain_city_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 3
+  },
+  {
+    "id": "taldain_white_dunes",
+    "name": "Les Dunes Blanches de Dayside",
+    "description": "Des étendues infinies de sable blanc scintillant sous le soleil éternel. Le sable ici est vivant, réagissant à l'Investiture.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 65,
+    "gridHeight": 65,
+    "tileMapFileName": "white_dunes.sks",
+    "playerSpawnPosition": { "col": 5, "row": 32 },
+    "connections": [
+      {
+        "targetZoneID": "taldain_hub",
+        "entryPointName": "city_return",
+        "exitPosition": { "col": 0, "row": 32 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_darkside",
+        "entryPointName": "border_crossing",
+        "exitPosition": { "col": 62, "row": 32 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "lost_traveler",
+        "position": { "col": 30, "row": 45 },
+        "dialogueTreeID": "lost_traveler_quest",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "sand_wyrm",
+        "position": { "col": 20, "row": 20 },
+        "patrolPath": [
+          { "col": 20, "row": 20 }, { "col": 30, "row": 15 },
+          { "col": 35, "row": 25 }, { "col": 20, "row": 20 }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "sand_raider",
+        "position": { "col": 40, "row": 40 },
+        "patrolPath": null,
+        "respawnTime": 100
+      },
+      {
+        "enemyID": "sand_raider",
+        "position": { "col": 50, "row": 25 },
+        "patrolPath": [
+          { "col": 50, "row": 25 }, { "col": 55, "row": 30 }
+        ],
+        "respawnTime": 100
+      },
+      {
+        "enemyID": "sandling",
+        "position": { "col": 35, "row": 50 },
+        "patrolPath": null,
+        "respawnTime": 180
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "dunes_oasis_cache",
+        "position": { "col": 45, "row": 15 },
+        "lootTable": [
+          { "itemID": "desert_water_flask", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 3 },
+          { "itemID": "white_sand_pouch", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 2 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_dunes_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 4
+  },
+  {
+    "id": "taldain_darkside",
+    "name": "Darkside — Le Côté Sombre de Taldain",
+    "description": "La face plongée dans l'obscurité éternelle. Le sable noir absorbe la lumière. Le Seigneur des Sables règne ici.",
+    "worldID": "taldain",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "darkside.sks",
+    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "connections": [
+      {
+        "targetZoneID": "taldain_hub",
+        "entryPointName": "terminus_return",
+        "exitPosition": { "col": 25, "row": 49 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "dark_sand_golem",
+        "position": { "col": 15, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "dark_sand_golem",
+        "position": { "col": 35, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "sand_lord",
+        "position": { "col": 25, "row": 8 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "taldain_boss_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 6
+  },
+  {
+    "id": "komashi_hub",
+    "name": "Kilahito — Ville des Lanternes",
+    "description": "Une ville baignée par la lumière douce des hion, lignes de lumière flottantes. Les Peintres veillent la nuit tandis que les Yoki-hijo empilent leurs pierres à l'aube.",
+    "worldID": "komashi",
+    "type": "hub",
+    "gridWidth": 40,
+    "gridHeight": 40,
+    "tileMapFileName": "kilahito_town.sks",
+    "playerSpawnPosition": { "col": 20, "row": 35 },
+    "connections": [
+      {
+        "targetZoneID": "komashi_nightmare_streets",
+        "entryPointName": "dark_alley",
+        "exitPosition": { "col": 38, "row": 20 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_shroud",
+        "entryPointName": "shrine_path",
+        "exitPosition": { "col": 5, "row": 5 },
+        "requiredQuestID": "komashi_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "ink_merchant",
+        "position": { "col": 15, "row": 25 },
+        "dialogueTreeID": "ink_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "yokihijo_elder",
+        "position": { "col": 25, "row": 15 },
+        "dialogueTreeID": "stacking_training",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "painter_nikaro",
+        "position": { "col": 20, "row": 20 },
+        "dialogueTreeID": "nikaro_intro",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [],
+    "ambientMusicTrack": "komashi_town_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 5
+  },
+  {
+    "id": "komashi_nightmare_streets",
+    "name": "Rues du Cauchemar — Kilahito Nocturne",
+    "description": "La nuit, les cauchemars émergent des ombres et prennent forme. Les lignes de hion vacillent. Seuls les Peintres osent s'aventurer.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "nightmare_streets.sks",
+    "playerSpawnPosition": { "col": 5, "row": 27 },
+    "connections": [
+      {
+        "targetZoneID": "komashi_hub",
+        "entryPointName": "safe_district",
+        "exitPosition": { "col": 0, "row": 27 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_shroud",
+        "entryPointName": "shroud_gate",
+        "exitPosition": { "col": 52, "row": 5 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "lesser_nightmare",
+        "position": { "col": 20, "row": 20 },
+        "patrolPath": [
+          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
+          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "lesser_nightmare",
+        "position": { "col": 40, "row": 35 },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "greater_nightmare",
+        "position": { "col": 35, "row": 15 },
+        "patrolPath": [
+          { "col": 35, "row": 15 }, { "col": 40, "row": 10 }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "shadow_seeker",
+        "position": { "col": 45, "row": 40 },
+        "patrolPath": null,
+        "respawnTime": 200
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "nightmare_ink_pot",
+        "position": { "col": 30, "row": 40 },
+        "lootTable": [
+          { "itemID": "nightmare_ink", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 2 },
+          { "itemID": "hion_shard", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_nightmare_ambient",
+    "weatherEffect": "colorDrain",
+    "recommendedLevel": 6
+  },
+  {
+    "id": "komashi_shroud",
+    "name": "Le Linceul — Cœur des Cauchemars",
+    "description": "Le plan spirituel où les cauchemars naissent. La réalité se dissout en ombres. Le Père des Cauchemars attend.",
+    "worldID": "komashi",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "the_shroud.sks",
+    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "connections": [
+      {
+        "targetZoneID": "komashi_hub",
+        "entryPointName": "shrine_return",
+        "exitPosition": { "col": 25, "row": 49 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "nightmare_sentinel",
+        "position": { "col": 15, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "nightmare_sentinel",
+        "position": { "col": 35, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "father_of_nightmares",
+        "position": { "col": 25, "row": 8 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "komashi_boss_ambient",
+    "weatherEffect": "colorDrain",
+    "recommendedLevel": 9
   }
 ]

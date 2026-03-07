@@ -3,26 +3,43 @@ import Foundation
 // MARK: - Champion Class
 
 enum ChampionClass: String, Codable, CaseIterable {
-    case mistborn   = "Brumeux"
-    case radiant    = "Radieux"
-    case awakener   = "Éveilleur"
-    case elantrian  = "Élantrien"
+    case mistborn         = "Brumeux"
+    case radiant          = "Radieux"
+    case awakener         = "Éveilleur"
+    case elantrian        = "Élantrien"
+    case sandMaster       = "Maître du Sable"
+    case nightmarePainter = "Peintre de Cauchemars"
 
     var magicSystem: MagicSystemType {
         switch self {
-        case .mistborn:  return .allomancy
-        case .radiant:   return .surgebinding
-        case .awakener:  return .awakening
-        case .elantrian: return .aonDor
+        case .mistborn:         return .allomancy
+        case .radiant:          return .surgebinding
+        case .awakener:         return .awakening
+        case .elantrian:        return .aonDor
+        case .sandMaster:       return .sandMastery
+        case .nightmarePainter: return .painting
         }
     }
 
     var startingWorld: WorldID {
         switch self {
-        case .mistborn:  return "scadrial"
-        case .radiant:   return "roshar"
-        case .awakener:  return "nalthis"
-        case .elantrian: return "sel"
+        case .mistborn:         return "scadrial"
+        case .radiant:          return "roshar"
+        case .awakener:         return "nalthis"
+        case .elantrian:        return "sel"
+        case .sandMaster:       return "taldain"
+        case .nightmarePainter: return "komashi"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .mistborn:         return "Brûle des métaux pour des pouvoirs physiques et mentaux"
+        case .radiant:          return "Lié à un spren, maîtrise deux Surges alimentées par la Lumière d'orage"
+        case .awakener:         return "Anime les objets avec le Souffle et la BioChroma"
+        case .elantrian:        return "Dessine des Aons lumineux pour canaliser le Dor"
+        case .sandMaster:       return "Contrôle le sable blanc de Dayside grâce à l'énergie solaire"
+        case .nightmarePainter: return "Capture et bannit les cauchemars par la peinture et l'empilement de pierres"
         }
     }
 }
@@ -116,6 +133,8 @@ struct Champion: Codable {
     var metalReserves: [SkillResourceType: Int]?  // Allomancie
     var breathCount: Int?                          // Éveil
     var stormlightAmount: Double?                  // Surgebinding
+    var waterReserve: Double?                      // Maîtrise du Sable (hydratation)
+    var inkReserve: Double?                        // Peinture de Cauchemars
 
     // Position
     var currentWorldID: WorldID
