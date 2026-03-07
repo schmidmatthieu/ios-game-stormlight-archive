@@ -17,6 +17,7 @@ import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../ga
 import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
+import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
@@ -168,6 +169,8 @@ export class ZoneScene extends Container implements GameScene {
   private playerSpeed = 120;
   private playerAnimTimer = 0;
   private playerFacing: 'left' | 'right' = 'right';
+  private playerAnimator!: CharacterAnimator;
+  private playerAuraSprite: Graphics | null = null;
 
   // Enemies
   private enemies: EnemyInstance[] = [];
@@ -938,6 +941,10 @@ export class ZoneScene extends Container implements GameScene {
     this.drawPlayer();
     this.playerContainer.addChild(this.playerSprite);
 
+    // Character animator
+    const champ = GameManager.shared.champion;
+    this.playerAnimator = new CharacterAnimator(champ?.championClass ?? 'mistborn');
+
     this.playerContainer.x = this.playerScreenPos.x;
     this.playerContainer.y = this.playerScreenPos.y;
     this.worldContainer.addChild(this.playerContainer);
@@ -1686,15 +1693,43 @@ export class ZoneScene extends Container implements GameScene {
   private updateAnimations(dt: number): void {
     this.playerAnimTimer += dt * 4;
 
-    // Player bob when moving
-    if (this.joystick.active && this.joystick.magnitude > 0) {
-      this.playerSprite.y = Math.sin(this.playerAnimTimer) * 1.5;
+    // Update character animator state based on movement
+    const isMoving = this.joystick.active && this.joystick.magnitude > 0;
+    if (this.playerAnimator.state !== 'attack' && this.playerAnimator.state !== 'hurt'
+        && this.playerAnimator.state !== 'cast' && this.playerAnimator.state !== 'death') {
+      this.playerAnimator.setState(isMoving ? 'walk' : 'idle');
+    }
+    this.playerAnimator.facing = this.playerFacing;
+    this.playerAnimator.update(dt);
+
+    // Apply animator transforms
+    applyAnimationToPlayer(this.playerContainer, this.playerSprite, this.playerShadow, this.playerAnimator);
+
+    // Hurt flash tint
+    if (this.playerAnimator.hurtFlash > 0) {
+      this.playerSprite.tint = 0xff4444;
     } else {
-      this.playerSprite.y = Math.sin(this.playerAnimTimer * 0.5) * 0.5;
+      this.playerSprite.tint = 0xffffff;
     }
 
-    // Player facing
-    this.playerSprite.scale.x = this.playerFacing === 'left' ? -1 : 1;
+    // Class aura effect
+    if (this.playerAuraSprite) {
+      this.playerAuraSprite.destroy();
+      this.playerAuraSprite = null;
+    }
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      const aura = drawClassAura(
+        this.worldContainer,
+        this.playerScreenPos.x, this.playerScreenPos.y,
+        champ.championClass, this.playerAnimator,
+      );
+      if (aura) {
+        aura.zIndex = this.playerContainer.zIndex - 1;
+        this.worldContainer.addChild(aura);
+        this.playerAuraSprite = aura;
+      }
+    }
 
     // Enemy idle bob
     for (const enemy of this.enemies) {
@@ -1946,6 +1981,9 @@ export class ZoneScene extends Container implements GameScene {
     const champ = GameManager.shared.champion;
     if (!champ) return;
 
+    // Attack animation
+    this.playerAnimator.setState('attack');
+
     // Attack visual
     this.showAttackEffect();
 
@@ -1972,7 +2010,8 @@ export class ZoneScene extends Container implements GameScene {
     this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit);
     this.drawEnemyHP(closest.hpBar, closest.hp / closest.data.maxHP);
 
-    // Hit flash
+    // Hit flash + shake animation
+    animateEnemyHit(closest.sprite);
     const innerSprite = closest.sprite.children[1] as Graphics;
     if (innerSprite) {
       innerSprite.tint = 0xff4444;
@@ -2004,6 +2043,9 @@ export class ZoneScene extends Container implements GameScene {
     if (champ.currentInvestiture < skill.investitureCost) return;
     champ.currentInvestiture -= skill.investitureCost;
     this.actionButtons.startCooldown(index, skill.cooldown);
+
+    // Cast animation
+    this.playerAnimator.setState('cast');
 
     // Skill visual effect
     this.showSkillEffect(skill.range * 32);
@@ -2046,11 +2088,15 @@ export class ZoneScene extends Container implements GameScene {
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
 
+    // Hurt animation
+    this.playerAnimator.setState('hurt');
+
     // Screen shake effect
     this.shakeCamera(3, 0.15);
 
     if (champ.currentHP <= 0) {
       champ.currentHP = 0;
+      this.playerAnimator.setState('death');
       this.handlePlayerDeath();
     }
   }
@@ -2058,7 +2104,10 @@ export class ZoneScene extends Container implements GameScene {
   private killEnemy(enemy: EnemyInstance): void {
     enemy.isDead = true;
     enemy.state = 'dead';
-    enemy.sprite.visible = false;
+
+    // Animated death instead of instant hide
+    animateEnemyDeath(enemy.sprite, this.worldContainer, enemy.position.x, enemy.position.y);
+    setTimeout(() => { enemy.sprite.visible = false; }, 500);
     enemy.respawnTimer = enemy.spawn.respawnTime ?? 999;
 
     // Boss defeat
@@ -2322,6 +2371,12 @@ export class ZoneScene extends Container implements GameScene {
   private showLevelUp(): void {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
+
+    // Level up aura burst in world space
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      animateLevelUpBurst(this.worldContainer, this.playerScreenPos.x, this.playerScreenPos.y, champ.championClass);
+    }
 
     // Background flash
     const flash = new Graphics();
