@@ -87,8 +87,10 @@ final class AwakeningSystem {
 
         // Les Souffles utilisés pour Éveiller sont temporairement investis
         // Ils reviennent quand l'animation se termine (contrairement aux autres systèmes)
-        champion.breathCount? -= baseCost
-        champion.currentInvestiture -= 5
+        if let current = champion.breathCount {
+            champion.breathCount = current - baseCost
+        }
+        champion.currentInvestiture = max(0, champion.currentInvestiture - 5)
 
         let spiritBonus = champion.baseStats.spirit
 
@@ -182,7 +184,9 @@ final class AwakeningSystem {
     // MARK: - Récupérer des Souffles
 
     func absorbBreath(from defeated: Bool, champion: inout Champion, amount: Int) {
-        champion.breathCount? += amount
+        if let current = champion.breathCount {
+            champion.breathCount = current + amount
+        }
     }
 
     // MARK: - Effets visuels

@@ -33,12 +33,13 @@ final class CombatSystem {
             attackPower = baseDmg + attacker.strength
         }
 
-        // Défense
+        // Défense (Double pour éviter troncature entière sur valeurs impaires)
         let defense = defender.defense
-        let mitigated = max(1, attackPower - defense / 2)
+        let reduction = Int(round(Double(defense) / 2.0))
+        let mitigated = max(1, attackPower - reduction)
 
         // Apply talent bonuses
-        let talents = GameManager.shared.talentTree
+        let talents = GameManager.shared.talentSystem
         let atkBonus = talents.totalBonus(for: .attackDamagePercent)
         let magicBonus = talents.totalBonus(for: .magicDamagePercent)
         let damageBonus = skill != nil ? magicBonus : atkBonus
@@ -91,7 +92,7 @@ final class CombatSystem {
         let baseDmg = max(1, rawDamage - defense)
 
         // Apply talent damage reduction
-        let dmgReduction = GameManager.shared.talentTree.totalBonus(for: .damageReductionPercent)
+        let dmgReduction = GameManager.shared.talentSystem.totalBonus(for: .damageReductionPercent)
         return max(1, Int(Double(baseDmg) * (1.0 - min(0.75, dmgReduction))))
     }
 
@@ -151,11 +152,17 @@ final class CombatSystem {
         if let cost = skill.resourceCost {
             switch cost.resourceType {
             case .stormlight:
-                champion.stormlightAmount? -= Double(cost.amount)
+                if let current = champion.stormlightAmount {
+                    champion.stormlightAmount = current - Double(cost.amount)
+                }
             case .breath:
-                champion.breathCount? -= cost.amount
+                if let current = champion.breathCount {
+                    champion.breathCount = current - cost.amount
+                }
             default:
-                champion.metalReserves?[cost.resourceType]? -= cost.amount
+                if let current = champion.metalReserves?[cost.resourceType] {
+                    champion.metalReserves?[cost.resourceType] = current - cost.amount
+                }
             }
         }
     }

@@ -43,7 +43,7 @@ final class GameManager {
     let combatSystem = CombatSystem()
     let lootSystem = LootSystem()
     let questSystem = QuestSystem()
-    let talentTree = TalentTreeSystem()
+    let talentSystem = TalentTreeSystem()
     let dialogueSystem = DialogueSystem()
 
     private init() {}

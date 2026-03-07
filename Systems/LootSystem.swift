@@ -216,6 +216,6 @@ final class LootSystem {
     // MARK: - Appliquer le loot au champion avec bonus de chance
 
     func adjustDropChance(baseChance: Double, luck: Int) -> Double {
-        return min(1.0, baseChance * (1.0 + Double(luck) * 0.02))
+        return min(1.0, baseChance * (1.0 + Double(luck) * GameConstants.Combat.luckDropMultiplier))
     }
 }

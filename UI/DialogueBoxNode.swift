@@ -22,7 +22,11 @@ class DialogueBoxNode: SKNode {
     private var fullText: String = ""
     private var displayedCharCount: Int = 0
     private var isTyping: Bool = false
-    private let typingSpeed: TimeInterval = 0.03  // Secondes par caractère
+    /// Vitesse de frappe ajustée par les paramètres
+    private var typingSpeed: TimeInterval {
+        let textSpeed = max(0.1, Double(SettingsMenuNode.current.textSpeed))
+        return GameConstants.Dialogue.typingSpeed / textSpeed
+    }
 
     var onChoiceSelected: ((Int) -> Void)?
     var onContinue: (() -> Void)?
@@ -32,16 +36,16 @@ class DialogueBoxNode: SKNode {
     init(screenSize: CGSize) {
         self.boxSize = CGSize(width: screenSize.width - 40, height: 160)
 
-        // Background box
-        backgroundNode = SKShapeNode(rectOf: boxSize, cornerRadius: 12)
-        backgroundNode.fillColor = SKColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 0.92)
-        backgroundNode.strokeColor = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 1.0)
-        backgroundNode.lineWidth = 2
+        // Background box with refined styling
+        backgroundNode = SKShapeNode(rectOf: boxSize, cornerRadius: 14)
+        backgroundNode.fillColor = SKColor(red: 0.04, green: 0.04, blue: 0.1, alpha: 0.94)
+        backgroundNode.strokeColor = SKColor(red: 0.45, green: 0.38, blue: 0.18, alpha: 1.0)
+        backgroundNode.lineWidth = 2.5
         backgroundNode.zPosition = 5000
 
-        // Portrait frame
-        portraitFrame = SKShapeNode(rectOf: CGSize(width: portraitSize.width + 4, height: portraitSize.height + 4), cornerRadius: 6)
-        portraitFrame.fillColor = SKColor(white: 0.1, alpha: 1.0)
+        // Portrait frame with inner glow
+        portraitFrame = SKShapeNode(rectOf: CGSize(width: portraitSize.width + 6, height: portraitSize.height + 6), cornerRadius: 8)
+        portraitFrame.fillColor = SKColor(white: 0.08, alpha: 1.0)
         portraitFrame.strokeColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 1.0)
         portraitFrame.lineWidth = 2
         portraitFrame.position = CGPoint(x: -boxSize.width / 2 + portraitSize.width / 2 + 15, y: 20)
@@ -57,12 +61,12 @@ class DialogueBoxNode: SKNode {
 
         // Text label
         textLabel = SKLabelNode(fontNamed: "Helvetica")
-        textLabel.fontSize = 13
+        textLabel.fontSize = 15
         textLabel.fontColor = .white
         textLabel.horizontalAlignmentMode = .left
         textLabel.verticalAlignmentMode = .top
         textLabel.preferredMaxLayoutWidth = boxSize.width - portraitSize.width - 45
-        textLabel.numberOfLines = 4
+        textLabel.numberOfLines = GameConstants.Dialogue.maxLines
         textLabel.position = CGPoint(x: -boxSize.width / 2 + portraitSize.width + 25, y: 35)
         textLabel.zPosition = 5001
 
@@ -150,7 +154,7 @@ class DialogueBoxNode: SKNode {
 
         for (i, choice) in choices.enumerated() {
             let choiceWidth = boxSize.width - 30
-            let choiceHeight: CGFloat = 30
+            let choiceHeight: CGFloat = 44
             let yOffset = -boxSize.height / 2 - 10 - CGFloat(i) * (choiceHeight + 8)
 
             let bg = SKShapeNode(rectOf: CGSize(width: choiceWidth, height: choiceHeight), cornerRadius: 6)
@@ -163,7 +167,7 @@ class DialogueBoxNode: SKNode {
 
             let label = SKLabelNode(fontNamed: "Helvetica")
             label.text = "▸ \(choice.text)"
-            label.fontSize = 12
+            label.fontSize = 14
             label.fontColor = .white
             label.horizontalAlignmentMode = .left
             label.verticalAlignmentMode = .center
@@ -178,6 +182,7 @@ class DialogueBoxNode: SKNode {
                     bg.fillColor = SKColor(white: 0.1, alpha: 0.5)
                     label.fontColor = .gray
                     label.text = "▸ [Réputation \(req.worldID) \(req.minReputation) requise] \(choice.text)"
+                    bg.name = "choice_locked_\(i)"
                 }
             }
 
@@ -197,6 +202,9 @@ class DialogueBoxNode: SKNode {
         isTyping = true
         removeAction(forKey: "typing")
 
+        // Cache typing speed at animation start to avoid per-frame settings lookup
+        let cachedSpeed = typingSpeed
+
         let typeAction = SKAction.repeat(SKAction.sequence([
             SKAction.run { [weak self] in
                 guard let self = self else { return }
@@ -209,7 +217,7 @@ class DialogueBoxNode: SKNode {
                     self.removeAction(forKey: "typing")
                 }
             },
-            SKAction.wait(forDuration: typingSpeed)
+            SKAction.wait(forDuration: cachedSpeed)
         ]), count: fullText.count)
 
         run(typeAction, withKey: "typing")
@@ -245,6 +253,16 @@ class DialogueBoxNode: SKNode {
         // Vérifier les choix
         for (i, node) in choiceNodes.enumerated() {
             if node.contains(location) {
+                // Ignorer les choix verrouillés
+                if node.name?.hasPrefix("choice_locked_") == true {
+                    // Shake animation pour indiquer que le choix est verrouillé
+                    node.run(SKAction.sequence([
+                        SKAction.moveBy(x: 5, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: -10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: 5, y: 0, duration: 0.05)
+                    ]))
+                    return
+                }
                 // Animation de sélection
                 node.run(SKAction.sequence([
                     SKAction.group([

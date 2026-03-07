@@ -159,7 +159,8 @@ class SkillBarNode: SKNode {
     // MARK: - Touch handling
 
     func skillIndex(at point: CGPoint) -> Int? {
-        let localPoint = convert(point, from: parent!)
+        guard let parent = parent else { return nil }
+        let localPoint = convert(point, from: parent)
         for (i, slot) in slots.enumerated() {
             if slot.background.contains(localPoint) && slot.cooldownRemaining <= 0 {
                 return i

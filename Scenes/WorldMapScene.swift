@@ -60,14 +60,27 @@ class WorldMapScene: SKScene {
         title.position = CGPoint(x: size.width / 2, y: size.height * 0.9)
         addChild(title)
 
-        // Bouton retour
+        // Bouton retour avec zone tactile 44pt
+        let backContainer = SKNode()
+        backContainer.position = CGPoint(x: 60, y: size.height - 50)
+        backContainer.name = "back"
+
+        let backBg = SKShapeNode(rectOf: CGSize(width: 100, height: 44), cornerRadius: 8)
+        backBg.fillColor = SKColor(white: 0.15, alpha: 0.6)
+        backBg.strokeColor = SKColor(white: 0.3, alpha: 0.5)
+        backBg.lineWidth = 1
+        backBg.name = "back"
+        backContainer.addChild(backBg)
+
         let back = SKLabelNode(fontNamed: "Copperplate")
         back.text = "← Retour"
         back.fontSize = 16
         back.fontColor = .lightGray
-        back.position = CGPoint(x: 60, y: size.height - 50)
+        back.verticalAlignmentMode = .center
         back.name = "back"
-        addChild(back)
+        backContainer.addChild(back)
+
+        addChild(backContainer)
     }
 
     private func createWorldNode(world: (id: String, name: String, color: SKColor, position: CGPoint, unlocked: Bool)) -> SKNode {
@@ -109,6 +122,36 @@ class WorldMapScene: SKScene {
             container.addChild(lock)
         }
 
+        // Réputation / progression si déverrouillé
+        if world.unlocked {
+            let reputation = GameManager.shared.champion?.reputation[world.id] ?? 0
+            let repLabel = SKLabelNode(fontNamed: "Helvetica")
+            repLabel.text = "Rep: \(reputation)"
+            repLabel.fontSize = 10
+            repLabel.fontColor = GameConstants.Colors.gold
+            repLabel.position = CGPoint(x: 0, y: -68)
+            container.addChild(repLabel)
+
+            // Barre de progression de réputation
+            let barWidth: CGFloat = 50
+            let barBg = SKShapeNode(rectOf: CGSize(width: barWidth, height: 4), cornerRadius: 2)
+            barBg.fillColor = SKColor(white: 0.15, alpha: 0.8)
+            barBg.strokeColor = SKColor(white: 0.3, alpha: 0.5)
+            barBg.lineWidth = 0.5
+            barBg.position = CGPoint(x: 0, y: -78)
+            container.addChild(barBg)
+
+            let progress = min(1.0, CGFloat(reputation) / 100.0)
+            if progress > 0 {
+                let fillWidth = barWidth * progress
+                let fill = SKShapeNode(rectOf: CGSize(width: fillWidth, height: 3), cornerRadius: 1)
+                fill.fillColor = GameConstants.Colors.gold
+                fill.strokeColor = .clear
+                fill.position = CGPoint(x: -(barWidth - fillWidth) / 2, y: 0)
+                barBg.addChild(fill)
+            }
+        }
+
         return container
     }
 
@@ -125,7 +168,35 @@ class WorldMapScene: SKScene {
                 return
             }
 
-            if let worldID = node.name, worldNodes.keys.contains(worldID) {
+            if let worldID = node.name, let worldNode = worldNodes[worldID] {
+                // Vérifier si le monde est déverrouillé
+                let isLocked = worldNode.children.contains { $0 is SKLabelNode && ($0 as? SKLabelNode)?.text == "🔒" }
+                if isLocked {
+                    // Feedback visuel : shake + message
+                    let shake = SKAction.sequence([
+                        SKAction.moveBy(x: -5, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: 10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: -10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: 10, y: 0, duration: 0.05),
+                        SKAction.moveBy(x: -5, y: 0, duration: 0.05),
+                    ])
+                    worldNode.run(shake)
+
+                    let msg = SKLabelNode(fontNamed: "Copperplate")
+                    msg.text = "Monde verrouillé"
+                    msg.fontSize = 14
+                    msg.fontColor = .red
+                    msg.position = CGPoint(x: worldNode.position.x, y: worldNode.position.y + 55)
+                    msg.zPosition = 10
+                    addChild(msg)
+                    msg.run(SKAction.sequence([
+                        SKAction.wait(forDuration: 1.0),
+                        SKAction.fadeOut(withDuration: 0.3),
+                        SKAction.removeFromParent()
+                    ]))
+                    return
+                }
+
                 let hubZoneID = "\(worldID)_hub"
                 if let view = self.view {
                     SceneRouter(view: view).transitionToZone(hubZoneID)

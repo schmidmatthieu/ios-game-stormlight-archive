@@ -61,8 +61,8 @@ class CombatComponent: GKComponent {
     // MARK: - Skill Cooldowns
 
     func isSkillReady(_ skillID: String, at currentTime: TimeInterval) -> Bool {
-        guard let lastUsed = skillCooldowns[skillID],
-              let skill = GameManager.shared.skill(byID: skillID) else { return true }
+        guard let skill = GameManager.shared.skill(byID: skillID) else { return false }
+        guard let lastUsed = skillCooldowns[skillID] else { return true }
         return currentTime - lastUsed >= skill.cooldown
     }
 

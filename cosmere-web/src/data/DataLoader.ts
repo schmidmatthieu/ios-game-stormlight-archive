@@ -34,7 +34,27 @@ export class DataLoader {
           for (const z of arr as Zone[]) this.zones.set(z.id, z);
           break;
         case 'quests':
-          for (const q of arr as Quest[]) this.quests.set(q.id, q);
+          for (const raw of arr) {
+            // Transform JSON format (reward/items/prerequisites) to TS types (rewards/itemIDs/requiredQuestID)
+            const q: Quest = {
+              id: raw.id,
+              name: raw.name,
+              description: raw.description,
+              worldID: raw.worldID,
+              type: raw.type,
+              actNumber: raw.actNumber ?? 1,
+              requiredLevel: raw.requiredLevel ?? 1,
+              requiredQuestID: raw.prerequisites?.[0] ?? raw.requiredQuestID ?? null,
+              objectives: raw.objectives ?? [],
+              rewards: raw.rewards ?? {
+                xp: raw.reward?.xp ?? 0,
+                gold: raw.reward?.gold ?? 0,
+                itemIDs: raw.reward?.items ?? raw.reward?.itemIDs ?? [],
+              },
+              status: raw.status ?? 'available',
+            };
+            this.quests.set(q.id, q);
+          }
           break;
       }
 

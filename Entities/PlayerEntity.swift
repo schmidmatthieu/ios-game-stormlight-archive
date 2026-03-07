@@ -25,19 +25,20 @@ class PlayerEntity: BaseEntity {
         health.currentHP = champion.currentHP
         addComponent(health)
 
-        // Mouvement
+        // Mouvement (vitesse bornée entre 1.0 et 10.0)
+        let playerSpeed = min(10.0, max(1.0, 2.0 + Double(champion.baseStats.agility) * 0.1))
         let movement = MovementComponent(
-            speed: 2.0 + Double(champion.baseStats.agility) * 0.1,
+            speed: playerSpeed,
             startPosition: champion.gridPosition
         )
         addComponent(movement)
 
-        // Combat
+        // Combat (crit chance bornée entre 0 et 0.75)
         let combat = CombatComponent(
-            baseDamage: champion.baseStats.strength,
-            attackSpeed: 1.0 + Double(champion.baseStats.agility) * 0.05,
+            baseDamage: max(1, champion.baseStats.strength),
+            attackSpeed: max(0.1, 1.0 + Double(champion.baseStats.agility) * 0.05),
             attackRange: 1.5,
-            critChance: Double(champion.baseStats.luck) * 0.01
+            critChance: min(0.75, max(0, Double(champion.baseStats.luck) * 0.01))
         )
         addComponent(combat)
 

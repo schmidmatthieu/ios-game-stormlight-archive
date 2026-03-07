@@ -1,4 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { getLayoutInfo, actionButtonScale, LayoutInfo } from '../ui/ResponsiveLayout';
 
 export interface SkillSlotData {
   skillID: string;
@@ -28,8 +29,13 @@ export class ActionButtons extends Container {
 
   get currentMode(): ActionMode { return this._currentMode; }
 
-  constructor() {
+  constructor(layout?: LayoutInfo) {
     super();
+
+    // Apply responsive scaling if layout is provided
+    if (layout) {
+      this.scale.set(actionButtonScale(layout));
+    }
 
     // Attack button (big, center)
     this.atkButton = this.createCircleBtn(0, 0, 32, 0xcc2222, 0xdd3333, 'ATK', () => this.handleMainButton());
@@ -175,7 +181,7 @@ export class ActionButtons extends Container {
     for (let i = 0; i < this.slots.length; i++) {
       const slot = this.slots[i];
       if (!slot || slot.cooldown <= 0) continue;
-      slot.cooldown -= dt / 60;
+      slot.cooldown -= dt;
       if (slot.cooldown <= 0) {
         slot.cooldown = 0;
         this.skillButtons[i].alpha = 1;

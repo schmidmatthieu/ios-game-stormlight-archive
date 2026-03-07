@@ -1,28 +1,26 @@
-import { Application, Container, Text, Graphics, TextStyle, FederatedPointerEvent } from 'pixi.js';
+import { Application, Container, Text, Graphics, TextStyle } from 'pixi.js';
 import type { GameScene } from '../game/SceneRouter';
 import { SceneRouter } from '../game/SceneRouter';
 import { GameManager } from '../game/GameManager';
 import { ZoneScene } from './ZoneScene';
 import { MainMenuScene } from './MainMenuScene';
+import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
 import type { ChampionClass, RadiantOrder } from '../data/types';
 import { CLASS_INFO } from '../data/types';
+import { CLASS_COLORS } from './CharacterPreview';
+import { ORDERS, ORDER_NAMES } from './OrderSelector';
+import { getLayoutInfo, fontSize, scaled } from '../ui/ResponsiveLayout';
+import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 const CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
-const ORDERS: RadiantOrder[] = ['windrunner', 'lightweaver', 'bondsmith', 'edgedancer'];
-const ORDER_NAMES: Record<RadiantOrder, string> = {
-  windrunner: 'Chevalier du Vent',
-  lightweaver: 'Tisseuse de Lumière',
-  bondsmith: 'Forgeur de Liens',
-  edgedancer: 'Danseuse du Fil',
-};
 
-const CLASS_COLORS: Record<ChampionClass, number> = {
-  mistborn: 0x888888,
-  radiant: 0x4488ff,
-  awakener: 0xff66aa,
-  elantrian: 0xffcc33,
-  sandMaster: 0xffee88,
-  nightmarePainter: 0xaa44cc,
+const WORLD_NAMES: Record<string, string> = {
+  scadrial: 'Scadrial — Le monde des brumes et des métaux',
+  roshar: 'Roshar — Le monde des tempêtes et des sprens',
+  nalthis: 'Nalthis — Le monde des couleurs et du Souffle',
+  sel: 'Sel — Le monde des Aons et du Dor',
+  taldain: 'Taldain — Le monde du sable et du soleil',
+  komashi: 'Komashi — Le monde des cauchemars et des peintures',
 };
 
 export class CharacterCreationScene extends Container implements GameScene {
@@ -36,6 +34,9 @@ export class CharacterCreationScene extends Container implements GameScene {
   private nameText!: Text;
   private classButtons: Container[] = [];
   private orderContainer: Container | null = null;
+  private previewContainer!: Container;
+  private layout!: LayoutInfo;
+  private btnSize = 48;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -44,128 +45,321 @@ export class CharacterCreationScene extends Container implements GameScene {
   }
 
   onEnter(): void {
+    this.buildUI();
+  }
+
+  onResize(): void {
+    this.removeChildren();
+    this.classButtons = [];
+    this.orderContainer = null;
+    this.buildUI();
+  }
+
+  private buildUI(): void {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
+    this.layout = getLayoutInfo(w, h);
+    const layout = this.layout;
+    const isLandscape = layout.orientation === 'landscape';
 
     // Background
     const bg = new Graphics();
-    bg.rect(0, 0, w, h).fill(0x080810);
+    bg.rect(0, 0, w, h).fill(0x060612);
     this.addChild(bg);
 
+    // Subtle pattern
+    const pattern = new Graphics();
+    for (let i = 0; i < 30; i++) {
+      const px = Math.random() * w;
+      const py = Math.random() * h;
+      pattern.circle(px, py, Math.random() * 1.5 + 0.5).fill({ color: 0x222233, alpha: 0.3 });
+    }
+    this.addChild(pattern);
+
     // Title
-    const titleStyle = new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 22, fill: 0xe6cc66, fontWeight: 'bold' });
-    const title = new Text({ text: 'Créer votre Salteur', style: titleStyle });
+    const title = new Text({
+      text: 'Créer votre Salteur',
+      style: new TextStyle({
+        fontFamily: 'Georgia, serif',
+        fontSize: fontSize(20, layout),
+        fill: 0xe6cc66,
+        fontWeight: 'bold',
+        dropShadow: { color: 0x000000, blur: 4, distance: 1 },
+      }),
+    });
     title.anchor.set(0.5);
     title.x = w / 2;
-    title.y = 40;
+    title.y = scaled(30, layout);
     this.addChild(title);
 
     // Name
-    const nameStyle = new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 15, fill: 0xffffff });
-    this.nameText = new Text({ text: `Nom: ${this.playerName}`, style: nameStyle });
+    this.nameText = new Text({
+      text: `Nom: ${this.playerName}`,
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(14, layout), fill: 0xffffff }),
+    });
     this.nameText.anchor.set(0.5);
     this.nameText.x = w / 2;
-    this.nameText.y = 75;
+    this.nameText.y = scaled(60, layout);
     this.nameText.eventMode = 'static';
     this.nameText.cursor = 'pointer';
     this.nameText.on('pointerdown', () => this.promptName());
     this.addChild(this.nameText);
 
-    const hintStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x666666 });
-    const hint = new Text({ text: '(touchez pour modifier)', style: hintStyle });
+    const hint = new Text({
+      text: '(touchez pour modifier)',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: 0x555555 }),
+    });
     hint.anchor.set(0.5);
     hint.x = w / 2;
-    hint.y = 93;
+    hint.y = scaled(76, layout);
     this.addChild(hint);
 
-    // Class buttons (2 rows of 3)
-    const btnSize = 60;
-    const gap = 12;
-    const totalW = btnSize * 3 + gap * 2;
-    const startX = w / 2 - totalW / 2 + btnSize / 2;
-    const startY = 130;
+    // Determine top of content area (below title/name)
+    const contentTop = scaled(95, layout);
 
-    CLASSES.forEach((cls, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const x = startX + col * (btnSize + gap);
-      const y = startY + row * (btnSize + gap + 18);
-      const btn = this.createClassBtn(cls, x, y, btnSize);
-      this.classButtons.push(btn);
-      this.addChild(btn);
-    });
+    // Action buttons always at the bottom
+    const actionBottomMargin = Math.max(layout.safeArea.bottom, scaled(10, layout));
+    const backBtnY = h - actionBottomMargin - scaled(12, layout);
+    const startBtnY = backBtnY - scaled(38, layout);
 
-    // Description
-    const descStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0xbbbbdd, wordWrap: true, wordWrapWidth: w - 40, align: 'center' });
-    this.descText = new Text({ text: '', style: descStyle });
-    this.descText.anchor.set(0.5, 0);
-    this.descText.x = w / 2;
-    this.descText.y = startY + 2 * (btnSize + gap + 18) + 10;
-    this.addChild(this.descText);
+    // Available content height between header and action buttons
+    const contentBottom = startBtnY - scaled(15, layout);
 
-    // World origin
-    const worldStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 11, fill: 0x6699cc });
-    this.worldText = new Text({ text: '', style: worldStyle });
-    this.worldText.anchor.set(0.5, 0);
-    this.worldText.x = w / 2;
-    this.worldText.y = this.descText.y + 40;
-    this.addChild(this.worldText);
+    this.btnSize = Math.round(scaled(48, layout));
+    const gap = Math.round(scaled(8, layout));
+
+    if (isLandscape) {
+      this.buildLandscapeLayout(w, h, contentTop, contentBottom, gap);
+    } else {
+      this.buildPortraitLayout(w, h, contentTop, contentBottom, gap);
+    }
 
     // Start button
-    this.createActionBtn('Commencer l\'aventure', w / 2, h - 70, 0x336633, () => {
-      GameManager.shared.startNewGame(this.playerName, this.selectedClass,
-        this.selectedClass === 'radiant' ? this.selectedOrder : undefined);
+    const actionBtnW = Math.min(scaled(200, layout), w - scaled(40, layout));
+    this.createActionBtn('Commencer l\'aventure', w / 2, startBtnY, 0x224422, actionBtnW, () => {
+      GameManager.shared.startNewGame(
+        this.playerName,
+        this.selectedClass,
+        this.selectedClass === 'radiant' ? this.selectedOrder : undefined,
+      );
       this.router.goto(ZoneScene);
     });
 
     // Back button
-    this.createActionBtn('Retour', w / 2, h - 30, 0x442222, () => {
+    this.createActionBtn('Retour', w / 2, backBtnY, 0x332222, actionBtnW, () => {
       this.router.goto(MainMenuScene);
     });
 
     this.updateSelection();
   }
 
+  // ─── Landscape: preview left (30%), class buttons center (40%), description right (30%) ───
+
+  private buildLandscapeLayout(
+    w: number, h: number,
+    contentTop: number, contentBottom: number,
+    gap: number,
+  ): void {
+    const layout = this.layout;
+    const btnSize = this.btnSize;
+
+    // Column boundaries
+    const leftW = w * 0.30;
+    const centerW = w * 0.40;
+    const rightX = w * 0.70;
+    const rightW = w * 0.30;
+
+    // ── Preview (left 30%) ──
+    const previewCenterX = leftW / 2;
+    const previewCenterY = (contentTop + contentBottom) / 2;
+
+    this.previewContainer = new Container();
+    this.previewContainer.x = previewCenterX;
+    this.previewContainer.y = previewCenterY;
+    this.addChild(this.previewContainer);
+
+    const previewScale = Math.max(0.8, layout.scale);
+    const previewBg = new Graphics();
+    previewBg.roundRect(-40 * previewScale, -55 * previewScale, 80 * previewScale, 90 * previewScale, 8)
+      .fill({ color: 0x0a0a1a, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    this.previewContainer.addChild(previewBg);
+
+    // ── Class buttons (center 40%, 3 columns x 2 rows) ──
+    const cols = 3;
+    const rows = 2;
+    const gridW = cols * btnSize + (cols - 1) * (gap + scaled(40, layout));
+    const gridH = rows * btnSize + (rows - 1) * (gap + scaled(4, layout));
+    const gridStartX = leftW + (centerW - gridW) / 2 + btnSize / 2;
+    const gridStartY = contentTop + ((contentBottom - contentTop) - gridH) / 2 + btnSize / 2;
+
+    CLASSES.forEach((cls, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = gridStartX + col * (btnSize + gap + scaled(40, layout));
+      const y = gridStartY + row * (btnSize + gap + scaled(4, layout));
+      const btn = this.createClassBtn(cls, x, y, btnSize);
+      this.classButtons.push(btn);
+      this.addChild(btn);
+    });
+
+    // ── Description (right 30%) ──
+    const descCenterX = rightX + rightW / 2;
+    const descWrapWidth = rightW - scaled(20, layout);
+
+    this.descText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0xaaaacc,
+        wordWrap: true,
+        wordWrapWidth: descWrapWidth,
+        align: 'center',
+      }),
+    });
+    this.descText.anchor.set(0.5, 0);
+    this.descText.x = descCenterX;
+    this.descText.y = contentTop + scaled(10, layout);
+    this.addChild(this.descText);
+
+    this.worldText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0x6699cc,
+        wordWrap: true,
+        wordWrapWidth: descWrapWidth,
+        align: 'center',
+      }),
+    });
+    this.worldText.anchor.set(0.5, 0);
+    this.worldText.x = descCenterX;
+    this.worldText.y = contentTop + scaled(50, layout);
+    this.addChild(this.worldText);
+  }
+
+  // ─── Portrait: stacked layout (original flow, scaled) ───
+
+  private buildPortraitLayout(
+    w: number, h: number,
+    contentTop: number, contentBottom: number,
+    gap: number,
+  ): void {
+    const layout = this.layout;
+    const btnSize = this.btnSize;
+
+    // Character preview (left-ish)
+    this.previewContainer = new Container();
+    this.previewContainer.x = w * 0.22;
+    this.previewContainer.y = contentTop + scaled(60, layout);
+    this.addChild(this.previewContainer);
+
+    const previewBg = new Graphics();
+    previewBg.roundRect(-40, -55, 80, 90, 8)
+      .fill({ color: 0x0a0a1a, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    this.previewContainer.addChild(previewBg);
+
+    // Class buttons (2 columns x 3 rows, right side)
+    const cols = 2;
+    const startX = w * 0.48;
+    const startY = contentTop + scaled(5, layout);
+
+    CLASSES.forEach((cls, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = startX + col * (btnSize + gap + scaled(40, layout));
+      const y = startY + row * (btnSize + gap + scaled(4, layout));
+      const btn = this.createClassBtn(cls, x, y, btnSize);
+      this.classButtons.push(btn);
+      this.addChild(btn);
+    });
+
+    // Description area below the buttons
+    const descY = startY + 3 * (btnSize + gap + scaled(4, layout)) + scaled(5, layout);
+
+    this.descText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0xaaaacc,
+        wordWrap: true,
+        wordWrapWidth: w - scaled(30, layout),
+        align: 'center',
+      }),
+    });
+    this.descText.anchor.set(0.5, 0);
+    this.descText.x = w / 2;
+    this.descText.y = descY;
+    this.addChild(this.descText);
+
+    this.worldText = new Text({
+      text: '',
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(10, layout),
+        fill: 0x6699cc,
+      }),
+    });
+    this.worldText.anchor.set(0.5, 0);
+    this.worldText.x = w / 2;
+    this.worldText.y = descY + scaled(30, layout);
+    this.addChild(this.worldText);
+  }
+
   private createClassBtn(cls: ChampionClass, x: number, y: number, size: number): Container {
+    const layout = this.layout;
     const container = new Container();
     container.x = x;
     container.y = y;
     (container as any)._cls = cls;
+    (container as any)._size = size;
 
     const bg = new Graphics();
-    bg.roundRect(-size / 2, -size / 2, size, size, 8)
-      .fill({ color: 0x1a1a2a, alpha: 0.9 })
-      .stroke({ color: 0x665533, width: 2 });
+    bg.roundRect(-size / 2, -size / 2, size, size, 6)
+      .fill({ color: 0x111120, alpha: 0.9 })
+      .stroke({ color: 0x554433, width: 1.5 });
     container.addChild(bg);
 
-    // Class icon (colored circle)
-    const icon = new Graphics();
-    icon.circle(0, -5, size / 4).fill(CLASS_COLORS[cls]);
-    container.addChild(icon);
+    // Mini character preview in button
+    const miniChar = new Graphics();
+    drawPlayerCharacter(miniChar, cls);
+    miniChar.scale.set(Math.max(1, layout.scale * 1.2));
+    miniChar.y = -3;
+    container.addChild(miniChar);
 
-    // Label
+    // Label below button
     const lbl = new Text({
-      text: CLASS_INFO[cls].name.split(' ')[0],
-      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0xaaaaaa }),
+      text: CLASS_INFO[cls].name,
+      style: new TextStyle({
+        fontFamily: 'sans-serif',
+        fontSize: fontSize(7, layout),
+        fill: CLASS_COLORS[cls],
+      }),
     });
     lbl.anchor.set(0.5);
-    lbl.y = size / 2 + 8;
+    lbl.y = size / 2 + scaled(6, layout);
     container.addChild(lbl);
 
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.on('pointerdown', () => {
       this.selectedClass = cls;
-      if (cls !== 'radiant') this.selectedOrder = 'windrunner';
       this.updateSelection();
     });
 
     return container;
   }
 
-  private createActionBtn(label: string, x: number, y: number, color: number, onClick: () => void): void {
-    const bw = 220;
-    const bh = 34;
+  private createActionBtn(
+    label: string, x: number, y: number,
+    color: number, bw: number, onClick: () => void,
+  ): void {
+    const layout = this.layout;
+    const bh = scaled(32, layout);
     const btn = new Container();
     btn.x = x;
     btn.y = y;
@@ -173,12 +367,16 @@ export class CharacterCreationScene extends Container implements GameScene {
     const bg = new Graphics();
     bg.roundRect(-bw / 2, -bh / 2, bw, bh, 8)
       .fill({ color, alpha: 0.9 })
-      .stroke({ color: 0x998033, width: 1.5 });
+      .stroke({ color: 0x998033, width: 1, alpha: 0.7 });
     btn.addChild(bg);
 
     const txt = new Text({
       text: label,
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 14, fill: 0xffffff }),
+      style: new TextStyle({
+        fontFamily: 'Georgia, serif',
+        fontSize: fontSize(13, layout),
+        fill: 0xeeddcc,
+      }),
     });
     txt.anchor.set(0.5);
     btn.addChild(txt);
@@ -193,50 +391,74 @@ export class CharacterCreationScene extends Container implements GameScene {
   }
 
   private updateSelection(): void {
+    const layout = this.layout;
     const info = CLASS_INFO[this.selectedClass];
     this.descText.text = info.description;
-    this.worldText.text = `Monde d'origine: ${info.startingWorld}`;
+    this.worldText.text = WORLD_NAMES[info.startingWorld] ?? info.startingWorld;
 
-    // Highlight selected
+    // Update preview
+    // Remove old preview character (keep background at index 0)
+    while (this.previewContainer.children.length > 1) {
+      this.previewContainer.removeChildAt(1);
+    }
+    const charSprite = new Graphics();
+    drawPlayerCharacter(charSprite, this.selectedClass);
+    charSprite.scale.set(3 * Math.max(0.8, layout.scale));
+    charSprite.y = -5;
+    this.previewContainer.addChild(charSprite);
+
+    // Glow ring
+    const glow = new Graphics();
+    glow.circle(0, 10, scaled(20, layout)).fill({ color: CLASS_COLORS[this.selectedClass], alpha: 0.08 });
+    this.previewContainer.addChild(glow);
+
+    // Highlight selected class button
     for (const btn of this.classButtons) {
       const cls = (btn as any)._cls as ChampionClass;
+      const size = (btn as any)._size as number;
       const bg = btn.children[0] as Graphics;
       bg.clear();
-      const size = 60;
-      bg.roundRect(-size / 2, -size / 2, size, size, 8)
-        .fill({ color: 0x1a1a2a, alpha: 0.9 })
-        .stroke({ color: cls === this.selectedClass ? 0xe6cc66 : 0x665533, width: cls === this.selectedClass ? 3 : 2 });
+      const selected = cls === this.selectedClass;
+      bg.roundRect(-size / 2, -size / 2, size, size, 6)
+        .fill({ color: selected ? 0x1a1a30 : 0x111120, alpha: 0.9 })
+        .stroke({ color: selected ? 0xe6cc66 : 0x554433, width: selected ? 2.5 : 1.5 });
     }
 
-    // Order selector
+    // Order selector for radiant
     this.orderContainer?.destroy({ children: true });
     this.orderContainer = null;
 
     if (this.selectedClass === 'radiant') {
       const w = this.app.screen.width;
+      const isLandscape = layout.orientation === 'landscape';
       const oc = new Container();
-      oc.y = this.worldText.y + 25;
+      oc.y = this.worldText.y + scaled(20, layout);
 
       const label = new Text({
         text: 'Ordre Radieux:',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x888888 }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: 0x777777 }),
       });
       label.anchor.set(0.5, 0);
-      label.x = w / 2;
+      label.x = isLandscape ? this.worldText.x : w / 2;
       oc.addChild(label);
 
+      const orderSpacing = scaled(70, layout);
       ORDERS.forEach((order, i) => {
-        const ox = w / 2 + (i - 1.5) * 75;
+        const anchorX = isLandscape ? this.worldText.x : w / 2;
+        const ox = anchorX + (i - 1.5) * orderSpacing;
+        const selected = this.selectedOrder === order;
         const txt = new Text({
           text: ORDER_NAMES[order],
           style: new TextStyle({
-            fontFamily: 'sans-serif', fontSize: 9,
-            fill: this.selectedOrder === order ? 0x66aaff : 0x666666,
+            fontFamily: 'sans-serif',
+            fontSize: fontSize(8, layout),
+            fill: selected ? 0x66aaff : 0x555555,
+            fontWeight: selected ? 'bold' : 'normal',
           }),
         });
         txt.anchor.set(0.5, 0);
         txt.x = ox;
-        txt.y = 16;
+        txt.y = scaled(14, layout);
         txt.eventMode = 'static';
         txt.cursor = 'pointer';
         txt.on('pointerdown', () => {

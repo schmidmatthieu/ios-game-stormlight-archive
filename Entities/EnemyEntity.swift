@@ -38,7 +38,7 @@ class EnemyEntity: BaseEntity {
             baseDamage: enemy.damage,
             attackSpeed: enemy.speed,
             attackRange: enemy.attackRange,
-            critChance: enemy.tier == .boss ? 0.15 : 0.05
+            critChance: enemy.tier == .boss ? GameConstants.Combat.bossCritChance : GameConstants.Combat.defaultCritChance
         )
         addComponent(combat)
 
@@ -83,8 +83,12 @@ class EnemyEntity: BaseEntity {
     private func handleDeath() {
         guard let sprite = spriteNode else { return }
 
+        // Clean up all running actions on children before fade-out
+        sprite.children.forEach { $0.removeAllActions() }
+
         let fadeOut = SKAction.sequence([
             SKAction.fadeOut(withDuration: 0.5),
+            SKAction.run { sprite.removeAllActions() },
             SKAction.removeFromParent()
         ])
         sprite.run(fadeOut)
