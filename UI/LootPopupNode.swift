@@ -48,7 +48,7 @@ class LootPopupNode: SKNode {
         label.verticalAlignmentMode = .center
         label.horizontalAlignmentMode = .left
 
-        let textWidth = max(label.frame.width + 44, 80)
+        let textWidth = min(max(label.frame.width + 44, 80), 220)
 
         // Background pill
         let bg = SKShapeNode(rectOf: CGSize(width: textWidth, height: 24), cornerRadius: 12)
@@ -119,6 +119,8 @@ class LootPopupNode: SKNode {
     // MARK: - Animation
 
     private func animatePopup(_ node: SKNode) {
+        guard visibleCount < maxVisiblePopups else { return }
+
         node.alpha = 0
         node.setScale(0.5)
         addChild(node)
