@@ -269,6 +269,17 @@ export function hudBarWidth(layout: LayoutInfo): number {
 export function questTrackerPosition(layout: LayoutInfo): { x: number; y: number; panelWidth: number } {
   const safeRight = Math.max(layout.safeArea.right, scaled(8, layout));
   const safeTop = Math.max(layout.safeArea.top, scaled(8, layout));
+
+  if (layout.device === 'mobile') {
+    // Mobile: smaller, pushed to right edge, below hamburger button
+    const panelWidth = Math.min(130, layout.width * 0.35);
+    return {
+      x: layout.width - safeRight - panelWidth - scaled(4, layout),
+      y: safeTop + scaled(38, layout),
+      panelWidth,
+    };
+  }
+
   const panelWidth = Math.min(190, layout.width * 0.4);
   return {
     x: layout.width - safeRight - panelWidth - scaled(8, layout),

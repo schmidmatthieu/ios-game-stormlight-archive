@@ -46,6 +46,7 @@ import { createAchievementToast, showAchievementPanel } from '../ui/AchievementU
 import { showSkillTreePanel } from '../ui/SkillTreePanel';
 import { showTalentTreePanel } from '../ui/TalentTreePanel';
 import { createZoneToolbar } from './ZoneToolbar';
+import { createMobileMenu } from '../ui/MobileMenu';
 import { CompanionManager } from '../game/CompanionSystem';
 import { showCompanionPanel } from '../ui/CompanionPanel';
 import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
@@ -475,7 +476,7 @@ export class ZoneScene extends Container implements GameScene {
     }
 
     // Toolbar buttons (pause, inventory, crafting, bestiary, etc.)
-    createZoneToolbar(this.uiContainer, w, layout, {
+    const toolbarCallbacks = {
       togglePause: () => this.togglePause(),
       toggleInventory: () => this.toggleInventory(),
       toggleCrafting: () => this.toggleCrafting(),
@@ -486,7 +487,13 @@ export class ZoneScene extends Container implements GameScene {
       toggleCompanion: () => this.toggleCompanion(),
       toggleQuestJournal: () => this.toggleQuestJournal(),
       toggleProfessions: () => this.toggleProfessions(),
-    });
+    };
+    createZoneToolbar(this.uiContainer, w, layout, toolbarCallbacks);
+
+    // On mobile, use hamburger menu instead of full toolbar
+    if (layout.device === 'mobile') {
+      createMobileMenu(this.uiContainer, w, h, layout, toolbarCallbacks);
+    }
 
     // Initialize companion
     CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);

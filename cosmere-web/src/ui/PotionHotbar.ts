@@ -1,5 +1,7 @@
 // ─── Potion Quick-Use Hotbar ─────────────────────────────────────────
-// Three potion slots displayed above the action buttons for combat use.
+// Three potion slots displayed near the action buttons for combat use.
+// On mobile: vertical strip to the left of action buttons.
+// On tablet/desktop: horizontal strip above action buttons.
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { PotionManager, POTIONS } from '../game/PotionSystem';
@@ -19,19 +21,43 @@ export function createPotionHotbar(
   const container = new Container();
   container.zIndex = 6000;
 
-  const slotSize = scaled(32, layout);
-  const gap = scaled(6, layout);
-  const totalW = slotSize * 3 + gap * 2;
-  const startX = screenW - totalW - scaled(16, layout);
-  const startY = screenH - scaled(130, layout); // Above action buttons
+  const isMobile = layout.device === 'mobile';
+  const slotSize = isMobile ? scaled(26, layout) : scaled(32, layout);
+  const gap = scaled(isMobile ? 4 : 6, layout);
+
+  // Position: mobile → vertical column left of action buttons
+  // tablet/desktop → horizontal row above action buttons
+  let startX: number;
+  let startY: number;
+
+  if (isMobile) {
+    // Vertical layout, left of action area
+    startX = screenW - scaled(170, layout);
+    startY = screenH - scaled(110, layout);
+  } else {
+    const totalW = slotSize * 3 + gap * 2;
+    startX = screenW - totalW - scaled(16, layout);
+    startY = screenH - scaled(130, layout);
+  }
 
   const slotGraphics: Graphics[] = [];
   const countTexts: Text[] = [];
   const iconTexts: Text[] = [];
+  const positions: { x: number; y: number }[] = [];
 
   for (let i = 0; i < 3; i++) {
-    const x = startX + i * (slotSize + gap);
-    const y = startY;
+    let x: number;
+    let y: number;
+    if (isMobile) {
+      // Vertical stack
+      x = startX;
+      y = startY + i * (slotSize + gap);
+    } else {
+      // Horizontal row
+      x = startX + i * (slotSize + gap);
+      y = startY;
+    }
+    positions.push({ x, y });
 
     // Slot background
     const bg = new Graphics();
@@ -49,7 +75,7 @@ export function createPotionHotbar(
     // Potion icon
     const icon = new Text({
       text: '',
-      style: new TextStyle({ fontSize: fontSize(14, layout) }),
+      style: new TextStyle({ fontSize: fontSize(isMobile ? 11 : 14, layout) }),
     });
     icon.anchor.set(0.5);
     icon.x = x + slotSize / 2;
@@ -61,7 +87,7 @@ export function createPotionHotbar(
     const count = new Text({
       text: '',
       style: new TextStyle({
-        fontFamily: 'sans-serif', fontSize: fontSize(8, layout),
+        fontFamily: 'sans-serif', fontSize: fontSize(isMobile ? 7 : 8, layout),
         fill: 0xffffff, fontWeight: 'bold',
         dropShadow: { color: 0x000000, blur: 2, distance: 1 },
       }),
@@ -72,17 +98,19 @@ export function createPotionHotbar(
     container.addChild(count);
     countTexts.push(count);
 
-    // Slot number hint
-    const hint = new Text({
-      text: `${i + 1}`,
-      style: new TextStyle({
-        fontFamily: 'sans-serif', fontSize: fontSize(7, layout),
-        fill: 0x556677,
-      }),
-    });
-    hint.x = x + 3;
-    hint.y = y + 1;
-    container.addChild(hint);
+    // Slot number hint (hide on mobile to save space)
+    if (!isMobile) {
+      const hint = new Text({
+        text: `${i + 1}`,
+        style: new TextStyle({
+          fontFamily: 'sans-serif', fontSize: fontSize(7, layout),
+          fill: 0x556677,
+        }),
+      });
+      hint.x = x + 3;
+      hint.y = y + 1;
+      container.addChild(hint);
+    }
   }
 
   uiContainer.addChild(container);
@@ -92,20 +120,17 @@ export function createPotionHotbar(
     for (let i = 0; i < 3; i++) {
       const slot = pm.slots[i];
       const def = slot ? POTIONS[slot.potionID] : null;
+      const { x, y } = positions[i];
 
       slotGraphics[i].clear();
       if (def && slot) {
-        slotGraphics[i].roundRect(
-          startX + i * (slotSize + gap), startY, slotSize, slotSize, 6,
-        )
+        slotGraphics[i].roundRect(x, y, slotSize, slotSize, 6)
           .fill({ color: def.color, alpha: 0.15 })
           .stroke({ color: def.color, width: 1.5, alpha: 0.7 });
         iconTexts[i].text = def.icon;
         countTexts[i].text = `×${slot.count}`;
       } else {
-        slotGraphics[i].roundRect(
-          startX + i * (slotSize + gap), startY, slotSize, slotSize, 6,
-        )
+        slotGraphics[i].roundRect(x, y, slotSize, slotSize, 6)
           .fill({ color: 0x0a0a1a, alpha: 0.8 })
           .stroke({ color: 0x334455, width: 1.5, alpha: 0.4 });
         iconTexts[i].text = '';

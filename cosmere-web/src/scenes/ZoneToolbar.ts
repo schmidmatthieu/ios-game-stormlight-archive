@@ -54,6 +54,9 @@ export function createZoneToolbar(
   layout: LayoutInfo,
   cb: ToolbarCallbacks,
 ): void {
+  // On mobile, skip the full toolbar — MobileMenu handles it
+  if (layout.device === 'mobile') return;
+
   const cx = screenWidth / 2;
 
   // Quest Journal (leftmost)

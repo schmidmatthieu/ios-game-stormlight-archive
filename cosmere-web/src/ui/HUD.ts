@@ -194,16 +194,18 @@ export class HUD extends Container {
     this.panel.roundRect(leftX - scaled(6, this.layout), topY - scaled(6, this.layout), panelWidth + scaled(4, this.layout), panelHeight + scaled(4, this.layout), radius)
       .stroke({ color: UI_COLORS.borderSubtle, width: 1.5, alpha: UI_ALPHA.panelBorder });
 
-    // Right panel background
+    // Right panel background — hidden on mobile to save space
     const rightPanelWidth = scaled(140, this.layout);
     const rightPanelHeight = scaled(44, this.layout);
     const rightPanelX = screenWidth - margins.right - rightPanelWidth;
 
     this.rightPanel.clear();
-    this.rightPanel.roundRect(rightPanelX, topY - scaled(6, this.layout), rightPanelWidth, rightPanelHeight, radius)
-      .fill({ color: UI_COLORS.panelBg, alpha: UI_ALPHA.panelBg });
-    this.rightPanel.roundRect(rightPanelX, topY - scaled(6, this.layout), rightPanelWidth, rightPanelHeight, radius)
-      .stroke({ color: UI_COLORS.borderSubtle, width: 1.5, alpha: UI_ALPHA.panelBorder });
+    if (this.layout.device !== 'mobile') {
+      this.rightPanel.roundRect(rightPanelX, topY - scaled(6, this.layout), rightPanelWidth, rightPanelHeight, radius)
+        .fill({ color: UI_COLORS.panelBg, alpha: UI_ALPHA.panelBg });
+      this.rightPanel.roundRect(rightPanelX, topY - scaled(6, this.layout), rightPanelWidth, rightPanelHeight, radius)
+        .stroke({ color: UI_COLORS.borderSubtle, width: 1.5, alpha: UI_ALPHA.panelBorder });
+    }
 
     // Level position
     this.levelText.x = leftX + scaled(2, this.layout);
@@ -242,11 +244,22 @@ export class HUD extends Container {
       .fill({ color: 0x0a1a0a, alpha: 0.8 })
       .stroke({ color: 0x223322, width: 0.5 });
 
-    // Zone & gold positions (top right, respecting safe area)
-    this.zoneText.x = screenWidth - margins.right - scaled(6, this.layout);
-    this.zoneText.y = topY;
-    this.goldText.x = screenWidth - margins.right - scaled(6, this.layout);
-    this.goldText.y = topY + scaled(20, this.layout);
+    // Zone & gold positions — on mobile, hide zone text and show gold compactly
+    if (this.layout.device === 'mobile') {
+      this.zoneText.visible = false;
+      // Gold shown below the left HUD panel
+      this.goldText.anchor.set(0, 0);
+      this.goldText.x = leftX;
+      this.goldText.y = topY + panelHeight + scaled(4, this.layout);
+      this.goldText.style.fontSize = fontSize(9, this.layout);
+    } else {
+      this.zoneText.visible = true;
+      this.zoneText.x = screenWidth - margins.right - scaled(6, this.layout);
+      this.zoneText.y = topY;
+      this.goldText.anchor.set(1, 0);
+      this.goldText.x = screenWidth - margins.right - scaled(6, this.layout);
+      this.goldText.y = topY + scaled(20, this.layout);
+    }
   }
 
   refresh(zoneName: string): void {

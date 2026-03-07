@@ -53,8 +53,10 @@ export class Minimap extends Container {
 
     this.layout = getLayoutInfo(screenWidth, screenHeight);
 
-    // Smooth responsive MAP_SIZE
-    this.MAP_SIZE = minimapSize(this.layout);
+    // Smooth responsive MAP_SIZE — smaller on mobile to avoid overlap
+    this.MAP_SIZE = this.layout.device === 'mobile'
+      ? Math.round(minimapSize(this.layout) * 0.65)
+      : minimapSize(this.layout);
 
     // Try to restore saved position and lock state
     const savedPos = this.loadPosition();
@@ -155,11 +157,13 @@ export class Minimap extends Container {
     this.exploredLabel.y = 3;
     this.addChild(this.exploredLabel);
 
-    // Legend — proportional
+    // Legend — proportional (hidden on mobile to save space)
     this.legendContainer = new Container();
     this.legendContainer.y = this.MAP_SIZE + 4;
     this.addChild(this.legendContainer);
-    this.renderLegend();
+    if (this.layout.device !== 'mobile') {
+      this.renderLegend();
+    }
 
     // Make draggable (respects lock state)
     this.eventMode = 'static';
