@@ -9,6 +9,7 @@ class CharacterCreationScene: SKScene {
     private var selectedOrder: RadiantOrder? = nil
     private var playerName: String = "Salteur"
 
+    private var isTransitioning = false
     private var classButtons: [SKNode] = []
     private var descriptionLabel: SKLabelNode!
     private var previewSprite: SKSpriteNode!
@@ -353,6 +354,9 @@ class CharacterCreationScene: SKScene {
     // MARK: - Start Game
 
     private func startGame() {
+        guard !isTransitioning else { return }
+        isTransitioning = true
+
         GameManager.shared.startNewGame(name: playerName, championClass: selectedClass)
 
         // Set radiant order if applicable
