@@ -1,4 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { getLayoutInfo, scaled, LayoutInfo } from '../ui/ResponsiveLayout';
 
 interface MinimapEntity {
   x: number;
@@ -15,8 +16,9 @@ export class Minimap extends Container {
   private arrowLayer: Graphics;
   private legendContainer: Container;
   private exploredLabel: Text;
-  private readonly MAP_SIZE = 100;
+  private MAP_SIZE: number;
   private readonly MARGIN = 8;
+  private layout: LayoutInfo;
   private gridWidth = 0;
   private gridHeight = 0;
   private tileW = 64;
@@ -42,11 +44,35 @@ export class Minimap extends Container {
   constructor(screenWidth: number, screenHeight: number) {
     super();
 
-    const x = this.MARGIN;
-    const y = screenHeight - this.MAP_SIZE - this.MARGIN - 100;
+    this.layout = getLayoutInfo(screenWidth, screenHeight);
 
-    this.x = x;
-    this.y = y;
+    // Responsive MAP_SIZE based on device type
+    if (this.layout.device === 'mobile') {
+      this.MAP_SIZE = 80;
+    } else if (this.layout.device === 'tablet') {
+      this.MAP_SIZE = 100;
+    } else {
+      this.MAP_SIZE = 120;
+    }
+
+    // Position adapts to screen size and orientation
+    const m = scaled(this.MARGIN, this.layout);
+    const safeLeft = Math.max(this.layout.safeArea.left, m);
+    const safeBottom = Math.max(this.layout.safeArea.bottom, m);
+
+    if (this.layout.device === 'mobile' && this.layout.orientation === 'portrait') {
+      // Mobile portrait: bottom-left, above joystick area, smaller size
+      this.x = safeLeft + m;
+      this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(110, this.layout);
+    } else if (this.layout.device === 'mobile' && this.layout.orientation === 'landscape') {
+      // Mobile landscape: bottom-left, adjusted for landscape proportions
+      this.x = safeLeft + m;
+      this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(90, this.layout);
+    } else {
+      // Tablet / desktop: bottom-left with comfortable margin
+      this.x = safeLeft + m;
+      this.y = screenHeight - this.MAP_SIZE - safeBottom - scaled(100, this.layout);
+    }
 
     // Background
     this.bg = new Graphics();
