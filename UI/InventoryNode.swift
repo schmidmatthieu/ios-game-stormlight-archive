@@ -397,8 +397,21 @@ class InventoryNode: SKNode {
             detailPanel.addChild(statLabel)
         }
 
+        // Traits (shown below stats in cyan)
+        let traitStartY = y - 50 - CGFloat(item.statBonuses.count) * 14
+        for (i, trait) in item.traits.enumerated() {
+            let traitLabel = SKLabelNode(fontNamed: "Helvetica")
+            let percentValue = Int(trait.effectValue * 100)
+            traitLabel.text = "\(trait.name) +\(percentValue)%"
+            traitLabel.fontSize = 10
+            traitLabel.fontColor = SKColor(red: 0.3, green: 0.8, blue: 0.9, alpha: 1)
+            traitLabel.position = CGPoint(x: screenSize.width / 6, y: traitStartY - CGFloat(i) * 13)
+            detailPanel.addChild(traitLabel)
+        }
+
         // Action buttons row
-        let btnY = y - 55 - CGFloat(item.statBonuses.count) * 14
+        let totalInfoLines = item.statBonuses.count + item.traits.count
+        let btnY = y - 55 - CGFloat(totalInfoLines) * 14
 
         if item.isConsumable {
             // Use button for consumables

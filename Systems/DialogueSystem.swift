@@ -65,7 +65,7 @@ final class DialogueSystem {
 
     // MARK: - State
 
-    private var currentTree: DialogueTree?
+    private(set) var currentTree: DialogueTree?
     private var currentNodeID: String?
     private var dialogueHistory: [String] = []  // IDs des nodes visités
     private var globalFlags: [String: Bool] = [:]
@@ -180,20 +180,23 @@ final class DialogueSystem {
         for action in actions {
             switch action.type {
             case .giveItem:
-                GameManager.shared.champion?.inventoryItemIDs.append(action.targetID)
+                GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(action.targetID) }
+                GameManager.shared.questSystem.onItemCollected(itemID: action.targetID)
 
             case .removeItem:
-                GameManager.shared.champion?.inventoryItemIDs.removeAll { $0 == action.targetID }
+                GameManager.shared.mutateChampion { $0.inventoryItemIDs.removeAll { $0 == action.targetID } }
 
             case .giveXP:
                 GameManager.shared.grantXP(action.value)
 
             case .giveGold:
-                GameManager.shared.champion?.gold += action.value
+                GameManager.shared.mutateChampion { $0.gold += action.value }
 
             case .changeReputation:
-                let current = GameManager.shared.champion?.reputation[action.targetID] ?? 0
-                GameManager.shared.champion?.reputation[action.targetID] = current + action.value
+                GameManager.shared.mutateChampion { champ in
+                    let current = champ.reputation[action.targetID] ?? 0
+                    champ.reputation[action.targetID] = current + action.value
+                }
 
             case .activateQuest:
                 _ = GameManager.shared.questSystem.activateQuest(action.targetID)
@@ -210,7 +213,6 @@ final class DialogueSystem {
                 }
 
             case .unlockZone:
-                // Mark zone as accessible
                 globalFlags["zone_unlocked_\(action.targetID)"] = true
 
             case .addCompanion:

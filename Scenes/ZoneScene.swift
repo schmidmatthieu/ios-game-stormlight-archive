@@ -744,13 +744,17 @@ class ZoneScene: SKScene {
 
         if npc.isShopkeeper {
             showAbilityEffect(description: "Boutique de \(npcID.replacingOccurrences(of: "_", with: " ").capitalized)")
-        } else if npc.dialogueTreeID != nil {
-            if dialogueBox == nil {
-                dialogueBox = DialogueBoxNode(screenSize: size)
-                dialogueBox?.position = CGPoint(x: 0, y: -size.height / 2 + 100)
-                dialogueBox?.zPosition = 5000
-                cameraNode.addChild(dialogueBox!)
-            }
+            return
+        }
+
+        // Use DialogueSystem if NPC has a dialogue tree
+        if let treeID = npc.dialogueTreeID {
+            ensureDialogueBox()
+            GameManager.shared.dialogueSystem.delegate = self
+            GameManager.shared.dialogueSystem.startDialogue(treeID: treeID)
+        } else {
+            // Fallback for NPCs without dialogue trees
+            ensureDialogueBox()
             dialogueBox?.showDialogue(
                 speakerName: npcID.replacingOccurrences(of: "_", with: " ").capitalized,
                 text: "Salutations, voyageur. Que puis-je faire pour vous ?",
@@ -760,6 +764,15 @@ class ZoneScene: SKScene {
             dialogueBox?.onContinue = { [weak self] in
                 self?.dialogueBox?.hide()
             }
+        }
+    }
+
+    private func ensureDialogueBox() {
+        if dialogueBox == nil {
+            dialogueBox = DialogueBoxNode(screenSize: size)
+            dialogueBox?.position = CGPoint(x: 0, y: -size.height / 2 + 100)
+            dialogueBox?.zPosition = 5000
+            cameraNode.addChild(dialogueBox!)
         }
     }
 
@@ -1731,8 +1744,9 @@ class ZoneScene: SKScene {
 
     private func updateRegeneration(currentTime: TimeInterval, deltaTime: TimeInterval) {
         GameManager.shared.mutateChampion { champ in
-            // Investiture regen: 2.0 per second, always active
-            let investitureRegen = 2.0 * deltaTime
+            // Investiture regen: base 2.0/s + trait bonus
+            let traitInvRegen = champ.totalTraitBonus(for: .investitureRegen) * Double(champ.maxInvestiture)
+            let investitureRegen = (2.0 + traitInvRegen) * deltaTime
             champ.currentInvestiture = min(champ.maxInvestiture,
                                            champ.currentInvestiture + Int(investitureRegen))
 
@@ -1789,5 +1803,46 @@ class ZoneScene: SKScene {
         if let levelLabel = cameraNode.childNode(withName: "//levelLabel") as? SKLabelNode {
             levelLabel.text = "\(champion.level)"
         }
+    }
+}
+
+// MARK: - DialogueSystemDelegate
+
+extension ZoneScene: DialogueSystemDelegate {
+    func dialogueSystem(_ system: DialogueSystem, showNode node: DialogueSystem.DialogueNode, availableChoices: [DialogueSystem.DialogueChoice]) {
+        ensureDialogueBox()
+
+        let speakerName: String
+        if node.speaker == "player" {
+            speakerName = GameManager.shared.champion?.name ?? "Joueur"
+        } else if let tree = system.currentTree {
+            speakerName = tree.npcName
+        } else {
+            speakerName = node.speaker.capitalized
+        }
+
+        dialogueBox?.showDialogue(
+            speakerName: speakerName,
+            text: node.text,
+            portrait: node.portrait,
+            emotion: node.emotion
+        )
+
+        if !availableChoices.isEmpty {
+            dialogueBox?.showChoices(availableChoices)
+            dialogueBox?.onChoiceSelected = { [weak self] choiceIndex in
+                system.selectChoice(choiceIndex)
+            }
+            dialogueBox?.onContinue = nil
+        } else {
+            dialogueBox?.onContinue = {
+                system.continueDialogue()
+            }
+            dialogueBox?.onChoiceSelected = nil
+        }
+    }
+
+    func dialogueSystemDidEnd(_ system: DialogueSystem, treeID: String) {
+        dialogueBox?.hide()
     }
 }

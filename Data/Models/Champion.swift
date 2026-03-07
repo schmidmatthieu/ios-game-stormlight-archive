@@ -152,7 +152,7 @@ struct Champion: Codable {
     // Calculé
     var xpForNextLevel: Int { level * 100 + 50 }
 
-    /// Stats effectives = base + bonus d'équipement
+    /// Stats effectives = base + bonus d'équipement + traits
     var effectiveStats: ChampionStats {
         var stats = baseStats
         let slots: [EquipmentSlot] = [.helmet, .shoulders, .chest, .cape, .gloves, .belt, .legs, .boots, .mainWeapon, .offhand, .amulet, .ring1, .ring2]
@@ -170,6 +170,22 @@ struct Champion: Codable {
                 }
             }
         }
+
+        // Off-world stat boost: items from other worlds grant bonus stats
+        let isOffWorld = currentWorldID != championClass.startingWorld
+        if isOffWorld {
+            let offWorldBonus = totalTraitBonus(for: .allStatBoostOffWorld)
+            if offWorldBonus > 0 {
+                let bonus = Int(offWorldBonus * 10)
+                stats.vigor += bonus
+                stats.investiture += bonus
+                stats.strength += bonus
+                stats.agility += bonus
+                stats.spirit += bonus
+                stats.luck += bonus
+            }
+        }
+
         return stats
     }
 

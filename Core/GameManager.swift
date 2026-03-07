@@ -44,6 +44,7 @@ final class GameManager {
     let lootSystem = LootSystem()
     let questSystem = QuestSystem()
     let talentTree = TalentTreeSystem()
+    let dialogueSystem = DialogueSystem()
 
     private init() {}
 
