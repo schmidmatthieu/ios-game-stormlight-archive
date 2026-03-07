@@ -89,8 +89,22 @@ class ZoneScene: SKScene {
 
         GameManager.shared.questSystem.onZoneEntered(zoneID: zone.id)
 
+        // Listen for equipment changes to refresh player appearance
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(onEquipmentChanged),
+            name: .equipmentDidChange, object: nil
+        )
+
         // Auto-save on zone entry
         _ = SaveManager.shared.save()
+    }
+
+    @objc private func onEquipmentChanged() {
+        refreshPlayerAppearance()
+    }
+
+    override func willMove(from view: SKView) {
+        NotificationCenter.default.removeObserver(self, name: .equipmentDidChange, object: nil)
     }
 
     // MARK: - Setup
@@ -104,7 +118,7 @@ class ZoneScene: SKScene {
         addChild(worldNode)
 
         // Create themed tile textures (batch by variation for performance)
-        let textures = createTileTextures()
+        let textures = TileTextureGenerator.createTileTextures(theme: worldTheme, tileSize: tileSize)
 
         for row in 0..<zone.gridHeight {
             for col in 0..<zone.gridWidth {
@@ -123,39 +137,19 @@ class ZoneScene: SKScene {
         setupEdgeGlow()
     }
 
-    private func createTileTextures() -> [SKTexture] {
-        let view = SKView()
-        var textures: [SKTexture] = []
+    // MARK: - Equipment Visual Refresh
 
-        let allColors = [worldTheme.tileBaseColor] + worldTheme.tileVariations
-        for color in allColors {
-            let tileNode = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-            tileNode.fillColor = color
-            tileNode.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-            tileNode.lineWidth = 0.5
+    /// Reconstruit le sprite du joueur quand l'équipement change
+    func refreshPlayerAppearance() {
+        guard let champion = GameManager.shared.champion,
+              let currentPlayer = playerNode else { return }
 
-            // Subtle crack detail
-            let crack = SKShapeNode(rectOf: CGSize(width: 1, height: CGFloat.random(in: 4...10)))
-            crack.fillColor = SKColor(white: 0.1, alpha: 0.2)
-            crack.strokeColor = .clear
-            crack.position = CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: -4...4))
-            crack.zRotation = CGFloat.random(in: -0.5...0.5)
-            tileNode.addChild(crack)
+        PlayerRenderer.refreshPlayerAppearance(playerNode: currentPlayer, champion: champion)
 
-            if let tex = view.texture(from: tileNode) {
-                textures.append(tex)
-            }
+        // Re-assign reference to new player node
+        if let newPlayer = worldNode.childNode(withName: "player") {
+            playerNode = newPlayer
         }
-
-        if textures.isEmpty {
-            let fallback = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-            fallback.fillColor = worldTheme.tileBaseColor
-            fallback.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-            fallback.lineWidth = 0.5
-            textures.append(view.texture(from: fallback) ?? SKTexture())
-        }
-
-        return textures
     }
 
     private func setupEdgeGlow() {
