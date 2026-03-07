@@ -70,18 +70,46 @@ final class QuestSystem {
         print("🏆 Quête terminée: \(quest.name)")
     }
 
+    // MARK: - Échouer une quête
+
+    func failQuest(_ questID: String) {
+        guard var quest = GameManager.shared.allQuests[questID],
+              quest.status == .active else { return }
+        quest.status = .failed
+        GameManager.shared.allQuests[questID] = quest
+
+        GameManager.shared.activeQuests.removeAll { $0.id == questID }
+        GameManager.shared.mutateChampion { $0.activeQuestIDs.removeAll { $0 == questID } }
+
+        print("❌ Quête échouée: \(quest.name)")
+    }
+
+    // MARK: - Réinitialiser une quête échouée
+
+    func resetQuest(_ questID: String) -> Bool {
+        guard var quest = GameManager.shared.allQuests[questID],
+              quest.status == .failed else { return false }
+
+        // Reset all objectives
+        for i in quest.objectives.indices {
+            quest.objectives[i].currentCount = 0
+        }
+        quest.status = .available
+        GameManager.shared.allQuests[questID] = quest
+
+        print("🔄 Quête réinitialisée: \(quest.name)")
+        return true
+    }
+
     // MARK: - Récompenses
 
     private func grantRewards(_ reward: QuestReward) {
         GameManager.shared.grantXP(reward.xp)
-
         GameManager.shared.mutateChampion { champ in
             champ.gold += reward.gold
-
             for itemID in reward.items {
                 champ.inventoryItemIDs.append(itemID)
             }
-
             for repChange in reward.reputationChanges {
                 let current = champ.reputation[repChange.worldID] ?? 0
                 champ.reputation[repChange.worldID] = current + repChange.amount

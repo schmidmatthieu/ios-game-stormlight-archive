@@ -89,6 +89,12 @@
         "position": { "col": 40, "row": 30 },
         "dialogueTreeID": "lost_skaa_quest",
         "isShopkeeper": false
+      },
+      {
+        "npcID": "wandering_mist_walker",
+        "position": { "col": 25, "row": 40 },
+        "dialogueTreeID": "mist_walker_secret",
+        "isShopkeeper": false
       }
     ],
     "enemySpawns": [
@@ -133,6 +139,16 @@
         ],
         "isHidden": false,
         "respawns": true
+      },
+      {
+        "id": "ash_fields_hidden_ruin",
+        "position": { "col": 50, "row": 50 },
+        "lootTable": [
+          { "itemID": "pewter_vial", "dropChance": 0.7, "minQuantity": 1, "maxQuantity": 2 },
+          { "itemID": "wraith_bone", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
       }
     ],
     "ambientMusicTrack": "scadrial_ashfields_ambient",
@@ -259,7 +275,20 @@
         "requiredQuestID": null
       }
     ],
-    "npcSpawns": [],
+    "npcSpawns": [
+      {
+        "npcID": "bridgeman_survivor",
+        "position": { "col": 20, "row": 50 },
+        "dialogueTreeID": "bridgeman_story",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "spren_guide",
+        "position": { "col": 50, "row": 40 },
+        "dialogueTreeID": "spren_hints",
+        "isShopkeeper": false
+      }
+    ],
     "enemySpawns": [
       {
         "enemyID": "parshendi_warrior",
@@ -301,6 +330,16 @@
         ],
         "isHidden": false,
         "respawns": true
+      },
+      {
+        "id": "plains_hidden_chasm",
+        "position": { "col": 60, "row": 60 },
+        "lootTable": [
+          { "itemID": "gemheart_fragment", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
+          { "itemID": "carapace_armor_piece", "dropChance": 0.6, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
       }
     ],
     "ambientMusicTrack": "roshar_plains_ambient",
@@ -441,6 +480,12 @@
         "position": { "col": 30, "row": 45 },
         "dialogueTreeID": "lost_traveler_quest",
         "isShopkeeper": false
+      },
+      {
+        "npcID": "sand_hermit",
+        "position": { "col": 55, "row": 50 },
+        "dialogueTreeID": "hermit_wisdom",
+        "isShopkeeper": false
       }
     ],
     "enemySpawns": [
@@ -484,6 +529,16 @@
         ],
         "isHidden": false,
         "respawns": true
+      },
+      {
+        "id": "dunes_buried_temple",
+        "position": { "col": 10, "row": 10 },
+        "lootTable": [
+          { "itemID": "white_sand_pouch", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 },
+          { "itemID": "wyrm_scale", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
       }
     ],
     "ambientMusicTrack": "taldain_dunes_ambient",
@@ -608,7 +663,14 @@
         "requiredQuestID": null
       }
     ],
-    "npcSpawns": [],
+    "npcSpawns": [
+      {
+        "npcID": "frightened_painter",
+        "position": { "col": 10, "row": 40 },
+        "dialogueTreeID": "painter_lost_brush",
+        "isShopkeeper": false
+      }
+    ],
     "enemySpawns": [
       {
         "enemyID": "lesser_nightmare",
@@ -650,6 +712,16 @@
         ],
         "isHidden": false,
         "respawns": true
+      },
+      {
+        "id": "nightmare_hidden_shrine",
+        "position": { "col": 48, "row": 48 },
+        "lootTable": [
+          { "itemID": "hion_shard", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 2 },
+          { "itemID": "shadow_fabric", "dropChance": 0.25, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
       }
     ],
     "ambientMusicTrack": "komashi_nightmare_ambient",
@@ -784,7 +856,14 @@
         "requiredQuestID": null
       }
     ],
-    "npcSpawns": [],
+    "npcSpawns": [
+      {
+        "npcID": "color_researcher",
+        "position": { "col": 25, "row": 50 },
+        "dialogueTreeID": "color_research_quest",
+        "isShopkeeper": false
+      }
+    ],
     "enemySpawns": [
       {
         "enemyID": "lifeless_soldier",
@@ -826,6 +905,16 @@
         ],
         "isHidden": false,
         "respawns": true
+      },
+      {
+        "id": "jungle_ancient_altar",
+        "position": { "col": 50, "row": 10 },
+        "lootTable": [
+          { "itemID": "chromatic_thread", "dropChance": 0.7, "minQuantity": 1, "maxQuantity": 2 },
+          { "itemID": "awakened_blade", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
       }
     ],
     "ambientMusicTrack": "nalthis_jungle_ambient",
@@ -960,7 +1049,14 @@
         "requiredQuestID": null
       }
     ],
-    "npcSpawns": [],
+    "npcSpawns": [
+      {
+        "npcID": "refugee_elantrian",
+        "position": { "col": 15, "row": 50 },
+        "dialogueTreeID": "refugee_story",
+        "isShopkeeper": false
+      }
+    ],
     "enemySpawns": [
       {
         "enemyID": "derethi_warrior",
@@ -1002,6 +1098,16 @@
         ],
         "isHidden": false,
         "respawns": true
+      },
+      {
+        "id": "fjorden_hidden_shrine",
+        "position": { "col": 50, "row": 10 },
+        "lootTable": [
+          { "itemID": "dakhor_bone_charm", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
+          { "itemID": "seons_light", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
       }
     ],
     "ambientMusicTrack": "sel_fjorden_ambient",
@@ -1051,5 +1157,220 @@
     "ambientMusicTrack": "sel_boss_ambient",
     "weatherEffect": "aonGlow",
     "recommendedLevel": 9
+  },
+  {
+    "id": "shadesmar_hub",
+    "name": "Célestia — Le Port Cognitif",
+    "description": "Une ville flottante sur l'océan de perles cognitives. Des spren marchands et des voyageurs entre mondes s'y retrouvent. Les bâtiments sont des concepts cristallisés.",
+    "worldID": "shadesmar",
+    "type": "hub",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "celestia_port.sks",
+    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_depths",
+        "entryPointName": "descent_path",
+        "exitPosition": { "col": 40, "row": 22 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_nexus",
+        "entryPointName": "nexus_gate",
+        "exitPosition": { "col": 5, "row": 5 },
+        "requiredQuestID": "shadesmar_main_2"
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "cognitive_merchant",
+        "position": { "col": 18, "row": 30 },
+        "dialogueTreeID": "cognitive_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "worldhopper_sage",
+        "position": { "col": 28, "row": 20 },
+        "dialogueTreeID": "sage_cosmere_lore",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "lost_herald",
+        "position": { "col": 10, "row": 25 },
+        "dialogueTreeID": "herald_warning",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [],
+    "lootPoints": [
+      {
+        "id": "celestia_hidden_vault",
+        "position": { "col": 38, "row": 8 },
+        "lootTable": [
+          { "itemID": "cognitive_bead", "dropChance": 1.0, "minQuantity": 3, "maxQuantity": 5 },
+          { "itemID": "spren_essence", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_hub_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 8
+  },
+  {
+    "id": "shadesmar_depths",
+    "name": "Les Profondeurs — Océan de Perles",
+    "description": "Les étendues infinies de l'océan cognitif. Des billes de verre s'étendent à perte de vue, chacune représentant un objet du monde physique. Des spren corrompus et des Fusionnés errants rôdent.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 65,
+    "gridHeight": 65,
+    "tileMapFileName": "bead_ocean.sks",
+    "playerSpawnPosition": { "col": 5, "row": 32 },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_hub",
+        "entryPointName": "ascent_path",
+        "exitPosition": { "col": 0, "row": 32 },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_nexus",
+        "entryPointName": "rift_entrance",
+        "exitPosition": { "col": 62, "row": 5 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "stranded_sailor",
+        "position": { "col": 30, "row": 45 },
+        "dialogueTreeID": "sailor_rescue",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "ancient_spren",
+        "position": { "col": 50, "row": 20 },
+        "dialogueTreeID": "ancient_spren_wisdom",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "cognitive_shade",
+        "position": { "col": 20, "row": 20 },
+        "patrolPath": [
+          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
+          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+        ],
+        "respawnTime": 100
+      },
+      {
+        "enemyID": "cognitive_shade",
+        "position": { "col": 45, "row": 40 },
+        "patrolPath": null,
+        "respawnTime": 100
+      },
+      {
+        "enemyID": "hostile_spren",
+        "position": { "col": 35, "row": 15 },
+        "patrolPath": [
+          { "col": 35, "row": 15 }, { "col": 40, "row": 10 },
+          { "col": 45, "row": 15 }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "fused_errant",
+        "position": { "col": 55, "row": 25 },
+        "patrolPath": null,
+        "respawnTime": 300
+      },
+      {
+        "enemyID": "hostile_spren",
+        "position": { "col": 25, "row": 50 },
+        "patrolPath": [
+          { "col": 25, "row": 50 }, { "col": 30, "row": 55 }
+        ],
+        "respawnTime": 150
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "depths_bead_cluster",
+        "position": { "col": 40, "row": 35 },
+        "lootTable": [
+          { "itemID": "cognitive_bead", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 },
+          { "itemID": "spren_essence", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": false,
+        "respawns": true
+      },
+      {
+        "id": "depths_sunken_shrine",
+        "position": { "col": 15, "row": 55 },
+        "lootTable": [
+          { "itemID": "voidlight_crystal", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
+          { "itemID": "unmade_fragment", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+        ],
+        "isHidden": true,
+        "respawns": false
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_depths_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 9
+  },
+  {
+    "id": "shadesmar_nexus",
+    "name": "Le Nexus — Cœur du Cosmere",
+    "description": "Le point de convergence de toutes les réalités cosmériques. L'Avatar de l'Éclat Brisé a corrompu ce lieu sacré. Les frontières entre mondes s'effondrent.",
+    "worldID": "shadesmar",
+    "type": "boss",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "cosmere_nexus.sks",
+    "playerSpawnPosition": { "col": 27, "row": 52 },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_hub",
+        "entryPointName": "nexus_exit",
+        "exitPosition": { "col": 27, "row": 53 },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "unmade_shard",
+        "position": { "col": 15, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "unmade_shard",
+        "position": { "col": 40, "row": 30 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "fused_errant",
+        "position": { "col": 27, "row": 38 },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "shattered_shard_avatar",
+        "position": { "col": 27, "row": 8 },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "shadesmar_boss_ambient",
+    "weatherEffect": "none",
+    "recommendedLevel": 12
   }
 ]

@@ -44,6 +44,7 @@ final class GameManager {
     let lootSystem = LootSystem()
     let questSystem = QuestSystem()
     let talentSystem = TalentTreeSystem()
+    let dialogueSystem = DialogueSystem()
 
     private init() {}
 
@@ -132,6 +133,11 @@ final class GameManager {
 
     func item(byID id: String) -> Item? {
         allItems[id]
+    }
+
+    /// Register a dynamically generated item so it can be looked up by ID
+    func registerItem(_ item: Item) {
+        allItems[item.id] = item
     }
 
     func skill(byID id: String) -> Skill? {

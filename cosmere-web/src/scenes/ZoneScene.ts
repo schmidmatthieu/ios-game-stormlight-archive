@@ -11,16 +11,24 @@ import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
 import { showCraftingPanel, getRecipeEffect } from '../ui/CraftingPanel';
 import { showPauseMenu } from '../ui/PauseMenu';
 import { QuestTracker } from '../ui/QuestTracker';
+import { showQuestJournal } from '../ui/QuestJournal';
 import { Minimap } from '../ui/Minimap';
 import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
 import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../game/WorldMechanics';
 import type { WorldEffect } from '../game/WorldMechanics';
 import { BossState, createBossHPBar, createBossSpecialEffect } from '../game/BossMechanics';
-import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
+import { drawPlayerCharacter } from '../rendering/PlayerRenderer';
+import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
-import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
+import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle } from '../rendering/SpellEffects';
+import { FloatingDamageManager } from '../rendering/FloatingDamage';
+import type { DamageStyle } from '../rendering/FloatingDamage';
+import { MusicManager } from '../game/MusicSystem';
+import { createMusicIndicator } from '../ui/MusicIndicator';
+import { rollAffixes, createAffixState, updateAffixState, getAffixHPMultiplier, getAffixDamageMultiplier, getAffixSpeedMultiplier, getThornsDamage, getVampiricHeal, hasAffix, getAffixLabel, getAffixColor } from '../game/EliteAffixes';
+import type { EnemyAffixState } from '../game/EliteAffixes';
 import { spawnLootDrop, spawnGoldBurst, spawnXPOrbs } from '../rendering/LootAnimations';
 import { WeatherManager, createWeatherOverlay } from '../rendering/WeatherSystem';
 import { DayNightManager, createDayNightOverlay } from '../rendering/DayNightCycle';
@@ -78,6 +86,7 @@ interface EnemyInstance {
   data: Enemy;
   spawn: EnemySpawn;
   hp: number;
+  maxHP: number;
   position: { x: number; y: number };
   gridPos: GridPosition;
   sprite: Container;
@@ -89,6 +98,8 @@ interface EnemyInstance {
   state: 'idle' | 'chasing' | 'attacking' | 'dead';
   respawnTimer: number;
   animTimer: number;
+  affixState?: EnemyAffixState;
+  affixLabel?: Text;
 }
 
 interface NPCInstance {
@@ -294,6 +305,13 @@ export class ZoneScene extends Container implements GameScene {
   // World events
   private eventBanner: { update: (dt: number) => void } | null = null;
   private activeEventEffect: WorldEventEffect | null = null;
+  private classAmbientTimer = 0;
+
+  // Floating damage
+  private floatingDmg!: FloatingDamageManager;
+
+  // Music indicator
+  private musicIndicator: { update: (dt: number) => void } | null = null;
 
   constructor(app: Application, router: SceneRouter) {
     super();
@@ -449,6 +467,9 @@ export class ZoneScene extends Container implements GameScene {
     // Companion button
     this.createCompanionButton(w, layout);
 
+    // Quest journal button
+    this.createQuestJournalButton(w, layout);
+
     // Initialize companion
     CompanionManager.shared.checkWorldUnlocks(this.zone.worldID);
     this.spawnCompanionSprite();
@@ -456,6 +477,14 @@ export class ZoneScene extends Container implements GameScene {
     // Combo display
     this.comboDisplay = createComboDisplay(this.uiContainer, w, h);
     ComboManager.shared.reset();
+
+    // Floating damage manager
+    this.floatingDmg = new FloatingDamageManager(this.worldContainer);
+
+    // Music system
+    MusicManager.shared.setWorld(this.zone.worldID);
+    MusicManager.shared.setWeather(this.zone.weatherEffect ?? 'none');
+    this.musicIndicator = createMusicIndicator(this.uiContainer, w, h);
 
     // World events banner
     this.eventBanner = createWorldEventBanner(this.uiContainer, w);
@@ -1327,6 +1356,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private closeDialogue(): void {
     if (this.dialoguePanel) {
+      MusicManager.shared.playSFX('close_menu');
       this.dialoguePanel.destroy({ children: true });
       this.dialoguePanel = null;
     }
@@ -1396,6 +1426,7 @@ export class ZoneScene extends Container implements GameScene {
 
   private toggleInventory(): void {
     if (this.dialoguePanel) return;
+    MusicManager.shared.playSFX('open_menu');
     this.isPaused = true;
     this.dialoguePanel = new InventoryPanel(
       this.app.screen.width, this.app.screen.height,
@@ -1578,6 +1609,40 @@ export class ZoneScene extends Container implements GameScene {
     this.dialoguePanel = showCompanionPanel(
       this.uiContainer, this.app.screen.width, this.app.screen.height,
       () => { this.closeDialogue(); this.spawnCompanionSprite(); },
+    );
+  }
+
+  private createQuestJournalButton(screenWidth: number, layout: LayoutInfo): void {
+    const btnW = scaled(36, layout);
+    const btnH = scaled(28, layout);
+    const btn = new Container();
+    const bg = new Graphics();
+    bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+      .fill({ color: 0x1a1528, alpha: 0.7 })
+      .stroke({ color: 0x443355, width: 1, alpha: 0.5 });
+    btn.addChild(bg);
+    // Book icon
+    const icon = new Graphics();
+    icon.roundRect(scaled(10, layout), scaled(7, layout), scaled(16, layout), scaled(15, layout), scaled(2, layout)).fill({ color: 0x886633, alpha: 0.7 });
+    icon.rect(scaled(17, layout), scaled(7, layout), scaled(2, layout), scaled(15, layout)).fill({ color: 0x664422, alpha: 0.8 });
+    icon.rect(scaled(12, layout), scaled(10, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
+    icon.rect(scaled(12, layout), scaled(14, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
+    icon.rect(scaled(12, layout), scaled(18, layout), scaled(4, layout), scaled(1, layout)).fill({ color: 0xccaa66, alpha: 0.5 });
+    btn.addChild(icon);
+    btn.x = screenWidth / 2 - scaled(144, layout);
+    btn.y = toolbarY(layout);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerdown', () => this.toggleQuestJournal());
+    this.uiContainer.addChild(btn);
+  }
+
+  private toggleQuestJournal(): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+    this.dialoguePanel = showQuestJournal(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      () => this.closeDialogue(),
     );
   }
 
@@ -1789,9 +1854,16 @@ export class ZoneScene extends Container implements GameScene {
       container.y = pos.y;
       this.worldContainer.addChild(container);
 
+      // Roll affixes for elite/boss enemies
+      const affixes = rollAffixes(data.tier);
+      const affixState = affixes.length > 0 ? createAffixState(affixes) : undefined;
+      const hpMult = affixState ? getAffixHPMultiplier(affixState) : 1;
+      const finalMaxHP = Math.floor(data.maxHP * hpMult);
+
       const enemy: EnemyInstance = {
         data, spawn,
-        hp: data.maxHP,
+        hp: finalMaxHP,
+        maxHP: finalMaxHP,
         position: { ...pos },
         gridPos: { ...spawn.position },
         sprite: container,
@@ -1802,7 +1874,24 @@ export class ZoneScene extends Container implements GameScene {
         state: 'idle',
         respawnTimer: 0,
         animTimer: Math.random() * Math.PI * 2,
+        affixState,
       };
+
+      // Affix label under name
+      if (affixState && affixes.length > 0) {
+        const affixText = new Text({
+          text: getAffixLabel(affixState),
+          style: new TextStyle({
+            fontFamily: 'sans-serif', fontSize: 5,
+            fill: getAffixColor(affixState),
+            dropShadow: { color: 0x000000, blur: 2, distance: 1 },
+          }),
+        });
+        affixText.anchor.set(0.5);
+        affixText.y = -size * 2 - 30;
+        container.addChild(affixText);
+        enemy.affixLabel = affixText;
+      }
 
       // Initialize boss state for boss enemies
       if (data.tier === 'boss') {
@@ -1971,6 +2060,22 @@ export class ZoneScene extends Container implements GameScene {
         this.particles.splice(i, 1);
       }
     }
+
+    // Class-specific ambient particles
+    this.classAmbientTimer += dt;
+    if (this.classAmbientTimer >= 0.4) {
+      this.classAmbientTimer = 0;
+      const cls = GameManager.shared.champion?.championClass;
+      if (cls) {
+        const ox = (Math.random() - 0.5) * 30;
+        const oy = (Math.random() - 0.5) * 20;
+        spawnClassAmbientParticle(
+          this.worldContainer,
+          this.playerScreenPos.x + ox, this.playerScreenPos.y + oy,
+          cls, this.particles as any,
+        );
+      }
+    }
   }
 
   private updateFog(): void {
@@ -2016,6 +2121,9 @@ export class ZoneScene extends Container implements GameScene {
     this.updateAchievements(delta);
     this.updateCompanion(delta);
     this.updateWorldEvents(delta);
+    this.floatingDmg.update(delta);
+    MusicManager.shared.update(delta);
+    if (this.musicIndicator) this.musicIndicator.update(delta);
     this.hud.refresh(this.zone.name);
     this.questTracker.refresh();
     this.refreshMinimap();
@@ -2141,7 +2249,7 @@ export class ZoneScene extends Container implements GameScene {
       if (enemy.isDead) {
         enemy.respawnTimer -= dt;
         if (enemy.respawnTimer <= 0 && enemy.spawn.respawnTime) {
-          enemy.hp = enemy.data.maxHP;
+          enemy.hp = enemy.maxHP;
           enemy.isDead = false;
           enemy.state = 'idle';
           enemy.sprite.visible = true;
@@ -2175,7 +2283,7 @@ export class ZoneScene extends Container implements GameScene {
           this.shakeCamera(5, 0.3);
         }
 
-        const hpPct = enemy.hp / enemy.data.maxHP;
+        const hpPct = enemy.hp / enemy.maxHP;
         const result = enemy.bossState.update(dt, hpPct);
 
         if (result.phaseChanged && result.message) {
@@ -2223,9 +2331,33 @@ export class ZoneScene extends Container implements GameScene {
         this.bossHPBar?.update(hpPct, enemy.bossState.config.phases[enemy.bossState.currentPhase].name);
       }
 
-      // Speed multiplier for boss phases
-      const speedMult = enemy.bossState
-        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).speedMultiplier : 1;
+      // Affix mechanics update
+      if (enemy.affixState) {
+        const affixResult = updateAffixState(enemy.affixState, dt, enemy.maxHP, enemy.hp);
+        if (affixResult.regenHP > 0 && enemy.hp < enemy.maxHP) {
+          enemy.hp = Math.min(enemy.maxHP, enemy.hp + affixResult.regenHP);
+          this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
+        }
+        if (affixResult.shouldTeleport && dist < detRange) {
+          const ox = (Math.random() - 0.5) * 80;
+          const oy = (Math.random() - 0.5) * 80;
+          enemy.position.x += ox;
+          enemy.position.y += oy;
+          enemy.sprite.x = enemy.position.x;
+          enemy.sprite.y = enemy.position.y;
+        }
+        // Shield visual
+        if (affixResult.shieldChanged) {
+          const gfx = enemy.sprite.children[1] as Graphics;
+          if (gfx) gfx.alpha = enemy.affixState.shieldActive ? 0.4 : 1.0;
+        }
+      }
+
+      // Speed multiplier for boss phases and affixes
+      const bossSpeedMult = enemy.bossState
+        ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).speedMultiplier : 1;
+      const affixSpeedMult = enemy.affixState ? getAffixSpeedMultiplier(enemy.affixState) : 1;
+      const speedMult = bossSpeedMult * affixSpeedMult;
 
       if (dist < atkRange && enemy.attackCooldown <= 0) {
         enemy.state = 'attacking';
@@ -2376,6 +2508,7 @@ export class ZoneScene extends Container implements GameScene {
 
     // Attack animation
     this.playerAnimator.setState('attack');
+    MusicManager.shared.enterCombat();
 
     // Attack visual
     this.showAttackEffect();
@@ -2395,6 +2528,13 @@ export class ZoneScene extends Container implements GameScene {
 
     if (!closest) return;
 
+    // Shield check (affix)
+    if (closest.affixState?.shieldActive) {
+      MusicManager.shared.playSFX('block');
+      this.showDamageNumber(closest.position.x, closest.position.y - 30, 0, false, 0x4488ff, 'block');
+      return;
+    }
+
     const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
     const statusDmgMult = this.playerStatusEffects.getDamageMultiplier();
     const comboResult = ComboManager.shared.registerHit();
@@ -2403,11 +2543,32 @@ export class ZoneScene extends Container implements GameScene {
     const totalDmg = isCrit ? damage * 2 : damage;
 
     closest.hp -= totalDmg;
-    this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit);
-    this.drawEnemyHP(closest.hpBar, closest.hp / closest.data.maxHP);
+    const dmgStyle: DamageStyle = isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'normal';
+    MusicManager.shared.playSFX(isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'hit');
+    this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit, undefined, dmgStyle, comboResult.combo);
+    this.drawEnemyHP(closest.hpBar, closest.hp / closest.maxHP);
+
+    // Thorns affix: reflect damage back to player
+    if (closest.affixState) {
+      const thornsDmg = getThornsDamage(closest.affixState, totalDmg);
+      if (thornsDmg > 0) {
+        champ.currentHP = Math.max(0, champ.currentHP - thornsDmg);
+        this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, thornsDmg, false, 0x88aa44, 'poison');
+      }
+      // Vampiric affix: enemy heals from being hit (on their turn, simulated)
+      const vampHeal = getVampiricHeal(closest.affixState, totalDmg);
+      if (vampHeal > 0) {
+        closest.hp = Math.min(closest.maxHP, closest.hp + vampHeal);
+        this.showDamageNumber(closest.position.x, closest.position.y - 20, vampHeal, false, 0xcc2244, 'heal');
+      }
+    }
 
     // Hit flash + shake animation
     animateEnemyHit(closest.sprite);
+    createHitImpact(
+      this.worldContainer, closest.position.x, closest.position.y,
+      champ.championClass, isCrit, this.particles as any,
+    );
     const innerSprite = closest.sprite.children[1] as Graphics;
     if (innerSprite) {
       innerSprite.tint = 0xff4444;
@@ -2443,6 +2604,14 @@ export class ZoneScene extends Container implements GameScene {
     // Cast animation
     this.playerAnimator.setState('cast');
 
+    // Magic SFX based on champion class
+    const classSfxMap: Record<string, string> = {
+      mistborn: 'magic_allomancy', radiant: 'magic_surgebinding',
+      awakener: 'magic_awakening', elantrian: 'magic_aondor',
+      sandMaster: 'magic_sand', nightmarePainter: 'magic_paint',
+    };
+    MusicManager.shared.playSFX(classSfxMap[champ.championClass] ?? 'magic_surgebinding');
+
     // Skill visual effect
     this.showSkillEffect(skill.range * 32);
 
@@ -2454,7 +2623,7 @@ export class ZoneScene extends Container implements GameScene {
         const damage = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
         enemy.hp -= damage;
         this.showDamageNumber(enemy.position.x, enemy.position.y - 30, damage, false);
-        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.data.maxHP);
+        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
         if (enemy.hp <= 0) this.killEnemy(enemy);
       }
     }
@@ -2478,12 +2647,15 @@ export class ZoneScene extends Container implements GameScene {
     const nightmareMult = this.worldMechanics instanceof KomashiMechanics
       ? (this.worldMechanics as KomashiMechanics).getDamageMultiplier() : 1;
     const bossMult = enemy.bossState
-      ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.data.maxHP).damageMultiplier : 1;
+      ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).damageMultiplier : 1;
+    const affixDmgMult = enemy.affixState
+      ? getAffixDamageMultiplier(enemy.affixState, enemy.hp / enemy.maxHP) : 1;
     const shieldReduction = 1 - this.playerStatusEffects.getDamageReduction();
-    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * shieldReduction));
+    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * affixDmgMult * shieldReduction));
     champ.currentHP -= damage;
 
     this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
+    MusicManager.shared.playSFX('hit');
 
     // Hurt animation
     this.playerAnimator.setState('hurt');
@@ -2501,6 +2673,7 @@ export class ZoneScene extends Container implements GameScene {
   private killEnemy(enemy: EnemyInstance): void {
     enemy.isDead = true;
     enemy.state = 'dead';
+    MusicManager.shared.playSFX('death');
 
     // Track in bestiary & achievements
     BestiaryManager.shared.registerKill(enemy.data);
@@ -2553,6 +2726,7 @@ export class ZoneScene extends Container implements GameScene {
     const xpMultiplier = getBonusXPMultiplier(this.zone.worldID);
     const finalXP = Math.floor(enemy.data.xpReward * xpMultiplier * this.getCompanionXPBonus() * this.getEventXPBonus());
     const leveledUp = gm.grantXP(finalXP);
+    if (leveledUp) MusicManager.shared.playSFX('level_up');
 
     // Grant reputation based on enemy tier
     const repByTier: Record<string, number> = { minion: 1, soldier: 2, elite: 4, boss: 15 };
@@ -2589,6 +2763,14 @@ export class ZoneScene extends Container implements GameScene {
           QuestManager.shared.onItemCollected(lootEntry.itemID);
           BestiaryManager.shared.registerDrop(enemy.data.id, lootEntry.itemID);
           AchievementManager.shared.recordItemCollect();
+
+          // Loot SFX based on rarity
+          const lootSfxMap: Record<string, string> = {
+            common: 'loot_common', uncommon: 'loot_common',
+            rare: 'loot_rare', epic: 'loot_epic',
+            legendary: 'loot_legendary', cosmeric: 'loot_legendary',
+          };
+          MusicManager.shared.playSFX(lootSfxMap[item.rarity] ?? 'loot_common');
 
           // Animated loot drop
           spawnLootDrop(this.worldContainer, enemy.position.x, enemy.position.y,
@@ -2683,31 +2865,21 @@ export class ZoneScene extends Container implements GameScene {
 
   // ─── Visual Effects ──────────────────────────────────────────
 
-  private showDamageNumber(x: number, y: number, amount: number, isCrit: boolean, color = 0xffffff): void {
-    const style = new TextStyle({
-      fontFamily: 'sans-serif',
-      fontSize: isCrit ? 18 : 13,
-      fill: isCrit ? 0xffee44 : color,
-      fontWeight: 'bold',
-      dropShadow: { color: 0x000000, blur: 2, distance: 1 },
-    });
-    const txt = new Text({ text: isCrit ? `${amount}!` : `${amount}`, style });
-    txt.anchor.set(0.5);
-    txt.x = x + (Math.random() - 0.5) * 20;
-    txt.y = y;
-    txt.zIndex = 100001;
-    this.worldContainer.addChild(txt);
-
-    const startY = txt.y;
-    let elapsed = 0;
-    const anim = () => {
-      elapsed += 1 / 60;
-      txt.y = startY - elapsed * 50;
-      txt.alpha = Math.max(0, 1 - elapsed / 0.8);
-      if (elapsed < 0.8) requestAnimationFrame(anim);
-      else txt.destroy();
-    };
-    requestAnimationFrame(anim);
+  private showDamageNumber(
+    x: number, y: number, amount: number, isCrit: boolean,
+    color?: number, dmgStyle?: DamageStyle, comboCount = 0,
+  ): void {
+    // Determine style from params if not explicitly set
+    let style: DamageStyle = dmgStyle ?? 'normal';
+    if (!dmgStyle) {
+      if (isCrit) style = 'crit';
+      else if (color === 0xff4444) style = 'normal'; // enemy damage to player
+      else if (color === 0x44cc44 || color === 0x44ff66) style = 'heal';
+      else if (color === 0x66cc44) style = 'xp';
+      else if (color === 0xe6cc33) style = 'gold';
+      else if (color === 0x8866ff) style = 'investiture';
+    }
+    this.floatingDmg.spawn(x, y, amount, style, comboCount);
   }
 
   private updateWorldMechanics(dt: number): void {
@@ -2959,6 +3131,7 @@ export class ZoneScene extends Container implements GameScene {
       if (QuestManager.shared.checkQuestCompletion(qid)) {
         const result = QuestManager.shared.completeQuest(qid);
         if (result) {
+          MusicManager.shared.playSFX('quest_complete');
           // Show quest completion reward
           this.showFloatingText(
             this.playerScreenPos.x, this.playerScreenPos.y - 50,

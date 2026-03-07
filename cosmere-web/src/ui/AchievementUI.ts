@@ -3,6 +3,7 @@ import { AchievementManager } from '../game/AchievementSystem';
 import { getLayoutInfo, fontSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import type { AchievementDef, AchievementCategory } from '../game/AchievementSystem';
+import { MusicManager } from '../game/MusicSystem';
 
 // ─── Category Info ───────────────────────────────────────────
 
@@ -39,6 +40,7 @@ export function createAchievementToast(
   let toastPhase: 'idle' | 'slide_in' | 'display' | 'slide_out' = 'idle';
 
   function showToast(achievement: AchievementDef): void {
+    MusicManager.shared.playSFX('achievement');
     if (activeToast) {
       toastContainer.removeChild(activeToast);
       activeToast.destroy({ children: true });

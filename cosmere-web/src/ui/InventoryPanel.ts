@@ -5,6 +5,7 @@ import type { Item, EquipmentSlot } from '../data/types';
 import { RARITY_COLORS } from '../data/types';
 import { getLayoutInfo, fontSize, scaled, panelSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
+import { MusicManager } from '../game/MusicSystem';
 
 const SLOT_LABELS: Record<string, string> = {
   helmet: 'Casque', shoulders: '\u00C9pauli\u00E8res', chest: 'Torse', cape: 'Cape',
@@ -340,6 +341,26 @@ export class InventoryPanel extends Container {
     const champ = GameManager.shared.champion;
     if (!champ) return;
 
+    // Gold display
+    const goldLabel = new Text({
+      text: `Or: ${champ.gold}`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0xe6cc33, fontWeight: 'bold' }),
+    });
+    goldLabel.x = cx + 14;
+    goldLabel.y = cy;
+    this.contentContainer.addChild(goldLabel);
+
+    const itemCount = new Text({
+      text: `${champ.inventoryItemIDs.length} objets`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x888888 }),
+    });
+    itemCount.anchor.set(1, 0);
+    itemCount.x = cx + cw - 14;
+    itemCount.y = cy;
+    this.contentContainer.addChild(itemCount);
+
+    let y = cy + 16;
+
     if (champ.inventoryItemIDs.length === 0) {
       const empty = new Text({
         text: 'Aucun objet dans l\'inventaire.\nTuez des ennemis et ouvrez des coffres\npour obtenir du butin!',
@@ -350,29 +371,25 @@ export class InventoryPanel extends Container {
       });
       empty.anchor.set(0.5, 0);
       empty.x = cx + cw / 2;
-      empty.y = cy + 24;
+      empty.y = y + 20;
       this.contentContainer.addChild(empty);
       return;
     }
 
-    const rowH = scaled(32, this.layout);
-    let y = cy;
-    for (const itemID of champ.inventoryItemIDs) {
+    const rowH = scaled(42, this.layout);
+    for (const itemID of [...champ.inventoryItemIDs]) {
+      if (y > cy + ch - 20) break;
       const item = gameData.item(itemID);
       if (!item) continue;
 
       const rarityColor = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
+      const sellPrice = GameManager.getItemSellPrice(itemID);
+      const disenchantResult = GameManager.getDisenchantResult(itemID);
 
       const row = new Graphics();
       row.roundRect(cx + 10, y, cw - 20, rowH, 5)
         .fill({ color: UI_COLORS.btnSecondary, alpha: 0.6 })
         .stroke({ color: rarityColor, width: 0.8, alpha: 0.3 });
-      row.eventMode = 'static';
-      row.cursor = 'pointer';
-      row.on('pointerdown', () => {
-        GameManager.shared.equipItem(itemID, item.slot);
-        this.refreshContent();
-      });
       this.contentContainer.addChild(row);
 
       // Item name
@@ -381,7 +398,7 @@ export class InventoryPanel extends Container {
         style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, this.layout), fill: rarityColor, fontWeight: 'bold' }),
       });
       nameLabel.x = cx + 16;
-      nameLabel.y = y + 4;
+      nameLabel.y = y + 2;
       this.contentContainer.addChild(nameLabel);
 
       // Slot + stats
@@ -392,18 +409,75 @@ export class InventoryPanel extends Container {
         style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, this.layout), fill: UI_COLORS.textMuted }),
       });
       detailLabel.x = cx + 16;
-      detailLabel.y = y + 18;
+      detailLabel.y = y + 14;
       this.contentContainer.addChild(detailLabel);
 
-      // Equip hint
-      const equipHint = new Text({
-        text: '\u00C9quiper',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, this.layout), fill: UI_COLORS.success, fontWeight: 'bold' }),
+      // Action buttons row
+      const btnY = y + 25;
+      const btnH = 11;
+
+      // Equip button
+      const equipBtn = new Graphics();
+      equipBtn.roundRect(cx + 14, btnY, 50, btnH, 3)
+        .fill({ color: 0x224422, alpha: 0.8 })
+        .stroke({ color: 0x44aa44, width: 0.5, alpha: 0.5 });
+      equipBtn.eventMode = 'static';
+      equipBtn.cursor = 'pointer';
+      equipBtn.on('pointerdown', () => {
+        MusicManager.shared.playSFX('equip');
+        GameManager.shared.equipItem(itemID, item.slot);
+        this.refreshContent();
       });
-      equipHint.anchor.set(1, 0.5);
-      equipHint.x = cx + cw - 16;
-      equipHint.y = y + rowH / 2;
-      this.contentContainer.addChild(equipHint);
+      this.contentContainer.addChild(equipBtn);
+      const equipText = new Text({
+        text: '\u00C9quiper',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x66cc44 }),
+      });
+      equipText.x = cx + 20;
+      equipText.y = btnY + 1;
+      this.contentContainer.addChild(equipText);
+
+      // Sell button
+      const sellBtn = new Graphics();
+      sellBtn.roundRect(cx + 70, btnY, 60, btnH, 3)
+        .fill({ color: 0x332211, alpha: 0.8 })
+        .stroke({ color: 0xcc9933, width: 0.5, alpha: 0.5 });
+      sellBtn.eventMode = 'static';
+      sellBtn.cursor = 'pointer';
+      sellBtn.on('pointerdown', () => {
+        MusicManager.shared.playSFX('loot_common');
+        GameManager.shared.sellItem(itemID);
+        this.refreshContent();
+      });
+      this.contentContainer.addChild(sellBtn);
+      const sellText = new Text({
+        text: `Vendre ${sellPrice}g`,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xe6cc33 }),
+      });
+      sellText.x = cx + 76;
+      sellText.y = btnY + 1;
+      this.contentContainer.addChild(sellText);
+
+      // Disenchant button
+      const disBtn = new Graphics();
+      disBtn.roundRect(cx + 136, btnY, 70, btnH, 3)
+        .fill({ color: 0x221133, alpha: 0.8 })
+        .stroke({ color: 0x9955ee, width: 0.5, alpha: 0.5 });
+      disBtn.eventMode = 'static';
+      disBtn.cursor = 'pointer';
+      disBtn.on('pointerdown', () => {
+        MusicManager.shared.playSFX('magic_aondor');
+        GameManager.shared.disenchantItem(itemID);
+        this.refreshContent();
+      });
+      this.contentContainer.addChild(disBtn);
+      const disText = new Text({
+        text: `D\u00E9chanter +${disenchantResult.amount}`,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0xbb88ee }),
+      });
+      disText.x = cx + 142;
+      disText.y = btnY + 1;
+      this.contentContainer.addChild(disText);
 
       y += rowH + 3;
     }

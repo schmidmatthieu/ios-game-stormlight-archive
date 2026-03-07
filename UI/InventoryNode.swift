@@ -117,6 +117,14 @@ class InventoryNode: SKNode {
         let equipSection = CGPoint(x: -screenSize.width / 4, y: 0)
 
         for (slot, x, y) in equipSlotPositions {
+            // Shadow
+            let shadow = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 6)
+            shadow.fillColor = SKColor(white: 0, alpha: 0.3)
+            shadow.strokeColor = .clear
+            shadow.position = CGPoint(x: equipSection.x + x + 1, y: equipSection.y + y - 1)
+            shadow.zPosition = 6001
+            panel.addChild(shadow)
+
             let slotNode = SKShapeNode(rectOf: CGSize(width: 44, height: 44), cornerRadius: 6)
             slotNode.fillColor = SKColor(white: 0.12, alpha: 1.0)
             slotNode.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
@@ -125,17 +133,55 @@ class InventoryNode: SKNode {
             slotNode.zPosition = 6002
             slotNode.name = "equip_\(slot.rawValue)"
 
+            // Inner shine
+            let shine = SKShapeNode(rectOf: CGSize(width: 36, height: 10), cornerRadius: 3)
+            shine.fillColor = SKColor(white: 1, alpha: 0.04)
+            shine.strokeColor = .clear
+            shine.position = CGPoint(x: 0, y: 10)
+            shine.zPosition = 1
+            slotNode.addChild(shine)
+
+            // Slot icon symbol
+            let icon = SKLabelNode(fontNamed: "Helvetica")
+            icon.text = slotIcon(slot)
+            icon.fontSize = 14
+            icon.fontColor = SKColor(white: 0.2, alpha: 0.4)
+            icon.verticalAlignmentMode = .center
+            icon.position = CGPoint(x: 0, y: 2)
+            icon.zPosition = 1
+            icon.name = "equip_icon_\(slot.rawValue)"
+            slotNode.addChild(icon)
+
             // Slot label
             let label = SKLabelNode(fontNamed: "Helvetica")
             label.text = slotAbbreviation(slot)
-            label.fontSize = 10
+            label.fontSize = 8
             label.fontColor = SKColor(white: 0.3, alpha: 0.5)
             label.verticalAlignmentMode = .center
+            label.position = CGPoint(x: 0, y: -14)
             label.name = "equip_\(slot.rawValue)"
             slotNode.addChild(label)
 
             panel.addChild(slotNode)
             equipmentSlots[slot] = slotNode
+        }
+    }
+
+    private func slotIcon(_ slot: EquipmentSlot) -> String {
+        switch slot {
+        case .helmet:     return "⛑"
+        case .shoulders:  return "⌃"
+        case .chest:      return "⊞"
+        case .cape:       return "◇"
+        case .gloves:     return "✋"
+        case .belt:       return "⊶"
+        case .legs:       return "⫿"
+        case .boots:      return "⊥"
+        case .mainWeapon: return "⚔"
+        case .offhand:    return "⊕"
+        case .amulet:     return "◈"
+        case .ring1:      return "○"
+        case .ring2:      return "○"
         }
     }
 
@@ -198,17 +244,19 @@ class InventoryNode: SKNode {
     private func setupStatsDisplay() {
         guard let champion = GameManager.shared.champion else { return }
 
+        let effective = champion.effectiveStats
+        let base = champion.baseStats
         let statsOrigin = CGPoint(x: 0, y: -screenSize.height / 3)
-        let stats: [(String, Int)] = [
-            ("VIG", champion.baseStats.vigor),
-            ("INV", champion.baseStats.investiture),
-            ("FOR", champion.baseStats.strength),
-            ("AGI", champion.baseStats.agility),
-            ("ESP", champion.baseStats.spirit),
-            ("CHA", champion.baseStats.luck)
+        let stats: [(String, Int, Int)] = [
+            ("VIG", effective.vigor, effective.vigor - base.vigor),
+            ("INV", effective.investiture, effective.investiture - base.investiture),
+            ("FOR", effective.strength, effective.strength - base.strength),
+            ("AGI", effective.agility, effective.agility - base.agility),
+            ("ESP", effective.spirit, effective.spirit - base.spirit),
+            ("CHA", effective.luck, effective.luck - base.luck)
         ]
 
-        for (i, (name, value)) in stats.enumerated() {
+        for (i, (name, value, bonus)) in stats.enumerated() {
             let x = CGFloat(i - 3) * 55 + 27
 
             let label = SKLabelNode(fontNamed: "Helvetica-Bold")
@@ -220,9 +268,9 @@ class InventoryNode: SKNode {
             statsPanel.addChild(label)
 
             let valueLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
-            valueLabel.text = "\(value)"
-            valueLabel.fontSize = 14
-            valueLabel.fontColor = .white
+            valueLabel.text = bonus > 0 ? "\(value) (+\(bonus))" : "\(value)"
+            valueLabel.fontSize = bonus > 0 ? 12 : 14
+            valueLabel.fontColor = bonus > 0 ? SKColor(red: 0.4, green: 0.9, blue: 0.4, alpha: 1) : .white
             valueLabel.position = CGPoint(x: x, y: statsOrigin.y - 8)
             valueLabel.zPosition = 6002
             valueLabel.name = "stat_\(name)"
@@ -236,6 +284,7 @@ class InventoryNode: SKNode {
         goldLabel.fontColor = SKColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0)
         goldLabel.position = CGPoint(x: 0, y: statsOrigin.y - 30)
         goldLabel.zPosition = 6002
+        goldLabel.name = "stat_gold"
         statsPanel.addChild(goldLabel)
     }
 
@@ -268,32 +317,74 @@ class InventoryNode: SKNode {
 
         // Refresh equipment
         for (eqSlot, node) in equipmentSlots {
-            // Nettoyer les labels d'items précédents
-            node.children.filter { $0.name == "equippedItemName" }.forEach { $0.removeFromParent() }
+            // Reset to default
+            node.fillColor = SKColor(white: 0.12, alpha: 1.0)
+            node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
+            node.glowWidth = 0
+
+            // Remove previous item indicators
+            node.children.filter { $0.name == "equipped_indicator" }.forEach { $0.removeFromParent() }
 
             if let itemID = champion.equipment.itemID(for: eqSlot),
                let item = GameManager.shared.allItems[itemID] {
-                node.fillColor = rarityColor(item.rarity).withAlphaComponent(0.2)
-                node.strokeColor = rarityColor(item.rarity)
+                let color = rarityColor(item.rarity)
+                node.fillColor = color.withAlphaComponent(0.15)
+                node.strokeColor = color
 
-                // Afficher le nom court de l'item équipé
-                let eqName = SKLabelNode(fontNamed: "Helvetica")
-                eqName.text = String(item.name.prefix(4))
-                eqName.fontSize = 8
-                eqName.fontColor = rarityColor(item.rarity)
-                eqName.verticalAlignmentMode = .center
-                eqName.position = CGPoint(x: 0, y: -18)
-                eqName.name = "equippedItemName"
-                node.addChild(eqName)
+                // Glow for epic+ items
+                switch item.rarity {
+                case .epic:      node.glowWidth = 2
+                case .legendary: node.glowWidth = 4
+                case .cosmeric:  node.glowWidth = 6
+                default: break
+                }
+
+                // Item name abbreviation
+                let nameLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
+                nameLabel.text = String(item.name.prefix(4))
+                nameLabel.fontSize = 8
+                nameLabel.fontColor = color
+                nameLabel.verticalAlignmentMode = .center
+                nameLabel.position = CGPoint(x: 0, y: 2)
+                nameLabel.zPosition = 3
+                nameLabel.name = "equipped_indicator"
+                node.addChild(nameLabel)
 
                 // Cacher le label d'emplacement vide
                 node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = true }
             } else {
-                node.fillColor = SKColor(white: 0.12, alpha: 1.0)
-                node.strokeColor = SKColor(red: 0.4, green: 0.3, blue: 0.15, alpha: 0.8)
                 // Réafficher le label d'emplacement
                 node.children.filter { $0 is SKLabelNode && $0.name == "equip_\(eqSlot.rawValue)" }.forEach { $0.isHidden = false }
             }
+        }
+
+        // Refresh stats display
+        refreshStats()
+    }
+
+    private func refreshStats() {
+        guard let champion = GameManager.shared.champion else { return }
+        let effective = champion.effectiveStats
+        let base = champion.baseStats
+
+        let statUpdates: [(String, Int, Int)] = [
+            ("VIG", effective.vigor, effective.vigor - base.vigor),
+            ("INV", effective.investiture, effective.investiture - base.investiture),
+            ("FOR", effective.strength, effective.strength - base.strength),
+            ("AGI", effective.agility, effective.agility - base.agility),
+            ("ESP", effective.spirit, effective.spirit - base.spirit),
+            ("CHA", effective.luck, effective.luck - base.luck)
+        ]
+
+        for (name, value, bonus) in statUpdates {
+            if let label = statsPanel.childNode(withName: "stat_\(name)") as? SKLabelNode {
+                label.text = bonus > 0 ? "\(value) (+\(bonus))" : "\(value)"
+                label.fontColor = bonus > 0 ? SKColor(red: 0.4, green: 0.9, blue: 0.4, alpha: 1) : .white
+            }
+        }
+
+        if let goldLabel = statsPanel.childNode(withName: "stat_gold") as? SKLabelNode {
+            goldLabel.text = "\(champion.gold) or"
         }
     }
 
@@ -330,6 +421,16 @@ class InventoryNode: SKNode {
 
             if node.name == "equipItem" || node.parent?.name == "equipItem" {
                 equipSelectedItem()
+                return
+            }
+
+            if node.name == "useButton" || node.parent?.name == "useButton" {
+                useSelectedConsumable()
+                return
+            }
+
+            if node.name == "discardButton" || node.parent?.name == "discardButton" {
+                discardSelectedItem()
                 return
             }
 
@@ -494,25 +595,221 @@ class InventoryNode: SKNode {
             detailPanel.addChild(statLabel)
         }
 
-        // Bouton Équiper
-        let equipBtnY = y - 50 - CGFloat(item.statBonuses.count) * 14 - 25
-        let equipBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 36), cornerRadius: 8)
-        equipBtn.fillColor = SKColor(red: 0.2, green: 0.5, blue: 0.3, alpha: 0.9)
-        equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.4, alpha: 1.0)
-        equipBtn.lineWidth = 1.5
-        equipBtn.position = CGPoint(x: screenSize.width / 6, y: equipBtnY)
-        equipBtn.zPosition = 6003
-        equipBtn.name = "equipItem"
+        // Traits (shown below stats in cyan)
+        let traitStartY = y - 50 - CGFloat(item.statBonuses.count) * 14
+        for (i, trait) in item.traits.enumerated() {
+            let traitLabel = SKLabelNode(fontNamed: "Helvetica")
+            let percentValue = Int(trait.effectValue * 100)
+            traitLabel.text = "\(trait.name) +\(percentValue)%"
+            traitLabel.fontSize = 10
+            traitLabel.fontColor = SKColor(red: 0.3, green: 0.8, blue: 0.9, alpha: 1)
+            traitLabel.position = CGPoint(x: screenSize.width / 6, y: traitStartY - CGFloat(i) * 13)
+            detailPanel.addChild(traitLabel)
+        }
 
-        let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
-        equipLabel.text = "Équiper"
-        equipLabel.fontSize = 13
-        equipLabel.fontColor = .white
-        equipLabel.verticalAlignmentMode = .center
-        equipLabel.name = "equipItem"
-        equipBtn.addChild(equipLabel)
+        // Action buttons row
+        let totalInfoLines = item.statBonuses.count + item.traits.count
+        let btnY = y - 55 - CGFloat(totalInfoLines) * 14
 
-        detailPanel.addChild(equipBtn)
+        if item.isConsumable {
+            // Use button for consumables
+            let useBtn = SKShapeNode(rectOf: CGSize(width: 80, height: 28), cornerRadius: 6)
+            useBtn.fillColor = SKColor(red: 0.1, green: 0.3, blue: 0.5, alpha: 0.9)
+            useBtn.strokeColor = SKColor(red: 0.3, green: 0.6, blue: 0.9, alpha: 1)
+            useBtn.position = CGPoint(x: screenSize.width / 6 - 48, y: btnY)
+            useBtn.name = "useButton"
+            detailPanel.addChild(useBtn)
+
+            let useLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+            useLabel.text = "Utiliser"
+            useLabel.fontSize = 12
+            useLabel.fontColor = .white
+            useLabel.verticalAlignmentMode = .center
+            useLabel.name = "useButton"
+            useBtn.addChild(useLabel)
+        } else {
+            // Equip button for equipment
+            let equipBtn = SKShapeNode(rectOf: CGSize(width: 80, height: 28), cornerRadius: 6)
+            equipBtn.fillColor = SKColor(red: 0.15, green: 0.4, blue: 0.15, alpha: 0.9)
+            equipBtn.strokeColor = SKColor(red: 0.3, green: 0.7, blue: 0.3, alpha: 1)
+            equipBtn.position = CGPoint(x: screenSize.width / 6 - 48, y: btnY)
+            equipBtn.name = "equipItem"
+            detailPanel.addChild(equipBtn)
+
+            let equipLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+            equipLabel.text = "Équiper"
+            equipLabel.fontSize = 12
+            equipLabel.fontColor = .white
+            equipLabel.verticalAlignmentMode = .center
+            equipLabel.name = "equipItem"
+            equipBtn.addChild(equipLabel)
+        }
+
+        // Discard button (for all items)
+        let discardBtn = SKShapeNode(rectOf: CGSize(width: 80, height: 28), cornerRadius: 6)
+        discardBtn.fillColor = SKColor(red: 0.4, green: 0.1, blue: 0.1, alpha: 0.9)
+        discardBtn.strokeColor = SKColor(red: 0.7, green: 0.2, blue: 0.2, alpha: 1)
+        discardBtn.position = CGPoint(x: screenSize.width / 6 + 48, y: btnY)
+        discardBtn.name = "discardButton"
+        detailPanel.addChild(discardBtn)
+
+        let discardLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        discardLabel.text = "Jeter"
+        discardLabel.fontSize = 12
+        discardLabel.fontColor = .white
+        discardLabel.verticalAlignmentMode = .center
+        discardLabel.name = "discardButton"
+        discardBtn.addChild(discardLabel)
+    }
+
+    // MARK: - Equip/Unequip
+
+    private func equipSelectedItem() {
+        guard let index = selectedItemIndex,
+              let champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID] else { return }
+
+        // Consumables cannot be equipped
+        if item.isConsumable { return }
+
+        // Check level requirement
+        if champion.level < item.requiredLevel {
+            return
+        }
+
+        let slot = item.slot
+        GameManager.shared.mutateChampion { champ in
+            // Unequip existing item to inventory
+            if let existingID = champ.equipment.itemID(for: slot) {
+                champ.inventoryItemIDs.append(existingID)
+            }
+
+            // Remove new item from inventory
+            if let removeIdx = champ.inventoryItemIDs.firstIndex(of: itemID) {
+                champ.inventoryItemIDs.remove(at: removeIdx)
+            }
+
+            // Equip
+            switch slot {
+            case .helmet:     champ.equipment.helmet = itemID
+            case .shoulders:  champ.equipment.shoulders = itemID
+            case .chest:      champ.equipment.chest = itemID
+            case .cape:       champ.equipment.cape = itemID
+            case .gloves:     champ.equipment.gloves = itemID
+            case .belt:       champ.equipment.belt = itemID
+            case .legs:       champ.equipment.legs = itemID
+            case .boots:      champ.equipment.boots = itemID
+            case .mainWeapon: champ.equipment.mainWeapon = itemID
+            case .offhand:    champ.equipment.offhand = itemID
+            case .amulet:     champ.equipment.amulet = itemID
+            case .ring1:      champ.equipment.ring1 = itemID
+            case .ring2:      champ.equipment.ring2 = itemID
+            case .consumable: break
+            }
+        }
+
+        selectedItemIndex = nil
+        detailPanel.removeAllChildren()
+        refresh()
+    }
+
+    private func useSelectedConsumable() {
+        guard let index = selectedItemIndex,
+              let champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID],
+              let effect = item.consumableEffect else { return }
+
+        GameManager.shared.mutateChampion { champ in
+            switch effect.type {
+            case .healHP:
+                champ.currentHP = min(champ.maxHP, champ.currentHP + effect.value)
+            case .restoreInvestiture:
+                champ.currentInvestiture = min(champ.maxInvestiture, champ.currentInvestiture + effect.value)
+            case .healAndRestore:
+                champ.currentHP = min(champ.maxHP, champ.currentHP + effect.value)
+                champ.currentInvestiture = min(champ.maxInvestiture, champ.currentInvestiture + effect.value)
+            }
+
+            // Remove consumed item
+            if let removeIdx = champ.inventoryItemIDs.firstIndex(of: itemID) {
+                champ.inventoryItemIDs.remove(at: removeIdx)
+            }
+        }
+
+        selectedItemIndex = nil
+        detailPanel.removeAllChildren()
+        refresh()
+    }
+
+    private func discardSelectedItem() {
+        guard let index = selectedItemIndex,
+              let champion = GameManager.shared.champion,
+              index < champion.inventoryItemIDs.count else { return }
+
+        let itemID = champion.inventoryItemIDs[index]
+        guard let item = GameManager.shared.allItems[itemID] else { return }
+
+        // Give some gold for discarded items
+        let sellValue: Int
+        switch item.rarity {
+        case .common:    sellValue = 5
+        case .uncommon:  sellValue = 15
+        case .rare:      sellValue = 40
+        case .epic:      sellValue = 100
+        case .legendary: sellValue = 250
+        case .cosmeric:  sellValue = 500
+        }
+
+        GameManager.shared.mutateChampion { champ in
+            champ.gold += sellValue
+            if let removeIdx = champ.inventoryItemIDs.firstIndex(of: itemID) {
+                champ.inventoryItemIDs.remove(at: removeIdx)
+            }
+        }
+
+        selectedItemIndex = nil
+        detailPanel.removeAllChildren()
+        refresh()
+    }
+
+    private func unequipSlot(_ slot: EquipmentSlot) {
+        guard let champion = GameManager.shared.champion,
+              let itemID = champion.equipment.itemID(for: slot) else { return }
+
+        // Check inventory space
+        guard champion.inventoryItemIDs.count < 30 else { return }
+
+        GameManager.shared.mutateChampion { champ in
+            // Move item to inventory
+            champ.inventoryItemIDs.append(itemID)
+
+            // Clear slot
+            switch slot {
+            case .helmet:     champ.equipment.helmet = nil
+            case .shoulders:  champ.equipment.shoulders = nil
+            case .chest:      champ.equipment.chest = nil
+            case .cape:       champ.equipment.cape = nil
+            case .gloves:     champ.equipment.gloves = nil
+            case .belt:       champ.equipment.belt = nil
+            case .legs:       champ.equipment.legs = nil
+            case .boots:      champ.equipment.boots = nil
+            case .mainWeapon: champ.equipment.mainWeapon = nil
+            case .offhand:    champ.equipment.offhand = nil
+            case .amulet:     champ.equipment.amulet = nil
+            case .ring1:      champ.equipment.ring1 = nil
+            case .ring2:      champ.equipment.ring2 = nil
+            case .consumable: break
+            }
+        }
+
+        // Show unequipped item detail
+        showItemDetail(itemID)
     }
 
     // MARK: - Sorting
@@ -569,6 +866,7 @@ class InventoryNode: SKNode {
         case .amulet:     return "AMU"
         case .ring1:      return "AN1"
         case .ring2:      return "AN2"
+        case .consumable: return "CON"
         }
     }
 }

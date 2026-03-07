@@ -65,7 +65,7 @@ final class DialogueSystem {
 
     // MARK: - State
 
-    private var currentTree: DialogueTree?
+    private(set) var currentTree: DialogueTree?
     private var currentNodeID: String?
     private var dialogueHistory: [String] = []  // IDs des nodes visités
     private var globalFlags: [String: Bool] = [:]
@@ -181,6 +181,7 @@ final class DialogueSystem {
             switch action.type {
             case .giveItem:
                 GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(action.targetID) }
+                GameManager.shared.questSystem.onItemCollected(itemID: action.targetID)
 
             case .removeItem:
                 GameManager.shared.mutateChampion { $0.inventoryItemIDs.removeAll { $0 == action.targetID } }

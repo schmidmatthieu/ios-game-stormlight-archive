@@ -42,18 +42,21 @@ class ZoneScene: SKScene {
     // Zone transition safety
     private var isTransitioning = false
 
-    // Regen
-    private var regenAccumulator: TimeInterval = 0
-    private let regenInterval = GameConstants.Regen.interval
-    private let hpRegenBase = GameConstants.Regen.hpPerSecond
-    private let investitureRegenBase = GameConstants.Regen.investiturePerSecond
+    // Gameplay: out-of-combat HP regen
+    private var lastDamageTakenTime: TimeInterval = 0
+    private let hpRegenDelay: TimeInterval = 5.0
+    private let hpRegenPercent: Double = 0.01  // 1% maxHP per second
 
     // Level up tracking
     private var previousLevel: Int = 1
 
-    // Low HP warning
-    private var lowHPOverlay: SKShapeNode?
-    private var isShowingLowHPWarning = false
+    // Gameplay: low HP vignette
+    private var lowHPVignette: SKShapeNode?
+
+    // Ultimate cooldown
+    private var ultimateCooldownRemaining: TimeInterval = 0
+    private let ultimateCooldownDuration: TimeInterval = 45.0
+
 
     // Theme
     private let worldTheme: WorldTheme
@@ -65,6 +68,11 @@ class ZoneScene: SKScene {
     private let aonDor = AonDorSystem()
     private let sandMastery = SandMasterySystem()
     private let painting = PaintingSystem()
+
+    // UI panels
+    private var inventoryNode: InventoryNode?
+    private var skillTreeNode: SkillTreeNode?
+    private var shopNode: ShopNode?
 
     // MARK: - Init
 
@@ -97,9 +105,11 @@ class ZoneScene: SKScene {
         setupPauseButton()
         setupEnemyInstances()
         setupPathfinding()
+        setupEnemyAICallbacks()
+
+        setupLowHPVignette()
 
         previousLevel = GameManager.shared.champion?.level ?? 1
-        setupLowHPOverlay()
 
         if let track = zone.ambientMusicTrack {
             AudioManager.shared.playMusic(track)
@@ -107,8 +117,28 @@ class ZoneScene: SKScene {
 
         GameManager.shared.questSystem.onZoneEntered(zoneID: zone.id)
 
+        // Zone entrance title card
+        showZoneEntranceTitle()
+
+        // Low HP vignette
+        lowHPVignette = CombatFeedbackSystem.lowHealthVignette(on: cameraNode, screenSize: size)
+
+        // Listen for equipment changes to refresh player appearance
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(onEquipmentChanged),
+            name: .equipmentDidChange, object: nil
+        )
+
         // Auto-save on zone entry
         _ = SaveManager.shared.save()
+    }
+
+    @objc private func onEquipmentChanged() {
+        refreshPlayerAppearance()
+    }
+
+    override func willMove(from view: SKView) {
+        NotificationCenter.default.removeObserver(self, name: .equipmentDidChange, object: nil)
     }
 
     // MARK: - Setup
@@ -122,7 +152,7 @@ class ZoneScene: SKScene {
         addChild(worldNode)
 
         // Create themed tile textures (batch by variation for performance)
-        let textures = createTileTextures()
+        let textures = TileTextureGenerator.createTileTextures(theme: worldTheme, tileSize: tileSize)
 
         for row in 0..<zone.gridHeight {
             for col in 0..<zone.gridWidth {
@@ -141,39 +171,75 @@ class ZoneScene: SKScene {
         setupEdgeGlow()
     }
 
-    private func createTileTextures() -> [SKTexture] {
-        let view = SKView()
-        var textures: [SKTexture] = []
+    // MARK: - Zone Entrance Title
 
-        let allColors = [worldTheme.tileBaseColor] + worldTheme.tileVariations
-        for color in allColors {
-            let tileNode = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-            tileNode.fillColor = color
-            tileNode.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-            tileNode.lineWidth = 0.5
+    private func showZoneEntranceTitle() {
+        let titleContainer = SKNode()
+        titleContainer.zPosition = 5000
+        titleContainer.alpha = 0
+        cameraNode.addChild(titleContainer)
 
-            // Subtle crack detail
-            let crack = SKShapeNode(rectOf: CGSize(width: 1, height: CGFloat.random(in: 4...10)))
-            crack.fillColor = SKColor(white: 0.1, alpha: 0.2)
-            crack.strokeColor = .clear
-            crack.position = CGPoint(x: CGFloat.random(in: -8...8), y: CGFloat.random(in: -4...4))
-            crack.zRotation = CGFloat.random(in: -0.5...0.5)
-            tileNode.addChild(crack)
+        // Main zone name
+        let titleShadow = SKLabelNode(fontNamed: "Copperplate-Bold")
+        titleShadow.text = zone.name
+        titleShadow.fontSize = 22
+        titleShadow.fontColor = SKColor(white: 0, alpha: 0.6)
+        titleShadow.position = CGPoint(x: 1, y: -1)
+        titleContainer.addChild(titleShadow)
 
-            if let tex = view.texture(from: tileNode) {
-                textures.append(tex)
-            }
+        let title = SKLabelNode(fontNamed: "Copperplate-Bold")
+        title.text = zone.name
+        title.fontSize = 22
+        title.fontColor = SKColor(white: 1, alpha: 1)
+        titleContainer.addChild(title)
+
+        // World name subtitle
+        let subtitle = SKLabelNode(fontNamed: "Copperplate")
+        subtitle.text = "— \(zone.worldID.capitalized) —"
+        subtitle.fontSize = 11
+        subtitle.fontColor = worldTheme.edgeGlowColor.withAlphaComponent(0.8)
+        subtitle.position = CGPoint(x: 0, y: -20)
+        titleContainer.addChild(subtitle)
+
+        // Decorative lines
+        for xOff in [-60, 60] as [CGFloat] {
+            let line = SKShapeNode(rectOf: CGSize(width: 30, height: 1))
+            line.fillColor = worldTheme.edgeGlowColor.withAlphaComponent(0.4)
+            line.strokeColor = .clear
+            line.position = CGPoint(x: xOff, y: -8)
+            titleContainer.addChild(line)
         }
 
-        if textures.isEmpty {
-            let fallback = SKShapeNode(rectOf: CGSize(width: tileSize.width - 2, height: tileSize.height - 2))
-            fallback.fillColor = worldTheme.tileBaseColor
-            fallback.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-            fallback.lineWidth = 0.5
-            textures.append(view.texture(from: fallback) ?? SKTexture())
-        }
+        // Diamond center
+        let diamond = SKShapeNode(rectOf: CGSize(width: 4, height: 4))
+        diamond.fillColor = worldTheme.edgeGlowColor.withAlphaComponent(0.5)
+        diamond.strokeColor = .clear
+        diamond.zRotation = .pi / 4
+        diamond.position = CGPoint(x: 0, y: -8)
+        titleContainer.addChild(diamond)
 
-        return textures
+        // Animate: fade in, hold, fade out
+        titleContainer.run(SKAction.sequence([
+            SKAction.fadeIn(withDuration: 0.8),
+            SKAction.wait(forDuration: 2.0),
+            SKAction.fadeOut(withDuration: 1.0),
+            SKAction.removeFromParent()
+        ]))
+    }
+
+    // MARK: - Equipment Visual Refresh
+
+    /// Reconstruit le sprite du joueur quand l'équipement change
+    func refreshPlayerAppearance() {
+        guard let champion = GameManager.shared.champion,
+              let currentPlayer = playerNode else { return }
+
+        PlayerRenderer.refreshPlayerAppearance(playerNode: currentPlayer, champion: champion)
+
+        // Re-assign reference to new player node
+        if let newPlayer = worldNode.childNode(withName: "player") {
+            playerNode = newPlayer
+        }
     }
 
     private func setupEdgeGlow() {
@@ -350,38 +416,81 @@ class ZoneScene: SKScene {
         mpLabel.name = "mpLabel"
         mpBg.addChild(mpLabel)
 
-        // Level badge
+        // Level badge (enhanced with double ring)
+        let levelOuter = SKShapeNode(circleOfRadius: 16)
+        levelOuter.fillColor = .clear
+        levelOuter.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.3)
+        levelOuter.lineWidth = 0.5
+        levelOuter.position = CGPoint(x: -size.width / 2 + 22, y: size.height / 2 - 22)
+        levelOuter.zPosition = 1999
+        cameraNode.addChild(levelOuter)
+
         let levelBadge = SKShapeNode(circleOfRadius: 14)
-        levelBadge.fillColor = SKColor(red: 0.15, green: 0.12, blue: 0.25, alpha: 0.9)
+        levelBadge.fillColor = SKColor(red: 0.12, green: 0.1, blue: 0.2, alpha: 0.95)
         levelBadge.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.8)
         levelBadge.lineWidth = 1.5
         levelBadge.position = CGPoint(x: -size.width / 2 + 22, y: size.height / 2 - 22)
         levelBadge.zPosition = 2000
         cameraNode.addChild(levelBadge)
 
+        let lvlPrefix = SKLabelNode(fontNamed: "Copperplate")
+        lvlPrefix.text = "Nv."
+        lvlPrefix.fontSize = 6
+        lvlPrefix.fontColor = SKColor(red: 0.7, green: 0.6, blue: 0.3, alpha: 0.7)
+        lvlPrefix.verticalAlignmentMode = .center
+        lvlPrefix.position = CGPoint(x: 0, y: 6)
+        levelBadge.addChild(lvlPrefix)
+
         let levelLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
         levelLabel.text = "\(champion.level)"
-        levelLabel.fontSize = 13
+        levelLabel.fontSize = 14
         levelLabel.fontColor = .white
         levelLabel.verticalAlignmentMode = .center
+        levelLabel.position = CGPoint(x: 0, y: -3)
         levelLabel.name = "levelLabel"
         levelBadge.addChild(levelLabel)
 
-        // Zone name
-        let zoneBg = SKShapeNode(rectOf: CGSize(width: 160, height: 22), cornerRadius: 6)
-        zoneBg.fillColor = SKColor(white: 0, alpha: 0.4)
-        zoneBg.strokeColor = SKColor(white: 0.3, alpha: 0.3)
-        zoneBg.lineWidth = 0.5
+        // Zone name (enhanced with ornamental design)
+        let zoneBg = SKShapeNode(rectOf: CGSize(width: 180, height: 28), cornerRadius: 8)
+        zoneBg.fillColor = SKColor(white: 0, alpha: 0.5)
+        zoneBg.strokeColor = SKColor(red: 0.4, green: 0.35, blue: 0.2, alpha: 0.4)
+        zoneBg.lineWidth = 1
         zoneBg.position = CGPoint(x: 0, y: size.height / 2 - 25)
         zoneBg.zPosition = 2000
         cameraNode.addChild(zoneBg)
 
-        let zoneLabel = SKLabelNode(fontNamed: "Copperplate")
-        zoneLabel.text = zone.name
-        zoneLabel.fontSize = 11
-        zoneLabel.fontColor = .lightGray
+        // Ornamental dividers
+        for xOff in [-75, 75] as [CGFloat] {
+            let divider = SKShapeNode(rectOf: CGSize(width: 12, height: 1))
+            divider.fillColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 0.4)
+            divider.strokeColor = .clear
+            divider.position = CGPoint(x: xOff, y: 0)
+            zoneBg.addChild(divider)
+
+            let diamond = SKShapeNode(rectOf: CGSize(width: 3, height: 3))
+            diamond.fillColor = SKColor(red: 0.5, green: 0.4, blue: 0.2, alpha: 0.3)
+            diamond.strokeColor = .clear
+            diamond.zRotation = .pi / 4
+            diamond.position = CGPoint(x: xOff + (xOff > 0 ? 8 : -8), y: 0)
+            zoneBg.addChild(diamond)
+        }
+
+        let zoneLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        zoneLabel.text = zone.name.uppercased()
+        zoneLabel.fontSize = 10
+        zoneLabel.fontColor = SKColor(white: 0.9, alpha: 1)
         zoneLabel.verticalAlignmentMode = .center
+        zoneLabel.position = CGPoint(x: 0, y: 1)
         zoneBg.addChild(zoneLabel)
+
+        // World subtitle
+        let worldLabel = SKLabelNode(fontNamed: "Copperplate")
+        worldLabel.text = zone.worldID.capitalized
+        worldLabel.fontSize = 6
+        worldLabel.fontColor = SKColor(red: 0.5, green: 0.45, blue: 0.3, alpha: 0.6)
+        worldLabel.verticalAlignmentMode = .center
+        worldLabel.position = CGPoint(x: 0, y: -8)
+        zoneBg.addChild(worldLabel)
 
         // XP bar
         let xpBg = SKShapeNode(rectOf: CGSize(width: 120, height: 10), cornerRadius: 2)
@@ -490,6 +599,19 @@ class ZoneScene: SKScene {
         invBtn.addChild(invIcon)
     }
 
+    private func setupLowHPVignette() {
+        let vignette = SKShapeNode(rectOf: CGSize(width: size.width + 20, height: size.height + 20), cornerRadius: 0)
+        vignette.fillColor = SKColor(red: 0.8, green: 0, blue: 0, alpha: 0.15)
+        vignette.strokeColor = SKColor(red: 1, green: 0, blue: 0, alpha: 0.3)
+        vignette.lineWidth = 12
+        vignette.position = .zero
+        vignette.zPosition = 1800
+        vignette.alpha = 0
+        vignette.name = "lowHPVignette"
+        cameraNode.addChild(vignette)
+        lowHPVignette = vignette
+    }
+
     // MARK: - Controls Setup
 
     private func setupControls() {
@@ -530,6 +652,61 @@ class ZoneScene: SKScene {
 
         configureAbilityIcons()
         cameraNode.addChild(actionButtons)
+
+        setupMenuButtons()
+        setupUIOverlays()
+    }
+
+    private func setupMenuButtons() {
+        let btnSize = CGSize(width: 36, height: 36)
+        let btnX = size.width / 2 - 30
+        let btnBaseY = size.height / 2 - 100
+
+        // Inventory button
+        let invBtn = SKShapeNode(rectOf: btnSize, cornerRadius: 8)
+        invBtn.fillColor = SKColor(red: 0.15, green: 0.12, blue: 0.08, alpha: 0.85)
+        invBtn.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.8)
+        invBtn.lineWidth = 1.5
+        invBtn.position = CGPoint(x: btnX, y: btnBaseY)
+        invBtn.zPosition = 2000
+        invBtn.name = "openInventory"
+        let invLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        invLabel.text = "INV"
+        invLabel.fontSize = 10
+        invLabel.fontColor = SKColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 1)
+        invLabel.verticalAlignmentMode = .center
+        invLabel.name = "openInventory"
+        invBtn.addChild(invLabel)
+        cameraNode.addChild(invBtn)
+
+        // Skills button
+        let skillBtn = SKShapeNode(rectOf: btnSize, cornerRadius: 8)
+        skillBtn.fillColor = SKColor(red: 0.08, green: 0.1, blue: 0.18, alpha: 0.85)
+        skillBtn.strokeColor = SKColor(red: 0.3, green: 0.5, blue: 0.8, alpha: 0.8)
+        skillBtn.lineWidth = 1.5
+        skillBtn.position = CGPoint(x: btnX, y: btnBaseY - 45)
+        skillBtn.zPosition = 2000
+        skillBtn.name = "openSkillTree"
+        let skillLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        skillLabel.text = "CMP"
+        skillLabel.fontSize = 10
+        skillLabel.fontColor = SKColor(red: 0.5, green: 0.7, blue: 1.0, alpha: 1)
+        skillLabel.verticalAlignmentMode = .center
+        skillLabel.name = "openSkillTree"
+        skillBtn.addChild(skillLabel)
+        cameraNode.addChild(skillBtn)
+    }
+
+    private func setupUIOverlays() {
+        let inv = InventoryNode(screenSize: size)
+        inv.onClose = { }
+        cameraNode.addChild(inv)
+        inventoryNode = inv
+
+        let skills = SkillTreeNode(screenSize: size)
+        skills.onClose = { }
+        cameraNode.addChild(skills)
+        skillTreeNode = skills
     }
 
     private func configureAbilityIcons() {
@@ -663,6 +840,35 @@ class ZoneScene: SKScene {
         }
     }
 
+    private func setupEnemyAICallbacks() {
+        enemyAI.onPlayerHit = { [weak self] enemyPosition in
+            guard let self else { return }
+            self.lastDamageTakenTime = self.lastUpdateTime
+            self.showDamageIndicator(fromEnemy: enemyPosition)
+            self.playPlayerHitFeedback(fromEnemy: enemyPosition)
+
+            // Check player death
+            if let champion = GameManager.shared.champion, champion.currentHP <= 0 {
+                self.handlePlayerDeath()
+            }
+        }
+
+        companionSystem.onEnemyHit = { [weak self] enemyID, damage, position in
+            guard let self else { return }
+            for i in 0..<self.enemyInstances.count {
+                guard self.enemyInstances[i].isAlive,
+                      self.enemyInstances[i].enemyData.id == enemyID else { continue }
+                let dist = hypot(self.enemyInstances[i].position.x - position.x,
+                                 self.enemyInstances[i].position.y - position.y)
+                if dist < 60 {
+                    self.applyDamageToEnemy(index: i, damage: damage, effectColor: .green,
+                                            statusEffect: nil, statusDuration: 0)
+                    break
+                }
+            }
+        }
+    }
+
     private func setupPathfinding() {
         var obstacles = Set<GridPosition>()
         for enemy in zone.enemySpawns { obstacles.insert(enemy.position) }
@@ -746,16 +952,21 @@ class ZoneScene: SKScene {
 
     private func handleTalkToNPC(npcID: String) {
         guard let npc = zone.npcSpawns.first(where: { $0.npcID == npcID }) else { return }
+        GameManager.shared.questSystem.onNPCTalkedTo(npcID: npcID)
 
         if npc.isShopkeeper {
-            showAbilityEffect(description: "Boutique de \(npcID.replacingOccurrences(of: "_", with: " ").capitalized)")
-        } else if npc.dialogueTreeID != nil {
-            if dialogueBox == nil {
-                dialogueBox = DialogueBoxNode(screenSize: size)
-                dialogueBox?.position = CGPoint(x: 0, y: -size.height / 2 + 100)
-                dialogueBox?.zPosition = 5000
-                cameraNode.addChild(dialogueBox!)
-            }
+            openShop(npcID: npcID)
+            return
+        }
+
+        // Use DialogueSystem if NPC has a dialogue tree
+        if let treeID = npc.dialogueTreeID {
+            ensureDialogueBox()
+            GameManager.shared.dialogueSystem.delegate = self
+            GameManager.shared.dialogueSystem.startDialogue(treeID: treeID)
+        } else {
+            // Fallback for NPCs without dialogue trees
+            ensureDialogueBox()
             dialogueBox?.showDialogue(
                 speakerName: npcID.replacingOccurrences(of: "_", with: " ").capitalized,
                 text: "Salutations, voyageur. Que puis-je faire pour vous ?",
@@ -766,6 +977,36 @@ class ZoneScene: SKScene {
                 self?.dialogueBox?.hide()
             }
         }
+    }
+
+    private func ensureDialogueBox() {
+        if dialogueBox == nil {
+            dialogueBox = DialogueBoxNode(screenSize: size)
+            dialogueBox?.position = CGPoint(x: 0, y: -size.height / 2 + 100)
+            dialogueBox?.zPosition = 5000
+            cameraNode.addChild(dialogueBox!)
+        }
+    }
+
+    private func openShop(npcID: String) {
+        guard shopNode == nil else { return }
+        let name = npcID.replacingOccurrences(of: "_", with: " ").capitalized
+
+        // Gather shop items: all items matching the zone's level range
+        let zoneLevel = zone.recommendedLevel
+        let shopItemIDs = GameManager.shared.allItems.values
+            .filter { $0.requiredLevel >= max(1, zoneLevel - 3) && $0.requiredLevel <= zoneLevel + 2 && !$0.isConsumable }
+            .prefix(12)
+            .map { $0.id }
+
+        let shop = ShopNode(screenSize: size, shopName: "Boutique de \(name)", shopItemIDs: Array(shopItemIDs))
+        shop.position = .zero
+        shop.onClose = { [weak self] in
+            self?.shopNode?.removeFromParent()
+            self?.shopNode = nil
+        }
+        cameraNode.addChild(shop)
+        shopNode = shop
     }
 
     private func handleEnterZone(zoneID: String) {
@@ -798,7 +1039,23 @@ class ZoneScene: SKScene {
         for loot in zone.lootPoints {
             let dist = abs(loot.position.col - gridPos.col) + abs(loot.position.row - gridPos.row)
             if dist <= 2 {
-                showAbilityEffect(description: "Butin recupere !")
+                let item = GameManager.shared.lootSystem.generateRandomItem(
+                    rarity: .common, level: champion.level
+                )
+                GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(item.id) }
+                GameManager.shared.questSystem.onItemCollected(itemID: item.id)
+
+                showAbilityEffect(description: "Obtenu: \(item.name)")
+
+                // Gold bonus from loot point
+                let bonusGold = Int.random(in: 5...15) * champion.level
+                GameManager.shared.mutateChampion { $0.gold += bonusGold }
+
+                if let playerNode {
+                    showFloatingDamage(bonusGold,
+                        at: CGPoint(x: playerNode.position.x + 10, y: playerNode.position.y + 20),
+                        color: SKColor(red: 1, green: 0.85, blue: 0.3, alpha: 1))
+                }
                 break
             }
         }
@@ -808,6 +1065,7 @@ class ZoneScene: SKScene {
 
     private func handleAttack() {
         guard let champion = GameManager.shared.champion, let playerNode else { return }
+        guard !actionButtons.isAttackOnCooldown else { return }
 
         let attackRange = GameConstants.Player.attackRange
         var closestEnemy: (name: String, node: SKNode, distance: CGFloat)?
@@ -822,28 +1080,76 @@ class ZoneScene: SKScene {
         }
 
         PlayerRenderer.playAttackAnimation(on: playerNode, in: worldNode)
+        actionButtons.startAttackCooldown(duration: 0.5)
+
+        // Weapon trail effect
+        let attackDirection = closestEnemy.map { atan2($0.node.position.y - playerNode.position.y,
+                                                        $0.node.position.x - playerNode.position.x) } ?? CGFloat(0)
+        CombatFeedbackSystem.weaponTrail(from: playerNode.position, direction: attackDirection,
+                                          color: .white, in: worldNode)
 
         if let target = closestEnemy {
             EntityRenderer.playHitEffect(on: target.node)
-
-            let damage = champion.baseStats.strength + 5
-            showFloatingDamage(damage, at: target.node.position)
+            CombatFeedbackSystem.hitFlash(on: target.node)
 
             if let idx = enemyInstances.firstIndex(where: {
                 "enemy_\($0.spawnData.enemyID)_\($0.spawnData.position.col)_\($0.spawnData.position.row)" == target.name
             }) {
+                // Use CombatSystem for proper damage + crit calculation
+                let damageResult = GameManager.shared.combatSystem.calculateDamage(
+                    attacker: champion.effectiveStats,
+                    skill: nil,
+                    defender: enemyInstances[idx].enemyData
+                )
+                let damage = damageResult.mitigatedDamage
+
+                // Critical hits: gold color, bigger text, "!" suffix
+                if damageResult.isCritical {
+                    showFloatingDamage(damage, at: target.node.position,
+                                       color: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1), isCritical: true)
+                } else {
+                    showFloatingDamage(damage, at: target.node.position)
+                }
+
                 enemyInstances[idx].currentHP -= damage
                 let ratio = CGFloat(enemyInstances[idx].currentHP) / CGFloat(enemyInstances[idx].enemyData.maxHP)
                 EntityRenderer.updateEnemyHP(node: target.node, ratio: ratio)
 
+                // Apply lifesteal from item traits
+                if damageResult.lifestealAmount > 0 {
+                    GameManager.shared.mutateChampion { champ in
+                        champ.currentHP = min(champ.maxHP, champ.currentHP + damageResult.lifestealAmount)
+                    }
+                    showFloatingDamage(damageResult.lifestealAmount, at: playerNode.position,
+                                       color: SKColor(red: 0.3, green: 1.0, blue: 0.3, alpha: 1))
+                }
+
+                // Aggro nearby enemies (group aggro)
+                alertNearbyEnemies(aroundIndex: idx)
+
                 if enemyInstances[idx].currentHP <= 0 {
-                    let xp = enemyInstances[idx].enemyData.xpReward
-                    let gold = Int.random(in: enemyInstances[idx].enemyData.goldReward)
+                    let enemyData = enemyInstances[idx].enemyData
+                    let xp = enemyData.xpReward
+                    let gold = Int.random(in: enemyData.goldReward)
                     GameManager.shared.grantXP(xp)
                     GameManager.shared.mutateChampion { $0.gold += gold }
+                    GameManager.shared.questSystem.onEnemyKilled(enemyID: enemyData.id)
 
+                    // Loot drops
+                    handleEnemyLootDrop(enemy: enemyData, at: target.node.position)
+
+                    // Floating XP label
                     showFloatingDamage(xp, at: CGPoint(x: target.node.position.x, y: target.node.position.y + 20),
                                        color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
+
+                    CombatFeedbackSystem.deathExplosion(at: target.node.position, color: .red, in: worldNode)
+
+                    // Floating gold label
+                    showFloatingDamage(gold, at: CGPoint(x: target.node.position.x + 15, y: target.node.position.y + 10),
+                                       color: SKColor(red: 1, green: 0.85, blue: 0.3, alpha: 1))
+
+                    // Flash the XP bar
+                    flashXPBar()
 
                     EntityRenderer.playDeathAnimation(on: target.node) { [weak self] in
                         self?.enemyNodes.removeValue(forKey: target.name)
@@ -857,8 +1163,40 @@ class ZoneScene: SKScene {
 
     // MARK: - Abilities
 
+    /// Returns the default skill IDs for each class ability slot (indices 0–3)
+    private func defaultSkillIDs(for championClass: ChampionClass) -> [String] {
+        switch championClass {
+        case .mistborn:         return ["steel_push", "iron_pull", "pewter_strength", "tin_senses"]
+        case .radiant:          return ["windrunner_gravitation", "windrunner_adhesion", "edgedancer_abrasion", "edgedancer_progression"]
+        case .awakener:         return ["awaken_garment", "awaken_weapon", "color_aura", "divine_breath"]
+        case .elantrian:        return ["aon_rao", "aon_ashe", "aon_tia", "aon_ien"]
+        case .sandMaster:       return ["sand_whip", "sand_shield", "sand_swarm", "sand_platform"]
+        case .nightmarePainter: return ["paint_inkstroke", "paint_capture", "paint_barrier", "paint_banishment"]
+        }
+    }
+
+    /// Looks up cooldown and range from Skill data, falling back to defaults
+    private func skillDataForAbility(champion: Champion, index: Int) -> (cooldown: TimeInterval, range: CGFloat) {
+        let equipped = champion.equippedSkillIDs
+        let skillID: String
+        if index < equipped.count, !equipped[index].isEmpty {
+            skillID = equipped[index]
+        } else {
+            let defaults = defaultSkillIDs(for: champion.championClass)
+            skillID = index < defaults.count ? defaults[index] : ""
+        }
+
+        if let skill = GameManager.shared.allSkills[skillID] {
+            // Convert grid range to pixel range (roughly 10 px per grid unit)
+            let pixelRange = CGFloat(skill.range > 0 ? skill.range * 10 : 100)
+            return (skill.cooldown, pixelRange)
+        }
+        return (3.0, 100)
+    }
+
     private func handleAbility(index: Int) {
         guard var champion = GameManager.shared.champion, let playerNode else { return }
+        let (cooldown, abilityRange) = skillDataForAbility(champion: champion, index: index)
 
         switch champion.championClass {
         case .mistborn:
@@ -868,10 +1206,17 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.effectDescription)
-                actionButtons.startCooldown(abilityIndex: index, duration: 3.0)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
+                let silverBlue = SKColor(red: 0.7, green: 0.8, blue: 1.0, alpha: 1)
                 switch metal {
-                case .steel:  SpellEffectsSystem.steelPush(from: playerNode.position, in: worldNode)
-                case .iron:   SpellEffectsSystem.ironPull(at: playerNode.position, in: worldNode)
+                case .steel:
+                    SpellEffectsSystem.steelPush(from: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: silverBlue)
+                case .iron:
+                    SpellEffectsSystem.ironPull(at: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: silverBlue)
                 case .pewter: SpellEffectsSystem.pewterFlare(on: playerNode)
                 case .tin:    SpellEffectsSystem.tinEnhance(on: playerNode, in: worldNode)
                 default: break
@@ -891,15 +1236,23 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: GameConstants.Combat.abilityCooldown)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 switch surge {
-                case .gravitation: SpellEffectsSystem.gravitationLash(from: playerNode.position, in: worldNode)
-                case .adhesion: SpellEffectsSystem.adhesionField(at: playerNode.position, in: worldNode)
+                case .gravitation:
+                    SpellEffectsSystem.gravitationLash(from: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: .cyan)
+                case .adhesion:
+                    SpellEffectsSystem.adhesionField(at: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: .cyan, isAoE: true)
                 case .progression: SpellEffectsSystem.progressionHeal(on: playerNode, in: worldNode)
                 case .abrasion: SpellEffectsSystem.spawnBuffAura(on: playerNode, color: .cyan, duration: result.duration)
                 case .illumination: SpellEffectsSystem.spawnAOE(at: playerNode.position, color: .white, radius: 30, in: worldNode, duration: result.duration)
                 default:
                     SpellEffectsSystem.spawnAOE(at: playerNode.position, color: .cyan, radius: 40, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: .cyan, isAoE: true)
                 }
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
             }
@@ -911,10 +1264,11 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 4.0)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 SpellEffectsSystem.awakeningAnimate(at: playerNode.position, in: worldNode)
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                if result.damage > 0 { showFloatingDamage(result.damage, at: playerNode.position, color: .magenta) }
+                applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                   statusDuration: result.duration, effectColor: .magenta)
             }
 
         case .elantrian:
@@ -924,10 +1278,11 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 4.5)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 SpellEffectsSystem.drawAon(at: playerNode.position, color: result.glyphColor, in: worldNode)
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                if result.damage > 0 { showFloatingDamage(result.damage, at: playerNode.position, color: result.glyphColor) }
+                applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                   statusDuration: result.duration, effectColor: result.glyphColor)
             }
 
         case .sandMaster:
@@ -937,14 +1292,21 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
                 let sandColor = SKColor(red: 0.9, green: 0.8, blue: 0.5, alpha: 1)
                 switch form {
-                case .lash: SpellEffectsSystem.sandWhip(from: playerNode.position, toward: 0, in: worldNode)
+                case .lash:
+                    SpellEffectsSystem.sandWhip(from: playerNode.position, toward: 0, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: sandColor)
                 case .shield: SpellEffectsSystem.sandShield(on: playerNode)
-                default: SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
+                case .swarm:
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: sandColor, isAoE: true)
+                default:
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: sandColor, radius: 35, in: worldNode)
                 }
-                if result.damage > 0 { showFloatingDamage(result.damage, at: playerNode.position, color: sandColor) }
             }
 
         case .nightmarePainter:
@@ -954,20 +1316,25 @@ class ZoneScene: SKScene {
             GameManager.shared.champion = champion
             if result.success {
                 showAbilityEffect(description: result.description)
-                actionButtons.startCooldown(abilityIndex: index, duration: 3.5)
+                actionButtons.startCooldown(abilityIndex: index, duration: cooldown)
+                let darkPurple = SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1)
                 switch technique {
-                case .ink_slash: SpellEffectsSystem.inkSlash(from: playerNode.position, in: worldNode)
-                case .capture: SpellEffectsSystem.nightmareCapture(at: playerNode.position, in: worldNode)
+                case .ink_slash:
+                    SpellEffectsSystem.inkSlash(from: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: darkPurple)
+                case .capture:
+                    SpellEffectsSystem.nightmareCapture(at: playerNode.position, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: darkPurple)
+                case .banish:
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: darkPurple, radius: 30, in: worldNode)
+                    applyAbilityDamage(result.damage, range: abilityRange, statusEffect: result.statusEffect,
+                                       statusDuration: result.duration, effectColor: darkPurple, isAoE: true)
                 default:
-                    SpellEffectsSystem.spawnAOE(at: playerNode.position,
-                                                 color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1),
-                                                 radius: 30, in: worldNode)
+                    SpellEffectsSystem.spawnAOE(at: playerNode.position, color: darkPurple, radius: 30, in: worldNode)
                 }
                 if result.healing > 0 { showHealEffect(amount: result.healing) }
-                if result.damage > 0 {
-                    showFloatingDamage(result.damage, at: playerNode.position,
-                                       color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 1))
-                }
             }
         }
     }
@@ -975,11 +1342,32 @@ class ZoneScene: SKScene {
     private func handleUltimate() {
         guard let champion = GameManager.shared.champion, let playerNode else { return }
 
-        // Spectacular ultimate effects
+        // Check cooldown
+        guard ultimateCooldownRemaining <= 0 else {
+            showAbilityEffect(description: "Ultime: \(Int(ultimateCooldownRemaining))s")
+            return
+        }
+
+        // Investiture cost: 50% of max
+        let investitureCost = champion.maxInvestiture / 2
+        guard champion.currentInvestiture >= investitureCost else {
+            showAbilityEffect(description: "Investiture insuffisante")
+            return
+        }
+
+        // Apply cost and start cooldown
+        GameManager.shared.mutateChampion { $0.currentInvestiture -= investitureCost }
+        ultimateCooldownRemaining = ultimateCooldownDuration
+
+        // Spectacular ultimate effects — casting circle + expanding rings
+        SpellEffectsSystem.spawnCastingCircle(at: playerNode.position,
+                                               color: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
+                                               in: worldNode, duration: 0.5)
         let ultimateFlash = SKShapeNode(circleOfRadius: 150)
         ultimateFlash.fillColor = SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 0.1)
         ultimateFlash.strokeColor = SKColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0)
         ultimateFlash.lineWidth = 4
+        ultimateFlash.glowWidth = 8
         ultimateFlash.position = playerNode.position
         ultimateFlash.zPosition = 400
         ultimateFlash.setScale(0.1)
@@ -993,34 +1381,35 @@ class ZoneScene: SKScene {
             SKAction.removeFromParent()
         ]))
 
-        let innerRing = SKShapeNode(circleOfRadius: 80)
-        innerRing.fillColor = .clear
-        innerRing.strokeColor = SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 0.8)
-        innerRing.lineWidth = 2
-        innerRing.position = playerNode.position
-        innerRing.zPosition = 401
-        innerRing.setScale(0.1)
-        worldNode.addChild(innerRing)
+        // Multiple rings expanding at different speeds
+        for i in 0..<3 {
+            let ring = SKShapeNode(circleOfRadius: CGFloat(60 + i * 25))
+            ring.fillColor = .clear
+            ring.strokeColor = SKColor(red: 1, green: 0.9, blue: 0.5, alpha: 0.6 - CGFloat(i) * 0.15)
+            ring.lineWidth = CGFloat(3 - i)
+            ring.position = playerNode.position
+            ring.zPosition = 401
+            ring.setScale(0.1)
+            worldNode.addChild(ring)
 
-        innerRing.run(SKAction.sequence([
-            SKAction.group([
-                SKAction.scale(to: 1.2, duration: 0.35),
-                SKAction.fadeOut(withDuration: 0.4)
-            ]),
-            SKAction.removeFromParent()
-        ]))
+            let delay = Double(i) * 0.1
+            ring.run(SKAction.sequence([
+                SKAction.wait(forDuration: delay),
+                SKAction.group([
+                    SKAction.scale(to: 1.3, duration: 0.4),
+                    SKAction.fadeOut(withDuration: 0.45)
+                ]),
+                SKAction.removeFromParent()
+            ]))
+        }
 
-        // Screen shake — applied to worldNode to avoid conflicting with camera follow
-        let shake = SKAction.sequence([
-            SKAction.moveBy(x: 5, y: 3, duration: 0.03),
-            SKAction.moveBy(x: -10, y: -6, duration: 0.03),
-            SKAction.moveBy(x: 8, y: 4, duration: 0.03),
-            SKAction.moveBy(x: -3, y: -1, duration: 0.03)
-        ])
-        worldNode.run(SKAction.sequence([
-            SKAction.repeat(shake, count: 4),
-            SKAction.move(to: worldNode.position, duration: 0.05)
-        ]), withKey: "screenShake")
+        // Golden particles burst
+        CombatFeedbackSystem.impactBurst(at: playerNode.position,
+                                          color: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
+                                          in: worldNode, count: 16, spread: 50)
+
+        // Epic screen shake
+        CombatFeedbackSystem.screenShake(on: cameraNode, intensity: .epic)
 
         let ultText: String
         switch champion.championClass {
@@ -1033,6 +1422,13 @@ class ZoneScene: SKScene {
         }
 
         showAbilityEffect(description: ultText)
+
+        // Ultimate AoE damage — massive hit on all enemies in range
+        let ultDamage = champion.effectiveStats.strength * 3 + champion.effectiveStats.spirit * 2
+        let ultRange: CGFloat = 200
+        applyAbilityDamage(ultDamage, range: ultRange, statusEffect: .stunned,
+                           statusDuration: 1.5, effectColor: SKColor(red: 1, green: 0.85, blue: 0.2, alpha: 1),
+                           isAoE: true)
     }
 
     // MARK: - Damage Label Pool
@@ -1050,18 +1446,23 @@ class ZoneScene: SKScene {
         return label
     }
 
-    private func showFloatingDamage(_ damage: Int, at position: CGPoint, color: SKColor = .white) {
+    private func showFloatingDamage(_ damage: Int, at position: CGPoint, color: SKColor = .white, isCritical: Bool = false) {
         let label = obtainDamageLabel()
-        label.text = "\(damage)"
+        label.text = isCritical ? "\(damage)!" : "\(damage)"
         label.fontColor = color
+        label.fontSize = isCritical ? 20 : 14
         label.position = position
         worldNode.addChild(label)
 
+        let floatDuration: TimeInterval = isCritical ? 0.8 : 0.6
+        let floatHeight: CGFloat = isCritical ? 55 : 40
+        let scaleTarget: CGFloat = isCritical ? 1.6 : 1.3
+
         label.run(SKAction.sequence([
             SKAction.group([
-                SKAction.moveBy(x: CGFloat.random(in: -15...15), y: 40, duration: 0.6),
-                SKAction.fadeOut(withDuration: 0.5),
-                SKAction.scale(to: 1.3, duration: 0.2)
+                SKAction.moveBy(x: CGFloat.random(in: -15...15), y: floatHeight, duration: floatDuration),
+                SKAction.fadeOut(withDuration: floatDuration - 0.1),
+                SKAction.scale(to: scaleTarget, duration: 0.2)
             ]),
             SKAction.run { [weak self] in
                 label.removeFromParent()
@@ -1113,6 +1514,270 @@ class ZoneScene: SKScene {
             ]),
             SKAction.removeFromParent()
         ]))
+    }
+
+    // MARK: - Ability Damage to Enemies
+
+    /// Finds the closest enemy in range and applies ability damage + status effects
+    private func applyAbilityDamage(_ damage: Int, range: CGFloat = 100, statusEffect: StatusEffectType? = nil,
+                                     statusDuration: TimeInterval = 0, effectColor: SKColor = .white, isAoE: Bool = false) {
+        guard damage > 0, let playerNode else { return }
+
+        if isAoE {
+            // AoE: hit all enemies in range
+            for i in 0..<enemyInstances.count {
+                guard enemyInstances[i].isAlive else { continue }
+                let dist = hypot(enemyInstances[i].position.x - playerNode.position.x,
+                                 enemyInstances[i].position.y - playerNode.position.y)
+                if dist <= range {
+                    applyDamageToEnemy(index: i, damage: damage, effectColor: effectColor,
+                                       statusEffect: statusEffect, statusDuration: statusDuration)
+                }
+            }
+        } else {
+            // Single target: closest enemy
+            var closestIdx: Int?
+            var closestDist: CGFloat = .greatestFiniteMagnitude
+
+            for i in 0..<enemyInstances.count {
+                guard enemyInstances[i].isAlive else { continue }
+                let dist = hypot(enemyInstances[i].position.x - playerNode.position.x,
+                                 enemyInstances[i].position.y - playerNode.position.y)
+                if dist <= range && dist < closestDist {
+                    closestDist = dist
+                    closestIdx = i
+                }
+            }
+
+            if let idx = closestIdx {
+                applyDamageToEnemy(index: idx, damage: damage, effectColor: effectColor,
+                                   statusEffect: statusEffect, statusDuration: statusDuration)
+            }
+        }
+    }
+
+    private func applyDamageToEnemy(index idx: Int, damage: Int, effectColor: SKColor,
+                                     statusEffect: StatusEffectType?, statusDuration: TimeInterval) {
+        let spriteName = "enemy_\(enemyInstances[idx].spawnData.enemyID)_\(enemyInstances[idx].spawnData.position.col)_\(enemyInstances[idx].spawnData.position.row)"
+
+        showFloatingDamage(damage, at: enemyInstances[idx].position, color: effectColor)
+
+        enemyInstances[idx].currentHP -= damage
+        if let node = enemyNodes[spriteName] {
+            EntityRenderer.playHitEffect(on: node)
+            let ratio = CGFloat(enemyInstances[idx].currentHP) / CGFloat(enemyInstances[idx].enemyData.maxHP)
+            EntityRenderer.updateEnemyHP(node: node, ratio: ratio)
+        }
+
+        // Apply status effects
+        if let effect = statusEffect, statusDuration > 0 {
+            switch effect {
+            case .stunned:
+                enemyAI.stun(enemy: &enemyInstances[idx], duration: statusDuration)
+            case .burning, .poisoned, .slowed:
+                enemyAI.applyStatusEffect(enemy: &enemyInstances[idx], type: effect, duration: statusDuration)
+            default:
+                break
+            }
+        }
+
+        alertNearbyEnemies(aroundIndex: idx)
+
+        if enemyInstances[idx].currentHP <= 0 {
+            let enemyData = enemyInstances[idx].enemyData
+            let xp = enemyData.xpReward
+            let gold = Int.random(in: enemyData.goldReward)
+            GameManager.shared.grantXP(xp)
+            GameManager.shared.mutateChampion { $0.gold += gold }
+            GameManager.shared.questSystem.onEnemyKilled(enemyID: enemyData.id)
+
+            // Loot drops
+            handleEnemyLootDrop(enemy: enemyData, at: enemyInstances[idx].position)
+
+            showFloatingDamage(xp, at: CGPoint(x: enemyInstances[idx].position.x, y: enemyInstances[idx].position.y + 20),
+                               color: SKColor(red: 0.5, green: 0.8, blue: 1, alpha: 1))
+            showFloatingDamage(gold, at: CGPoint(x: enemyInstances[idx].position.x + 15, y: enemyInstances[idx].position.y + 10),
+                               color: SKColor(red: 1, green: 0.85, blue: 0.3, alpha: 1))
+            flashXPBar()
+
+            if let node = enemyNodes[spriteName] {
+                EntityRenderer.playDeathAnimation(on: node) { [weak self] in
+                    self?.enemyNodes.removeValue(forKey: spriteName)
+                }
+            }
+        }
+    }
+
+    // MARK: - Enemy Loot Drops
+
+    private func handleEnemyLootDrop(enemy: Enemy, at position: CGPoint) {
+        let loot = GameManager.shared.lootSystem.generateLoot(from: enemy)
+        guard !loot.isEmpty else { return }
+
+        let inventoryLimit = 30
+        var currentCount = GameManager.shared.champion?.inventoryItemIDs.count ?? 0
+
+        for (i, item) in loot.enumerated() {
+            // Check inventory space
+            if currentCount >= inventoryLimit {
+                let fullLabel = SKLabelNode(fontNamed: "Helvetica-Bold")
+                fullLabel.text = "Inventaire plein!"
+                fullLabel.fontSize = 12
+                fullLabel.fontColor = SKColor(red: 1, green: 0.3, blue: 0.3, alpha: 1)
+                fullLabel.position = CGPoint(x: position.x, y: position.y + 35 + CGFloat(i) * 18)
+                fullLabel.zPosition = 500
+                worldNode.addChild(fullLabel)
+                fullLabel.run(SKAction.sequence([
+                    SKAction.group([
+                        SKAction.moveBy(x: 0, y: 30, duration: 1.0),
+                        SKAction.fadeOut(withDuration: 1.0)
+                    ]),
+                    SKAction.removeFromParent()
+                ]))
+                break
+            }
+
+            // Register generated items so they can be looked up by ID
+            GameManager.shared.registerItem(item)
+            GameManager.shared.mutateChampion { $0.inventoryItemIDs.append(item.id) }
+            GameManager.shared.questSystem.onItemCollected(itemID: item.id)
+            currentCount += 1
+
+            // Show floating item name with rarity color
+            let label = SKLabelNode(fontNamed: "Copperplate-Bold")
+            label.text = item.name
+            label.fontSize = 11
+            label.fontColor = lootRarityColor(item.rarity)
+            label.position = CGPoint(x: position.x, y: position.y + 35 + CGFloat(i) * 18)
+            label.zPosition = 500
+            worldNode.addChild(label)
+
+            label.run(SKAction.sequence([
+                SKAction.group([
+                    SKAction.moveBy(x: CGFloat.random(in: -20...20), y: 45, duration: 1.2),
+                    SKAction.sequence([
+                        SKAction.wait(forDuration: 0.6),
+                        SKAction.fadeOut(withDuration: 0.6)
+                    ])
+                ]),
+                SKAction.removeFromParent()
+            ]))
+        }
+    }
+
+    private func lootRarityColor(_ rarity: ItemRarity) -> SKColor {
+        switch rarity {
+        case .common:    return SKColor(white: 0.7, alpha: 1)
+        case .uncommon:  return SKColor(red: 0.3, green: 0.85, blue: 0.3, alpha: 1)
+        case .rare:      return SKColor(red: 0.3, green: 0.5, blue: 1.0, alpha: 1)
+        case .epic:      return SKColor(red: 0.7, green: 0.3, blue: 0.9, alpha: 1)
+        case .legendary: return SKColor(red: 1.0, green: 0.6, blue: 0.1, alpha: 1)
+        case .cosmeric:  return SKColor(red: 0.9, green: 0.1, blue: 0.2, alpha: 1)
+        }
+    }
+
+    // MARK: - Group Aggro
+
+    private func alertNearbyEnemies(aroundIndex idx: Int) {
+        let aggroRadius: CGFloat = 100
+        let attackedPos = enemyInstances[idx].position
+
+        for i in 0..<enemyInstances.count where i != idx {
+            guard enemyInstances[i].isAlive else { continue }
+            switch enemyInstances[i].state {
+            case .idle, .patrolling:
+                let dist = hypot(enemyInstances[i].position.x - attackedPos.x,
+                                 enemyInstances[i].position.y - attackedPos.y)
+                if dist <= aggroRadius {
+                    enemyInstances[i].state = .chasing(target: attackedPos)
+                }
+            default:
+                break
+            }
+        }
+    }
+
+    // MARK: - XP Bar Flash
+
+    private func flashXPBar() {
+        guard let xpBg = cameraNode.childNode(withName: "//xpBarBg") as? SKShapeNode else {
+            // Find by position fallback — flash all XP-related elements
+            cameraNode.enumerateChildNodes(withName: "//*") { node, _ in
+                if let label = node as? SKLabelNode, label.text?.hasPrefix("XP") == true {
+                    label.run(SKAction.sequence([
+                        SKAction.colorize(with: .white, colorBlendFactor: 1, duration: 0.1),
+                        SKAction.wait(forDuration: 0.15),
+                        SKAction.colorize(withColorBlendFactor: 0, duration: 0.3)
+                    ]))
+                }
+            }
+            return
+        }
+        xpBg.run(SKAction.sequence([
+            SKAction.customAction(withDuration: 0.1) { node, _ in
+                (node as? SKShapeNode)?.strokeColor = .white
+            },
+            SKAction.wait(forDuration: 0.15),
+            SKAction.customAction(withDuration: 0.3) { node, _ in
+                (node as? SKShapeNode)?.strokeColor = SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.4)
+            }
+        ]))
+    }
+
+    // MARK: - Damage Direction Indicator
+
+    private func showDamageIndicator(fromEnemy enemyPosition: CGPoint) {
+        guard let playerNode else { return }
+
+        let angle = atan2(enemyPosition.y - playerNode.position.y,
+                          enemyPosition.x - playerNode.position.x)
+
+        // Place indicator on screen edge in the direction of the enemy
+        let edgeDistance: CGFloat = min(size.width, size.height) / 2 - 30
+        let indicatorX = cos(angle) * edgeDistance
+        let indicatorY = sin(angle) * edgeDistance
+
+        let indicator = SKShapeNode()
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 0, y: 8))
+        path.addLine(to: CGPoint(x: -6, y: -4))
+        path.addLine(to: CGPoint(x: 6, y: -4))
+        path.closeSubpath()
+        indicator.path = path
+        indicator.fillColor = SKColor(red: 1, green: 0.2, blue: 0.2, alpha: 0.8)
+        indicator.strokeColor = .clear
+        indicator.position = CGPoint(x: indicatorX, y: indicatorY)
+        indicator.zRotation = angle - .pi / 2
+        indicator.zPosition = 3500
+        indicator.setScale(1.5)
+        cameraNode.addChild(indicator)
+
+        indicator.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.1),
+            SKAction.fadeOut(withDuration: 0.4),
+            SKAction.removeFromParent()
+        ]))
+    }
+
+    private func playPlayerHitFeedback(fromEnemy enemyPosition: CGPoint) {
+        guard let playerNode else { return }
+
+        // Red flash on player
+        let flash = SKAction.sequence([
+            SKAction.colorize(with: .red, colorBlendFactor: 0.8, duration: 0.05),
+            SKAction.colorize(withColorBlendFactor: 0.0, duration: 0.15)
+        ])
+        playerNode.run(flash)
+
+        // Knockback away from enemy
+        let angle = atan2(playerNode.position.y - enemyPosition.y,
+                          playerNode.position.x - enemyPosition.x)
+        let knockbackDist: CGFloat = 8
+        let knockback = SKAction.sequence([
+            SKAction.moveBy(x: cos(angle) * knockbackDist, y: sin(angle) * knockbackDist, duration: 0.05),
+            SKAction.moveBy(x: -cos(angle) * knockbackDist * 0.5, y: -sin(angle) * knockbackDist * 0.5, duration: 0.1)
+        ])
+        playerNode.run(knockback)
     }
 
     // MARK: - Isometric Helpers
@@ -1187,6 +1852,18 @@ class ZoneScene: SKScene {
                 togglePause()
                 return
             }
+            if node.name == "respawnButton" {
+                handleRespawn()
+                return
+            }
+            if node.name == "openInventory" {
+                inventoryNode?.show()
+                return
+            }
+            if node.name == "openSkillTree" {
+                skillTreeNode?.show()
+                return
+            }
             if node.name == "inventoryButton" {
                 toggleInventory()
                 return
@@ -1222,6 +1899,87 @@ class ZoneScene: SKScene {
         }
         cameraNode.addChild(menu)
         pauseMenu = menu
+    }
+
+    // MARK: - Player Death
+
+    private var isPlayerDead = false
+
+    private func handlePlayerDeath() {
+        guard !isPlayerDead else { return }
+        isPlayerDead = true
+        isTransitioning = true  // Block all input
+
+        // Player fade + shrink
+        playerNode?.run(SKAction.group([
+            SKAction.fadeOut(withDuration: 0.6),
+            SKAction.scale(to: 0.3, duration: 0.6)
+        ]))
+
+        // Dark overlay
+        let overlay = SKShapeNode(rectOf: CGSize(width: size.width * 2, height: size.height * 2))
+        overlay.fillColor = .black
+        overlay.strokeColor = .clear
+        overlay.alpha = 0
+        overlay.zPosition = 9000
+        cameraNode.addChild(overlay)
+
+        // Defeat label
+        let defeatLabel = SKLabelNode(fontNamed: "Copperplate-Bold")
+        defeatLabel.text = "DÉFAITE"
+        defeatLabel.fontSize = 36
+        defeatLabel.fontColor = SKColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1)
+        defeatLabel.position = CGPoint(x: 0, y: 30)
+        defeatLabel.zPosition = 9001
+        defeatLabel.alpha = 0
+        cameraNode.addChild(defeatLabel)
+
+        // Respawn button
+        let respawnLabel = SKLabelNode(fontNamed: "Copperplate")
+        respawnLabel.text = "Toucher pour réapparaître"
+        respawnLabel.fontSize = 18
+        respawnLabel.fontColor = SKColor(red: 0.8, green: 0.8, blue: 0.8, alpha: 1)
+        respawnLabel.position = CGPoint(x: 0, y: -30)
+        respawnLabel.zPosition = 9001
+        respawnLabel.alpha = 0
+        respawnLabel.name = "respawnButton"
+        cameraNode.addChild(respawnLabel)
+
+        overlay.run(SKAction.fadeAlpha(to: 0.7, duration: 0.8))
+        defeatLabel.run(SKAction.sequence([
+            SKAction.wait(forDuration: 0.5),
+            SKAction.fadeIn(withDuration: 0.5)
+        ]))
+        respawnLabel.run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.0),
+            SKAction.fadeIn(withDuration: 0.5),
+            SKAction.repeatForever(SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.5, duration: 0.8),
+                SKAction.fadeAlpha(to: 1.0, duration: 0.8)
+            ]))
+        ]))
+    }
+
+    private func handleRespawn() {
+        guard isPlayerDead, let view = self.view else { return }
+
+        // Fail escort quests on death
+        for quest in GameManager.shared.activeQuests {
+            if quest.objectives.contains(where: { $0.type == .escort }) {
+                GameManager.shared.questSystem.failQuest(quest.id)
+            }
+        }
+
+        // Restore HP to 50%, keep gold but lose 10%
+        GameManager.shared.mutateChampion { champ in
+            champ.currentHP = champ.maxHP / 2
+            champ.currentInvestiture = champ.maxInvestiture / 2
+            champ.gold = max(0, champ.gold - champ.gold / 10)
+        }
+
+        // Reload current zone
+        let zoneID = zone.id
+        SceneRouter(view: view).transitionToZone(zoneID)
     }
 
     private func toggleInventory() {
@@ -1275,35 +2033,6 @@ class ZoneScene: SKScene {
             settings?.removeFromParent()
         }
         cameraNode.addChild(settings)
-    }
-
-    // MARK: - Low HP Warning
-
-    private func setupLowHPOverlay() {
-        let overlay = SKShapeNode(rectOf: CGSize(width: size.width * 2, height: size.height * 2))
-        overlay.fillColor = GameConstants.Colors.lowHPWarning
-        overlay.strokeColor = .clear
-        overlay.zPosition = 1500
-        overlay.alpha = 0
-        overlay.name = "lowHPOverlay"
-        cameraNode.addChild(overlay)
-        lowHPOverlay = overlay
-    }
-
-    private func updateLowHPWarning(champion: Champion) {
-        let hpRatio = Double(champion.currentHP) / Double(champion.maxHP)
-        if hpRatio <= GameConstants.HUD.lowHPThreshold && !isShowingLowHPWarning {
-            isShowingLowHPWarning = true
-            let pulse = SKAction.repeatForever(SKAction.sequence([
-                SKAction.fadeAlpha(to: 0.4, duration: 0.3),
-                SKAction.fadeAlpha(to: 0.1, duration: 0.3)
-            ]))
-            lowHPOverlay?.run(pulse, withKey: "lowHPPulse")
-        } else if hpRatio > GameConstants.HUD.lowHPThreshold && isShowingLowHPWarning {
-            isShowingLowHPWarning = false
-            lowHPOverlay?.removeAction(forKey: "lowHPPulse")
-            lowHPOverlay?.run(SKAction.fadeAlpha(to: 0, duration: 0.3))
-        }
     }
 
     // MARK: - Level Up Celebration
@@ -1416,35 +2145,6 @@ class ZoneScene: SKScene {
         AudioManager.shared.playSFX("level_up", on: self)
     }
 
-    // MARK: - Regen Visual
-
-    private func showRegenTick(hpHealed: Int, invHealed: Int) {
-        guard let playerNode, (hpHealed > 0 || invHealed > 0) else { return }
-
-        if hpHealed > 0 {
-            let label = obtainDamageLabel()
-            label.text = "+\(hpHealed)"
-            label.fontColor = GameConstants.Colors.healGreen
-            label.fontSize = 12
-            label.position = CGPoint(x: playerNode.position.x - 15, y: playerNode.position.y + 20)
-            worldNode.addChild(label)
-
-            label.run(SKAction.sequence([
-                SKAction.group([
-                    SKAction.moveBy(x: 0, y: 25, duration: 0.6),
-                    SKAction.fadeOut(withDuration: 0.5)
-                ]),
-                SKAction.run { [weak self] in
-                    label.removeFromParent()
-                    guard let self else { return }
-                    if self.damageNodePool.count < self.maxPoolSize {
-                        self.damageNodePool.append(label)
-                    }
-                }
-            ]))
-        }
-    }
-
     // MARK: - Update Loop
 
     override func update(_ currentTime: TimeInterval) {
@@ -1463,31 +2163,13 @@ class ZoneScene: SKScene {
             }
         }
 
-        // Régénération passive HP/Investiture
-        regenAccumulator += deltaTime
-        if regenAccumulator >= regenInterval {
-            regenAccumulator -= regenInterval
-            var hpHealed = 0
-            var invHealed = 0
-            GameManager.shared.mutateChampion { champ in
-                if champ.currentHP < champ.maxHP {
-                    let heal = min(self.hpRegenBase, champ.maxHP - champ.currentHP)
-                    champ.currentHP += heal
-                    hpHealed = heal
-                }
-                if champ.currentInvestiture < champ.maxInvestiture {
-                    let heal = min(self.investitureRegenBase, champ.maxInvestiture - champ.currentInvestiture)
-                    champ.currentInvestiture += heal
-                    invHealed = heal
-                }
-            }
-            showRegenTick(hpHealed: hpHealed, invHealed: invHealed)
-        }
-
         if let champion = GameManager.shared.champion {
             minimap.updatePlayerPosition(champion.gridPosition)
             updateHUD(champion: champion)
-            updateLowHPWarning(champion: champion)
+
+            // Update low HP vignette
+            let hpRatio = Double(champion.currentHP) / Double(max(1, champion.maxHP))
+            CombatFeedbackSystem.updateHealthVignette(lowHPVignette, hpRatio: hpRatio)
 
             // Détection de level up
             if champion.level > previousLevel {
@@ -1498,5 +2180,120 @@ class ZoneScene: SKScene {
 
         let enemies = enemyInstances.filter { $0.isAlive }.map { (position: $0.position, id: $0.enemyData.id) }
         companionSystem.update(deltaTime: deltaTime, playerPosition: playerPos, enemies: enemies)
+
+        // --- Gameplay improvements ---
+        actionButtons.update(deltaTime: deltaTime)
+        if ultimateCooldownRemaining > 0 {
+            ultimateCooldownRemaining = max(0, ultimateCooldownRemaining - deltaTime)
+        }
+        updateRegeneration(currentTime: currentTime, deltaTime: deltaTime)
+        updateLowHPVignette()
+        updateHUDBars()
+    }
+
+    // MARK: - Passive Regeneration (HP + Investiture)
+
+    private func updateRegeneration(currentTime: TimeInterval, deltaTime: TimeInterval) {
+        GameManager.shared.mutateChampion { champ in
+            // Investiture regen: base 2.0/s + trait bonus
+            let traitInvRegen = champ.totalTraitBonus(for: .investitureRegen) * Double(champ.maxInvestiture)
+            let investitureRegen = (2.0 + traitInvRegen) * deltaTime
+            champ.currentInvestiture = min(champ.maxInvestiture,
+                                           champ.currentInvestiture + Int(investitureRegen))
+
+            // HP regen: 1% maxHP/sec, only out of combat (5s since last hit)
+            if currentTime - self.lastDamageTakenTime > self.hpRegenDelay {
+                let hpRegen = Double(champ.maxHP) * self.hpRegenPercent * deltaTime
+                if champ.currentHP < champ.maxHP {
+                    champ.currentHP = min(champ.maxHP, champ.currentHP + max(1, Int(hpRegen)))
+                }
+            }
+        }
+    }
+
+    // MARK: - Low HP Vignette
+
+    private func updateLowHPVignette() {
+        guard let champion = GameManager.shared.champion, let vignette = lowHPVignette else { return }
+
+        let hpPercent = Double(champion.currentHP) / Double(champion.maxHP)
+        if hpPercent < 0.25 {
+            if vignette.action(forKey: "lowHPPulse") == nil {
+                let pulse = SKAction.repeatForever(SKAction.sequence([
+                    SKAction.fadeAlpha(to: 0.25, duration: 0.5),
+                    SKAction.fadeAlpha(to: 0.1, duration: 0.5)
+                ]))
+                vignette.run(pulse, withKey: "lowHPPulse")
+            }
+        } else {
+            vignette.removeAction(forKey: "lowHPPulse")
+            vignette.alpha = 0
+        }
+    }
+
+    // MARK: - HUD Bars Update
+
+    private func updateHUDBars() {
+        guard let champion = GameManager.shared.champion else { return }
+
+        // Update HP bar fill
+        if let hpFill = cameraNode.childNode(withName: "//hpFill") as? SKShapeNode {
+            let hpRatio = CGFloat(champion.currentHP) / CGFloat(champion.maxHP)
+            hpFill.xScale = max(0, hpRatio)
+        }
+        if let hpLabel = cameraNode.childNode(withName: "//hpLabel") as? SKLabelNode {
+            hpLabel.text = "\(champion.currentHP)/\(champion.maxHP)"
+        }
+
+        // Update gold
+        if let goldLabel = cameraNode.childNode(withName: "//goldLabel") as? SKLabelNode {
+            goldLabel.text = "\(champion.gold) or"
+        }
+
+        // Update level
+        if let levelLabel = cameraNode.childNode(withName: "//levelLabel") as? SKLabelNode {
+            levelLabel.text = "\(champion.level)"
+        }
+    }
+}
+
+// MARK: - DialogueSystemDelegate
+
+extension ZoneScene: DialogueSystemDelegate {
+    func dialogueSystem(_ system: DialogueSystem, showNode node: DialogueSystem.DialogueNode, availableChoices: [DialogueSystem.DialogueChoice]) {
+        ensureDialogueBox()
+
+        let speakerName: String
+        if node.speaker == "player" {
+            speakerName = GameManager.shared.champion?.name ?? "Joueur"
+        } else if let tree = system.currentTree {
+            speakerName = tree.npcName
+        } else {
+            speakerName = node.speaker.capitalized
+        }
+
+        dialogueBox?.showDialogue(
+            speakerName: speakerName,
+            text: node.text,
+            portrait: node.portrait,
+            emotion: node.emotion
+        )
+
+        if !availableChoices.isEmpty {
+            dialogueBox?.showChoices(availableChoices)
+            dialogueBox?.onChoiceSelected = { [weak self] choiceIndex in
+                system.selectChoice(choiceIndex)
+            }
+            dialogueBox?.onContinue = nil
+        } else {
+            dialogueBox?.onContinue = {
+                system.continueDialogue()
+            }
+            dialogueBox?.onChoiceSelected = nil
+        }
+    }
+
+    func dialogueSystemDidEnd(_ system: DialogueSystem, treeID: String) {
+        dialogueBox?.hide()
     }
 }

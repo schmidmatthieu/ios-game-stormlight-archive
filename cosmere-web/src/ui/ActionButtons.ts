@@ -230,7 +230,7 @@ export class ActionButtons extends Container {
         continue;
       }
 
-      slot.cooldown -= dt / 60;
+      slot.cooldown -= dt;
       if (slot.cooldown <= 0) {
         slot.cooldown = 0;
         this.skillButtons[i].alpha = 1;
