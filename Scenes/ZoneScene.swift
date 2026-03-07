@@ -509,6 +509,10 @@ class ZoneScene: SKScene {
             actionButtons.updateAbilityIcon(index: 1, text: "Ir", color: SKColor(red: 0.4, green: 0.4, blue: 0.5, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 2, text: "Pw", color: SKColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 3, text: "Sn", color: SKColor(red: 0.7, green: 0.7, blue: 0.8, alpha: 0.85))
+            actionButtons.setAbilityName(index: 0, name: "Acier")
+            actionButtons.setAbilityName(index: 1, name: "Fer")
+            actionButtons.setAbilityName(index: 2, name: "Pewter")
+            actionButtons.setAbilityName(index: 3, name: "Étain")
 
         case .radiant:
             let order = champion.radiantOrder ?? .windrunner
@@ -518,21 +522,37 @@ class ZoneScene: SKScene {
                 actionButtons.updateAbilityIcon(index: 1, text: "AD", color: SKColor(red: 0.3, green: 0.7, blue: 0.8, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 2, text: "LS", color: SKColor(red: 0.1, green: 0.5, blue: 0.7, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 3, text: "SH", color: SKColor(red: 0.4, green: 0.8, blue: 1.0, alpha: 0.85))
+                actionButtons.setAbilityName(index: 0, name: "Gravit")
+                actionButtons.setAbilityName(index: 1, name: "Adhés.")
+                actionButtons.setAbilityName(index: 2, name: "Lash")
+                actionButtons.setAbilityName(index: 3, name: "Bouclr")
             case .edgedancer:
                 actionButtons.updateAbilityIcon(index: 0, text: "AB", color: SKColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 1, text: "PR", color: SKColor(red: 0.3, green: 0.9, blue: 0.5, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 2, text: "SL", color: SKColor(red: 0.1, green: 0.7, blue: 0.3, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 3, text: "HL", color: SKColor(red: 0.4, green: 1.0, blue: 0.6, alpha: 0.85))
+                actionButtons.setAbilityName(index: 0, name: "Absorb")
+                actionButtons.setAbilityName(index: 1, name: "Progrn")
+                actionButtons.setAbilityName(index: 2, name: "Glisse")
+                actionButtons.setAbilityName(index: 3, name: "Soin")
             case .lightweaver:
                 actionButtons.updateAbilityIcon(index: 0, text: "IL", color: SKColor(red: 0.8, green: 0.6, blue: 0.9, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 1, text: "TR", color: SKColor(red: 0.7, green: 0.5, blue: 0.8, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 2, text: "LR", color: SKColor(red: 0.9, green: 0.7, blue: 1.0, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 3, text: "MM", color: SKColor(red: 0.6, green: 0.4, blue: 0.7, alpha: 0.85))
+                actionButtons.setAbilityName(index: 0, name: "Illus.")
+                actionButtons.setAbilityName(index: 1, name: "Transf")
+                actionButtons.setAbilityName(index: 2, name: "Leurre")
+                actionButtons.setAbilityName(index: 3, name: "Miroir")
             case .bondsmith:
                 actionButtons.updateAbilityIcon(index: 0, text: "TN", color: SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 1, text: "AD", color: SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 2, text: "UN", color: SKColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 0.85))
                 actionButtons.updateAbilityIcon(index: 3, text: "BN", color: SKColor(red: 0.7, green: 0.6, blue: 0.1, alpha: 0.85))
+                actionButtons.setAbilityName(index: 0, name: "Tension")
+                actionButtons.setAbilityName(index: 1, name: "Adhés.")
+                actionButtons.setAbilityName(index: 2, name: "Union")
+                actionButtons.setAbilityName(index: 3, name: "Lien")
             }
 
         case .awakener:
@@ -540,24 +560,40 @@ class ZoneScene: SKScene {
             actionButtons.updateAbilityIcon(index: 1, text: "AN", color: SKColor(red: 0.7, green: 0.2, blue: 0.5, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 2, text: "AU", color: SKColor(red: 0.9, green: 0.4, blue: 0.7, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 3, text: "DR", color: SKColor(red: 0.6, green: 0.1, blue: 0.4, alpha: 0.85))
+            actionButtons.setAbilityName(index: 0, name: "Éveil")
+            actionButtons.setAbilityName(index: 1, name: "Animat")
+            actionButtons.setAbilityName(index: 2, name: "Aura")
+            actionButtons.setAbilityName(index: 3, name: "Drain")
 
         case .elantrian:
             actionButtons.updateAbilityIcon(index: 0, text: "Rao", color: SKColor(red: 0.9, green: 0.8, blue: 0.3, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 1, text: "Ash", color: SKColor(red: 0.8, green: 0.7, blue: 0.2, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 2, text: "Tia", color: SKColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 3, text: "Ien", color: SKColor(red: 0.7, green: 0.6, blue: 0.1, alpha: 0.85))
+            actionButtons.setAbilityName(index: 0, name: "Aon Rao")
+            actionButtons.setAbilityName(index: 1, name: "Aon Ash")
+            actionButtons.setAbilityName(index: 2, name: "Aon Tia")
+            actionButtons.setAbilityName(index: 3, name: "Aon Ien")
 
         case .sandMaster:
             actionButtons.updateAbilityIcon(index: 0, text: "FO", color: SKColor(red: 0.9, green: 0.8, blue: 0.5, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 1, text: "BO", color: SKColor(red: 0.8, green: 0.7, blue: 0.4, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 2, text: "NU", color: SKColor(red: 0.7, green: 0.6, blue: 0.3, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 3, text: "PL", color: SKColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.85))
+            actionButtons.setAbilityName(index: 0, name: "Fouet")
+            actionButtons.setAbilityName(index: 1, name: "Bouclr")
+            actionButtons.setAbilityName(index: 2, name: "Nuage")
+            actionButtons.setAbilityName(index: 3, name: "Pilier")
 
         case .nightmarePainter:
             actionButtons.updateAbilityIcon(index: 0, text: "PE", color: SKColor(red: 0.3, green: 0.1, blue: 0.4, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 1, text: "EM", color: SKColor(red: 0.4, green: 0.1, blue: 0.5, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 2, text: "OM", color: SKColor(red: 0.2, green: 0.0, blue: 0.3, alpha: 0.85))
             actionButtons.updateAbilityIcon(index: 3, text: "HI", color: SKColor(red: 0.5, green: 0.3, blue: 0.6, alpha: 0.85))
+            actionButtons.setAbilityName(index: 0, name: "Peint.")
+            actionButtons.setAbilityName(index: 1, name: "Empile")
+            actionButtons.setAbilityName(index: 2, name: "Ombre")
+            actionButtons.setAbilityName(index: 3, name: "Hisame")
         }
     }
 

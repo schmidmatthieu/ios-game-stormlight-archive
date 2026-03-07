@@ -351,6 +351,25 @@ class ActionButtonsNode: SKNode {
         ultimateButton.alpha = available ? 1.0 : 0.4
     }
 
+    /// Affiche le nom complet de la compétence sous le bouton
+    func setAbilityName(index: Int, name: String) {
+        guard index < abilityButtons.count else { return }
+        let button = abilityButtons[index]
+
+        // Supprimer l'ancien label de nom s'il existe
+        button.children.filter { $0.name == "abilityName" }.forEach { $0.removeFromParent() }
+
+        let nameLabel = SKLabelNode(fontNamed: "Helvetica")
+        nameLabel.text = String(name.prefix(6))
+        nameLabel.fontSize = 7
+        nameLabel.fontColor = SKColor(white: 0.8, alpha: 0.8)
+        nameLabel.verticalAlignmentMode = .top
+        nameLabel.position = CGPoint(x: 0, y: -abilityButtonRadius - 3)
+        nameLabel.zPosition = 1001
+        nameLabel.name = "abilityName"
+        button.addChild(nameLabel)
+    }
+
     // MARK: - Helpers
 
     private func distance(from a: CGPoint, to b: CGPoint) -> CGFloat {
