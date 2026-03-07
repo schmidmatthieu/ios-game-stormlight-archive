@@ -26,7 +26,7 @@ import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyH
 import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer';
 import { createEnemyAnimState, updateEnemyIdle, triggerEnemyHurt, triggerEnemyDeath, drawBossAura, drawAlertIndicator, setEnemyAlert } from '../rendering/EnemyAnimations';
 import type { EnemyAnimState } from '../rendering/EnemyAnimations';
-import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle } from '../rendering/SpellEffects';
+import { createAttackEffect, createSkillEffect, createHitImpact, spawnClassAmbientParticle, createSkillGroundMark } from '../rendering/SpellEffects';
 import { createDirectionalSlash, createCritFlash, createKillBurst, showKillStreakBanner, triggerHitStop, updateHitStop, createGroundCrack } from '../rendering/CombatFeedback';
 import { FloatingDamageManager } from '../rendering/FloatingDamage';
 import type { DamageStyle } from '../rendering/FloatingDamage';
@@ -2459,12 +2459,17 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private showSkillEffect(range: number): void {
+    const cls = GameManager.shared.champion?.championClass ?? 'mistborn';
     createSkillEffect(
       this.worldContainer,
       this.playerScreenPos.x, this.playerScreenPos.y,
-      range,
-      GameManager.shared.champion?.championClass ?? 'mistborn',
-      this.particles,
+      range, cls, this.particles,
+    );
+    // Lingering ground mark where skill was cast
+    createSkillGroundMark(
+      this.worldContainer,
+      this.playerScreenPos.x, this.playerScreenPos.y,
+      range, cls,
     );
   }
 

@@ -38,11 +38,16 @@ export function createAttackEffect(
   const endAngle = dir > 0 ? Math.PI * 0.3 : Math.PI * 1.3;
   g.arc(0, 0, 28, startAngle, endAngle).stroke({ color: slashColor, width: 3, alpha: 0.7 });
   g.arc(0, 0, 22, startAngle, endAngle).stroke({ color: 0xffffff, width: 1.5, alpha: 0.4 });
+  // Secondary inner arc for depth
+  g.arc(0, 0, 16, startAngle + 0.2, endAngle - 0.2).stroke({ color: slashColor, width: 1, alpha: 0.3 });
 
-  for (let i = 0; i < 5; i++) {
-    const angle = startAngle + (endAngle - startAngle) * (i / 5);
-    const r = 25 + Math.random() * 5;
-    g.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1.5).fill({ color: slashColor, alpha: 0.5 });
+  // Trailing sparks along arc
+  for (let i = 0; i < 8; i++) {
+    const angle = startAngle + (endAngle - startAngle) * (i / 8);
+    const r = 22 + Math.random() * 8;
+    const sz = 0.8 + Math.random() * 1.2;
+    g.circle(Math.cos(angle) * r, Math.sin(angle) * r, sz)
+      .fill({ color: slashColor, alpha: 0.4 + Math.random() * 0.3 });
   }
 
   g.x = px + dir * 18;
@@ -50,17 +55,9 @@ export function createAttackEffect(
   g.zIndex = 100000;
   worldContainer.addChild(g);
 
-  // Weapon trail
+  // Class-specific weapon trail
   const armSwing = new Graphics();
-  if (cls === 'radiant') {
-    armSwing.poly([
-      { x: dir * 4, y: -8 }, { x: dir * 30, y: -24 }, { x: dir * 32, y: -20 }, { x: dir * 6, y: -4 },
-    ]).fill({ color: 0x88ccff, alpha: 0.3 });
-  } else {
-    armSwing.poly([
-      { x: dir * 4, y: -8 }, { x: dir * 22, y: -18 }, { x: dir * 24, y: -14 }, { x: dir * 6, y: -4 },
-    ]).fill({ color: slashColor, alpha: 0.2 });
-  }
+  drawClassAttackTrail(armSwing, cls, dir, slashColor);
   armSwing.x = px;
   armSwing.y = py;
   armSwing.zIndex = 100001;
@@ -82,6 +79,88 @@ export function createAttackEffect(
     else { g.destroy(); armSwing.destroy(); }
   };
   requestAnimationFrame(anim);
+}
+
+function drawClassAttackTrail(g: Graphics, cls: string, dir: number, slashColor: number): void {
+  switch (cls) {
+    case 'radiant':
+      // Shardblade luminous trail
+      g.poly([
+        { x: dir * 4, y: -8 }, { x: dir * 32, y: -26 },
+        { x: dir * 34, y: -22 }, { x: dir * 6, y: -4 },
+      ]).fill({ color: 0x88ccff, alpha: 0.3 });
+      // Stormlight wisps along trail
+      for (let i = 0; i < 4; i++) {
+        const t = i / 4;
+        const wx = dir * (4 + t * 28);
+        const wy = -8 - t * 16;
+        g.circle(wx, wy, 2).fill({ color: 0xcceeFF, alpha: 0.2 });
+      }
+      break;
+    case 'mistborn':
+      // Dual dagger trails
+      g.poly([
+        { x: dir * 4, y: -6 }, { x: dir * 20, y: -18 },
+        { x: dir * 22, y: -15 }, { x: dir * 6, y: -3 },
+      ]).fill({ color: 0x6688aa, alpha: 0.25 });
+      g.poly([
+        { x: dir * 2, y: -10 }, { x: dir * 18, y: -22 },
+        { x: dir * 20, y: -19 }, { x: dir * 4, y: -7 },
+      ]).fill({ color: 0x8899bb, alpha: 0.2 });
+      break;
+    case 'awakener':
+      // Color ribbon trail
+      g.poly([
+        { x: dir * 4, y: -8 }, { x: dir * 24, y: -20 },
+        { x: dir * 26, y: -16 }, { x: dir * 6, y: -4 },
+      ]).fill({ color: 0xcc88ff, alpha: 0.2 });
+      // Rainbow streak
+      const ribbonColors = [0xff4466, 0x44aaff, 0x44ff66];
+      ribbonColors.forEach((c, i) => {
+        const oy = -6 - i * 4;
+        g.moveTo(dir * 6, oy).lineTo(dir * 22, oy - 10)
+          .stroke({ color: c, width: 1.5, alpha: 0.3 });
+      });
+      break;
+    case 'elantrian':
+      // Glowing Aon arc trail
+      g.poly([
+        { x: dir * 4, y: -8 }, { x: dir * 22, y: -18 },
+        { x: dir * 24, y: -14 }, { x: dir * 6, y: -4 },
+      ]).fill({ color: 0xffcc44, alpha: 0.25 });
+      // Glowing dots along trail
+      for (let i = 0; i < 3; i++) {
+        const t = (i + 1) / 4;
+        g.circle(dir * (4 + t * 18), -8 - t * 8, 2.5)
+          .fill({ color: 0xffdd66, alpha: 0.3 });
+      }
+      break;
+    case 'sandMaster':
+      // Sand wave trail
+      g.poly([
+        { x: dir * 4, y: -4 }, { x: dir * 24, y: -14 },
+        { x: dir * 26, y: -10 }, { x: dir * 8, y: 0 },
+      ]).fill({ color: 0xddcc88, alpha: 0.2 });
+      // Sand grains
+      for (let i = 0; i < 6; i++) {
+        g.circle(dir * (6 + Math.random() * 18), -2 - Math.random() * 12, 0.8)
+          .fill({ color: 0xeecc77, alpha: 0.4 });
+      }
+      break;
+    default:
+      // Ink slash trail (nightmare painter)
+      g.poly([
+        { x: dir * 4, y: -8 }, { x: dir * 22, y: -18 },
+        { x: dir * 24, y: -14 }, { x: dir * 6, y: -4 },
+      ]).fill({ color: 0x332244, alpha: 0.3 });
+      // Dripping ink
+      for (let i = 0; i < 3; i++) {
+        const dx = dir * (8 + i * 6);
+        g.moveTo(dx, -6 - i * 4).lineTo(dx + dir, -2 - i * 2)
+          .stroke({ color: 0x111122, width: 1, alpha: 0.3 });
+      }
+      break;
+  }
 }
 
 export function createSkillEffect(
@@ -143,44 +222,202 @@ export function createSkillEffect(
 
 function drawClassBurst(burst: Graphics, cls: string, range: number, cfg: { color1: number; color2: number }): void {
   switch (cls) {
-    case 'mistborn':
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        burst.moveTo(0, 0).lineTo(Math.cos(angle) * range * 0.8, Math.sin(angle) * range * 0.8)
-          .stroke({ color: 0x4488ff, width: 1, alpha: 0.4 });
+    case 'mistborn': {
+      // Metal push/pull lines radiating outward with varying thickness
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const len = range * (0.5 + Math.random() * 0.4);
+        const width = 0.5 + Math.random() * 1.5;
+        burst.moveTo(0, 0).lineTo(Math.cos(angle) * len, Math.sin(angle) * len)
+          .stroke({ color: 0x4488ff, width, alpha: 0.3 + Math.random() * 0.2 });
+        // Metal shard at tip
+        const sz = 1 + Math.random() * 2;
+        burst.poly([
+          { x: Math.cos(angle) * len, y: Math.sin(angle) * len },
+          { x: Math.cos(angle + 0.2) * (len + sz), y: Math.sin(angle + 0.2) * (len + sz) },
+          { x: Math.cos(angle - 0.1) * (len + sz * 0.5), y: Math.sin(angle - 0.1) * (len + sz * 0.5) },
+        ]).fill({ color: 0x88aacc, alpha: 0.5 });
       }
+      // Central vortex
+      burst.circle(0, 0, range * 0.15).fill({ color: 0x4488ff, alpha: 0.2 });
       break;
-    case 'radiant':
-      burst.circle(0, 0, range * 0.5).fill({ color: 0x88ccff, alpha: 0.15 });
-      burst.circle(0, 0, range * 0.3).fill({ color: 0xaaddff, alpha: 0.1 });
-      break;
-    case 'elantrian':
-      burst.circle(0, 0, range * 0.6).stroke({ color: 0xffcc44, width: 1.5, alpha: 0.4 });
-      burst.moveTo(-range * 0.4, 0).lineTo(range * 0.4, 0).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
-      burst.moveTo(0, -range * 0.4).lineTo(0, range * 0.4).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
-      break;
-    case 'awakener': {
-      const colors = [0xff4466, 0x44aaff, 0xffaa22, 0x44ff66, 0xaa44ff];
-      for (let i = 0; i < 5; i++) {
-        burst.circle(0, 0, range * (0.3 + i * 0.12)).stroke({ color: colors[i], width: 1.5, alpha: 0.2 });
+    }
+    case 'radiant': {
+      // Stormlight nova with layered glow
+      burst.circle(0, 0, range * 0.6).fill({ color: 0x88ccff, alpha: 0.12 });
+      burst.circle(0, 0, range * 0.4).fill({ color: 0xaaddff, alpha: 0.1 });
+      burst.circle(0, 0, range * 0.2).fill({ color: 0xcceeFF, alpha: 0.15 });
+      // Lightning-like tendrils
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
+        const segments = 3 + Math.floor(Math.random() * 2);
+        let cx = 0, cy = 0;
+        for (let s = 0; s < segments; s++) {
+          const nextR = (range * 0.6 / segments) * (s + 1);
+          const jitter = (Math.random() - 0.5) * 8;
+          const nx = Math.cos(angle) * nextR + jitter;
+          const ny = Math.sin(angle) * nextR + jitter * 0.5;
+          burst.moveTo(cx, cy).lineTo(nx, ny)
+            .stroke({ color: 0xcceeFF, width: 1.5 - s * 0.3, alpha: 0.4 });
+          cx = nx; cy = ny;
+        }
       }
       break;
     }
-    case 'sandMaster':
-      for (let i = 0; i < 20; i++) {
-        const angle = (i / 20) * Math.PI * 4;
-        const r = (i / 20) * range * 0.8;
-        burst.circle(Math.cos(angle) * r, Math.sin(angle) * r, 1.5).fill({ color: 0xddcc88, alpha: 0.4 });
+    case 'elantrian': {
+      // Aon glyph pattern - concentric circles with radial lines
+      burst.circle(0, 0, range * 0.6).stroke({ color: 0xffcc44, width: 1.5, alpha: 0.4 });
+      burst.circle(0, 0, range * 0.35).stroke({ color: 0xffdd66, width: 1, alpha: 0.3 });
+      // Cross + diagonals (Aon pattern)
+      const r = range * 0.5;
+      burst.moveTo(-r, 0).lineTo(r, 0).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
+      burst.moveTo(0, -r).lineTo(0, r).stroke({ color: 0xffcc44, width: 1, alpha: 0.3 });
+      burst.moveTo(-r * 0.7, -r * 0.7).lineTo(r * 0.7, r * 0.7).stroke({ color: 0xffaa33, width: 0.8, alpha: 0.2 });
+      burst.moveTo(r * 0.7, -r * 0.7).lineTo(-r * 0.7, r * 0.7).stroke({ color: 0xffaa33, width: 0.8, alpha: 0.2 });
+      // Corner accents (Aon modifiers)
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const cx = Math.cos(a) * r * 0.8;
+        const cy = Math.sin(a) * r * 0.8;
+        burst.circle(cx, cy, 3).stroke({ color: 0xffdd66, width: 1, alpha: 0.35 });
+        burst.circle(cx, cy, 1).fill({ color: 0xffee88, alpha: 0.4 });
       }
+      break;
+    }
+    case 'awakener': {
+      // Rainbow color spiral rings
+      const colors = [0xff4466, 0x44aaff, 0xffaa22, 0x44ff66, 0xaa44ff];
+      for (let i = 0; i < colors.length; i++) {
+        const r = range * (0.2 + i * 0.13);
+        burst.circle(0, 0, r).stroke({ color: colors[i], width: 1.5, alpha: 0.25 });
+      }
+      // Color ribbons spiraling outward
+      for (let i = 0; i < 5; i++) {
+        const color = colors[i % colors.length];
+        const startAngle = (i / 5) * Math.PI * 2;
+        let cx = 0, cy = 0;
+        for (let s = 0; s < 8; s++) {
+          const a = startAngle + s * 0.4;
+          const r = range * 0.1 * (s + 1);
+          const nx = Math.cos(a) * r;
+          const ny = Math.sin(a) * r;
+          burst.moveTo(cx, cy).lineTo(nx, ny).stroke({ color, width: 1, alpha: 0.2 });
+          cx = nx; cy = ny;
+        }
+      }
+      break;
+    }
+    case 'sandMaster': {
+      // Sand vortex spiral
+      for (let i = 0; i < 30; i++) {
+        const angle = (i / 30) * Math.PI * 6; // 3 full rotations
+        const r = (i / 30) * range * 0.8;
+        const sz = 0.8 + (i / 30) * 1.5;
+        burst.circle(Math.cos(angle) * r, Math.sin(angle) * r, sz)
+          .fill({ color: i % 3 === 0 ? 0xeecc77 : 0xddcc88, alpha: 0.35 });
+      }
+      // Central dust cloud
+      burst.circle(0, 0, range * 0.2).fill({ color: 0xddcc88, alpha: 0.15 });
+      burst.circle(3, -2, range * 0.12).fill({ color: 0xccbb77, alpha: 0.1 });
+      break;
+    }
+    default: {
+      // Nightmare Painter - ink splatter blobs
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.5;
+        const r = range * (0.2 + Math.random() * 0.4);
+        const sx = 3 + Math.random() * 4;
+        const sy = 2 + Math.random() * 5;
+        burst.ellipse(Math.cos(angle) * r, Math.sin(angle) * r, sx, sy)
+          .fill({ color: 0x222244, alpha: 0.3 });
+      }
+      // Dark tendrils reaching outward
+      for (let i = 0; i < 5; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const len = range * 0.6 * Math.random();
+        burst.moveTo(0, 0)
+          .lineTo(Math.cos(angle) * len * 0.5, Math.sin(angle) * len * 0.5)
+          .lineTo(Math.cos(angle + 0.3) * len, Math.sin(angle + 0.3) * len)
+          .stroke({ color: 0x332255, width: 1.5, alpha: 0.25 });
+      }
+      break;
+    }
+  }
+}
+
+// ─── Lingering Ground Effect ────────────────────────────────────
+
+/**
+ * Creates a lingering ground mark where a skill was cast.
+ * Fades slowly over a few seconds for visual atmosphere.
+ */
+export function createSkillGroundMark(
+  worldContainer: Container,
+  px: number, py: number,
+  range: number,
+  cls: ChampionClass,
+): void {
+  const cfg = SKILL_COLORS[cls] ?? SKILL_COLORS.mistborn;
+  const g = new Graphics();
+  g.x = px; g.y = py;
+  g.zIndex = py - 100; // Under entities
+
+  // Class-specific ground pattern
+  switch (cls) {
+    case 'mistborn':
+      // Metal flake scatter
+      for (let i = 0; i < 15; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = Math.random() * range * 0.7;
+        g.circle(Math.cos(a) * r, Math.sin(a) * r, 0.5 + Math.random())
+          .fill({ color: 0x6688aa, alpha: 0.2 });
+      }
+      break;
+    case 'radiant':
+      // Glowing cracks in ground
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const len = range * 0.4 * (0.5 + Math.random() * 0.5);
+        g.moveTo(0, 0).lineTo(Math.cos(a) * len, Math.sin(a) * len * 0.5)
+          .stroke({ color: 0x88ccff, width: 1, alpha: 0.15 });
+      }
+      break;
+    case 'elantrian':
+      // Fading Aon circle
+      g.circle(0, 0, range * 0.4).stroke({ color: 0xffcc44, width: 0.8, alpha: 0.12 });
+      break;
+    case 'awakener':
+      // Color stain
+      g.circle(-3, 2, range * 0.25).fill({ color: 0xcc66ff, alpha: 0.06 });
+      g.circle(4, -1, range * 0.2).fill({ color: 0xff6688, alpha: 0.05 });
+      break;
+    case 'sandMaster':
+      // Disturbed sand
+      g.ellipse(0, 0, range * 0.4, range * 0.2).fill({ color: 0xddcc88, alpha: 0.08 });
       break;
     default:
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const r = range * 0.5;
-        burst.ellipse(Math.cos(angle) * r, Math.sin(angle) * r, 4, 6).fill({ color: 0x222233, alpha: 0.3 });
-      }
+      // Ink stain
+      g.ellipse(0, 1, range * 0.3, range * 0.15).fill({ color: 0x111122, alpha: 0.1 });
       break;
   }
+
+  worldContainer.addChild(g);
+
+  // Fade over 4 seconds
+  let life = 0;
+  const animate = () => {
+    life += 1 / 60;
+    if (life > 2) {
+      g.alpha = Math.max(0, 1 - (life - 2) / 2);
+    }
+    if (life < 4) {
+      requestAnimationFrame(animate);
+    } else {
+      worldContainer.removeChild(g);
+      g.destroy();
+    }
+  };
+  requestAnimationFrame(animate);
 }
 
 // ─── Enhanced Magic Effects ──────────────────────────────────
