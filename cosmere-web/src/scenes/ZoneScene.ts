@@ -18,6 +18,8 @@ import type { WorldEffect } from '../game/WorldMechanics';
 import { drawPlayerCharacter, lighten, darken } from '../rendering/PlayerRenderer';
 import { drawEnemySprite } from '../rendering/EnemyRenderer';
 import { createAttackEffect, createSkillEffect } from '../rendering/SpellEffects';
+import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
+import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
@@ -225,6 +227,13 @@ export class ZoneScene extends Container implements GameScene {
   // World mechanics
   private worldMechanics!: WorldEffect;
 
+  // Map structures
+  private walls: WallSegment[] = [];
+  private enterableBuildings: EnterableBuilding[] = [];
+  private secretAreas: SecretArea[] = [];
+  private nearbyBuilding: EnterableBuilding | null = null;
+  private nearbySecret: SecretArea | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -268,6 +277,25 @@ export class ZoneScene extends Container implements GameScene {
 
     // Decorations (environment objects)
     this.spawnDecorations();
+
+    // Walls, enterable buildings, and secret areas
+    this.walls = spawnWalls(
+      this.worldContainer, isoToScreen,
+      this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.worldID, this.zone.playerSpawnPosition,
+      this.zone.connections, this.zone.npcSpawns,
+    );
+    this.enterableBuildings = spawnEnterableBuildings(
+      this.worldContainer, isoToScreen,
+      this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.worldID, this.zone.playerSpawnPosition,
+      this.zone.connections, this.zone.npcSpawns, this.zone.type,
+    );
+    this.secretAreas = spawnSecretAreas(
+      this.worldContainer, isoToScreen,
+      this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.worldID, this.zone.playerSpawnPosition,
+    );
 
     // Loot points
     this.spawnLootPoints();
@@ -998,14 +1026,123 @@ export class ZoneScene extends Container implements GameScene {
         }
         break;
       case 'enter':
+        if (this.nearbyBuilding) {
+          this.enterBuilding(this.nearbyBuilding);
+        }
         // Zone exit handled by checkZoneExit
         break;
       case 'loot':
-        if (this.nearbyLoot) {
+        if (this.nearbySecret) {
+          this.interactWithSecret(this.nearbySecret);
+        } else if (this.nearbyLoot) {
           this.collectLoot(this.nearbyLoot.id);
         }
         break;
     }
+  }
+
+  private enterBuilding(building: EnterableBuilding): void {
+    if (this.dialoguePanel) return;
+    this.isPaused = true;
+
+    const champ = GameManager.shared.champion;
+    const goldReward = 5 + Math.floor(Math.random() * 15);
+    const xpReward = 10 + Math.floor(Math.random() * 20);
+
+    if (champ) {
+      champ.gold += goldReward;
+      GameManager.shared.grantXP(xpReward);
+    }
+
+    const panel = new Container();
+    panel.zIndex = 10000;
+
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+
+    const overlay = new Graphics();
+    overlay.rect(0, 0, w, h).fill({ color: 0x000000, alpha: 0.5 });
+    overlay.eventMode = 'static';
+    panel.addChild(overlay);
+
+    const panelH = 120;
+    const panelY = h - panelH - 20;
+    const bg = new Graphics();
+    bg.roundRect(20, panelY, w - 40, panelH, 12)
+      .fill({ color: 0x0a0815, alpha: 0.92 })
+      .stroke({ color: 0x665533, width: 2, alpha: 0.7 });
+    bg.eventMode = 'static';
+    panel.addChild(bg);
+
+    const title = new Text({
+      text: building.name,
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: 13, fill: 0xe6cc66, fontWeight: 'bold' }),
+    });
+    title.x = 36;
+    title.y = panelY + 10;
+    panel.addChild(title);
+
+    const desc = new Text({
+      text: `Vous explorez ${building.name}.\nVous trouvez quelques ressources utiles.`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0xccccbb, wordWrap: true, wordWrapWidth: w - 80 }),
+    });
+    desc.x = 36;
+    desc.y = panelY + 30;
+    panel.addChild(desc);
+
+    const reward = new Text({
+      text: `+${xpReward} XP  +${goldReward} or`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0x66cc44, fontWeight: 'bold' }),
+    });
+    reward.anchor.set(1, 0);
+    reward.x = w - 36;
+    reward.y = panelY + 10;
+    panel.addChild(reward);
+
+    const closeHint = new Text({
+      text: 'Toucher pour fermer',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x888888 }),
+    });
+    closeHint.anchor.set(0.5);
+    closeHint.x = w / 2;
+    closeHint.y = panelY + panelH - 14;
+    panel.addChild(closeHint);
+
+    const close = () => {
+      panel.destroy({ children: true });
+      this.dialoguePanel = null;
+      this.isPaused = false;
+    };
+    overlay.on('pointerdown', close);
+    bg.on('pointerdown', close);
+
+    this.dialoguePanel = panel;
+    this.uiContainer.addChild(panel);
+  }
+
+  private interactWithSecret(secret: SecretArea): void {
+    if (!secret.revealed) return;
+
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    // Grant rewards
+    champ.gold += secret.loot.gold;
+    GameManager.shared.grantXP(secret.loot.xp);
+
+    if (secret.type === 'shrine') {
+      // Shrine: heal and buff
+      champ.currentHP = GameManager.shared.maxHP;
+      champ.currentInvestiture = GameManager.shared.maxInvestiture;
+      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV et Inv restaurés', 0x88ccff);
+    } else {
+      this.showFloatingText(secret.x, secret.y - 30,
+        `${secret.loot.itemHint}! +${secret.loot.xp}XP +${secret.loot.gold}or`, 0xffdd44);
+    }
+
+    // Remove from interactable
+    secret.sprite.alpha = 0.3;
+    this.secretAreas = this.secretAreas.filter(s => s !== secret);
   }
 
   private interactWithNPC(spawn: { npcID: string; isShopkeeper: boolean; dialogueTreeID: string | null }): void {
@@ -1611,6 +1748,8 @@ export class ZoneScene extends Container implements GameScene {
     this.nearbyNPC = null;
     this.nearbyExit = null;
     this.nearbyLoot = null;
+    this.nearbyBuilding = null;
+    this.nearbySecret = null;
 
     // Check NPCs
     let minNPCDist = Infinity;
@@ -1644,16 +1783,53 @@ export class ZoneScene extends Container implements GameScene {
       }
     }
 
-    // Determine mode (priority: NPC > Exit > Loot > Attack)
+    // Check enterable buildings
+    let minBuildingDist = Infinity;
+    for (const b of this.enterableBuildings) {
+      const dist = Math.hypot(b.x - this.playerScreenPos.x, b.y - this.playerScreenPos.y);
+      if (dist < b.interactionRadius && dist < minBuildingDist) {
+        minBuildingDist = dist;
+        this.nearbyBuilding = b;
+      }
+    }
+
+    // Check secret areas (reveal when close)
+    for (const s of this.secretAreas) {
+      if (s.revealed) continue;
+      const dist = Math.hypot(s.x - this.playerScreenPos.x, s.y - this.playerScreenPos.y);
+      if (dist < s.interactionRadius) {
+        revealSecret(s, this.zone.worldID);
+        this.showFloatingText(s.x, s.y - 20, '✦ Zone secrète découverte!', 0xffdd44);
+        this.nearbySecret = s;
+      }
+    }
+    // Check already revealed secrets for loot
+    for (const s of this.secretAreas) {
+      if (!s.revealed) continue;
+      const dist = Math.hypot(s.x - this.playerScreenPos.x, s.y - this.playerScreenPos.y);
+      if (dist < 40) {
+        this.nearbySecret = s;
+        break;
+      }
+    }
+
+    // Determine mode (priority: NPC > Building > Exit > Secret > Loot > Attack)
     let newMode: ActionMode = 'attack';
     let promptText = '';
     if (this.nearbyNPC && minNPCDist < minExitDist && minNPCDist < minLootDist) {
       newMode = 'talk';
       promptText = this.nearbyNPC.isShopkeeper ? 'Ouvrir la boutique' : 'Parler';
+    } else if (this.nearbyBuilding && minBuildingDist < minExitDist) {
+      newMode = 'enter';
+      promptText = this.nearbyBuilding.name;
     } else if (this.nearbyExit && minExitDist < minLootDist) {
       newMode = 'enter';
       const targetZone = gameData.zone(this.nearbyExit.targetZoneID);
       promptText = `→ ${targetZone?.name ?? this.nearbyExit.targetZoneID}`;
+    } else if (this.nearbySecret) {
+      newMode = 'loot';
+      promptText = this.nearbySecret.type === 'treasure' ? 'Ouvrir le coffre'
+        : this.nearbySecret.type === 'shrine' ? 'Prier au sanctuaire' : 'Explorer';
     } else if (this.nearbyLoot) {
       newMode = 'loot';
       promptText = 'Ramasser';
