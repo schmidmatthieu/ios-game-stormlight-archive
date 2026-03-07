@@ -291,7 +291,11 @@ final class TalentTreeSystem {
         }
     }
 
-    private var playerTalents = PlayerTalents()
+    private(set) var playerTalents = PlayerTalents()
+
+    func restoreTalents(_ saved: PlayerTalents) {
+        playerTalents = saved
+    }
 
     // MARK: - Unlock Talent
 

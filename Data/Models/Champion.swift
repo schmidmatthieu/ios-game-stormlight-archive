@@ -101,6 +101,7 @@ struct EquipmentLoadout: Codable {
         case .amulet:     return amulet
         case .ring1:      return ring1
         case .ring2:      return ring2
+        case .consumable: return nil
         }
     }
 
@@ -168,8 +169,60 @@ struct Champion: Codable {
 
     // Calculé
     var xpForNextLevel: Int { level * 100 + 50 }
-    var maxHP: Int { baseStats.vigor * 10 + 50 }
-    var maxInvestiture: Int { baseStats.investiture * 8 + 30 }
+
+    /// Stats effectives = base + bonus d'équipement + traits
+    var effectiveStats: ChampionStats {
+        var stats = baseStats
+        let slots: [EquipmentSlot] = [.helmet, .shoulders, .chest, .cape, .gloves, .belt, .legs, .boots, .mainWeapon, .offhand, .amulet, .ring1, .ring2]
+        for slot in slots {
+            guard let itemID = equipment.itemID(for: slot),
+                  let item = GameManager.shared.item(byID: itemID) else { continue }
+            for bonus in item.statBonuses {
+                switch bonus.stat {
+                case .vigor:       stats.vigor += bonus.value
+                case .investiture: stats.investiture += bonus.value
+                case .strength:    stats.strength += bonus.value
+                case .agility:     stats.agility += bonus.value
+                case .spirit:      stats.spirit += bonus.value
+                case .luck:        stats.luck += bonus.value
+                }
+            }
+        }
+
+        // Off-world stat boost: items from other worlds grant bonus stats
+        let isOffWorld = currentWorldID != championClass.startingWorld
+        if isOffWorld {
+            let offWorldBonus = totalTraitBonus(for: .allStatBoostOffWorld)
+            if offWorldBonus > 0 {
+                let bonus = Int(offWorldBonus * 10)
+                stats.vigor += bonus
+                stats.investiture += bonus
+                stats.strength += bonus
+                stats.agility += bonus
+                stats.spirit += bonus
+                stats.luck += bonus
+            }
+        }
+
+        return stats
+    }
+
+    var maxHP: Int { effectiveStats.vigor * 10 + 50 }
+    var maxInvestiture: Int { effectiveStats.investiture * 8 + 30 }
+
+    /// Total trait bonus from all equipped items for a given effect type
+    func totalTraitBonus(for effectType: TraitEffectType) -> Double {
+        let slots: [EquipmentSlot] = [.helmet, .shoulders, .chest, .cape, .gloves, .belt, .legs, .boots, .mainWeapon, .offhand, .amulet, .ring1, .ring2]
+        var total = 0.0
+        for slot in slots {
+            guard let itemID = equipment.itemID(for: slot),
+                  let item = GameManager.shared.item(byID: itemID) else { continue }
+            for trait in item.traits where trait.effectType == effectType {
+                total += trait.effectValue
+            }
+        }
+        return total
+    }
 
     /// Progression XP normalisée (0.0–1.0)
     var experienceProgress: Double {

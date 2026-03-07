@@ -7,10 +7,12 @@ final class LootSystem {
 
     func generateLoot(from enemy: Enemy) -> [Item] {
         var droppedItems: [Item] = []
+        let luck = GameManager.shared.champion?.effectiveStats.luck ?? 0
 
         for entry in enemy.lootTable {
             let roll = Double.random(in: 0...1)
-            if roll <= entry.dropChance {
+            let adjustedChance = adjustDropChance(baseChance: entry.dropChance, luck: luck)
+            if roll <= adjustedChance {
                 let quantity = Int.random(in: entry.minQuantity...entry.maxQuantity)
                 for _ in 0..<quantity {
                     if let item = GameManager.shared.allItems[entry.itemID] {
@@ -70,7 +72,13 @@ final class LootSystem {
     // MARK: - Génération d'item aléatoire
 
     func generateRandomItem(rarity: ItemRarity, level: Int) -> Item {
-        let slot = EquipmentSlot.allCases.randomElement() ?? .chest
+        // Chance to generate a consumable instead of equipment
+        if Double.random(in: 0...1) < 0.25 {
+            return generateConsumable(rarity: rarity, level: level)
+        }
+
+        let equipmentSlots = EquipmentSlot.allCases.filter { $0 != .consumable }
+        let slot = equipmentSlots.randomElement() ?? .chest
         let statCount = rarity.statBonusCount
 
         let stats = (0..<statCount).map { _ in
@@ -80,6 +88,8 @@ final class LootSystem {
             )
         }
 
+        let traits = generateTraits(rarity: rarity)
+
         return Item(
             id: UUID().uuidString,
             name: generateItemName(slot: slot, rarity: rarity),
@@ -88,10 +98,49 @@ final class LootSystem {
             slot: slot,
             requiredLevel: max(1, level - 2),
             statBonuses: stats,
-            traits: [],
+            traits: traits,
             spriteName: "item_\(slot.rawValue)_\(rarity.rawValue)",
             worldOrigin: nil
         )
+    }
+
+    private func generateTraits(rarity: ItemRarity) -> [ItemTrait] {
+        // Only rare+ items get traits
+        let traitCount: Int
+        switch rarity {
+        case .common, .uncommon: return []
+        case .rare:      traitCount = 1
+        case .epic:      traitCount = Int.random(in: 1...2)
+        case .legendary: traitCount = 2
+        case .cosmeric:  traitCount = Int.random(in: 2...3)
+        }
+
+        let possibleTraits: [(TraitEffectType, String, String, ClosedRange<Double>)] = [
+            (.critChance, "Précision", "Augmente les chances de critique", 0.02...0.08),
+            (.lifesteal, "Vampirisme", "Vole de la vie à chaque coup", 0.03...0.10),
+            (.investitureRegen, "Canalisation", "Régénère l'Investiture au combat", 0.01...0.05),
+            (.damageBoostAllomancy, "Forge allomantique", "Augmente les dégâts allomantiques", 0.05...0.15),
+            (.damageBoostSurgebinding, "Lumière radieuse", "Augmente les dégâts de Surgebinding", 0.05...0.15),
+            (.aonDorCostReduction, "Efficacité aonique", "Réduit le coût des Aons", 0.05...0.15),
+        ]
+
+        var selected: [ItemTrait] = []
+        var usedTypes: Set<String> = []
+
+        for _ in 0..<traitCount {
+            guard let pick = possibleTraits.filter({ !usedTypes.contains($0.0.rawValue) }).randomElement() else { break }
+            usedTypes.insert(pick.0.rawValue)
+            let value = Double.random(in: pick.3)
+            selected.append(ItemTrait(
+                id: UUID().uuidString,
+                name: pick.1,
+                description: pick.2,
+                effectType: pick.0,
+                effectValue: value
+            ))
+        }
+
+        return selected
     }
 
     private func generateItemName(slot: EquipmentSlot, rarity: ItemRarity) -> String {
@@ -115,6 +164,53 @@ final class LootSystem {
         let prefix = prefixes[rarity]?.randomElement() ?? "Mystérieux"
         let name = slotNames[slot] ?? "Objet"
         return "\(prefix) \(name)"
+    }
+
+    // MARK: - Consumable Generation
+
+    private func generateConsumable(rarity: ItemRarity, level: Int) -> Item {
+        let typeRoll = Double.random(in: 0...1)
+        let type: ConsumableType = typeRoll < 0.45 ? .healHP : typeRoll < 0.85 ? .restoreInvestiture : .healAndRestore
+
+        let baseValue = (level + 2) * 5
+        let rarityMultiplier: Int
+        switch rarity {
+        case .common:    rarityMultiplier = 1
+        case .uncommon:  rarityMultiplier = 2
+        case .rare:      rarityMultiplier = 3
+        case .epic:      rarityMultiplier = 4
+        case .legendary: rarityMultiplier = 6
+        case .cosmeric:  rarityMultiplier = 8
+        }
+        let value = baseValue * rarityMultiplier
+
+        let name: String
+        let description: String
+        switch type {
+        case .healHP:
+            name = "Potion de vie"
+            description = "Restaure \(value) PV"
+        case .restoreInvestiture:
+            name = "Fiole d'Investiture"
+            description = "Restaure \(value) Investiture"
+        case .healAndRestore:
+            name = "Élixir cosmérique"
+            description = "Restaure \(value) PV et Investiture"
+        }
+
+        return Item(
+            id: UUID().uuidString,
+            name: name,
+            description: description,
+            rarity: rarity,
+            slot: .consumable,
+            requiredLevel: 1,
+            statBonuses: [],
+            traits: [],
+            spriteName: "consumable_\(type.rawValue)_\(rarity.rawValue)",
+            worldOrigin: nil,
+            consumableEffect: ConsumableEffect(type: type, value: value)
+        )
     }
 
     // MARK: - Appliquer le loot au champion avec bonus de chance
