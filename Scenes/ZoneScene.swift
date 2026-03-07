@@ -385,6 +385,33 @@ class ZoneScene: SKScene {
         cameraNode.addChild(goldLabel)
     }
 
+    private func updateHUD(champion: Champion) {
+        // Update HP bar fill
+        if let hpBg = cameraNode.childNode(withName: "hpBarBg"),
+           let hpFill = hpBg.childNode(withName: "hpFill") as? SKShapeNode {
+            let hpRatio = CGFloat(champion.currentHP) / CGFloat(champion.maxHP)
+            let fillWidth = 116 * max(0, min(hpRatio, 1))
+            let rect = CGRect(x: -fillWidth / 2, y: -4, width: fillWidth, height: 8)
+            hpFill.path = CGPath(roundedRect: rect, cornerWidth: 2, cornerHeight: 2, transform: nil)
+        }
+
+        // Update HP label
+        if let hpBg = cameraNode.childNode(withName: "hpBarBg"),
+           let hpLabel = hpBg.childNode(withName: "hpLabel") as? SKLabelNode {
+            hpLabel.text = "\(champion.currentHP)/\(champion.maxHP)"
+        }
+
+        // Update gold label
+        if let goldLabel = cameraNode.childNode(withName: "goldLabel") as? SKLabelNode {
+            goldLabel.text = "\(champion.gold) or"
+        }
+
+        // Update level label
+        if let levelLabel = cameraNode.childNode(withName: "levelLabel") as? SKLabelNode {
+            levelLabel.text = "\(champion.level)"
+        }
+    }
+
     private func setupPauseButton() {
         let pauseBtn = SKShapeNode(rectOf: CGSize(width: 32, height: 32), cornerRadius: 6)
         pauseBtn.fillColor = SKColor(white: 0.1, alpha: 0.6)
@@ -1099,6 +1126,7 @@ class ZoneScene: SKScene {
 
         if let champion = GameManager.shared.champion {
             minimap.updatePlayerPosition(champion.gridPosition)
+            updateHUD(champion: champion)
         }
 
         let enemies = enemyInstances.filter { $0.isAlive }.map { (position: $0.position, id: $0.enemyData.id) }
