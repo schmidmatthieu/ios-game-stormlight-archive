@@ -24,6 +24,7 @@ import type { StatusEffectManager } from '../../game/StatusEffects';
 import { spawnStatusParticle } from '../../game/StatusEffects';
 import { ObjectPool } from '../../systems/ObjectPool';
 import { getCompanionXPBonus } from './ZoneCompanion';
+import { CompanionManager } from '../../game/CompanionSystem';
 import { getEventXPBonus, getEventGoldBonus } from './ZoneEnvironment';
 import type { EnemyInstance, Particle } from './ZoneTypes';
 import type { WorldEventEffect } from '../../game/WorldEvents';
@@ -152,6 +153,13 @@ export function killEnemy(enemy: EnemyInstance, host: KillHost): void {
     showRankUpEffect(host.uiContainer, host.screenWidth, host.screenHeight, repResult.rankName, host.worldID);
   }
   if (host.repBadge) host.repBadge.refresh();
+
+  // Check companion unlock conditions (kill count, boss kills)
+  const unlockedCompanion = CompanionManager.shared.recordKill(host.worldID, !!enemy.bossState);
+  if (unlockedCompanion) {
+    host.showFloatingText(host.playerScreenPos.x, host.playerScreenPos.y - 90,
+      `Compagnon débloqué: ${unlockedCompanion}!`, 0xffdd44);
+  }
 
   host.showDamageNumber(enemy.position.x, enemy.position.y - 10, finalXP, false, 0x66cc44);
   setTimeout(() => {

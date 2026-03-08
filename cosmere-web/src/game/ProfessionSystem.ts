@@ -533,6 +533,12 @@ export class ProfessionManager {
     this.inventory.set(id, (this.inventory.get(id) ?? 0) + amount);
   }
 
+  // ── Enchanting XP (called from UI when applying enchantments) ──
+
+  addEnchantingXP(amount: number): void {
+    this.addXP('enchanting', amount);
+  }
+
   // ── Labels ───────────────────────────────────────────
 
   professionLabel(type: ProfessionType): string {

@@ -67,11 +67,12 @@ export function showProfessionPanel(
   title.y = py + 10;
   panel.addChild(title);
 
-  // Tabs: Professions | Materiaux | Recettes | Désenchanter
+  // Tabs: Professions | Materiaux | Recettes | Enchanter | Désenchanter
   const tabs = [
     { label: 'Professions', id: 'prof' },
     { label: 'Materiaux', id: 'mats' },
     { label: 'Recettes', id: 'recipes' },
+    { label: 'Enchanter', id: 'enchant' },
     { label: 'Désencht.', id: 'disench' },
   ];
   let activeTab = 'prof';
@@ -115,6 +116,7 @@ export function showProfessionPanel(
     if (activeTab === 'prof') renderProfessions();
     else if (activeTab === 'mats') renderMaterials();
     else if (activeTab === 'recipes') renderRecipes();
+    else if (activeTab === 'enchant') renderEnchant();
     else renderDisenchant();
   }
 
@@ -340,6 +342,182 @@ export function showProfessionPanel(
     });
   }
 
+  // ─── Enchant Tab (Apply enchantments to equipment) ──────────────
+
+  let selectedEnchantID: string | null = null;
+
+  function renderEnchant(): void {
+    const startY = tabY + 34;
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    // Find enchantment items in inventory
+    const enchantIDs = champ.inventoryItemIDs.filter(id => id.startsWith('enchant_'));
+    const enchantCounts = new Map<string, number>();
+    for (const id of enchantIDs) enchantCounts.set(id, (enchantCounts.get(id) ?? 0) + 1);
+
+    if (enchantCounts.size === 0) {
+      const emptyText = new Text({
+        text: 'Aucun enchantement disponible.\nFabriquez-en via l\'onglet Recettes\n(profession Enchantement).',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textMuted, align: 'center' }),
+      });
+      emptyText.anchor.set(0.5);
+      emptyText.x = screenW / 2;
+      emptyText.y = startY + 50;
+      contentContainer.addChild(emptyText);
+      return;
+    }
+
+    // Section 1: Select an enchantment
+    const sectionTitle = new Text({
+      text: selectedEnchantID ? 'Enchantement sélectionné — Choisir un équipement :' : 'Choisir un enchantement :',
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textGold }),
+    });
+    sectionTitle.x = px + 14;
+    sectionTitle.y = startY;
+    contentContainer.addChild(sectionTitle);
+
+    if (!selectedEnchantID) {
+      // Show available enchantments
+      const itemH = 38;
+      let idx = 0;
+      for (const [enchantID, count] of enchantCounts) {
+        const iy = startY + 18 + idx * itemH;
+        const recipe = RECIPES.find(r => r.result.itemID === enchantID);
+        const enchName = recipe?.name ?? enchantID;
+        const enchDesc = getEnchantDescription(enchantID);
+
+        const rowBg = new Graphics();
+        rowBg.roundRect(px + 10, iy, panelW - 20, itemH - 4, 6)
+          .fill({ color: 0x111133, alpha: 0.6 })
+          .stroke({ color: 0x7744cc, width: 1, alpha: 0.3 });
+        rowBg.eventMode = 'static';
+        rowBg.cursor = 'pointer';
+        contentContainer.addChild(rowBg);
+
+        const nameText = new Text({
+          text: `${enchName}${count > 1 ? ` x${count}` : ''}`,
+          style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(9, layout), fill: 0xaa88ff, fontWeight: 'bold' }),
+        });
+        nameText.x = px + 18;
+        nameText.y = iy + 4;
+        contentContainer.addChild(nameText);
+
+        const descText = new Text({
+          text: enchDesc,
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textSecondary }),
+        });
+        descText.x = px + 18;
+        descText.y = iy + 18;
+        contentContainer.addChild(descText);
+
+        rowBg.on('pointerdown', () => {
+          selectedEnchantID = enchantID;
+          renderContent();
+        });
+
+        idx++;
+      }
+    } else {
+      // Show equipped items to apply enchantment to
+      const eq = champ.equipment;
+      const slots: { slot: string; label: string; itemID: string | null }[] = [
+        { slot: 'mainWeapon', label: 'Arme', itemID: eq.mainWeapon },
+        { slot: 'offhand', label: 'Offhand', itemID: eq.offhand },
+        { slot: 'helmet', label: 'Casque', itemID: eq.helmet },
+        { slot: 'chest', label: 'Torse', itemID: eq.chest },
+        { slot: 'shoulders', label: 'Épaules', itemID: eq.shoulders },
+        { slot: 'gloves', label: 'Gants', itemID: eq.gloves },
+        { slot: 'legs', label: 'Jambes', itemID: eq.legs },
+        { slot: 'boots', label: 'Bottes', itemID: eq.boots },
+        { slot: 'cape', label: 'Cape', itemID: eq.cape },
+        { slot: 'belt', label: 'Ceinture', itemID: eq.belt },
+        { slot: 'amulet', label: 'Amulette', itemID: eq.amulet },
+        { slot: 'ring1', label: 'Anneau 1', itemID: eq.ring1 },
+        { slot: 'ring2', label: 'Anneau 2', itemID: eq.ring2 },
+      ];
+
+      const equippedSlots = slots.filter(s => s.itemID);
+      if (equippedSlots.length === 0) {
+        const noEquip = new Text({
+          text: 'Aucun équipement porté.\nÉquipez des objets d\'abord.',
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textMuted, align: 'center' }),
+        });
+        noEquip.anchor.set(0.5);
+        noEquip.x = screenW / 2;
+        noEquip.y = startY + 50;
+        contentContainer.addChild(noEquip);
+      } else {
+        const itemH = 36;
+        equippedSlots.forEach((s, idx) => {
+          const iy = startY + 18 + idx * itemH;
+          const item = gameData.item(s.itemID!);
+          const itemName = item?.name ?? s.itemID!;
+          const rarityColor = item ? (RARITY_COLORS[item.rarity as string] ?? 0xaaaaaa) : 0xaaaaaa;
+
+          const rowBg = new Graphics();
+          rowBg.roundRect(px + 10, iy, panelW - 20, itemH - 4, 6)
+            .fill({ color: 0x111122, alpha: 0.6 })
+            .stroke({ color: rarityColor, width: 1, alpha: 0.3 });
+          rowBg.eventMode = 'static';
+          rowBg.cursor = 'pointer';
+          contentContainer.addChild(rowBg);
+
+          const slotLabel = new Text({
+            text: `[${s.label}]`,
+            style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textMuted }),
+          });
+          slotLabel.x = px + 16;
+          slotLabel.y = iy + 4;
+          contentContainer.addChild(slotLabel);
+
+          const nameText = new Text({
+            text: itemName,
+            style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(9, layout), fill: rarityColor, fontWeight: 'bold' }),
+          });
+          nameText.x = px + 16 + slotLabel.width + 6;
+          nameText.y = iy + 4;
+          contentContainer.addChild(nameText);
+
+          const enchDesc = getEnchantDescription(selectedEnchantID!);
+          const previewText = new Text({
+            text: `→ ${enchDesc}`,
+            style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: 0x88ccff }),
+          });
+          previewText.x = px + 16;
+          previewText.y = iy + 18;
+          contentContainer.addChild(previewText);
+
+          rowBg.on('pointerdown', () => {
+            applyEnchantment(champ, selectedEnchantID!, s.itemID!);
+            selectedEnchantID = null;
+            renderContent();
+          });
+        });
+      }
+
+      // Back button
+      const backBtn = new Graphics();
+      const backY = startY + 18 + Math.max(equippedSlots.length, 1) * 36 + 8;
+      backBtn.roundRect(px + panelW / 2 - 50, backY, 100, 24, 4)
+        .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
+        .stroke({ color: 0x666688, width: 1 });
+      backBtn.eventMode = 'static';
+      backBtn.cursor = 'pointer';
+      backBtn.on('pointerdown', () => { selectedEnchantID = null; renderContent(); });
+      contentContainer.addChild(backBtn);
+
+      const backLabel = new Text({
+        text: 'Retour',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textSecondary }),
+      });
+      backLabel.anchor.set(0.5);
+      backLabel.x = px + panelW / 2;
+      backLabel.y = backY + 12;
+      contentContainer.addChild(backLabel);
+    }
+  }
+
   // ─── Disenchant Tab ─────────────────────────────────────────────
 
   function renderDisenchant(): void {
@@ -487,5 +665,86 @@ function professionIcon(type: ProfessionType): string {
     case 'woodcutting': return '\u2692';
     case 'skinning': return '\u2694';
     case 'enchanting': return '\u2728';
+  }
+}
+
+// ─── Enchantment Data ───────────────────────────────────────────
+
+interface EnchantmentBonus {
+  stat: string;
+  value: number;
+  label: string;
+}
+
+const ENCHANTMENT_BONUSES: Record<string, EnchantmentBonus> = {
+  enchant_protection: { stat: 'vigor', value: 3, label: 'Défense +3' },
+  enchant_force: { stat: 'strength', value: 4, label: 'Force +4' },
+  enchant_agilite: { stat: 'agility', value: 4, label: 'Agilité +4' },
+  enchant_esprit: { stat: 'spirit', value: 4, label: 'Esprit +4' },
+  enchant_investiture: { stat: 'spirit', value: 6, label: 'Esprit +6' },
+  enchant_cosmos: { stat: 'strength', value: 5, label: 'Force +5, Esprit +5' },
+  enchant_legendaire: { stat: 'strength', value: 8, label: 'Force +8, Agilité +4' },
+  enchant_divin: { stat: 'strength', value: 6, label: 'Tous stats +6' },
+};
+
+function getEnchantDescription(enchantID: string): string {
+  // Handle quality variants (e.g., enchant_force_q3)
+  const baseID = enchantID.replace(/_q\d+$/, '');
+  const bonus = ENCHANTMENT_BONUSES[baseID];
+  return bonus?.label ?? 'Bonus inconnu';
+}
+
+function applyEnchantment(champ: import('../data/types').Champion, enchantID: string, targetItemID: string): void {
+  // Remove one enchantment from inventory
+  const idx = champ.inventoryItemIDs.indexOf(enchantID);
+  if (idx === -1) return;
+  champ.inventoryItemIDs.splice(idx, 1);
+
+  // Get the target item and add stat bonuses
+  const item = gameData.item(targetItemID);
+  if (!item) return;
+
+  const baseID = enchantID.replace(/_q\d+$/, '');
+  const qualityMatch = enchantID.match(/_q(\d+)$/);
+  const qualityBonus = qualityMatch ? parseInt(qualityMatch[1]) : 0;
+
+  // Apply enchantment bonuses based on type
+  if (baseID === 'enchant_cosmos') {
+    const val = 5 + qualityBonus;
+    addItemStat(item, 'strength', val);
+    addItemStat(item, 'spirit', val);
+  } else if (baseID === 'enchant_legendaire') {
+    addItemStat(item, 'strength', 8 + qualityBonus);
+    addItemStat(item, 'agility', 4 + qualityBonus);
+  } else if (baseID === 'enchant_divin') {
+    const val = 6 + qualityBonus;
+    addItemStat(item, 'strength', val);
+    addItemStat(item, 'agility', val);
+    addItemStat(item, 'spirit', val);
+    addItemStat(item, 'vigor', val);
+  } else {
+    const bonus = ENCHANTMENT_BONUSES[baseID];
+    if (bonus) {
+      addItemStat(item, bonus.stat, bonus.value + qualityBonus);
+    }
+  }
+
+  // Mark item name as enchanted (if not already)
+  if (!item.name.includes('(E)')) {
+    item.name = `${item.name} (E)`;
+  }
+
+  // Grant enchanting XP
+  ProfessionManager.shared.addEnchantingXP(20 + qualityBonus * 5);
+  ProfessionManager.shared.save();
+  GameManager.shared.save();
+}
+
+function addItemStat(item: import('../data/types').Item, stat: string, value: number): void {
+  const existing = item.statBonuses.find(b => b.stat === stat);
+  if (existing) {
+    existing.value += value;
+  } else {
+    item.statBonuses.push({ stat, value });
   }
 }

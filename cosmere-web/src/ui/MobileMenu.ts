@@ -17,6 +17,7 @@ export interface MobileMenuCallbacks {
   toggleCompanion: () => void;
   toggleQuestJournal: () => void;
   toggleProfessions?: () => void;
+  spawnWave?: () => void;
 }
 
 interface MenuEntry {
@@ -87,6 +88,9 @@ export function createMobileMenu(
   ];
   if (cb.toggleProfessions) {
     entries.push({ label: 'Métiers', icon: '⛏', color: 0xaa8855, action: cb.toggleProfessions });
+  }
+  if (cb.spawnWave) {
+    entries.push({ label: 'Vague', icon: '\u2694', color: 0xee5544, action: cb.spawnWave });
   }
 
   function toggleMenu(): void {

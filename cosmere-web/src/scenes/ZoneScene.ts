@@ -489,6 +489,7 @@ export class ZoneScene extends Container implements GameScene {
       toggleCompanion: () => this.toggleCompanion(),
       toggleQuestJournal: () => this.toggleQuestJournal(),
       toggleProfessions: () => this.toggleProfessions(),
+      spawnWave: () => this.spawnEnemyWave(),
     };
     createZoneToolbar(this.uiContainer, w, layout, toolbarCallbacks);
 
@@ -869,6 +870,41 @@ export class ZoneScene extends Container implements GameScene {
       (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
       () => this.checkQuestCompletion(),
     );
+  }
+
+  /** Force-respawn all dead enemies + spawn a fresh wave from existing spawn points */
+  private spawnEnemyWave(): void {
+    let respawned = 0;
+    // First: respawn all dead enemies instantly
+    for (const enemy of this.enemies) {
+      if (enemy.isDead) {
+        enemy.isDead = false;
+        enemy.hp = enemy.maxHP;
+        enemy.state = 'idle';
+        enemy.sprite.visible = true;
+        enemy.sprite.alpha = 1;
+        enemy.respawnTimer = 0;
+        respawned++;
+      }
+    }
+    // Second: spawn an additional wave from the zone's spawn points
+    const result = spawnEnemiesModule(this.zone, this.worldContainer, (bar, pct) => this.drawEnemyHP(bar, pct));
+    for (const newEnemy of result.enemies) {
+      // Offset position slightly to avoid exact overlap
+      const offsetX = (Math.random() - 0.5) * 40;
+      const offsetY = (Math.random() - 0.5) * 20;
+      newEnemy.position.x += offsetX;
+      newEnemy.position.y += offsetY;
+      newEnemy.sprite.x += offsetX;
+      newEnemy.sprite.y += offsetY;
+      this.enemies.push(newEnemy);
+    }
+    for (const [key, behavior] of result.behaviors) {
+      this.enemyBehaviors.set(key + '_w' + Date.now(), behavior);
+    }
+    const totalNew = result.enemies.length;
+    this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60,
+      `Vague d'ennemis! +${totalNew + respawned} ennemis`, 0xee5544);
   }
 
   private spawnEnemies(): void {

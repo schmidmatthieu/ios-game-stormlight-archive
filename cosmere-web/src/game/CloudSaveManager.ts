@@ -13,7 +13,7 @@ const SAVE_KEYS: readonly string[] = [
   'cosmere_bestiary',
   'cosmere_achievements',
   'cosmere_achievement_stats',
-  'cosmere_companion',
+  'cosmere_companions',
   'cosmere_npc_rel',
   'cosmere_professions',
   'minimap_position',

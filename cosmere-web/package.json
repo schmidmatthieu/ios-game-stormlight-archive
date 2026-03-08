@@ -1,6 +1,6 @@
 {
   "name": "cosmere-chronicles-web",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Cosmere Chronicles — RPG isométrique 2D dans l'univers de Brandon Sanderson",
   "type": "module",
   "scripts": {
