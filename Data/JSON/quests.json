@@ -1309,7 +1309,7 @@
         "id": "cosmere_main_1_obj1",
         "description": "Explorer le Shadesmar",
         "type": "explore",
-        "targetID": "shadesmar",
+        "targetID": "shadesmar_hub",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1460,7 +1460,7 @@
         "id": "cosmere_main_3_obj1",
         "description": "Pénétrer au cœur du Shadesmar corrompu",
         "type": "explore",
-        "targetID": "shadesmar",
+        "targetID": "shadesmar_hub",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1545,7 +1545,7 @@
         "id": "hidden_shadesmar_obj1",
         "description": "Découvrir l'entrée cachée du Shadesmar",
         "type": "explore",
-        "targetID": "shadesmar",
+        "targetID": "shadesmar_hub",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1724,7 +1724,7 @@
         "id": "nalthis_main_2_obj1",
         "description": "Infiltrer la Cour des Dieux",
         "type": "explore",
-        "targetID": "nalthis_court",
+        "targetID": "nalthis_god_king_palace",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1732,7 +1732,7 @@
         "id": "nalthis_main_2_obj2",
         "description": "Interroger les Retournés du tribunal",
         "type": "talkTo",
-        "targetID": "returned_councilor",
+        "targetID": "returned_priest",
         "requiredCount": 3,
         "currentCount": 0
       },
@@ -1786,7 +1786,7 @@
         "id": "nalthis_main_3_obj1",
         "description": "Entrer dans le Temple du Souffle Divin",
         "type": "explore",
-        "targetID": "nalthis_temple",
+        "targetID": "nalthis_jungle",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1841,7 +1841,7 @@
         "id": "nalthis_side_1_obj1",
         "description": "Parler au tisserand Éveilleur",
         "type": "talkTo",
-        "targetID": "awakener_weaver",
+        "targetID": "color_researcher",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1895,7 +1895,7 @@
         "id": "nalthis_side_2_obj1",
         "description": "Parler à l'Éveilleur paniqué",
         "type": "talkTo",
-        "targetID": "panicked_awakener",
+        "targetID": "breath_merchant",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -1972,7 +1972,7 @@
         "id": "sel_main_2_obj4",
         "description": "Parler au sage Élantrien",
         "type": "talkTo",
-        "targetID": "elantrian_sage",
+        "targetID": "aon_scholar",
         "requiredCount": 1,
         "currentCount": 0
       }
@@ -2011,7 +2011,7 @@
         "id": "sel_main_3_obj1",
         "description": "Traverser les ruines corrompues",
         "type": "explore",
-        "targetID": "sel_ruins",
+        "targetID": "sel_spirit_pool",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -2066,7 +2066,7 @@
         "id": "sel_side_1_obj1",
         "description": "Parler à l'archiviste d'Elantris",
         "type": "talkTo",
-        "targetID": "elantris_archivist",
+        "targetID": "raoden_ally",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -2074,7 +2074,7 @@
         "id": "sel_side_1_obj2",
         "description": "Retrouver le Séon dans les ruines",
         "type": "explore",
-        "targetID": "sel_ruins",
+        "targetID": "sel_spirit_pool",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -2120,7 +2120,7 @@
         "id": "sel_side_2_obj1",
         "description": "Rencontrer l'Élantrien reclus",
         "type": "talkTo",
-        "targetID": "recluse_elantrian",
+        "targetID": "refugee_elantrian",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -2174,7 +2174,7 @@
         "id": "hidden_breath_obj1",
         "description": "Découvrir l'entrée secrète du caveau",
         "type": "explore",
-        "targetID": "nalthis_temple",
+        "targetID": "nalthis_jungle",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -2228,7 +2228,7 @@
         "id": "hidden_aon_obj1",
         "description": "Déchiffrer les archives secrètes",
         "type": "talkTo",
-        "targetID": "elantrian_sage",
+        "targetID": "aon_scholar",
         "requiredCount": 1,
         "currentCount": 0
       },
@@ -2244,7 +2244,7 @@
         "id": "hidden_aon_obj3",
         "description": "Activer le glyphe dans les ruines anciennes",
         "type": "explore",
-        "targetID": "sel_ruins",
+        "targetID": "sel_spirit_pool",
         "requiredCount": 1,
         "currentCount": 0
       }

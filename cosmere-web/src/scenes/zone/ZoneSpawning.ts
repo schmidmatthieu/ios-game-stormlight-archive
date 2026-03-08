@@ -31,26 +31,93 @@ export function spawnNPCs(
     container.zIndex = pos.y;
 
     const shadow = new Graphics();
-    shadow.ellipse(0, 2, 10, 4).fill({ color: 0x000000, alpha: 0.25 });
+    shadow.ellipse(0, 2, 11, 5).fill({ color: 0x000000, alpha: 0.3 });
     container.addChild(shadow);
 
     const sprite = new Graphics();
     if (spawn.isShopkeeper) {
-      sprite.poly([{ x: -9, y: -3 }, { x: -7, y: -18 }, { x: 0, y: -22 }, { x: 7, y: -18 }, { x: 9, y: -3 }])
-        .fill({ color: 0x886633, alpha: 0.9 });
-      sprite.circle(0, -26, 5.5).fill({ color: 0xddbb88, alpha: 0.95 });
-      sprite.ellipse(0, -31, 8, 3).fill({ color: 0x664422, alpha: 0.9 });
-      sprite.rect(-3, -16, 6, 6).fill({ color: 0xe6cc33, alpha: 0.7 });
+      // Shopkeeper — warm colors, apron, distinct look
+      // Legs
+      sprite.rect(-4, -3, 4, 5).fill({ color: 0x554433, alpha: 0.9 });
+      sprite.rect(0, -3, 4, 5).fill({ color: 0x554433, alpha: 0.9 });
+      // Boots
+      sprite.roundRect(-5, 1, 5, 3, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
+      sprite.roundRect(0, 1, 5, 3, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
+      // Body — merchant robe
+      sprite.poly([
+        { x: -9, y: -3 }, { x: -8, y: -20 }, { x: 0, y: -23 }, { x: 8, y: -20 }, { x: 9, y: -3 },
+      ]).fill({ color: 0x886633, alpha: 0.95 });
+      // Apron
+      sprite.poly([
+        { x: -6, y: -16 }, { x: -5, y: -3 }, { x: 5, y: -3 }, { x: 6, y: -16 },
+      ]).fill({ color: 0xccaa77, alpha: 0.8 });
+      // Arms
+      sprite.rect(-11, -19, 4, 10).fill({ color: 0x886633, alpha: 0.9 });
+      sprite.rect(7, -19, 4, 10).fill({ color: 0x886633, alpha: 0.9 });
+      // Hands
+      sprite.circle(-9, -8, 2).fill({ color: 0xddbb88, alpha: 0.9 });
+      sprite.circle(9, -8, 2).fill({ color: 0xddbb88, alpha: 0.9 });
+      // Neck
+      sprite.rect(-2, -25, 4, 3).fill({ color: 0xddbb88, alpha: 0.9 });
+      // Head
+      sprite.circle(0, -28, 6.5).fill({ color: 0xddbb88, alpha: 0.95 });
+      // Hair (merchant cap)
+      sprite.ellipse(0, -33, 8, 3.5).fill({ color: 0x664422, alpha: 0.9 });
+      sprite.rect(-7, -33, 14, 2).fill({ color: 0x664422, alpha: 0.8 });
+      // Eyes
+      sprite.ellipse(-2.5, -28, 1.2, 1).fill(0xffffff);
+      sprite.ellipse(2.5, -28, 1.2, 1).fill(0xffffff);
+      sprite.circle(-2.5, -28, 0.7).fill(0x332211);
+      sprite.circle(2.5, -28, 0.7).fill(0x332211);
+      // Friendly smile
+      sprite.moveTo(-2, -25.5).quadraticCurveTo(0, -24.5, 2, -25.5).stroke({ color: 0xaa8866, width: 0.6, alpha: 0.5 });
+      // Gold coin pouch
+      sprite.roundRect(-4, -10, 4, 4, 1).fill({ color: 0xe6cc33, alpha: 0.8 });
+      sprite.circle(-2, -8, 1.5).fill({ color: 0xffdd44, alpha: 0.7 });
     } else {
-      sprite.poly([{ x: -8, y: -3 }, { x: -6, y: -18 }, { x: 0, y: -21 }, { x: 6, y: -18 }, { x: 8, y: -3 }])
-        .fill({ color: 0x555577, alpha: 0.9 });
-      sprite.circle(0, -25, 5.5).fill({ color: 0xddbb88, alpha: 0.95 });
+      // Regular NPC — villager/quest giver
+      // Legs
+      sprite.rect(-4, -3, 4, 5).fill({ color: 0x444455, alpha: 0.9 });
+      sprite.rect(0, -3, 4, 5).fill({ color: 0x444455, alpha: 0.9 });
+      // Boots
+      sprite.roundRect(-5, 1, 5, 3, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
+      sprite.roundRect(0, 1, 5, 3, 1).fill({ color: 0x3a2a1a, alpha: 0.9 });
+      // Body — simple tunic
+      sprite.poly([
+        { x: -8, y: -3 }, { x: -7, y: -19 }, { x: 0, y: -22 }, { x: 7, y: -19 }, { x: 8, y: -3 },
+      ]).fill({ color: 0x555577, alpha: 0.95 });
+      // Tunic detail
+      sprite.moveTo(0, -22).lineTo(0, -3).stroke({ color: 0x444466, width: 0.6, alpha: 0.4 });
+      // Belt
+      sprite.rect(-7, -8, 14, 2).fill({ color: 0x554422, alpha: 0.8 });
+      // Arms
+      sprite.rect(-10, -18, 4, 10).fill({ color: 0x555577, alpha: 0.9 });
+      sprite.rect(6, -18, 4, 10).fill({ color: 0x555577, alpha: 0.9 });
+      // Hands
+      sprite.circle(-8, -7, 2).fill({ color: 0xddbb88, alpha: 0.9 });
+      sprite.circle(8, -7, 2).fill({ color: 0xddbb88, alpha: 0.9 });
+      // Neck
+      sprite.rect(-2, -24, 4, 3).fill({ color: 0xddbb88, alpha: 0.9 });
+      // Head
+      sprite.circle(0, -27, 6.5).fill({ color: 0xddbb88, alpha: 0.95 });
+      // Hair
+      sprite.poly([
+        { x: -6, y: -28 }, { x: -6, y: -33 }, { x: -2, y: -35 },
+        { x: 3, y: -35 }, { x: 6, y: -33 }, { x: 6, y: -28 },
+      ]).fill({ color: 0x554433, alpha: 0.9 });
+      // Eyes
+      sprite.ellipse(-2.5, -27, 1.2, 1).fill(0xffffff);
+      sprite.ellipse(2.5, -27, 1.2, 1).fill(0xffffff);
+      sprite.circle(-2.5, -27, 0.7).fill(0x332244);
+      sprite.circle(2.5, -27, 0.7).fill(0x332244);
+      // Quest marker
       const hasQuest = spawn.dialogueTreeID != null;
       if (hasQuest) {
-        sprite.circle(0, -36, 5).fill({ color: 0xeedd44, alpha: 0.8 });
-        const bang = new Text({ text: '!', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x332200, fontWeight: 'bold' }) });
+        sprite.circle(0, -40, 5).fill({ color: 0xeedd44, alpha: 0.85 });
+        sprite.circle(0, -40, 5).stroke({ color: 0xccbb33, width: 0.8, alpha: 0.6 });
+        const bang = new Text({ text: '!', style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 9, fill: 0x332200, fontWeight: 'bold' }) });
         bang.anchor.set(0.5);
-        bang.y = -36;
+        bang.y = -40;
         container.addChild(bang);
       }
     }

@@ -388,14 +388,16 @@ export class ZoneScene extends Container implements GameScene {
     // Initialize pathfinder with wall data
     this.pathfinder = new Pathfinder(this.zone.gridWidth, this.zone.gridHeight);
     for (const wall of this.walls) {
-      // Convert screen coords to approximate grid coords for blocking
-      const col = Math.round((wall.x / 32 + wall.y / 16) / 2);
-      const row = Math.round((wall.y / 16 - wall.x / 32) / 2);
+      // Convert screen coords to grid coords using proper iso conversion
+      const iso = screenToIso(wall.x, wall.y);
+      const col = Math.round(iso.col);
+      const row = Math.round(iso.row);
       this.pathfinder.setBlocked(col, row, true);
     }
     for (const bld of this.enterableBuildings) {
-      const col = Math.round((bld.x / 32 + bld.y / 16) / 2);
-      const row = Math.round((bld.y / 16 - bld.x / 32) / 2);
+      const iso = screenToIso(bld.x, bld.y);
+      const col = Math.round(iso.col);
+      const row = Math.round(iso.row);
       for (let dc = -1; dc <= 1; dc++) {
         for (let dr = -1; dr <= 1; dr++) {
           this.pathfinder.setBlocked(col + dc, row + dr, true);

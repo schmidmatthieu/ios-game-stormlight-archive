@@ -123,8 +123,11 @@ export class UILayoutManager {
 
     const onMove = (e: FederatedPointerEvent) => {
       if (!dragging) return;
-      c.x = e.globalX - dragOffsetX;
-      c.y = e.globalY - dragOffsetY;
+      // Clamp to screen bounds during drag
+      const newX = e.globalX - dragOffsetX;
+      const newY = e.globalY - dragOffsetY;
+      c.x = Math.max(-20, Math.min(this.screenW - 10, newX));
+      c.y = Math.max(-20, Math.min(this.screenH - 10, newY));
     };
 
     const onUp = () => {
@@ -343,26 +346,37 @@ export class UILayoutManager {
     btn.cursor = 'pointer';
     btn.zIndex = 100001;
 
-    // Background
+    const btnSize = 38;
+    // Background — more visible with contrasting border
     const bg = new Graphics();
-    bg.roundRect(0, 0, 32, 32, 6)
-      .fill({ color: 0x1a1528, alpha: 0.85 })
-      .stroke({ color: 0x444466, width: 1 });
+    bg.roundRect(0, 0, btnSize, btnSize, 8)
+      .fill({ color: 0x1a1528, alpha: 0.9 })
+      .stroke({ color: 0x6688aa, width: 1.5 });
     btn.addChild(bg);
 
-    // Icon — grid/move icon
+    // Icon — move/grid icon, larger
     const icon = new Text({
       text: '⊞',
-      style: new TextStyle({ fontSize: 16, fill: 0xaaccff }),
+      style: new TextStyle({ fontSize: 20, fill: 0xaaccff }),
     });
     icon.anchor.set(0.5);
-    icon.x = 16;
-    icon.y = 16;
+    icon.x = btnSize / 2;
+    icon.y = btnSize / 2;
     btn.addChild(icon);
 
-    // Position: top-center
-    btn.x = screenW / 2 - 16;
-    btn.y = 4;
+    // Label below icon
+    const label = new Text({
+      text: 'UI',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: 0x8899bb }),
+    });
+    label.anchor.set(0.5, 0);
+    label.x = btnSize / 2;
+    label.y = btnSize + 1;
+    btn.addChild(label);
+
+    // Position: top-center, slightly lower to avoid notch
+    btn.x = screenW / 2 - btnSize / 2;
+    btn.y = 6;
 
     // Edit mode overlay (shown when active)
     let overlay: Container | null = null;
@@ -372,9 +386,9 @@ export class UILayoutManager {
 
       // Update button appearance
       bg.clear();
-      bg.roundRect(0, 0, 32, 32, 6)
-        .fill({ color: active ? 0x2a3548 : 0x1a1528, alpha: 0.85 })
-        .stroke({ color: active ? 0x44aaff : 0x444466, width: active ? 2 : 1 });
+      bg.roundRect(0, 0, btnSize, btnSize, 8)
+        .fill({ color: active ? 0x2a3548 : 0x1a1528, alpha: 0.9 })
+        .stroke({ color: active ? 0x44aaff : 0x6688aa, width: active ? 2 : 1.5 });
       icon.style.fill = active ? 0x44aaff : 0xaaccff;
 
       if (active) {
