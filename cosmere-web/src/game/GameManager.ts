@@ -1,5 +1,6 @@
 import type { Champion, ChampionClass, ChampionStats, RadiantOrder, MagicSystemType } from '../data/types';
-import { CLASS_INFO } from '../data/types';
+import { CLASS_INFO, UPGRADE_MAX_LEVEL, UPGRADE_COST_BASE } from '../data/types';
+import { ItemModStore } from './ItemModStore';
 import { gameData } from '../data/DataLoader';
 import { MagicSystemManager } from './magic/MagicSystemManager';
 import { TalentTreeSystem } from './TalentTreeSystem';
@@ -212,11 +213,56 @@ export class GameManager {
     return (this.champion?.baseStats.investiture ?? 10) * 8 + 30;
   }
 
+  // MARK: - Upgrade Items
+
+  static getUpgradeCost(itemID: string): { gold: number; maxed: boolean; currentLevel: number; maxLevel: number } {
+    const item = gameData.item(itemID);
+    if (!item) return { gold: 0, maxed: true, currentLevel: 0, maxLevel: 0 };
+    const lvl = item.itemLevel ?? 0;
+    const max = UPGRADE_MAX_LEVEL[item.rarity] ?? 3;
+    if (lvl >= max) return { gold: 0, maxed: true, currentLevel: lvl, maxLevel: max };
+    const base = UPGRADE_COST_BASE[item.rarity] ?? 10;
+    return { gold: base * (lvl + 1), maxed: false, currentLevel: lvl, maxLevel: max };
+  }
+
+  upgradeItem(itemID: string): boolean {
+    if (!this.champion) return false;
+    const item = gameData.item(itemID);
+    if (!item) return false;
+    const cost = GameManager.getUpgradeCost(itemID);
+    if (cost.maxed || this.champion.gold < cost.gold) return false;
+    this.champion.gold -= cost.gold;
+    item.itemLevel = (item.itemLevel ?? 0) + 1;
+    for (const b of item.statBonuses) b.value += 1;
+    ItemModStore.shared.recordUpgrade(itemID);
+    return true;
+  }
+
+  // MARK: - Bulk Operations
+
+  bulkSell(itemIDs: string[]): number {
+    if (!this.champion) return 0;
+    let totalGold = 0;
+    for (const id of itemIDs) totalGold += this.sellItem(id);
+    return totalGold;
+  }
+
+  bulkDisenchant(itemIDs: string[]): number {
+    if (!this.champion) return 0;
+    let totalEssence = 0;
+    for (const id of itemIDs) {
+      const r = this.disenchantItem(id);
+      if (r) totalEssence += r.amount;
+    }
+    return totalEssence;
+  }
+
   // MARK: - Save / Load
 
   save(): void {
     if (this.champion) {
       localStorage.setItem('cosmere_save', JSON.stringify(this.champion));
+      ItemModStore.shared.save();
     }
   }
 
@@ -230,6 +276,8 @@ export class GameManager {
         this.champion.radiantOrder ?? undefined,
       );
       this.talentSystem = TalentTreeSystem.load(this.champion.championClass);
+      ItemModStore.shared.load();
+      ItemModStore.shared.applyAll();
     }
     return true;
   }

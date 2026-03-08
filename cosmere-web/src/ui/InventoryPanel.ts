@@ -6,6 +6,8 @@ import { txt } from './InventoryConstants';
 import { renderEquipmentTab } from './InventoryEquipment';
 import { renderInventoryTab, showItemTooltip, usePotion } from './InventoryItemRenderer';
 import { renderSkillsTab } from './InventoryEquipment';
+import { createFilterState } from './InventoryFilters';
+import type { InventoryFilterState } from './InventoryFilters';
 
 export class InventoryPanel extends Container {
   private onClose: () => void;
@@ -21,6 +23,7 @@ export class InventoryPanel extends Container {
   private tabLabels: ReturnType<typeof txt>[] = [];
   private ca: { x: number; y: number; w: number; h: number } = { x: 0, y: 0, w: 0, h: 0 };
   private tooltip: Container | null = null;
+  filterState: InventoryFilterState = createFilterState();
 
   constructor(screenW: number, screenH: number, onClose: () => void) {
     super();
@@ -146,7 +149,7 @@ export class InventoryPanel extends Container {
     this.cc.y = this.scrollY;
   }
 
-  private refreshContent(): void {
+  refreshContent(): void {
     this.cc.removeChildren(); this.cc.y = 0; this.scrollY = 0;
     const { x, y, w, h } = this.ca;
     const showTT = (item: Item, slot: EquipmentSlot | string, ax: number, ay: number) => {
@@ -155,7 +158,8 @@ export class InventoryPanel extends Container {
     if (this.currentTab === 'equipment') {
       renderEquipmentTab(this.cc, x, y, w, h, this.layout, showTT);
     } else if (this.currentTab === 'inventory') {
-      renderInventoryTab(this.cc, x, y, w, h, this.layout, showTT, (id) => this.handleUsePotion(id));
+      renderInventoryTab(this.cc, x, y, w, h, this.layout, showTT,
+        (id) => this.handleUsePotion(id), this.filterState, () => this.refreshContent());
     } else {
       renderSkillsTab(this.cc, x, y, w, h, this.layout, () => this.refreshContent());
     }

@@ -16,6 +16,7 @@ const SAVE_KEYS: readonly string[] = [
   'cosmere_companions',
   'cosmere_npc_rel',
   'cosmere_professions',
+  'cosmere_item_mods',
   'minimap_position',
   'cosmere_tutorial',
 ] as const;

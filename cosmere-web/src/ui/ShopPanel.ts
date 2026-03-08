@@ -263,6 +263,7 @@ export function showShopPanel(
 
   const panel = new Container();
   panel.zIndex = 10000;
+  panel.sortableChildren = true;
   const layout = getLayoutInfo(screenW, screenH);
   const worldID = champ.currentWorldID ?? 'scadrial';
   const items = getShopItems(worldID, champ.level, champ.championClass);
@@ -324,15 +325,79 @@ export function showShopPanel(
   repLabel.y = py + scaled(46, layout);
   panel.addChild(repLabel);
 
-  // Scrollable item list
-  const contentY = py + scaled(58, layout);
-  const contentH = panelH - scaled(86, layout);
-  const rowH = scaled(42, layout);
-  const maxVisible = Math.floor(contentH / rowH);
+  // ─── Scroll navigation buttons (above content) ─────────────
+  const navH = scaled(22, layout);
+  const navY = py + scaled(56, layout);
   let scrollOffset = 0;
+
+  const navContainer = new Container();
+  navContainer.zIndex = 100;
+  panel.addChild(navContainer);
+
+  // ─── Scrollable item list (masked) ─────────────────────────
+  const contentY = navY + navH + scaled(4, layout);
+  const closeH = scaled(32, layout);
+  const contentH = panelH - (contentY - py) - closeH - scaled(8, layout);
+  const rowH = scaled(44, layout);
+  const maxVisible = Math.floor(contentH / rowH);
 
   const contentContainer = new Container();
   panel.addChild(contentContainer);
+
+  // Clip mask so items never overflow into nav or close button
+  const clipMask = new Graphics();
+  clipMask.rect(px, contentY, panelW, contentH).fill(0xffffff);
+  panel.addChild(clipMask);
+  contentContainer.mask = clipMask;
+
+  function renderNav(): void {
+    navContainer.removeChildren();
+    const canUp = scrollOffset > 0;
+    const canDown = scrollOffset + maxVisible < items.length;
+    const totalPages = Math.ceil(items.length / maxVisible);
+    const currentPage = Math.floor(scrollOffset / maxVisible) + 1;
+
+    // Up button
+    const upBtnW = scaled(50, layout);
+    const upBtn = new Graphics();
+    upBtn.roundRect(px + 8, navY, upBtnW, navH, 4)
+      .fill({ color: canUp ? 0x222233 : 0x111122, alpha: 0.8 })
+      .stroke({ color: canUp ? 0x666688 : 0x333344, width: 1 });
+    upBtn.eventMode = 'static';
+    upBtn.cursor = canUp ? 'pointer' : 'default';
+    if (canUp) upBtn.on('pointerdown', () => { scrollOffset = Math.max(0, scrollOffset - maxVisible); renderAll(); });
+    navContainer.addChild(upBtn);
+    const upLabel = new Text({
+      text: '\u25B2 Haut',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: canUp ? UI_COLORS.textSecondary : 0x444444 }),
+    });
+    upLabel.anchor.set(0.5); upLabel.x = px + 8 + upBtnW / 2; upLabel.y = navY + navH / 2;
+    navContainer.addChild(upLabel);
+
+    // Page indicator
+    const pageText = new Text({
+      text: `${currentPage}/${totalPages}`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textMuted }),
+    });
+    pageText.anchor.set(0.5); pageText.x = screenW / 2; pageText.y = navY + navH / 2;
+    navContainer.addChild(pageText);
+
+    // Down button
+    const downBtn = new Graphics();
+    downBtn.roundRect(px + panelW - upBtnW - 8, navY, upBtnW, navH, 4)
+      .fill({ color: canDown ? 0x222233 : 0x111122, alpha: 0.8 })
+      .stroke({ color: canDown ? 0x666688 : 0x333344, width: 1 });
+    downBtn.eventMode = 'static';
+    downBtn.cursor = canDown ? 'pointer' : 'default';
+    if (canDown) downBtn.on('pointerdown', () => { scrollOffset += maxVisible; renderAll(); });
+    navContainer.addChild(downBtn);
+    const downLabel = new Text({
+      text: '\u25BC Bas',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: canDown ? UI_COLORS.textSecondary : 0x444444 }),
+    });
+    downLabel.anchor.set(0.5); downLabel.x = px + panelW - 8 - upBtnW / 2; downLabel.y = navY + navH / 2;
+    navContainer.addChild(downLabel);
+  }
 
   function renderItems(): void {
     contentContainer.removeChildren();
@@ -374,18 +439,29 @@ export function showShopPanel(
         style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textMuted }),
       });
       descText.x = px + 30;
-      descText.y = iy + 18;
+      descText.y = iy + 20;
       contentContainer.addChild(descText);
 
-      // Cost (with discount applied)
-      const costLabel = discount > 0 ? `${finalCost} or (-${Math.round(discount * 100)}%)` : `${finalCost} or`;
+      // Cost (with discount applied) — buy button style
+      const costBtnW = scaled(64, layout);
+      const costBtnH = scaled(20, layout);
+      const costBtnX = px + panelW - costBtnW - 12;
+      const costBtnY = iy + (rowH - costBtnH) / 2 - 2;
+
+      const costBtn = new Graphics();
+      costBtn.roundRect(costBtnX, costBtnY, costBtnW, costBtnH, 4)
+        .fill({ color: canBuy ? 0x332211 : 0x1a1111, alpha: 0.8 })
+        .stroke({ color: canBuy ? 0xcc9933 : 0x553333, width: 1 });
+      contentContainer.addChild(costBtn);
+
+      const costLabel = `${finalCost}g`;
       const costText = new Text({
         text: costLabel,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: canBuy ? 0xe6cc33 : 0x884444, fontWeight: 'bold' }),
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: canBuy ? 0xe6cc33 : 0x884444, fontWeight: 'bold' }),
       });
-      costText.anchor.set(1, 0.5);
-      costText.x = px + panelW - 16;
-      costText.y = iy + (rowH - 4) / 2;
+      costText.anchor.set(0.5);
+      costText.x = costBtnX + costBtnW / 2;
+      costText.y = costBtnY + costBtnH / 2;
       contentContainer.addChild(costText);
 
       if (canBuy) {
@@ -393,49 +469,24 @@ export function showShopPanel(
           applyShopEffect(champ!, item, discount);
           goldLabel.text = `Or : ${champ!.gold}`;
           showFloatingText(playerPos.x, playerPos.y - 40, `${item.name} acheté!`, rarityColor);
-          renderItems();
+          renderAll();
         });
       }
     });
-
-    // Scroll indicators
-    if (scrollOffset > 0) {
-      const upArrow = new Text({
-        text: '▲ Plus',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary }),
-      });
-      upArrow.anchor.set(0.5);
-      upArrow.x = screenW / 2;
-      upArrow.y = contentY - 8;
-      upArrow.eventMode = 'static';
-      upArrow.cursor = 'pointer';
-      upArrow.on('pointerdown', () => { scrollOffset = Math.max(0, scrollOffset - maxVisible); renderItems(); });
-      contentContainer.addChild(upArrow);
-    }
-    if (scrollOffset + maxVisible < items.length) {
-      const downArrow = new Text({
-        text: '▼ Plus',
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: UI_COLORS.textSecondary }),
-      });
-      downArrow.anchor.set(0.5);
-      downArrow.x = screenW / 2;
-      downArrow.y = contentY + contentH + 2;
-      downArrow.eventMode = 'static';
-      downArrow.cursor = 'pointer';
-      downArrow.on('pointerdown', () => { scrollOffset += maxVisible; renderItems(); });
-      contentContainer.addChild(downArrow);
-    }
   }
 
-  renderItems();
+  function renderAll(): void { renderNav(); renderItems(); }
+  renderAll();
 
-  // Close button
+  // Close button (fixed at bottom, never overlapped)
+  const closeBtnY = py + panelH - closeH - scaled(4, layout);
   const closeBtn = new Graphics();
-  closeBtn.roundRect(px + panelW / 2 - 40, py + panelH - scaled(30, layout), 80, scaled(24, layout), 6)
+  closeBtn.roundRect(px + panelW / 2 - 40, closeBtnY, 80, closeH - 4, 6)
     .fill({ color: UI_COLORS.btnDanger, alpha: UI_ALPHA.buttonBg })
     .stroke({ color: UI_COLORS.danger, width: 1 });
   closeBtn.eventMode = 'static';
   closeBtn.cursor = 'pointer';
+  closeBtn.zIndex = 200;
   closeBtn.on('pointerdown', onClose);
   panel.addChild(closeBtn);
 
@@ -445,7 +496,8 @@ export function showShopPanel(
   });
   closeLabel.anchor.set(0.5);
   closeLabel.x = px + panelW / 2;
-  closeLabel.y = py + panelH - scaled(18, layout);
+  closeLabel.y = closeBtnY + (closeH - 4) / 2;
+  closeLabel.zIndex = 201;
   panel.addChild(closeLabel);
 
   uiContainer.addChild(panel);
