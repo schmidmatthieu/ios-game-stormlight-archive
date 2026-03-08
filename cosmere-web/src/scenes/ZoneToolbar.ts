@@ -15,6 +15,7 @@ export interface ToolbarCallbacks {
   toggleCompanion: () => void;
   toggleQuestJournal: () => void;
   toggleProfessions?: () => void;
+  spawnWave?: () => void;
 }
 
 interface ToolbarEntry {
@@ -108,6 +109,10 @@ export function createZoneToolbar(
 
   if (cb.toggleProfessions) {
     entries.push({ icon: '⛏', label: 'MÉTIERS', color: 0xaa8855, action: cb.toggleProfessions });
+  }
+
+  if (cb.spawnWave) {
+    entries.push({ icon: '\u2694', label: 'VAGUE', color: 0xee5544, action: cb.spawnWave });
   }
 
   entries.push({ icon: '🏆', label: 'SUCCÈS', color: 0xddaa44, action: cb.toggleAchievements });

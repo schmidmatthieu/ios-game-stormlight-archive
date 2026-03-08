@@ -104,6 +104,8 @@ const STORAGE_KEY = 'cosmere_companions';
 export interface CompanionState {
   activeCompanionID: string | null;
   unlockedIDs: string[];
+  worldKills: Record<string, number>;
+  worldBossKills: Record<string, number>;
 }
 
 export class CompanionManager {
@@ -115,6 +117,8 @@ export class CompanionManager {
 
   activeCompanionID: string | null = null;
   unlockedIDs: string[] = [];
+  worldKills: Record<string, number> = {};
+  worldBossKills: Record<string, number> = {};
 
   // Unlock companions based on world visit (basic unlock for defaults)
   checkWorldUnlocks(worldID: string): void {
@@ -127,6 +131,33 @@ export class CompanionManager {
     if (!this.activeCompanionID && this.unlockedIDs.length > 0) {
       this.activeCompanionID = this.unlockedIDs[0];
     }
+  }
+
+  /** Track an enemy kill and check conditional companion unlocks.
+   *  Returns the companion name if a new one was unlocked, null otherwise. */
+  recordKill(worldID: string, isBoss: boolean): string | null {
+    this.worldKills[worldID] = (this.worldKills[worldID] ?? 0) + 1;
+    if (isBoss) {
+      this.worldBossKills[worldID] = (this.worldBossKills[worldID] ?? 0) + 1;
+    }
+
+    // Check conditional unlocks
+    // cryptic: 10 kills on Roshar
+    if (worldID === 'roshar' && (this.worldKills[worldID] ?? 0) >= 10) {
+      if (this.unlockCompanion('cryptic')) {
+        this.save();
+        return COMPANIONS.find(c => c.id === 'cryptic')?.name ?? null;
+      }
+    }
+    // steelpushling: 1 boss kill on Scadrial
+    if (worldID === 'scadrial' && isBoss) {
+      if (this.unlockCompanion('steelpushling')) {
+        this.save();
+        return COMPANIONS.find(c => c.id === 'steelpushling')?.name ?? null;
+      }
+    }
+
+    return null;
   }
 
   unlockCompanion(id: string): boolean {
@@ -159,6 +190,8 @@ export class CompanionManager {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       activeCompanionID: this.activeCompanionID,
       unlockedIDs: this.unlockedIDs,
+      worldKills: this.worldKills,
+      worldBossKills: this.worldBossKills,
     }));
   }
 
@@ -169,6 +202,8 @@ export class CompanionManager {
       const data = JSON.parse(raw);
       this.activeCompanionID = data.activeCompanionID ?? null;
       this.unlockedIDs = data.unlockedIDs ?? [];
+      this.worldKills = data.worldKills ?? {};
+      this.worldBossKills = data.worldBossKills ?? {};
     } catch { /* ignore */ }
   }
 }
