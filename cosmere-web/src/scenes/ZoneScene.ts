@@ -843,7 +843,14 @@ export class ZoneScene extends Container implements GameScene {
 
   private togglePause(): void {
     const h = this.panelHost;
-    this.pauseMenu = togglePauseModule(h, this.pauseMenu);
+    this.pauseMenu = togglePauseModule(h, this.pauseMenu, () => {
+      // Resume callback: destroy menu and unpause
+      if (this.pauseMenu) {
+        this.pauseMenu.destroy({ children: true });
+        this.pauseMenu = null;
+      }
+      this.isPaused = false;
+    });
     this.isPaused = h.isPaused;
   }
 

@@ -81,8 +81,9 @@ export class HUD extends Container {
     // Level
     this.levelText = new Text({
       text: 'Nv.1',
-      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(15, this.layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
+      style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(12, this.layout), fill: UI_COLORS.textGold, fontWeight: 'bold' }),
     });
+    this.levelText.anchor.set(0.5, 0.5);
     this.addChild(this.levelText);
 
     // Level up glow effect
@@ -175,7 +176,7 @@ export class HUD extends Container {
     const smallRadius = scaled(5, this.layout);
 
     // Update font sizes
-    this.levelText.style.fontSize = fontSize(15, this.layout);
+    this.levelText.style.fontSize = fontSize(12, this.layout);
     this.hpIcon.style.fontSize = fontSize(8, this.layout);
     this.invIcon.style.fontSize = fontSize(8, this.layout);
     this.hpText.style.fontSize = fontSize(9, this.layout);
@@ -207,10 +208,6 @@ export class HUD extends Container {
         .stroke({ color: UI_COLORS.borderSubtle, width: 1.5, alpha: UI_ALPHA.panelBorder });
     }
 
-    // Level position
-    this.levelText.x = leftX + scaled(2, this.layout);
-    this.levelText.y = topY;
-
     // HP positions
     const hpY = topY + scaled(2, this.layout);
     this.hpIcon.x = barStartX - scaled(16, this.layout);
@@ -223,6 +220,11 @@ export class HUD extends Container {
     this.hpBg.roundRect(barStartX, hpY, this.barWidth, this.barHeight, smallRadius)
       .fill({ color: 0x1a0a0a, alpha: UI_ALPHA.barBg })
       .stroke({ color: 0x332222, width: 0.8 });
+
+    // Level position — centered in left gutter, vertically between HP and INV bars
+    const gutterCenterX = leftX + (barStartX - scaled(18, this.layout) - leftX) / 2;
+    this.levelText.x = gutterCenterX;
+    this.levelText.y = hpY + barSpacing / 2;
 
     // Investiture positions
     const invY = hpY + barSpacing;

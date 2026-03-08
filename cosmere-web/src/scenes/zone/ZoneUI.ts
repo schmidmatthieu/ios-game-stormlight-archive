@@ -131,7 +131,7 @@ export function toggleQuestJournal(host: PanelHost): void {
   );
 }
 
-export function togglePause(host: PanelHost, pauseMenu: Container | null): Container | null {
+export function togglePause(host: PanelHost, pauseMenu: Container | null, onResumed: () => void): Container | null {
   if (pauseMenu) {
     pauseMenu.destroy({ children: true });
     host.isPaused = false;
@@ -140,7 +140,7 @@ export function togglePause(host: PanelHost, pauseMenu: Container | null): Conta
   host.isPaused = true;
   return showPauseMenu(
     host.uiContainer, host.screenWidth, host.screenHeight,
-    () => { /* re-toggle via caller */ },
+    () => { onResumed(); },
     (x, y, msg, color) => host.showFloatingText(x, y, msg, color),
     host.playerScreenPos,
     () => {
