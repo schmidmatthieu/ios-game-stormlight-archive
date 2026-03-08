@@ -204,6 +204,52 @@ export class SaveManager {
     this.saveToSlot(0);
   }
 
+  downloadSaveFile(): void {
+    const save = this.buildUnifiedSave();
+    const json = JSON.stringify(save, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().slice(0, 10);
+    a.download = `cosmere-save-${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  uploadSaveFile(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) { resolve(false); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const save: UnifiedSave = JSON.parse(reader.result as string);
+            if (typeof save.version !== 'number' || typeof save.data !== 'object') {
+              resolve(false);
+              return;
+            }
+            this.distributeData(save.data);
+            localStorage.setItem(UNIFIED_KEY, JSON.stringify(save));
+            resolve(true);
+          } catch {
+            resolve(false);
+          }
+        };
+        reader.onerror = () => resolve(false);
+        reader.readAsText(file);
+      };
+      input.oncancel = () => resolve(false);
+      input.click();
+    });
+  }
+
   hasSaveData(): boolean {
     if (localStorage.getItem(UNIFIED_KEY) !== null) {
       return true;
