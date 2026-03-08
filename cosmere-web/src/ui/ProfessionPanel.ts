@@ -3,6 +3,8 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { getLayoutInfo, fontSize, scaled, panelSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import { ProfessionManager, MATERIALS, RECIPES } from '../game/ProfessionSystem';
+import { GameManager } from '../game/GameManager';
+import { gameData } from '../data/DataLoader';
 import type { ProfessionType, CraftingRecipe } from '../game/ProfessionSystem';
 
 // ─── Rarity Colors ───────────────────────────────────────────────
@@ -65,11 +67,12 @@ export function showProfessionPanel(
   title.y = py + 10;
   panel.addChild(title);
 
-  // Tabs: Professions | Materiaux | Recettes
+  // Tabs: Professions | Materiaux | Recettes | Désenchanter
   const tabs = [
     { label: 'Professions', id: 'prof' },
     { label: 'Materiaux', id: 'mats' },
     { label: 'Recettes', id: 'recipes' },
+    { label: 'Désencht.', id: 'disench' },
   ];
   let activeTab = 'prof';
 
@@ -111,7 +114,8 @@ export function showProfessionPanel(
     contentContainer.removeChildren();
     if (activeTab === 'prof') renderProfessions();
     else if (activeTab === 'mats') renderMaterials();
-    else renderRecipes();
+    else if (activeTab === 'recipes') renderRecipes();
+    else renderDisenchant();
   }
 
   // ─── Professions Tab ──────────────────────────────────────────
@@ -334,6 +338,116 @@ export function showProfessionPanel(
         });
       }
     });
+  }
+
+  // ─── Disenchant Tab ─────────────────────────────────────────────
+
+  function renderDisenchant(): void {
+    const startY = tabY + 34;
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
+
+    // Get non-equipped inventory items
+    const eq = champ.equipment;
+    const equippedIDs = new Set([eq.mainWeapon, eq.offhand, eq.helmet, eq.chest, eq.shoulders, eq.gloves, eq.boots, eq.legs, eq.cape, eq.belt, eq.ring1, eq.ring2, eq.amulet].filter(Boolean));
+    const items = champ.inventoryItemIDs.filter(id => !equippedIDs.has(id));
+
+    // Deduplicate (show unique items with count)
+    const itemCounts = new Map<string, number>();
+    for (const id of items) itemCounts.set(id, (itemCounts.get(id) ?? 0) + 1);
+
+    if (itemCounts.size === 0) {
+      const emptyText = new Text({
+        text: 'Aucun objet à désenchanter.\nLes objets équipés ne peuvent pas\nêtre désenchantés.',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(10, layout), fill: UI_COLORS.textMuted, align: 'center' }),
+      });
+      emptyText.anchor.set(0.5);
+      emptyText.x = screenW / 2;
+      emptyText.y = startY + 50;
+      contentContainer.addChild(emptyText);
+      return;
+    }
+
+    const itemH = 42;
+    const maxItems = Math.floor((panelH - 90) / itemH);
+    let idx = 0;
+
+    for (const [itemID, count] of itemCounts) {
+      if (idx >= maxItems) break;
+      const item = gameData.item(itemID);
+      if (!item) continue;
+
+      const iy = startY + idx * itemH;
+      const rarityColor = RARITY_COLORS[item.rarity as string] ?? 0xaaaaaa;
+
+      // Row
+      const rowBg = new Graphics();
+      rowBg.roundRect(px + 10, iy, panelW - 20, itemH - 4, 6)
+        .fill({ color: 0x111122, alpha: 0.6 })
+        .stroke({ color: rarityColor, width: 1, alpha: 0.3 });
+      contentContainer.addChild(rowBg);
+
+      // Item name + rarity
+      const nameText = new Text({
+        text: `${item.name}${count > 1 ? ` x${count}` : ''}`,
+        style: new TextStyle({ fontFamily: 'Georgia, serif', fontSize: fontSize(10, layout), fill: rarityColor, fontWeight: 'bold' }),
+      });
+      nameText.x = px + 18;
+      nameText.y = iy + 4;
+      contentContainer.addChild(nameText);
+
+      // Preview materials
+      const rarity = item.rarity as string;
+      const base = rarity === 'common' ? 1 : rarity === 'uncommon' ? 2 : rarity === 'rare' ? 3 : rarity === 'epic' ? 5 : rarity === 'legendary' ? 8 : 12;
+      let preview = `→ ${base}x Poudre Arcane`;
+      if (['rare', 'epic', 'legendary', 'cosmeric'].includes(rarity)) {
+        const c = rarity === 'rare' ? 1 : rarity === 'epic' ? 2 : rarity === 'legendary' ? 3 : 5;
+        preview += `, ${c}x Cristal`;
+      }
+      if (['epic', 'legendary', 'cosmeric'].includes(rarity)) {
+        const s = rarity === 'epic' ? 1 : rarity === 'legendary' ? 2 : 4;
+        preview += `, ${s}x Sable`;
+      }
+
+      const previewText = new Text({
+        text: preview,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(7, layout), fill: UI_COLORS.textSecondary }),
+      });
+      previewText.x = px + 18;
+      previewText.y = iy + 20;
+      contentContainer.addChild(previewText);
+
+      // Disenchant button
+      const btnW = scaled(68, layout);
+      const btnH = scaled(22, layout);
+      const btnX = px + panelW - btnW - 16;
+      const btnY = iy + 10;
+
+      const disBtn = new Graphics();
+      disBtn.roundRect(btnX, btnY, btnW, btnH, 4)
+        .fill({ color: 0x442244, alpha: 0.8 })
+        .stroke({ color: 0x7744cc, width: 1, alpha: 0.6 });
+      disBtn.eventMode = 'static';
+      disBtn.cursor = 'pointer';
+      contentContainer.addChild(disBtn);
+
+      const disLabel = new Text({
+        text: 'Désencht.',
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: 0xcc88ff }),
+      });
+      disLabel.anchor.set(0.5);
+      disLabel.x = btnX + btnW / 2;
+      disLabel.y = btnY + btnH / 2;
+      contentContainer.addChild(disLabel);
+
+      disBtn.on('pointerdown', () => {
+        mgr.disenchant(itemID);
+        mgr.save();
+        renderContent();
+      });
+
+      idx++;
+    }
   }
 
   // ─── Close Button ─────────────────────────────────────────────
