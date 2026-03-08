@@ -15,6 +15,8 @@ import { CLASS_INFO } from '../data/types';
 import { getLayoutInfo, fontSize, scaled, panelRadius, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import { MusicManager } from '../game/MusicSystem';
+import { CloudSaveManager } from '../game/CloudSaveManager';
+import { showAuthPanel, createUserWidget } from '../ui/AuthPanel';
 
 const SHOWCASE_CLASSES: ChampionClass[] = ['mistborn', 'radiant', 'awakener', 'elantrian', 'sandMaster', 'nightmarePainter'];
 
@@ -244,6 +246,24 @@ export class MainMenuScene extends Container implements GameScene {
     ver.x = w / 2;
     ver.y = h - scaled(15, layout);
     this.addChild(ver);
+
+    // User auth widget (top-right)
+    const userWidget = createUserWidget(
+      w, h,
+      () => {
+        // Show login panel
+        showAuthPanel(this, w, h,
+          () => { this.onResize(); }, // onClose: rebuild UI
+          () => { this.onResize(); }, // onSuccess: rebuild UI to show username
+        );
+      },
+      () => {
+        // Logout
+        CloudSaveManager.shared.logout();
+        this.onResize();
+      },
+    );
+    this.addChild(userWidget);
   }
 
   private updateShowcase(layout?: LayoutInfo): void {
