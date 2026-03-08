@@ -4,6 +4,7 @@ import { BestiaryManager } from '../game/BestiarySystem';
 import { AchievementManager } from '../game/AchievementSystem';
 import { CompanionManager } from '../game/CompanionSystem';
 import { NPCRelationshipManager } from '../game/NPCRelationships';
+import { SaveManager } from '../game/SaveManager';
 import { getLayoutInfo, fontSize, scaled, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
@@ -28,7 +29,7 @@ export function showPauseMenu(
   const panelW = Math.min(scaled(220, layout), screenW - 40);
   const btnH = buttonHeight(layout);
   const btnSpacing = btnH + scaled(12, layout);
-  const buttonCount = onWorldMap ? 4 : 3;
+  const buttonCount = (onWorldMap ? 4 : 3) + 2; // +2 for export/import
   const panelH = scaled(60, layout) + buttonCount * btnSpacing;
   const px = (screenW - panelW) / 2;
   const py = (screenH - panelH) / 2;
@@ -68,15 +69,43 @@ export function showPauseMenu(
     },
   ];
 
+  let nextIdx = 2;
+
+  buttons.push({
+    label: '⬇ Exporter sauvegarde', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x2a3a50,
+    action: () => {
+      GameManager.shared.save();
+      SaveManager.shared.downloadSaveFile();
+      showFloatingText(playerPos.x, playerPos.y - 40, 'Sauvegarde exportée!', UI_COLORS.success);
+    },
+  });
+  nextIdx++;
+
+  buttons.push({
+    label: '⬆ Importer sauvegarde', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x2a3a50,
+    action: () => {
+      SaveManager.shared.uploadSaveFile().then((ok) => {
+        if (ok) {
+          showFloatingText(playerPos.x, playerPos.y - 40, 'Sauvegarde importée! Rechargement...', UI_COLORS.success);
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          showFloatingText(playerPos.x, playerPos.y - 40, 'Fichier invalide', UI_COLORS.btnDanger);
+        }
+      });
+    },
+  });
+  nextIdx++;
+
   if (onWorldMap) {
     buttons.push({
-      label: 'Carte du Cosmere', y: py + scaled(60, layout) + btnSpacing * 2, color: 0x1a2840,
+      label: 'Carte du Cosmere', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x1a2840,
       action: onWorldMap,
     });
+    nextIdx++;
   }
 
   buttons.push({
-    label: 'Quitter', y: py + scaled(60, layout) + btnSpacing * (onWorldMap ? 3 : 2), color: UI_COLORS.btnDanger,
+    label: 'Quitter', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: UI_COLORS.btnDanger,
     action: () => {
       GameManager.shared.save();
       BestiaryManager.shared.save();
