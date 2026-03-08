@@ -55,6 +55,7 @@ export interface InteractionHost {
   checkQuestCompletion: () => void;
   collectLoot: (id: string) => void;
   gotoZoneScene: () => void;
+  onCloseDialogue: () => void;
 }
 
 // ─── Handle Interaction ─────────────────────────────────────────
@@ -296,7 +297,7 @@ export function showDialogueUI(npcID: string, _dialogueTreeID: string | null, ho
 
   host.dialoguePanel = showDialoguePanel(
     host.uiContainer, host.screenWidth, host.screenHeight,
-    host.zone.worldID, npcName, () => closeDialogue(host),
+    host.zone.worldID, npcName, () => host.onCloseDialogue(),
   );
 }
 
@@ -319,7 +320,7 @@ export function showShopUI(host: InteractionHost): void {
   host.isPaused = true;
   host.dialoguePanel = showShopPanel(
     host.uiContainer, host.screenWidth, host.screenHeight,
-    () => closeDialogue(host),
+    () => host.onCloseDialogue(),
     (x, y, msg, color) => host.showFloatingText(x, y, msg, color),
     host.playerScreenPos,
   );
