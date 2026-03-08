@@ -2,6 +2,7 @@
 
 import { GameManager } from './GameManager';
 import { gameData } from '../data/DataLoader';
+import type { EquipmentSlot } from '../data/types';
 
 export type ProfessionType = 'mining' | 'herbalism' | 'woodcutting' | 'skinning' | 'enchanting';
 
@@ -121,56 +122,135 @@ const WORLD_LOOT: Record<string, Partial<Record<ProfessionType, string[]>>> = {
 // ─── Recipes ─────────────────────────────────────────────────────
 
 export const RECIPES: CraftingRecipe[] = [
-  // Herbalism potions
+  // ── Herbalism — potions & elixirs (every ~5 levels) ──────────
   { id: 'potion_soin', name: 'Potion de Soin', profession: 'herbalism', requiredLevel: 1,
     materials: [{ materialID: 'herbe_soins', amount: 3 }],
     result: { type: 'potion', itemID: 'potion_soin', amount: 1 } },
   { id: 'potion_investiture', name: 'Potion d\'Investiture', profession: 'herbalism', requiredLevel: 5,
     materials: [{ materialID: 'herbe_soins', amount: 2 }, { materialID: 'racine_orage', amount: 1 }],
     result: { type: 'potion', itemID: 'potion_investiture', amount: 1 } },
-  { id: 'elixir_vitalite', name: 'Elixir de Vitalite', profession: 'herbalism', requiredLevel: 15,
+  { id: 'potion_soin_ii', name: 'Grande Potion de Soin', profession: 'herbalism', requiredLevel: 10,
+    materials: [{ materialID: 'herbe_soins', amount: 5 }, { materialID: 'racine_orage', amount: 1 }],
+    result: { type: 'potion', itemID: 'potion_soin_ii', amount: 1 } },
+  { id: 'elixir_vitalite', name: 'Élixir de Vitalité', profession: 'herbalism', requiredLevel: 15,
     materials: [{ materialID: 'fleur_nalthis', amount: 2 }, { materialID: 'herbe_soins', amount: 3 }],
     result: { type: 'potion', itemID: 'elixir_vitalite', amount: 1 } },
-  { id: 'elixir_supreme', name: 'Elixir Supreme', profession: 'herbalism', requiredLevel: 40,
+  { id: 'potion_investiture_ii', name: 'Grande Potion d\'Investiture', profession: 'herbalism', requiredLevel: 20,
+    materials: [{ materialID: 'racine_orage', amount: 3 }, { materialID: 'fleur_nalthis', amount: 1 }],
+    result: { type: 'potion', itemID: 'potion_investiture_ii', amount: 1 } },
+  { id: 'elixir_orage', name: 'Élixir d\'Orage', profession: 'herbalism', requiredLevel: 25,
+    materials: [{ materialID: 'racine_orage', amount: 3 }, { materialID: 'mousse_shadesmar', amount: 1 }],
+    result: { type: 'potion', itemID: 'elixir_orage', amount: 1 } },
+  { id: 'elixir_cosmos', name: 'Élixir Cosmique', profession: 'herbalism', requiredLevel: 30,
+    materials: [{ materialID: 'mousse_shadesmar', amount: 2 }, { materialID: 'fleur_nalthis', amount: 2 }],
+    result: { type: 'potion', itemID: 'elixir_cosmos', amount: 1 } },
+  { id: 'potion_soin_iii', name: 'Potion de Soin Majeure', profession: 'herbalism', requiredLevel: 35,
+    materials: [{ materialID: 'lotus_investiture', amount: 1 }, { materialID: 'herbe_soins', amount: 5 }],
+    result: { type: 'potion', itemID: 'potion_soin_iii', amount: 1 } },
+  { id: 'elixir_supreme', name: 'Élixir Suprême', profession: 'herbalism', requiredLevel: 40,
     materials: [{ materialID: 'lotus_investiture', amount: 1 }, { materialID: 'fleur_nalthis', amount: 2 }, { materialID: 'mousse_shadesmar', amount: 2 }],
     result: { type: 'potion', itemID: 'elixir_supreme', amount: 1 } },
-  // Mining equipment
+  { id: 'elixir_divin', name: 'Élixir Divin', profession: 'herbalism', requiredLevel: 50,
+    materials: [{ materialID: 'lotus_investiture', amount: 2 }, { materialID: 'mousse_shadesmar', amount: 3 }],
+    result: { type: 'potion', itemID: 'elixir_divin', amount: 1 } },
+
+  // ── Mining — weapons & armor (every ~5-8 levels) ──────────────
   { id: 'lingot_acier', name: 'Lingot d\'Acier', profession: 'mining', requiredLevel: 1,
     materials: [{ materialID: 'minerai_fer', amount: 4 }],
     result: { type: 'equipment', itemID: 'lingot_acier', amount: 1 } },
+  { id: 'dague_fer', name: 'Dague de Fer', profession: 'mining', requiredLevel: 5,
+    materials: [{ materialID: 'minerai_fer', amount: 3 }, { materialID: 'minerai_acier', amount: 1 }],
+    result: { type: 'equipment', itemID: 'dague_fer', amount: 1 } },
   { id: 'lame_pewter', name: 'Lame de Pewter', profession: 'mining', requiredLevel: 10,
     materials: [{ materialID: 'minerai_pewter', amount: 3 }, { materialID: 'minerai_fer', amount: 2 }],
     result: { type: 'equipment', itemID: 'lame_pewter', amount: 1 } },
+  { id: 'casque_acier', name: 'Casque d\'Acier', profession: 'mining', requiredLevel: 15,
+    materials: [{ materialID: 'minerai_acier', amount: 4 }, { materialID: 'minerai_fer', amount: 2 }],
+    result: { type: 'equipment', itemID: 'casque_acier', amount: 1 } },
+  { id: 'epee_acier', name: 'Épée d\'Acier Renforcé', profession: 'mining', requiredLevel: 20,
+    materials: [{ materialID: 'minerai_acier', amount: 5 }, { materialID: 'minerai_pewter', amount: 2 }],
+    result: { type: 'equipment', itemID: 'epee_acier', amount: 1 } },
   { id: 'bouclier_gemme', name: 'Bouclier de Gemme', profession: 'mining', requiredLevel: 25,
     materials: [{ materialID: 'gemme_lumiere', amount: 2 }, { materialID: 'minerai_acier', amount: 3 }],
     result: { type: 'equipment', itemID: 'bouclier_gemme', amount: 1 } },
+  { id: 'plastron_acier', name: 'Plastron d\'Acier Supérieur', profession: 'mining', requiredLevel: 30,
+    materials: [{ materialID: 'minerai_acier', amount: 6 }, { materialID: 'gemme_lumiere', amount: 1 }],
+    result: { type: 'equipment', itemID: 'plastron_acier', amount: 1 } },
+  { id: 'lame_gemme', name: 'Lame de Gemcœur', profession: 'mining', requiredLevel: 40,
+    materials: [{ materialID: 'gemme_lumiere', amount: 3 }, { materialID: 'minerai_pewter', amount: 3 }],
+    result: { type: 'equipment', itemID: 'lame_gemme', amount: 1 } },
   { id: 'arme_atium', name: 'Arme d\'Atium', profession: 'mining', requiredLevel: 50,
     materials: [{ materialID: 'minerai_atium', amount: 3 }, { materialID: 'minerai_acier', amount: 5 }],
     result: { type: 'equipment', itemID: 'arme_atium', amount: 1 } },
-  // Woodcutting
+
+  // ── Woodcutting — bows, staves, shields (every ~8 levels) ─────
   { id: 'arc_simple', name: 'Arc Simple', profession: 'woodcutting', requiredLevel: 1,
     materials: [{ materialID: 'bois_commun', amount: 5 }],
     result: { type: 'equipment', itemID: 'arc_simple', amount: 1 } },
-  { id: 'baton_coquebois', name: 'Baton de Coquebois', profession: 'woodcutting', requiredLevel: 15,
+  { id: 'bouclier_bois', name: 'Bouclier en Bois', profession: 'woodcutting', requiredLevel: 8,
+    materials: [{ materialID: 'bois_commun', amount: 6 }],
+    result: { type: 'equipment', itemID: 'bouclier_bois', amount: 1 } },
+  { id: 'baton_coquebois', name: 'Bâton de Coquebois', profession: 'woodcutting', requiredLevel: 15,
     materials: [{ materialID: 'bois_roshar', amount: 3 }, { materialID: 'bois_commun', amount: 2 }],
     result: { type: 'equipment', itemID: 'baton_coquebois', amount: 1 } },
-  // Skinning
+  { id: 'arc_roshar', name: 'Arc de Coquebois', profession: 'woodcutting', requiredLevel: 22,
+    materials: [{ materialID: 'bois_roshar', amount: 5 }],
+    result: { type: 'equipment', itemID: 'arc_roshar', amount: 1 } },
+  { id: 'lance_petrifie', name: 'Lance Pétrifiée', profession: 'woodcutting', requiredLevel: 30,
+    materials: [{ materialID: 'bois_petrifie', amount: 3 }, { materialID: 'bois_roshar', amount: 2 }],
+    result: { type: 'equipment', itemID: 'lance_petrifie', amount: 1 } },
+  { id: 'baton_ancien', name: 'Bâton Ancien', profession: 'woodcutting', requiredLevel: 40,
+    materials: [{ materialID: 'bois_petrifie', amount: 4 }, { materialID: 'bois_roshar', amount: 3 }],
+    result: { type: 'equipment', itemID: 'baton_ancien', amount: 1 } },
+
+  // ── Skinning — armor & capes (every ~8 levels) ────────────────
   { id: 'armure_cuir', name: 'Armure de Cuir', profession: 'skinning', requiredLevel: 1,
     materials: [{ materialID: 'cuir_brut', amount: 5 }],
     result: { type: 'equipment', itemID: 'armure_cuir', amount: 1 } },
-  { id: 'plastron_crustace', name: 'Plastron de Crustace', profession: 'skinning', requiredLevel: 20,
+  { id: 'bottes_cuir', name: 'Bottes de Cuir', profession: 'skinning', requiredLevel: 8,
+    materials: [{ materialID: 'cuir_brut', amount: 4 }],
+    result: { type: 'equipment', itemID: 'bottes_cuir', amount: 1 } },
+  { id: 'gantelets_cuir', name: 'Gantelets de Cuir Renforcé', profession: 'skinning', requiredLevel: 15,
+    materials: [{ materialID: 'cuir_brut', amount: 3 }, { materialID: 'ecailles_crustace', amount: 1 }],
+    result: { type: 'equipment', itemID: 'gantelets_cuir', amount: 1 } },
+  { id: 'plastron_crustace', name: 'Plastron de Crustacé', profession: 'skinning', requiredLevel: 20,
     materials: [{ materialID: 'ecailles_crustace', amount: 3 }, { materialID: 'cuir_brut', amount: 2 }],
     result: { type: 'equipment', itemID: 'plastron_crustace', amount: 1 } },
+  { id: 'jambiere_ecailles', name: 'Jambières d\'Écailles', profession: 'skinning', requiredLevel: 28,
+    materials: [{ materialID: 'ecailles_crustace', amount: 4 }, { materialID: 'cuir_brut', amount: 2 }],
+    result: { type: 'equipment', itemID: 'jambiere_ecailles', amount: 1 } },
   { id: 'cape_larkin', name: 'Cape de Larkin', profession: 'skinning', requiredLevel: 35,
     materials: [{ materialID: 'peau_larkin', amount: 2 }, { materialID: 'ecailles_crustace', amount: 2 }],
     result: { type: 'equipment', itemID: 'cape_larkin', amount: 1 } },
-  // Enchanting
+  { id: 'armure_epine', name: 'Armure d\'Épine', profession: 'skinning', requiredLevel: 45,
+    materials: [{ materialID: 'carapace_epine', amount: 3 }, { materialID: 'peau_larkin', amount: 2 }],
+    result: { type: 'equipment', itemID: 'armure_epine', amount: 1 } },
+
+  // ── Enchanting — enchantments & consumables (every ~5-8 levels) ───
+  { id: 'enchant_protection', name: 'Enchantement de Protection', profession: 'enchanting', requiredLevel: 1,
+    materials: [{ materialID: 'poudre_arcane', amount: 3 }],
+    result: { type: 'enchantment', itemID: 'enchant_protection', amount: 1 } },
   { id: 'enchant_force', name: 'Enchantement de Force', profession: 'enchanting', requiredLevel: 5,
     materials: [{ materialID: 'poudre_arcane', amount: 4 }],
     result: { type: 'enchantment', itemID: 'enchant_force', amount: 1 } },
-  { id: 'enchant_cosmos', name: 'Enchantement Cosmerique', profession: 'enchanting', requiredLevel: 30,
+  { id: 'enchant_agilite', name: 'Enchantement d\'Agilité', profession: 'enchanting', requiredLevel: 10,
+    materials: [{ materialID: 'poudre_arcane', amount: 5 }, { materialID: 'sable_blanc', amount: 1 }],
+    result: { type: 'enchantment', itemID: 'enchant_agilite', amount: 1 } },
+  { id: 'enchant_esprit', name: 'Enchantement d\'Esprit', profession: 'enchanting', requiredLevel: 15,
+    materials: [{ materialID: 'poudre_arcane', amount: 4 }, { materialID: 'cristal_investiture', amount: 1 }],
+    result: { type: 'enchantment', itemID: 'enchant_esprit', amount: 1 } },
+  { id: 'enchant_investiture', name: 'Enchantement d\'Investiture', profession: 'enchanting', requiredLevel: 20,
+    materials: [{ materialID: 'cristal_investiture', amount: 2 }, { materialID: 'poudre_arcane', amount: 3 }],
+    result: { type: 'enchantment', itemID: 'enchant_investiture', amount: 1 } },
+  { id: 'enchant_cosmos', name: 'Enchantement Cosmérique', profession: 'enchanting', requiredLevel: 30,
     materials: [{ materialID: 'cristal_investiture', amount: 2 }, { materialID: 'sable_blanc', amount: 3 }],
     result: { type: 'enchantment', itemID: 'enchant_cosmos', amount: 1 } },
+  { id: 'enchant_legendaire', name: 'Enchantement Légendaire', profession: 'enchanting', requiredLevel: 40,
+    materials: [{ materialID: 'cristal_investiture', amount: 3 }, { materialID: 'sable_blanc', amount: 3 }, { materialID: 'poudre_arcane', amount: 5 }],
+    result: { type: 'enchantment', itemID: 'enchant_legendaire', amount: 1 } },
+  { id: 'enchant_divin', name: 'Enchantement Divin', profession: 'enchanting', requiredLevel: 50,
+    materials: [{ materialID: 'cristal_investiture', amount: 5 }, { materialID: 'sable_blanc', amount: 5 }],
+    result: { type: 'enchantment', itemID: 'enchant_divin', amount: 1 } },
 ];
 
 // ─── Profession Manager (Singleton) ─────────────────────────────
@@ -290,25 +370,104 @@ export class ProfessionManager {
       this.inventory.set(mat.materialID, current - mat.amount);
     }
 
+    // Profession level scaling: bonus stats that increase with profession level
+    const profState = this.professions.get(recipe.profession)!;
+    const levelBonus = Math.floor(profState.level / 5); // +1 stat per 5 profession levels
+    const qualityBonus = profState.level >= 40 ? 3 : profState.level >= 25 ? 2 : profState.level >= 10 ? 1 : 0;
+    const totalBonus = levelBonus + qualityBonus;
+
+    // Create a unique crafted item ID that encodes the quality level
+    const craftedItemID = totalBonus > 0
+      ? `${recipe.result.itemID}_q${totalBonus}`
+      : recipe.result.itemID;
+
+    // Register the crafted item in gameData with scaled stats
+    this.registerCraftedItem(recipe, craftedItemID, totalBonus);
+
     // Add crafted item to champion inventory
     const champ = GameManager.shared.champion;
     if (champ) {
       for (let i = 0; i < recipe.result.amount; i++) {
-        champ.inventoryItemIDs.push(recipe.result.itemID);
+        champ.inventoryItemIDs.push(craftedItemID);
       }
     }
 
-    // Profession level bonus applied to crafted items
-    const profState = this.professions.get(recipe.profession)!;
-    const levelBonus = Math.floor(profState.level / 5); // +1 stat per 5 profession levels
-    if (levelBonus > 0) {
-      this.craftBonuses.set(recipe.result.itemID, levelBonus);
+    if (totalBonus > 0) {
+      this.craftBonuses.set(craftedItemID, totalBonus);
     }
 
     // Grant crafting XP
     this.addXP(recipe.profession, recipe.requiredLevel * 15 + 20);
 
-    return { success: true, message: `${recipe.name} fabriqué !${levelBonus > 0 ? ` (+${levelBonus} bonus)` : ''}` };
+    const qualityLabel = totalBonus >= 6 ? ' (Chef-d\'œuvre!)' : totalBonus >= 3 ? ` (+${totalBonus} qualité supérieure)` : totalBonus > 0 ? ` (+${totalBonus} bonus)` : '';
+    return { success: true, message: `${recipe.name} fabriqué !${qualityLabel}` };
+  }
+
+  /** Register a crafted item in gameData so it appears in inventory with proper stats */
+  private registerCraftedItem(recipe: CraftingRecipe, craftedID: string, bonus: number): void {
+    if (gameData.items.has(craftedID)) return;
+
+    // Try to get base item definition; if missing, create one
+    const baseItem = gameData.item(recipe.result.itemID);
+    const baseName = baseItem?.name ?? recipe.name;
+    const baseDesc = baseItem?.description ?? `Fabriqué via ${this.professionLabel(recipe.profession)}`;
+    const baseRarity = baseItem?.rarity ?? (bonus >= 6 ? 'epic' : bonus >= 3 ? 'rare' : bonus >= 1 ? 'uncommon' : 'common');
+    const baseSlot = baseItem?.slot ?? this.guessSlot(recipe);
+
+    // Calculate stat bonuses based on recipe level + profession bonus
+    const baseStatValue = Math.max(1, Math.floor(recipe.requiredLevel / 5));
+    const stat = this.guessStat(recipe);
+    const statBonuses = baseItem?.statBonuses?.map(b => ({
+      ...b,
+      value: b.value + bonus,
+    })) ?? [{ stat, value: baseStatValue + bonus }];
+
+    // Upgrade rarity based on quality
+    const upgradeRarity = (r: string): string => {
+      if (bonus >= 8) return 'legendary';
+      if (bonus >= 5 && (r === 'common' || r === 'uncommon')) return 'rare';
+      if (bonus >= 3 && r === 'common') return 'uncommon';
+      return r;
+    };
+
+    const qualitySuffix = bonus >= 6 ? ' (Chef-d\'œuvre)' : bonus >= 3 ? ' (Supérieur)' : bonus >= 1 ? ' (Amélioré)' : '';
+
+    gameData.items.set(craftedID, {
+      id: craftedID,
+      name: `${baseName}${qualitySuffix}`,
+      description: `${baseDesc}. Qualité +${bonus}`,
+      rarity: upgradeRarity(baseRarity) as typeof baseRarity,
+      slot: baseSlot as EquipmentSlot,
+      requiredLevel: Math.max(1, recipe.requiredLevel - 2),
+      statBonuses,
+      traits: baseItem?.traits ?? [],
+      spriteName: baseItem?.spriteName ?? `item_${recipe.result.type}`,
+      worldOrigin: baseItem?.worldOrigin ?? null,
+    });
+  }
+
+  private guessSlot(recipe: CraftingRecipe): string {
+    const name = recipe.name.toLowerCase();
+    if (name.includes('potion') || name.includes('elixir') || name.includes('enchant')) return 'consumable';
+    if (name.includes('casque') || name.includes('heaume')) return 'helmet';
+    if (name.includes('plastron') || name.includes('armure')) return 'chest';
+    if (name.includes('botte')) return 'boots';
+    if (name.includes('gant')) return 'gloves';
+    if (name.includes('cape')) return 'cape';
+    if (name.includes('jambière') || name.includes('jambiere')) return 'legs';
+    if (name.includes('bouclier')) return 'offhand';
+    if (name.includes('arc') || name.includes('lame') || name.includes('épée') || name.includes('epee') || name.includes('lance') || name.includes('bâton') || name.includes('baton') || name.includes('dague') || name.includes('arme')) return 'mainWeapon';
+    return 'mainWeapon';
+  }
+
+  private guessStat(recipe: CraftingRecipe): string {
+    switch (recipe.profession) {
+      case 'mining': return 'strength';
+      case 'woodcutting': return 'agility';
+      case 'skinning': return 'vigor';
+      case 'herbalism': return 'spirit';
+      case 'enchanting': return 'spirit';
+    }
   }
 
   // ── Disenchanting ──────────────────────────────────────

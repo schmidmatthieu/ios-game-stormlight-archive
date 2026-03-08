@@ -1,0 +1,11 @@
+{
+  "name": "cosmere-chronicles",
+  "private": true,
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "jose": "^5.9.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.0.0"
+  }
+}

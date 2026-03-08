@@ -3,8 +3,9 @@
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
+import { gameData } from '../data/DataLoader';
 import { getLayoutInfo, fontSize, scaled, panelSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from './ResponsiveLayout';
-import type { Champion, ChampionClass, ItemRarity } from '../data/types';
+import type { Champion, ChampionClass, ItemRarity, EquipmentSlot, Item } from '../data/types';
 
 // ─── Shop Item Type ─────────────────────────────────────────────
 
@@ -388,46 +389,94 @@ export function showShopPanel(
   return panel;
 }
 
+// ─── Effect → Equipment Slot Mapping ─────────────────────────────
+
+const EFFECT_TO_SLOT: Record<string, EquipmentSlot> = {
+  chest_def: 'chest', chest_spi: 'chest',
+  helmet_def: 'helmet', helmet_spi: 'helmet',
+  shoulders_def: 'shoulders', shoulders_str: 'shoulders',
+  cape_spi: 'cape', cape_all: 'cape',
+  gloves_agi: 'gloves', gloves_str: 'gloves',
+  belt_vig: 'belt', belt_spi: 'belt',
+  legs_agi: 'legs',
+  boots_agi: 'boots', boots_all: 'boots',
+  weapon_str: 'mainWeapon', weapon_spi: 'mainWeapon',
+  amulet_spi: 'amulet',
+  ring_luck: 'ring1', ring_spi: 'ring1', ring_all: 'ring1',
+};
+
+const EFFECT_TO_STAT: Record<string, string> = {
+  chest_def: 'vigor', helmet_def: 'vigor', shoulders_def: 'vigor',
+  chest_spi: 'spirit', helmet_spi: 'spirit', cape_spi: 'spirit', belt_spi: 'spirit',
+  weapon_spi: 'spirit', amulet_spi: 'spirit', ring_spi: 'spirit',
+  legs_agi: 'agility', boots_agi: 'agility', gloves_agi: 'agility',
+  gloves_str: 'strength', shoulders_str: 'strength', weapon_str: 'strength',
+  belt_vig: 'vigor', ring_luck: 'luck',
+};
+
+let shopItemCounter = 0;
+
+// ─── Register Shop Item as Game Item ─────────────────────────────
+
+function registerShopItemAsGameItem(shopItem: ShopItem, worldID: string): string {
+  // Create a unique, deterministic ID based on the item name
+  const baseID = `shop_${shopItem.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+  // If already registered, return the ID
+  if (gameData.items.has(baseID)) return baseID;
+
+  const slot = EFFECT_TO_SLOT[shopItem.effect] ?? 'consumable';
+  const stat = EFFECT_TO_STAT[shopItem.effect];
+
+  const statBonuses: Array<{ stat: string; value: number }> = [];
+  if (shopItem.effect === 'cape_all' || shopItem.effect === 'boots_all' || shopItem.effect === 'ring_all') {
+    statBonuses.push(
+      { stat: 'strength', value: shopItem.value },
+      { stat: 'agility', value: shopItem.value },
+      { stat: 'spirit', value: shopItem.value },
+      { stat: 'vigor', value: shopItem.value },
+    );
+  } else if (stat) {
+    statBonuses.push({ stat, value: shopItem.value });
+  }
+
+  const gameItem: Item = {
+    id: baseID,
+    name: shopItem.name,
+    description: shopItem.description,
+    rarity: shopItem.rarity,
+    slot: slot as EquipmentSlot,
+    requiredLevel: 1,
+    statBonuses,
+    traits: [],
+    spriteName: `item_${shopItem.category}`,
+    worldOrigin: (worldID as Item['worldOrigin']) ?? null,
+  };
+
+  gameData.items.set(baseID, gameItem);
+  return baseID;
+}
+
 // ─── Apply Effect ───────────────────────────────────────────────
 
 function applyShopEffect(champ: Champion, item: ShopItem): void {
   champ.gold -= item.cost;
   const gm = GameManager.shared;
+  const worldID = champ.currentWorldID ?? 'scadrial';
 
-  switch (item.effect) {
-    case 'hp': champ.currentHP = Math.min(gm.maxHP, champ.currentHP + item.value); break;
-    case 'inv': champ.currentInvestiture = Math.min(gm.maxInvestiture, champ.currentInvestiture + item.value); break;
-    case 'str': champ.baseStats.strength += item.value; break;
-    case 'agi': champ.baseStats.agility += item.value; break;
-    case 'spi': champ.baseStats.spirit += item.value; break;
-    // Armor & equipment effects — grant stat bonuses directly
-    case 'chest_def': case 'helmet_def': case 'shoulders_def':
-      champ.baseStats.vigor += item.value; break;
-    case 'chest_spi': case 'helmet_spi': case 'cape_spi': case 'belt_spi':
-      champ.baseStats.spirit += item.value; break;
-    case 'legs_agi': case 'boots_agi': case 'gloves_agi':
-      champ.baseStats.agility += item.value; break;
-    case 'gloves_str': case 'shoulders_str': case 'weapon_str':
-      champ.baseStats.strength += item.value; break;
-    case 'weapon_spi':
-      champ.baseStats.spirit += item.value; break;
-    case 'amulet_spi':
-      champ.baseStats.spirit += item.value; break;
-    case 'ring_luck':
-      champ.baseStats.luck += item.value; break;
-    case 'ring_spi':
-      champ.baseStats.spirit += item.value; break;
-    case 'belt_vig':
-      champ.baseStats.vigor += item.value; break;
-    case 'cape_all': case 'boots_all': case 'ring_all':
-      champ.baseStats.strength += item.value;
-      champ.baseStats.agility += item.value;
-      champ.baseStats.spirit += item.value;
-      champ.baseStats.vigor += item.value;
-      break;
-    case 'material':
-      // Materials are stored; for now just mark as purchased
-      break;
+  if (item.category === 'potion') {
+    // Potions are consumed immediately — direct effect
+    switch (item.effect) {
+      case 'hp': champ.currentHP = Math.min(gm.maxHP, champ.currentHP + item.value); break;
+      case 'inv': champ.currentInvestiture = Math.min(gm.maxInvestiture, champ.currentInvestiture + item.value); break;
+      case 'str': champ.baseStats.strength += item.value; break;
+      case 'agi': champ.baseStats.agility += item.value; break;
+      case 'spi': champ.baseStats.spirit += item.value; break;
+    }
+  } else {
+    // Equipment, weapons, accessories, materials → add to inventory
+    const itemID = registerShopItemAsGameItem(item, worldID);
+    champ.inventoryItemIDs.push(itemID);
   }
 
   gm.save();
