@@ -3,6 +3,7 @@
 import { GameManager } from './GameManager';
 import { gameData } from '../data/DataLoader';
 import type { EquipmentSlot } from '../data/types';
+import { MATERIALS as DATA_MATERIALS, WORLD_LOOT as DATA_WORLD_LOOT, RECIPES as DATA_RECIPES } from './ProfessionData';
 
 export type ProfessionType = 'mining' | 'herbalism' | 'woodcutting' | 'skinning' | 'enchanting';
 
@@ -35,223 +36,13 @@ function xpForLevel(level: number): number {
   return Math.floor(50 * level * (1 + level * 0.15));
 }
 
-// ─── Materials ───────────────────────────────────────────────────
+// Re-export data from ProfessionData.ts
+export { MATERIALS, WORLD_LOOT, RECIPES } from './ProfessionData';
 
-export const MATERIALS: CraftingMaterial[] = [
-  // Mining
-  { id: 'minerai_fer', name: 'Minerai de Fer', profession: 'mining', rarity: 'common', icon: 'ore_grey' },
-  { id: 'minerai_acier', name: 'Minerai d\'Acier', profession: 'mining', rarity: 'uncommon', icon: 'ore_silver' },
-  { id: 'minerai_pewter', name: 'Minerai de Pewter', profession: 'mining', rarity: 'uncommon', icon: 'ore_blue' },
-  { id: 'minerai_atium', name: 'Minerai d\'Atium', profession: 'mining', rarity: 'epic', icon: 'ore_gold' },
-  { id: 'gemme_lumiere', name: 'Gemme de Lumiere', profession: 'mining', rarity: 'rare', icon: 'gem_cyan' },
-  // Herbalism
-  { id: 'herbe_soins', name: 'Herbe de Soins', profession: 'herbalism', rarity: 'common', icon: 'herb_green' },
-  { id: 'fleur_nalthis', name: 'Fleur de Nalthis', profession: 'herbalism', rarity: 'uncommon', icon: 'herb_purple' },
-  { id: 'racine_orage', name: 'Racine d\'Orage', profession: 'herbalism', rarity: 'uncommon', icon: 'herb_blue' },
-  { id: 'mousse_shadesmar', name: 'Mousse de Shadesmar', profession: 'herbalism', rarity: 'rare', icon: 'herb_dark' },
-  { id: 'lotus_investiture', name: 'Lotus d\'Investiture', profession: 'herbalism', rarity: 'epic', icon: 'herb_gold' },
-  // Woodcutting
-  { id: 'bois_commun', name: 'Bois Commun', profession: 'woodcutting', rarity: 'common', icon: 'wood_brown' },
-  { id: 'bois_roshar', name: 'Bois de Coquebois', profession: 'woodcutting', rarity: 'uncommon', icon: 'wood_red' },
-  { id: 'bois_petrifie', name: 'Bois Petrifie', profession: 'woodcutting', rarity: 'rare', icon: 'wood_grey' },
-  // Skinning
-  { id: 'cuir_brut', name: 'Cuir Brut', profession: 'skinning', rarity: 'common', icon: 'hide_tan' },
-  { id: 'ecailles_crustace', name: 'Ecailles de Crustace', profession: 'skinning', rarity: 'uncommon', icon: 'hide_blue' },
-  { id: 'peau_larkin', name: 'Peau de Larkin', profession: 'skinning', rarity: 'rare', icon: 'hide_purple' },
-  { id: 'carapace_epine', name: 'Carapace d\'Epine', profession: 'skinning', rarity: 'epic', icon: 'hide_black' },
-  // Enchanting
-  { id: 'poudre_arcane', name: 'Poudre Arcane', profession: 'enchanting', rarity: 'common', icon: 'dust_blue' },
-  { id: 'cristal_investiture', name: 'Cristal d\'Investiture', profession: 'enchanting', rarity: 'rare', icon: 'crystal_cyan' },
-  { id: 'sable_blanc', name: 'Sable Blanc', profession: 'enchanting', rarity: 'uncommon', icon: 'sand_white' },
-];
-
-// ─── World → Gathering Loot Tables ──────────────────────────────
-
-const WORLD_LOOT: Record<string, Partial<Record<ProfessionType, string[]>>> = {
-  scadrial: {
-    mining: ['minerai_fer', 'minerai_acier', 'minerai_pewter', 'minerai_atium'],
-    herbalism: ['herbe_soins'],
-    skinning: ['cuir_brut'],
-    woodcutting: ['bois_commun'],
-    enchanting: ['poudre_arcane'],
-  },
-  roshar: {
-    mining: ['minerai_fer', 'gemme_lumiere'],
-    herbalism: ['herbe_soins', 'racine_orage'],
-    skinning: ['ecailles_crustace', 'carapace_epine'],
-    woodcutting: ['bois_roshar'],
-    enchanting: ['poudre_arcane', 'cristal_investiture'],
-  },
-  taldain: {
-    mining: ['minerai_fer'],
-    herbalism: ['herbe_soins'],
-    skinning: ['cuir_brut'],
-    woodcutting: ['bois_commun'],
-    enchanting: ['sable_blanc', 'poudre_arcane'],
-  },
-  nalthis: {
-    mining: ['minerai_fer'],
-    herbalism: ['herbe_soins', 'fleur_nalthis', 'lotus_investiture'],
-    skinning: ['cuir_brut'],
-    woodcutting: ['bois_commun'],
-    enchanting: ['poudre_arcane'],
-  },
-  sel: {
-    mining: ['minerai_fer', 'minerai_acier'],
-    herbalism: ['herbe_soins'],
-    skinning: ['cuir_brut'],
-    woodcutting: ['bois_commun', 'bois_petrifie'],
-    enchanting: ['poudre_arcane', 'cristal_investiture'],
-  },
-  komashi: {
-    mining: ['minerai_fer'],
-    herbalism: ['herbe_soins', 'mousse_shadesmar'],
-    skinning: ['cuir_brut', 'peau_larkin'],
-    woodcutting: ['bois_commun'],
-    enchanting: ['poudre_arcane'],
-  },
-  shadesmar: {
-    mining: ['gemme_lumiere', 'minerai_atium'],
-    herbalism: ['mousse_shadesmar', 'lotus_investiture'],
-    skinning: ['peau_larkin', 'carapace_epine'],
-    woodcutting: ['bois_petrifie'],
-    enchanting: ['cristal_investiture', 'sable_blanc'],
-  },
-};
-
-// ─── Recipes ─────────────────────────────────────────────────────
-
-export const RECIPES: CraftingRecipe[] = [
-  // ── Herbalism — potions & elixirs (every ~5 levels) ──────────
-  { id: 'potion_soin', name: 'Potion de Soin', profession: 'herbalism', requiredLevel: 1,
-    materials: [{ materialID: 'herbe_soins', amount: 3 }],
-    result: { type: 'potion', itemID: 'potion_soin', amount: 1 } },
-  { id: 'potion_investiture', name: 'Potion d\'Investiture', profession: 'herbalism', requiredLevel: 5,
-    materials: [{ materialID: 'herbe_soins', amount: 2 }, { materialID: 'racine_orage', amount: 1 }],
-    result: { type: 'potion', itemID: 'potion_investiture', amount: 1 } },
-  { id: 'potion_soin_ii', name: 'Grande Potion de Soin', profession: 'herbalism', requiredLevel: 10,
-    materials: [{ materialID: 'herbe_soins', amount: 5 }, { materialID: 'racine_orage', amount: 1 }],
-    result: { type: 'potion', itemID: 'potion_soin_ii', amount: 1 } },
-  { id: 'elixir_vitalite', name: 'Élixir de Vitalité', profession: 'herbalism', requiredLevel: 15,
-    materials: [{ materialID: 'fleur_nalthis', amount: 2 }, { materialID: 'herbe_soins', amount: 3 }],
-    result: { type: 'potion', itemID: 'elixir_vitalite', amount: 1 } },
-  { id: 'potion_investiture_ii', name: 'Grande Potion d\'Investiture', profession: 'herbalism', requiredLevel: 20,
-    materials: [{ materialID: 'racine_orage', amount: 3 }, { materialID: 'fleur_nalthis', amount: 1 }],
-    result: { type: 'potion', itemID: 'potion_investiture_ii', amount: 1 } },
-  { id: 'elixir_orage', name: 'Élixir d\'Orage', profession: 'herbalism', requiredLevel: 25,
-    materials: [{ materialID: 'racine_orage', amount: 3 }, { materialID: 'mousse_shadesmar', amount: 1 }],
-    result: { type: 'potion', itemID: 'elixir_orage', amount: 1 } },
-  { id: 'elixir_cosmos', name: 'Élixir Cosmique', profession: 'herbalism', requiredLevel: 30,
-    materials: [{ materialID: 'mousse_shadesmar', amount: 2 }, { materialID: 'fleur_nalthis', amount: 2 }],
-    result: { type: 'potion', itemID: 'elixir_cosmos', amount: 1 } },
-  { id: 'potion_soin_iii', name: 'Potion de Soin Majeure', profession: 'herbalism', requiredLevel: 35,
-    materials: [{ materialID: 'lotus_investiture', amount: 1 }, { materialID: 'herbe_soins', amount: 5 }],
-    result: { type: 'potion', itemID: 'potion_soin_iii', amount: 1 } },
-  { id: 'elixir_supreme', name: 'Élixir Suprême', profession: 'herbalism', requiredLevel: 40,
-    materials: [{ materialID: 'lotus_investiture', amount: 1 }, { materialID: 'fleur_nalthis', amount: 2 }, { materialID: 'mousse_shadesmar', amount: 2 }],
-    result: { type: 'potion', itemID: 'elixir_supreme', amount: 1 } },
-  { id: 'elixir_divin', name: 'Élixir Divin', profession: 'herbalism', requiredLevel: 50,
-    materials: [{ materialID: 'lotus_investiture', amount: 2 }, { materialID: 'mousse_shadesmar', amount: 3 }],
-    result: { type: 'potion', itemID: 'elixir_divin', amount: 1 } },
-
-  // ── Mining — weapons & armor (every ~5-8 levels) ──────────────
-  { id: 'lingot_acier', name: 'Lingot d\'Acier', profession: 'mining', requiredLevel: 1,
-    materials: [{ materialID: 'minerai_fer', amount: 4 }],
-    result: { type: 'equipment', itemID: 'lingot_acier', amount: 1 } },
-  { id: 'dague_fer', name: 'Dague de Fer', profession: 'mining', requiredLevel: 5,
-    materials: [{ materialID: 'minerai_fer', amount: 3 }, { materialID: 'minerai_acier', amount: 1 }],
-    result: { type: 'equipment', itemID: 'dague_fer', amount: 1 } },
-  { id: 'lame_pewter', name: 'Lame de Pewter', profession: 'mining', requiredLevel: 10,
-    materials: [{ materialID: 'minerai_pewter', amount: 3 }, { materialID: 'minerai_fer', amount: 2 }],
-    result: { type: 'equipment', itemID: 'lame_pewter', amount: 1 } },
-  { id: 'casque_acier', name: 'Casque d\'Acier', profession: 'mining', requiredLevel: 15,
-    materials: [{ materialID: 'minerai_acier', amount: 4 }, { materialID: 'minerai_fer', amount: 2 }],
-    result: { type: 'equipment', itemID: 'casque_acier', amount: 1 } },
-  { id: 'epee_acier', name: 'Épée d\'Acier Renforcé', profession: 'mining', requiredLevel: 20,
-    materials: [{ materialID: 'minerai_acier', amount: 5 }, { materialID: 'minerai_pewter', amount: 2 }],
-    result: { type: 'equipment', itemID: 'epee_acier', amount: 1 } },
-  { id: 'bouclier_gemme', name: 'Bouclier de Gemme', profession: 'mining', requiredLevel: 25,
-    materials: [{ materialID: 'gemme_lumiere', amount: 2 }, { materialID: 'minerai_acier', amount: 3 }],
-    result: { type: 'equipment', itemID: 'bouclier_gemme', amount: 1 } },
-  { id: 'plastron_acier', name: 'Plastron d\'Acier Supérieur', profession: 'mining', requiredLevel: 30,
-    materials: [{ materialID: 'minerai_acier', amount: 6 }, { materialID: 'gemme_lumiere', amount: 1 }],
-    result: { type: 'equipment', itemID: 'plastron_acier', amount: 1 } },
-  { id: 'lame_gemme', name: 'Lame de Gemcœur', profession: 'mining', requiredLevel: 40,
-    materials: [{ materialID: 'gemme_lumiere', amount: 3 }, { materialID: 'minerai_pewter', amount: 3 }],
-    result: { type: 'equipment', itemID: 'lame_gemme', amount: 1 } },
-  { id: 'arme_atium', name: 'Arme d\'Atium', profession: 'mining', requiredLevel: 50,
-    materials: [{ materialID: 'minerai_atium', amount: 3 }, { materialID: 'minerai_acier', amount: 5 }],
-    result: { type: 'equipment', itemID: 'arme_atium', amount: 1 } },
-
-  // ── Woodcutting — bows, staves, shields (every ~8 levels) ─────
-  { id: 'arc_simple', name: 'Arc Simple', profession: 'woodcutting', requiredLevel: 1,
-    materials: [{ materialID: 'bois_commun', amount: 5 }],
-    result: { type: 'equipment', itemID: 'arc_simple', amount: 1 } },
-  { id: 'bouclier_bois', name: 'Bouclier en Bois', profession: 'woodcutting', requiredLevel: 8,
-    materials: [{ materialID: 'bois_commun', amount: 6 }],
-    result: { type: 'equipment', itemID: 'bouclier_bois', amount: 1 } },
-  { id: 'baton_coquebois', name: 'Bâton de Coquebois', profession: 'woodcutting', requiredLevel: 15,
-    materials: [{ materialID: 'bois_roshar', amount: 3 }, { materialID: 'bois_commun', amount: 2 }],
-    result: { type: 'equipment', itemID: 'baton_coquebois', amount: 1 } },
-  { id: 'arc_roshar', name: 'Arc de Coquebois', profession: 'woodcutting', requiredLevel: 22,
-    materials: [{ materialID: 'bois_roshar', amount: 5 }],
-    result: { type: 'equipment', itemID: 'arc_roshar', amount: 1 } },
-  { id: 'lance_petrifie', name: 'Lance Pétrifiée', profession: 'woodcutting', requiredLevel: 30,
-    materials: [{ materialID: 'bois_petrifie', amount: 3 }, { materialID: 'bois_roshar', amount: 2 }],
-    result: { type: 'equipment', itemID: 'lance_petrifie', amount: 1 } },
-  { id: 'baton_ancien', name: 'Bâton Ancien', profession: 'woodcutting', requiredLevel: 40,
-    materials: [{ materialID: 'bois_petrifie', amount: 4 }, { materialID: 'bois_roshar', amount: 3 }],
-    result: { type: 'equipment', itemID: 'baton_ancien', amount: 1 } },
-
-  // ── Skinning — armor & capes (every ~8 levels) ────────────────
-  { id: 'armure_cuir', name: 'Armure de Cuir', profession: 'skinning', requiredLevel: 1,
-    materials: [{ materialID: 'cuir_brut', amount: 5 }],
-    result: { type: 'equipment', itemID: 'armure_cuir', amount: 1 } },
-  { id: 'bottes_cuir', name: 'Bottes de Cuir', profession: 'skinning', requiredLevel: 8,
-    materials: [{ materialID: 'cuir_brut', amount: 4 }],
-    result: { type: 'equipment', itemID: 'bottes_cuir', amount: 1 } },
-  { id: 'gantelets_cuir', name: 'Gantelets de Cuir Renforcé', profession: 'skinning', requiredLevel: 15,
-    materials: [{ materialID: 'cuir_brut', amount: 3 }, { materialID: 'ecailles_crustace', amount: 1 }],
-    result: { type: 'equipment', itemID: 'gantelets_cuir', amount: 1 } },
-  { id: 'plastron_crustace', name: 'Plastron de Crustacé', profession: 'skinning', requiredLevel: 20,
-    materials: [{ materialID: 'ecailles_crustace', amount: 3 }, { materialID: 'cuir_brut', amount: 2 }],
-    result: { type: 'equipment', itemID: 'plastron_crustace', amount: 1 } },
-  { id: 'jambiere_ecailles', name: 'Jambières d\'Écailles', profession: 'skinning', requiredLevel: 28,
-    materials: [{ materialID: 'ecailles_crustace', amount: 4 }, { materialID: 'cuir_brut', amount: 2 }],
-    result: { type: 'equipment', itemID: 'jambiere_ecailles', amount: 1 } },
-  { id: 'cape_larkin', name: 'Cape de Larkin', profession: 'skinning', requiredLevel: 35,
-    materials: [{ materialID: 'peau_larkin', amount: 2 }, { materialID: 'ecailles_crustace', amount: 2 }],
-    result: { type: 'equipment', itemID: 'cape_larkin', amount: 1 } },
-  { id: 'armure_epine', name: 'Armure d\'Épine', profession: 'skinning', requiredLevel: 45,
-    materials: [{ materialID: 'carapace_epine', amount: 3 }, { materialID: 'peau_larkin', amount: 2 }],
-    result: { type: 'equipment', itemID: 'armure_epine', amount: 1 } },
-
-  // ── Enchanting — enchantments & consumables (every ~5-8 levels) ───
-  { id: 'enchant_protection', name: 'Enchantement de Protection', profession: 'enchanting', requiredLevel: 1,
-    materials: [{ materialID: 'poudre_arcane', amount: 3 }],
-    result: { type: 'enchantment', itemID: 'enchant_protection', amount: 1 } },
-  { id: 'enchant_force', name: 'Enchantement de Force', profession: 'enchanting', requiredLevel: 5,
-    materials: [{ materialID: 'poudre_arcane', amount: 4 }],
-    result: { type: 'enchantment', itemID: 'enchant_force', amount: 1 } },
-  { id: 'enchant_agilite', name: 'Enchantement d\'Agilité', profession: 'enchanting', requiredLevel: 10,
-    materials: [{ materialID: 'poudre_arcane', amount: 5 }, { materialID: 'sable_blanc', amount: 1 }],
-    result: { type: 'enchantment', itemID: 'enchant_agilite', amount: 1 } },
-  { id: 'enchant_esprit', name: 'Enchantement d\'Esprit', profession: 'enchanting', requiredLevel: 15,
-    materials: [{ materialID: 'poudre_arcane', amount: 4 }, { materialID: 'cristal_investiture', amount: 1 }],
-    result: { type: 'enchantment', itemID: 'enchant_esprit', amount: 1 } },
-  { id: 'enchant_investiture', name: 'Enchantement d\'Investiture', profession: 'enchanting', requiredLevel: 20,
-    materials: [{ materialID: 'cristal_investiture', amount: 2 }, { materialID: 'poudre_arcane', amount: 3 }],
-    result: { type: 'enchantment', itemID: 'enchant_investiture', amount: 1 } },
-  { id: 'enchant_cosmos', name: 'Enchantement Cosmérique', profession: 'enchanting', requiredLevel: 30,
-    materials: [{ materialID: 'cristal_investiture', amount: 2 }, { materialID: 'sable_blanc', amount: 3 }],
-    result: { type: 'enchantment', itemID: 'enchant_cosmos', amount: 1 } },
-  { id: 'enchant_legendaire', name: 'Enchantement Légendaire', profession: 'enchanting', requiredLevel: 40,
-    materials: [{ materialID: 'cristal_investiture', amount: 3 }, { materialID: 'sable_blanc', amount: 3 }, { materialID: 'poudre_arcane', amount: 5 }],
-    result: { type: 'enchantment', itemID: 'enchant_legendaire', amount: 1 } },
-  { id: 'enchant_divin', name: 'Enchantement Divin', profession: 'enchanting', requiredLevel: 50,
-    materials: [{ materialID: 'cristal_investiture', amount: 5 }, { materialID: 'sable_blanc', amount: 5 }],
-    result: { type: 'enchantment', itemID: 'enchant_divin', amount: 1 } },
-];
+// Use imported data references for internal logic
+const MATERIALS_REF = DATA_MATERIALS;
+const WORLD_LOOT_REF = DATA_WORLD_LOOT;
+const RECIPES_REF = DATA_RECIPES;
 
 // ─── Profession Manager (Singleton) ─────────────────────────────
 
@@ -278,7 +69,7 @@ export class ProfessionManager {
   // ── Gathering ────────────────────────────────────────
 
   gatherMaterial(profession: ProfessionType, worldID: string): CraftingMaterial | null {
-    const loot = WORLD_LOOT[worldID]?.[profession];
+    const loot = WORLD_LOOT_REF[worldID]?.[profession];
     if (!loot || loot.length === 0) return null;
 
     const state = this.professions.get(profession)!;
@@ -296,7 +87,7 @@ export class ProfessionManager {
     }
 
     const materialID = pool[Math.floor(Math.random() * pool.length)];
-    const mat = MATERIALS.find(m => m.id === materialID);
+    const mat = MATERIALS_REF.find(m => m.id === materialID);
     if (!mat) return null;
 
     // Add to inventory
@@ -331,7 +122,7 @@ export class ProfessionManager {
   // ── Crafting ─────────────────────────────────────────
 
   getAvailableRecipes(profession?: ProfessionType): CraftingRecipe[] {
-    return RECIPES.filter(r => {
+    return RECIPES_REF.filter(r => {
       if (profession && r.profession !== profession) return false;
       const state = this.professions.get(r.profession);
       return state !== undefined && state.level >= r.requiredLevel;
@@ -339,7 +130,7 @@ export class ProfessionManager {
   }
 
   canCraft(recipeID: string): { possible: boolean; reason: string } {
-    const recipe = RECIPES.find(r => r.id === recipeID);
+    const recipe = RECIPES_REF.find(r => r.id === recipeID);
     if (!recipe) return { possible: false, reason: 'Recette inconnue' };
 
     const state = this.professions.get(recipe.profession);
@@ -350,7 +141,7 @@ export class ProfessionManager {
     for (const mat of recipe.materials) {
       const owned = this.inventory.get(mat.materialID) ?? 0;
       if (owned < mat.amount) {
-        const matInfo = MATERIALS.find(m => m.id === mat.materialID);
+        const matInfo = MATERIALS_REF.find(m => m.id === mat.materialID);
         return { possible: false, reason: `${mat.amount}x ${matInfo?.name ?? mat.materialID} requis (${owned} possedes)` };
       }
     }
@@ -362,7 +153,7 @@ export class ProfessionManager {
     const check = this.canCraft(recipeID);
     if (!check.possible) return { success: false, message: check.reason };
 
-    const recipe = RECIPES.find(r => r.id === recipeID)!;
+    const recipe = RECIPES_REF.find(r => r.id === recipeID)!;
 
     // Consume materials
     for (const mat of recipe.materials) {
