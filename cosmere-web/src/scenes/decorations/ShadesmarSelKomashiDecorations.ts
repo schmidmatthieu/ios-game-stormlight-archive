@@ -10,6 +10,7 @@ import { lighten } from '../../utils/ColorUtils';
 const sr = seededRandom;
 
 function shadow(g: Graphics, x: number, y: number, rx: number, ry: number): void {
+  g.ellipse(x + 1, y + 3, rx * 1.15, ry * 1.1).fill({ color: 0x000000, alpha: 0.06 });
   g.ellipse(x, y + 2, rx, ry).fill({ color: 0x000000, alpha: 0.15 });
 }
 
