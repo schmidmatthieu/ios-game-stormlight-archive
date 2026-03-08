@@ -8,6 +8,7 @@ import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
 import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
+import { UILayoutManager } from '../ui/UILayoutManager';
 import { showDeathScreen } from '../ui/DeathScreen';
 import { QuestManager } from '../game/QuestManager';
 import { createWorldMechanics, ScadrialMechanics, KomashiMechanics } from '../game/WorldMechanics';
@@ -425,6 +426,7 @@ export class ZoneScene extends Container implements GameScene {
     this.updateFog();
 
     // UI layer
+    this.uiContainer.sortableChildren = true;
     this.addChild(this.uiContainer);
 
     // HUD
@@ -571,6 +573,33 @@ export class ZoneScene extends Container implements GameScene {
     this.minimap = new Minimap(w, h);
     this.minimap.setZone(this.zone.gridWidth, this.zone.gridHeight, this.zone.worldID, this.zone.id);
     this.uiContainer.addChild(this.minimap);
+
+    // ─── Draggable UI Layout ─────────────────────────────────
+    const layoutMgr = UILayoutManager.shared;
+    layoutMgr.clear();
+    layoutMgr.setScreenSize(w, h);
+
+    // Register all movable UI elements with their default positions
+    layoutMgr.register('HUD', this.hud, this.hud.x, this.hud.y);
+    layoutMgr.register('Joystick', this.joystick, this.joystick.x, this.joystick.y);
+    layoutMgr.register('Actions', this.actionButtons, this.actionButtons.x, this.actionButtons.y);
+    // Minimap already has its own built-in drag+lock system
+    layoutMgr.register('Quêtes', this.questTracker, this.questTracker.x, this.questTracker.y);
+    if (this.potionHotbar) {
+      layoutMgr.register('Potions', this.potionHotbar.container, this.potionHotbar.container.x, this.potionHotbar.container.y);
+    }
+    if (this.statusBar) {
+      layoutMgr.register('Statuts', this.statusBar.container, this.statusBar.container.x, this.statusBar.container.y);
+    }
+    if (this.repBadge) {
+      layoutMgr.register('Réputation', this.repBadge.container, this.repBadge.container.x, this.repBadge.container.y);
+    }
+
+    // Edit mode button (top-center) — pauses game while repositioning UI
+    layoutMgr.onEditModeChanged((active) => {
+      this.isPaused = active;
+    });
+    layoutMgr.createEditButton(this.uiContainer, w, h);
 
     // Center camera immediately
     this.worldContainer.x = w / 2 - this.playerScreenPos.x;
@@ -909,6 +938,8 @@ export class ZoneScene extends Container implements GameScene {
       this.bossHPBar.destroy();
       this.bossHPBar = null;
     }
+    // Clear UI layout handles
+    UILayoutManager.shared.clear();
     // Auto-save
     SaveManager.shared.autoSave();
   }
