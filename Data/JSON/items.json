@@ -1223,5 +1223,201 @@
     "traits": ["cosmere_transcendence", "worldhopper_mastery"],
     "spriteName": "item_cosmere_nexus",
     "worldOrigin": "shadesmar"
+  },
+
+  {
+    "id": "voidspren_essence",
+    "name": "Essence de Néantispren",
+    "description": "Une substance sombre et pulsante, résidu de la corruption cosmérique. Les enquêteurs de T'Telir la recherchent.",
+    "rarity": "uncommon",
+    "slot": "consumable",
+    "requiredLevel": 1,
+    "statBonuses": [],
+    "traits": ["quest_item"],
+    "spriteName": "item_voidspren_essence",
+    "worldOrigin": "nalthis"
+  },
+
+  {
+    "id": "skaa_leather_gloves",
+    "name": "Gants en cuir Skaa",
+    "description": "Des gants simples fabriqués par les Skaa pour protéger leurs mains lors du travail.",
+    "rarity": "common",
+    "slot": "gloves",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_gloves_skaa",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "mistcloak_gloves",
+    "name": "Gants de Brumeux",
+    "description": "Des gants sombres tressés avec les fibres d'un manteau de brumes, offrant dextérité et discrétion.",
+    "rarity": "uncommon",
+    "slot": "gloves",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "agility", "value": 2 }, { "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_gloves_mist",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "shardplate_gauntlets",
+    "name": "Gantelets d'Armure Esquissée",
+    "description": "Des gantelets forgés à partir de fragments d'Armure Esquissée, vibrant de lumière d'orage.",
+    "rarity": "rare",
+    "slot": "gloves",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "strength", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_gloves_shard",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "awakened_gloves",
+    "name": "Gants Éveillés",
+    "description": "Des gants imprégnés de Souffles, capables de mouvements autonomes subtils.",
+    "rarity": "epic",
+    "slot": "gloves",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "spirit", "value": 3 }, { "stat": "agility", "value": 3 }, { "stat": "strength", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_gloves_awakened",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "aon_inscribed_gloves",
+    "name": "Gants Gravés d'Aons",
+    "description": "Des gants élantiens gravés de glyphes lumineux qui amplifient le pouvoir du Dor.",
+    "rarity": "legendary",
+    "slot": "gloves",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "spirit", "value": 5 }, { "stat": "strength", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_gloves_aon",
+    "worldOrigin": "sel"
+  },
+
+  {
+    "id": "skaa_trousers",
+    "name": "Pantalon de Skaa",
+    "description": "Un pantalon simple et robuste porté par le peuple Skaa dans les mines de Scadrial.",
+    "rarity": "common",
+    "slot": "legs",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "vigor", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_legs_skaa",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "parshendi_warskirt",
+    "name": "Jupe de guerre Parshendi",
+    "description": "Une jupe de combat tissée avec les carapaces des Parshenlis, offrant protection et mobilité.",
+    "rarity": "uncommon",
+    "slot": "legs",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_legs_parshendi",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "sand_master_leggings",
+    "name": "Jambières du Maître du Sable",
+    "description": "Des jambières taldaines légères permettant de se déplacer aisément sur les dunes.",
+    "rarity": "rare",
+    "slot": "legs",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "agility", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_legs_sand",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "nightmare_woven_legs",
+    "name": "Jambières Tissées de Cauchemar",
+    "description": "Des jambières créées à partir de l'encre de cauchemars, absorbant les impacts.",
+    "rarity": "epic",
+    "slot": "legs",
+    "requiredLevel": 8,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "agility", "value": 2 }, { "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_legs_nightmare",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "shardplate_greaves",
+    "name": "Jambières d'Armure Esquissée",
+    "description": "Des jambières d'Armure Esquissée complètes, presque indestructibles.",
+    "rarity": "legendary",
+    "slot": "legs",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "vigor", "value": 5 }, { "stat": "strength", "value": 3 }, { "stat": "agility", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_legs_shard",
+    "worldOrigin": "roshar"
+  },
+
+  {
+    "id": "skaa_work_boots",
+    "name": "Bottes de travail Skaa",
+    "description": "Des bottes solides usées par le travail dans les mines de cendres.",
+    "rarity": "common",
+    "slot": "boots",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_skaa",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "coinshot_boots",
+    "name": "Bottes de Tire-Monnaie",
+    "description": "Des bottes renforcées pour absorber l'impact des Poussées allomantiques.",
+    "rarity": "uncommon",
+    "slot": "boots",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "agility", "value": 2 }, { "stat": "vigor", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_coinshot",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "windrunner_boots",
+    "name": "Bottes du Coureur des Vents",
+    "description": "Des bottes infusées de Lumière d'Orage permettant des bonds surhumains.",
+    "rarity": "rare",
+    "slot": "boots",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "agility", "value": 4 }, { "stat": "spirit", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_windrunner",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "dakhor_monk_sandals",
+    "name": "Sandales du Moine Dakhor",
+    "description": "Des sandales rituelles des moines Dakhor, dont les os transformés confèrent une vitesse surnaturelle.",
+    "rarity": "epic",
+    "slot": "boots",
+    "requiredLevel": 8,
+    "statBonuses": [{ "stat": "agility", "value": 4 }, { "stat": "spirit", "value": 2 }, { "stat": "luck", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_dakhor",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "cosmere_strider_boots",
+    "name": "Bottes du Salteur Cosmère",
+    "description": "Des bottes légendaires portées par les plus grands Worldhoppers, permettant de marcher entre les mondes.",
+    "rarity": "legendary",
+    "slot": "boots",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "agility", "value": 5 }, { "stat": "luck", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_boots_cosmere",
+    "worldOrigin": "shadesmar"
   }
 ]

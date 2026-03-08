@@ -217,6 +217,51 @@
         },
         "patrolPath": null,
         "respawnTime": 300
+      },
+      {
+        "enemyID": "ash_scavenger",
+        "position": {
+          "col": 15,
+          "row": 30
+        },
+        "patrolPath": [
+          {
+            "col": 15,
+            "row": 30
+          },
+          {
+            "col": 25,
+            "row": 35
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "ash_scavenger",
+        "position": {
+          "col": 45,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "pewter_thug",
+        "position": {
+          "col": 30,
+          "row": 40
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 40
+          },
+          {
+            "col": 35,
+            "row": 45
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -531,6 +576,42 @@
           }
         ],
         "respawnTime": 200
+      },
+      {
+        "enemyID": "crab_spren",
+        "position": {
+          "col": 18,
+          "row": 22
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "crab_spren",
+        "position": {
+          "col": 42,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "stormform_listener",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "patrolPath": [
+          {
+            "col": 35,
+            "row": 35
+          },
+          {
+            "col": 40,
+            "row": 30
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -854,6 +935,42 @@
         },
         "patrolPath": null,
         "respawnTime": 180
+      },
+      {
+        "enemyID": "sand_scorpion",
+        "position": {
+          "col": 20,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "sand_scorpion",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "dayside_nomad",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 35
+          },
+          {
+            "col": 35,
+            "row": 40
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -1150,6 +1267,42 @@
         },
         "patrolPath": null,
         "respawnTime": 200
+      },
+      {
+        "enemyID": "ink_tendril",
+        "position": {
+          "col": 18,
+          "row": 28
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "ink_tendril",
+        "position": {
+          "col": 38,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "nightmare_beast",
+        "position": {
+          "col": 30,
+          "row": 40
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 40
+          },
+          {
+            "col": 35,
+            "row": 35
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -1461,6 +1614,51 @@
         "position": {
           "col": 50,
           "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "drab_thief",
+        "position": {
+          "col": 25,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "drab_thief",
+        "position": {
+          "col": 45,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "awakened_construct",
+        "position": {
+          "col": 30,
+          "row": 45
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 45
+          },
+          {
+            "col": 35,
+            "row": 40
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "pahn_kahl_rebel",
+        "position": {
+          "col": 50,
+          "row": 35
         },
         "patrolPath": null,
         "respawnTime": 240
@@ -1778,6 +1976,42 @@
         },
         "patrolPath": null,
         "respawnTime": 250
+      },
+      {
+        "enemyID": "elantris_revenant",
+        "position": {
+          "col": 20,
+          "row": 28
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "elantris_revenant",
+        "position": {
+          "col": 40,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "fjordell_templar",
+        "position": {
+          "col": 30,
+          "row": 40
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 40
+          },
+          {
+            "col": 35,
+            "row": 35
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -2129,6 +2363,33 @@
           }
         ],
         "respawnTime": 150
+      },
+      {
+        "enemyID": "shadesmar_lurker",
+        "position": {
+          "col": 25,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "shadesmar_lurker",
+        "position": {
+          "col": 40,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 40,
+            "row": 20
+          },
+          {
+            "col": 45,
+            "row": 25
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -2340,6 +2601,33 @@
         },
         "patrolPath": null,
         "respawnTime": 144
+      },
+      {
+        "enemyID": "coinshot_bandit",
+        "position": {
+          "col": 25,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "ash_scavenger",
+        "position": {
+          "col": 38,
+          "row": 28
+        },
+        "patrolPath": [
+          {
+            "col": 38,
+            "row": 28
+          },
+          {
+            "col": 42,
+            "row": 32
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -2460,6 +2748,15 @@
         },
         "patrolPath": null,
         "respawnTime": 165
+      },
+      {
+        "enemyID": "pewter_thug",
+        "position": {
+          "col": 20,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -2580,6 +2877,33 @@
         },
         "patrolPath": null,
         "respawnTime": 186
+      },
+      {
+        "enemyID": "coinshot_bandit",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 20
+          },
+          {
+            "col": 35,
+            "row": 25
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "ash_scavenger",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -3048,6 +3372,33 @@
         },
         "patrolPath": null,
         "respawnTime": 144
+      },
+      {
+        "enemyID": "crab_spren",
+        "position": {
+          "col": 25,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "skybreaker_squire",
+        "position": {
+          "col": 40,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 40,
+            "row": 20
+          },
+          {
+            "col": 45,
+            "row": 25
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -3288,6 +3639,33 @@
         },
         "patrolPath": null,
         "respawnTime": 186
+      },
+      {
+        "enemyID": "stormform_listener",
+        "position": {
+          "col": 22,
+          "row": 38
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "skybreaker_squire",
+        "position": {
+          "col": 45,
+          "row": 15
+        },
+        "patrolPath": [
+          {
+            "col": 45,
+            "row": 15
+          },
+          {
+            "col": 50,
+            "row": 20
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -3799,6 +4177,24 @@
         },
         "patrolPath": null,
         "respawnTime": 144
+      },
+      {
+        "enemyID": "sand_scorpion",
+        "position": {
+          "col": 28,
+          "row": 22
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "dayside_nomad",
+        "position": {
+          "col": 42,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -4522,6 +4918,24 @@
         },
         "patrolPath": null,
         "respawnTime": 144
+      },
+      {
+        "enemyID": "ink_tendril",
+        "position": {
+          "col": 22,
+          "row": 32
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "nightmare_beast",
+        "position": {
+          "col": 40,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -4762,6 +5176,33 @@
         },
         "patrolPath": null,
         "respawnTime": 186
+      },
+      {
+        "enemyID": "ink_tendril",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "nightmare_beast",
+        "position": {
+          "col": 35,
+          "row": 38
+        },
+        "patrolPath": [
+          {
+            "col": 35,
+            "row": 38
+          },
+          {
+            "col": 40,
+            "row": 42
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -5263,6 +5704,42 @@
         },
         "patrolPath": null,
         "respawnTime": 144
+      },
+      {
+        "enemyID": "drab_thief",
+        "position": {
+          "col": 20,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "awakened_construct",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "pahn_kahl_rebel",
+        "position": {
+          "col": 45,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 45,
+            "row": 20
+          },
+          {
+            "col": 50,
+            "row": 25
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -5383,6 +5860,24 @@
         },
         "patrolPath": null,
         "respawnTime": 165
+      },
+      {
+        "enemyID": "drab_thief",
+        "position": {
+          "col": 22,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "awakened_construct",
+        "position": {
+          "col": 38,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -5512,6 +6007,24 @@
         },
         "patrolPath": null,
         "respawnTime": 186
+      },
+      {
+        "enemyID": "drab_thief",
+        "position": {
+          "col": 25,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "pahn_kahl_rebel",
+        "position": {
+          "col": 40,
+          "row": 22
+        },
+        "patrolPath": null,
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -6013,6 +6526,24 @@
         },
         "patrolPath": null,
         "respawnTime": 144
+      },
+      {
+        "enemyID": "fjordell_templar",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "elantris_revenant",
+        "position": {
+          "col": 42,
+          "row": 32
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -6244,6 +6775,33 @@
         },
         "patrolPath": null,
         "respawnTime": 186
+      },
+      {
+        "enemyID": "fjordell_templar",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 20
+          },
+          {
+            "col": 35,
+            "row": 25
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "elantris_revenant",
+        "position": {
+          "col": 18,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -6764,6 +7322,15 @@
         },
         "patrolPath": null,
         "respawnTime": 150
+      },
+      {
+        "enemyID": "shadesmar_lurker",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -6884,6 +7451,24 @@
         },
         "patrolPath": null,
         "respawnTime": 174
+      },
+      {
+        "enemyID": "shadesmar_lurker",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "patrolPath": [
+          {
+            "col": 35,
+            "row": 35
+          },
+          {
+            "col": 40,
+            "row": 30
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [

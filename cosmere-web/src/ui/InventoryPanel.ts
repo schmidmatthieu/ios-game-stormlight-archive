@@ -88,7 +88,7 @@ export class InventoryPanel extends Container {
 
     let isDragging = false, lastDY = 0;
     this.cc.eventMode = 'static';
-    this.cc.hitArea = { contains: (x: number, y: number) => x >= px && x <= px + pW && y >= cY && y <= cY + cH };
+    this.cc.hitArea = { contains: (x: number, y: number) => x >= px && x <= px + pW && y >= (cY - this.scrollY) && y <= (cY + cH - this.scrollY) };
     this.cc.on('pointerdown', (e) => { isDragging = true; lastDY = e.globalY; this.scrollVelocity = 0; });
     this.cc.on('globalpointermove', (e) => {
       if (!isDragging) return;
