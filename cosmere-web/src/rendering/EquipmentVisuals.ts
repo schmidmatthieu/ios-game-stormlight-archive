@@ -6,6 +6,7 @@ import { lighten, darken } from '../utils/ColorUtils';
 import type { EquipmentLoadout, ItemRarity } from '../data/types';
 import { gameData } from '../data/DataLoader';
 import { RARITY_COLORS } from '../data/types';
+import { ForgeManager } from '../systems/ForgeSystem';
 
 // ─── Visual Config per Rarity ────────────────────────────────────
 
@@ -247,6 +248,54 @@ function drawRarityGlow(g: Graphics, rarity: ItemRarity): void {
   }
 }
 
+// ─── Enchantment Glow Effects ─────────────────────────────────────
+
+function drawEnchantmentGlow(g: Graphics, equipment: EquipmentLoadout): void {
+  const forge = ForgeManager.shared;
+  const slots = [
+    equipment.mainWeapon, equipment.offhand, equipment.helmet, equipment.chest,
+    equipment.shoulders, equipment.gloves, equipment.boots, equipment.legs,
+    equipment.cape, equipment.belt, equipment.ring1, equipment.ring2, equipment.amulet,
+  ];
+
+  // Collect all enchantment glow colors
+  const glowColors: number[] = [];
+  for (const slotID of slots) {
+    if (!slotID) continue;
+    const color = forge.getEnchantGlowColor(slotID);
+    if (color !== null) glowColors.push(color);
+  }
+
+  if (glowColors.length === 0) return;
+
+  // Primary enchantment glow — soft aura around character
+  const primaryColor = glowColors[0];
+  g.circle(0, -18, 26).fill({ color: primaryColor, alpha: 0.06 * Math.min(glowColors.length, 4) });
+  g.circle(0, -18, 20).fill({ color: primaryColor, alpha: 0.04 * Math.min(glowColors.length, 4) });
+
+  // Secondary enchantment glow — inner ring with second color
+  if (glowColors.length >= 2) {
+    g.circle(0, -18, 14).fill({ color: glowColors[1], alpha: 0.05 });
+  }
+
+  // Sparkle dots for 3+ enchantments (weapon glow particles)
+  if (glowColors.length >= 3) {
+    const sparkleColor = glowColors[2] ?? primaryColor;
+    g.circle(-8, -28, 1.5).fill({ color: sparkleColor, alpha: 0.3 });
+    g.circle(6, -32, 1).fill({ color: sparkleColor, alpha: 0.25 });
+    g.circle(-4, -8, 1).fill({ color: sparkleColor, alpha: 0.2 });
+    g.circle(10, -14, 1.2).fill({ color: sparkleColor, alpha: 0.25 });
+  }
+
+  // Weapon-specific enchantment glow
+  if (equipment.mainWeapon && forge.hasEnchantments(equipment.mainWeapon)) {
+    const wColor = forge.getEnchantGlowColor(equipment.mainWeapon) ?? primaryColor;
+    // Glow along weapon position (right side)
+    g.circle(15, -24, 6).fill({ color: wColor, alpha: 0.1 });
+    g.circle(15, -24, 3).fill({ color: wColor, alpha: 0.15 });
+  }
+}
+
 // ─── Main Equipment Overlay Function ─────────────────────────────
 
 /** Draw equipment visuals on specific body parts for multi-part body. */
@@ -343,6 +392,9 @@ export function drawEquipmentOnParts(
   if (rarityOrder.indexOf(bestRarity) >= 2) {
     drawRarityGlow(parts.torso, bestRarity);
   }
+
+  // Enchantment glow effects
+  drawEnchantmentGlow(parts.torso, equipment);
 }
 
 /** Draw equipment visuals over the player sprite. Call after drawPlayerCharacter. */
@@ -416,4 +468,7 @@ export function drawEquipmentOverlay(g: Graphics, equipment: EquipmentLoadout): 
   if (rarityOrder.indexOf(bestRarity) >= 2) { // rare+
     drawRarityGlow(g, bestRarity);
   }
+
+  // Enchantment glow effects
+  drawEnchantmentGlow(g, equipment);
 }

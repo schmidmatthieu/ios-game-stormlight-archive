@@ -1,8 +1,7 @@
 // ─── Zone Toolbar — top button bar for all game panels ──────────────
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import { MusicManager } from '../game/MusicSystem';
-import { toolbarY, toolbarButtonSize, scaled, touchTarget, fontSize, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
+import { toolbarY, scaled, touchTarget, fontSize, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
 export interface ToolbarCallbacks {
@@ -18,31 +17,70 @@ export interface ToolbarCallbacks {
   toggleProfessions?: () => void;
 }
 
+interface ToolbarEntry {
+  icon: string;
+  label: string;
+  color: number;
+  action: () => void;
+}
+
 function createToolbarButton(
   parent: Container,
   x: number,
   layout: LayoutInfo,
-  drawIcon: (g: Graphics, w: number, h: number, layout: LayoutInfo) => void,
-  onClick: () => void,
+  entry: ToolbarEntry,
 ): void {
   const btnW = touchTarget(36, layout);
   const btnH = touchTarget(28, layout);
   const btn = new Container();
+
+  // Background with subtle gradient feel
   const bg = new Graphics();
-  bg.roundRect(0, 0, btnW, btnH, scaled(7, layout))
-    .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
-    .stroke({ color: UI_COLORS.borderSubtle, width: 1.2, alpha: UI_ALPHA.panelBorder });
+  bg.roundRect(0, 0, btnW, btnH, scaled(6, layout))
+    .fill({ color: 0x1a1a2e, alpha: 0.85 })
+    .stroke({ color: entry.color, width: 1, alpha: 0.45 });
   btn.addChild(bg);
 
-  const icon = new Graphics();
-  drawIcon(icon, btnW, btnH, layout);
-  btn.addChild(icon);
+  // Colored accent line at top
+  const accent = new Graphics();
+  accent.roundRect(scaled(4, layout), 1, btnW - scaled(8, layout), scaled(2, layout), 1)
+    .fill({ color: entry.color, alpha: 0.6 });
+  btn.addChild(accent);
+
+  // Icon text (emoji/unicode)
+  const iconText = new Text({
+    text: entry.icon,
+    style: new TextStyle({
+      fontSize: fontSize(13, layout),
+      fill: 0xffffff,
+    }),
+  });
+  iconText.anchor.set(0.5);
+  iconText.x = btnW / 2;
+  iconText.y = btnH * 0.38;
+  btn.addChild(iconText);
+
+  // Small label below icon
+  const labelText = new Text({
+    text: entry.label,
+    style: new TextStyle({
+      fontFamily: 'sans-serif',
+      fontSize: fontSize(6, layout),
+      fill: entry.color,
+      fontWeight: 'bold',
+    }),
+  });
+  labelText.anchor.set(0.5);
+  labelText.x = btnW / 2;
+  labelText.y = btnH * 0.78;
+  btn.addChild(labelText);
 
   btn.x = x;
   btn.y = toolbarY(layout);
   btn.eventMode = 'static';
   btn.cursor = 'pointer';
-  btn.on('pointerdown', () => { btn.alpha = 0.7; onClick(); });
+
+  btn.on('pointerdown', () => { btn.alpha = 0.7; entry.action(); });
   btn.on('pointerup', () => { btn.alpha = 1; });
   btn.on('pointerupoutside', () => { btn.alpha = 1; });
   parent.addChild(btn);
@@ -57,99 +95,31 @@ export function createZoneToolbar(
   // On mobile, skip the full toolbar — MobileMenu handles it
   if (layout.device === 'mobile') return;
 
-  const cx = screenWidth / 2;
+  const entries: ToolbarEntry[] = [
+    { icon: '📜', label: 'QUÊTES', color: 0xccaa66, action: cb.toggleQuestJournal },
+    { icon: '🤝', label: 'ALLIÉ', color: 0x88ccff, action: cb.toggleCompanion },
+    { icon: '🌟', label: 'TALENTS', color: 0xcc88ff, action: cb.toggleTalentTree },
+    { icon: '⚡', label: 'SKILLS', color: 0x5599dd, action: cb.toggleSkillTree },
+    { icon: '⏸', label: 'PAUSE', color: 0xcccccc, action: cb.togglePause },
+    { icon: '🎒', label: 'INVENT.', color: 0xcc9955, action: cb.toggleInventory },
+    { icon: '⚒', label: 'CRAFT', color: 0x8888aa, action: cb.toggleCrafting },
+    { icon: '📖', label: 'BESTIAIRE', color: 0x77aa66, action: cb.toggleBestiary },
+  ];
 
-  // Quest Journal (leftmost)
-  createToolbarButton(uiContainer, cx - scaled(144, layout), layout,
-    (g, w, h, l) => {
-      g.roundRect(scaled(10, l), scaled(7, l), scaled(16, l), scaled(15, l), scaled(2, l)).fill({ color: 0x886633, alpha: 0.7 });
-      g.rect(scaled(17, l), scaled(7, l), scaled(2, l), scaled(15, l)).fill({ color: 0x664422, alpha: 0.8 });
-      g.rect(scaled(12, l), scaled(10, l), scaled(4, l), scaled(1, l)).fill({ color: 0xccaa66, alpha: 0.5 });
-      g.rect(scaled(12, l), scaled(14, l), scaled(4, l), scaled(1, l)).fill({ color: 0xccaa66, alpha: 0.5 });
-      g.rect(scaled(12, l), scaled(18, l), scaled(4, l), scaled(1, l)).fill({ color: 0xccaa66, alpha: 0.5 });
-    }, cb.toggleQuestJournal);
-
-  // Companion
-  createToolbarButton(uiContainer, cx - scaled(108, layout), layout,
-    (g, w, h) => {
-      g.circle(w * 0.5, h * 0.5, w * 0.17).fill({ color: 0x88ccff, alpha: 0.5 });
-      g.circle(w * 0.5, h * 0.5, w * 0.11).fill({ color: 0xaaddff, alpha: 0.7 });
-      g.circle(w * 0.47, h * 0.47, w * 0.06).fill({ color: 0xffffff, alpha: 0.4 });
-    }, cb.toggleCompanion);
-
-  // Talent Tree (new!)
-  createToolbarButton(uiContainer, cx - scaled(64, layout), layout,
-    (g, w, h) => {
-      // Star icon for talents
-      g.circle(w * 0.5, h * 0.42, w * 0.14).fill({ color: 0xcc88ff, alpha: 0.6 });
-      g.circle(w * 0.5, h * 0.42, w * 0.08).fill({ color: 0xeeccff, alpha: 0.8 });
-      g.rect(w * 0.47, h * 0.56, w * 0.06, h * 0.2).fill({ color: 0xaa77dd, alpha: 0.5 });
-      g.circle(w * 0.35, h * 0.65, w * 0.06).fill({ color: 0x9966cc, alpha: 0.4 });
-      g.circle(w * 0.65, h * 0.65, w * 0.06).fill({ color: 0x9966cc, alpha: 0.4 });
-    }, cb.toggleTalentTree);
-
-  // Skill Tree
-  createToolbarButton(uiContainer, cx - scaled(20, layout), layout,
-    (g, w, h) => {
-      g.rect(w * 0.47, h * 0.3, w * 0.06, h * 0.5).fill({ color: 0x5588cc, alpha: 0.7 });
-      g.circle(w * 0.5, h * 0.3, w * 0.1).fill({ color: 0x5588cc, alpha: 0.6 });
-      g.circle(w * 0.33, h * 0.55, w * 0.08).fill({ color: 0x4477aa, alpha: 0.5 });
-      g.circle(w * 0.67, h * 0.55, w * 0.08).fill({ color: 0x4477aa, alpha: 0.5 });
-      g.moveTo(w * 0.5, h * 0.45).lineTo(w * 0.33, h * 0.55).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
-      g.moveTo(w * 0.5, h * 0.45).lineTo(w * 0.67, h * 0.55).stroke({ color: 0x5588cc, width: 1, alpha: 0.5 });
-    }, cb.toggleSkillTree);
-
-  // Pause (center)
-  createToolbarButton(uiContainer, cx + scaled(24, layout), layout,
-    (g, w, h) => {
-      g.rect(w * 0.3, h * 0.2, w * 0.1, h * 0.6).fill({ color: UI_COLORS.textPrimary, alpha: 0.85 });
-      g.rect(w * 0.55, h * 0.2, w * 0.1, h * 0.6).fill({ color: UI_COLORS.textPrimary, alpha: 0.85 });
-    }, cb.togglePause);
-
-  // Inventory
-  createToolbarButton(uiContainer, cx + scaled(68, layout), layout,
-    (g, w, h, l) => {
-      const ix = w * 0.28, iy = h * 0.3, iw = w * 0.44, ih = h * 0.5;
-      g.roundRect(ix, iy, iw, ih, scaled(3, l)).fill({ color: 0xaa8855, alpha: 0.7 });
-      g.roundRect(ix, iy, iw, ih, scaled(3, l)).stroke({ color: 0xccaa66, width: 1, alpha: 0.5 });
-      g.arc(w * 0.5, iy, iw * 0.3, Math.PI, 0).stroke({ color: 0xccaa66, width: 1.5, alpha: 0.6 });
-    }, cb.toggleInventory);
-
-  // Crafting
-  createToolbarButton(uiContainer, cx + scaled(112, layout), layout,
-    (g, w, h) => {
-      g.poly([{ x: w * 0.33, y: h * 0.7 }, { x: w * 0.5, y: h * 0.35 }, { x: w * 0.67, y: h * 0.7 }]).fill({ color: 0x888899, alpha: 0.7 });
-      g.rect(w * 0.28, h * 0.7, w * 0.44, h * 0.1).fill({ color: 0x666677, alpha: 0.8 });
-      g.rect(w * 0.44, h * 0.2, w * 0.1, h * 0.2).fill({ color: 0xaa8844, alpha: 0.7 });
-    }, cb.toggleCrafting);
-
-  // Bestiary
-  createToolbarButton(uiContainer, cx + scaled(156, layout), layout,
-    (g, w, h, l) => {
-      g.roundRect(w * 0.28, h * 0.22, w * 0.44, h * 0.56, scaled(2, l)).fill({ color: 0x557744, alpha: 0.7 });
-      g.rect(w * 0.33, h * 0.32, w * 0.33, h * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.6 });
-      g.rect(w * 0.33, h * 0.42, w * 0.28, h * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.5 });
-      g.rect(w * 0.33, h * 0.52, w * 0.3, h * 0.04).fill({ color: UI_COLORS.textPrimary, alpha: 0.4 });
-      g.rect(w * 0.28, h * 0.22, w * 0.06, h * 0.56).fill({ color: 0x445533, alpha: 0.8 });
-    }, cb.toggleBestiary);
-
-  // Professions
   if (cb.toggleProfessions) {
-    createToolbarButton(uiContainer, cx + scaled(200, layout), layout,
-      (g, w, h) => {
-        // Pickaxe icon for professions
-        g.poly([{ x: w * 0.35, y: h * 0.65 }, { x: w * 0.6, y: h * 0.3 }])
-          .stroke({ color: 0xaa8855, width: 2, alpha: 0.8 });
-        g.poly([{ x: w * 0.55, y: h * 0.25 }, { x: w * 0.7, y: h * 0.2 }, { x: w * 0.65, y: h * 0.4 }])
-          .fill({ color: 0x888899, alpha: 0.7 });
-      }, cb.toggleProfessions);
+    entries.push({ icon: '⛏', label: 'MÉTIERS', color: 0xaa8855, action: cb.toggleProfessions });
   }
 
-  // Achievements (rightmost)
-  createToolbarButton(uiContainer, cx + scaled(244, layout), layout,
-    (g, w, h) => {
-      g.moveTo(w * 0.36, h * 0.25).lineTo(w * 0.64, h * 0.25).lineTo(w * 0.6, h * 0.55).lineTo(w * 0.4, h * 0.55).closePath().fill({ color: UI_COLORS.textGold, alpha: 0.7 });
-      g.rect(w * 0.44, h * 0.55, w * 0.12, h * 0.12).fill({ color: 0xccaa44, alpha: 0.7 });
-      g.rect(w * 0.38, h * 0.67, w * 0.24, h * 0.08).fill({ color: 0xccaa44, alpha: 0.6 });
-    }, cb.toggleAchievements);
+  entries.push({ icon: '🏆', label: 'SUCCÈS', color: 0xddaa44, action: cb.toggleAchievements });
+
+  // Uniform spacing: calculate total width and center
+  const btnW = touchTarget(36, layout);
+  const gap = scaled(8, layout);
+  const totalW = entries.length * btnW + (entries.length - 1) * gap;
+  const startX = (screenWidth - totalW) / 2;
+
+  for (let i = 0; i < entries.length; i++) {
+    const x = startX + i * (btnW + gap);
+    createToolbarButton(uiContainer, x, layout, entries[i]);
+  }
 }

@@ -374,8 +374,8 @@ export class UILayoutManager {
     label.y = btnSize + 1;
     btn.addChild(label);
 
-    // Position: top-center, slightly lower to avoid notch
-    btn.x = screenW / 2 - btnSize / 2;
+    // Position: top-right corner, away from toolbar
+    btn.x = screenW - btnSize - 8;
     btn.y = 6;
 
     // Edit mode overlay (shown when active)

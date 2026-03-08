@@ -752,6 +752,7 @@ export class ZoneScene extends Container implements GameScene {
       checkQuestCompletion: () => this.checkQuestCompletion(),
       collectLoot: (id) => this.collectLoot(id),
       gotoZoneScene: () => this.router.goto(ZoneScene),
+      onCloseDialogue: () => this.closeDialogue(),
     };
   }
 

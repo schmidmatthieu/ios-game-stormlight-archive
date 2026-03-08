@@ -2,6 +2,7 @@
 // Upgrade existing equipment: enhance stats, add enchantments, reforge rarity
 
 import { GameManager } from '../game/GameManager';
+import { ProfessionManager } from '../game/ProfessionSystem';
 import type { ItemRarity } from '../data/types';
 
 const STORAGE_KEY = 'cosmere_forge';
@@ -24,6 +25,8 @@ export interface EnchantmentDef {
   goldCost: number;
   requiredLevel: number;
   worldID: string;
+  materialCost: { materialID: string; amount: number }[];
+  glowColor: number; // Visual glow color for enchanted items
 }
 
 export interface ForgeResult {
@@ -53,22 +56,32 @@ const ENHANCEMENT_TIERS: EnhancementLevel[] = [
 
 const ENCHANTMENTS: EnchantmentDef[] = [
   // Scadrial
-  { id: 'ench_steel_edge', name: 'Tranchant d\'Acier', description: '+3 Force', statType: 'strength', bonusValue: 3, goldCost: 200, requiredLevel: 3, worldID: 'scadrial' },
-  { id: 'ench_pewter_body', name: 'Corps d\'Étain', description: '+3 Vigueur', statType: 'vigor', bonusValue: 3, goldCost: 200, requiredLevel: 3, worldID: 'scadrial' },
+  { id: 'ench_steel_edge', name: 'Tranchant d\'Acier', description: '+3 Force', statType: 'strength', bonusValue: 3, goldCost: 100, requiredLevel: 3, worldID: 'scadrial',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 4 }], glowColor: 0xaabbcc },
+  { id: 'ench_pewter_body', name: 'Corps d\'Étain', description: '+3 Vigueur', statType: 'vigor', bonusValue: 3, goldCost: 100, requiredLevel: 3, worldID: 'scadrial',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 4 }], glowColor: 0x88aacc },
   // Roshar
-  { id: 'ench_stormlight', name: 'Infusion de Lumière', description: '+4 Investiture', statType: 'investiture', bonusValue: 4, goldCost: 250, requiredLevel: 4, worldID: 'roshar' },
-  { id: 'ench_windrunner', name: 'Bénédiction du Vent', description: '+3 Agilité', statType: 'agility', bonusValue: 3, goldCost: 250, requiredLevel: 4, worldID: 'roshar' },
+  { id: 'ench_stormlight', name: 'Infusion de Lumière', description: '+4 Investiture', statType: 'investiture', bonusValue: 4, goldCost: 120, requiredLevel: 4, worldID: 'roshar',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 3 }, { materialID: 'cristal_investiture', amount: 1 }], glowColor: 0x44ccff },
+  { id: 'ench_windrunner', name: 'Bénédiction du Vent', description: '+3 Agilité', statType: 'agility', bonusValue: 3, goldCost: 120, requiredLevel: 4, worldID: 'roshar',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 3 }, { materialID: 'cristal_investiture', amount: 1 }], glowColor: 0x66ddff },
   // Taldain
-  { id: 'ench_sand_guard', name: 'Garde de Sable', description: '+3 Vigueur', statType: 'vigor', bonusValue: 3, goldCost: 180, requiredLevel: 3, worldID: 'taldain' },
-  { id: 'ench_solar', name: 'Énergie Solaire', description: '+3 Esprit', statType: 'spirit', bonusValue: 3, goldCost: 180, requiredLevel: 3, worldID: 'taldain' },
+  { id: 'ench_sand_guard', name: 'Garde de Sable', description: '+3 Vigueur', statType: 'vigor', bonusValue: 3, goldCost: 80, requiredLevel: 3, worldID: 'taldain',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 3 }, { materialID: 'sable_blanc', amount: 1 }], glowColor: 0xddcc88 },
+  { id: 'ench_solar', name: 'Énergie Solaire', description: '+3 Esprit', statType: 'spirit', bonusValue: 3, goldCost: 80, requiredLevel: 3, worldID: 'taldain',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 3 }, { materialID: 'sable_blanc', amount: 1 }], glowColor: 0xffdd44 },
   // Komashi
-  { id: 'ench_nightmare', name: 'Touche de Cauchemar', description: '+4 Esprit', statType: 'spirit', bonusValue: 4, goldCost: 220, requiredLevel: 5, worldID: 'komashi' },
+  { id: 'ench_nightmare', name: 'Touche de Cauchemar', description: '+4 Esprit', statType: 'spirit', bonusValue: 4, goldCost: 100, requiredLevel: 5, worldID: 'komashi',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 5 }, { materialID: 'cristal_investiture', amount: 1 }], glowColor: 0x7744aa },
   // Nalthis
-  { id: 'ench_chromatic', name: 'Résonance Chromatique', description: '+3 Investiture, +2 Chance', statType: 'investiture', bonusValue: 3, goldCost: 300, requiredLevel: 5, worldID: 'nalthis' },
+  { id: 'ench_chromatic', name: 'Résonance Chromatique', description: '+3 Investiture, +2 Chance', statType: 'investiture', bonusValue: 3, goldCost: 150, requiredLevel: 5, worldID: 'nalthis',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 4 }, { materialID: 'cristal_investiture', amount: 2 }], glowColor: 0xff44cc },
   // Sel
-  { id: 'ench_aon_power', name: 'Pouvoir Aonique', description: '+5 Esprit', statType: 'spirit', bonusValue: 5, goldCost: 350, requiredLevel: 6, worldID: 'sel' },
+  { id: 'ench_aon_power', name: 'Pouvoir Aonique', description: '+5 Esprit', statType: 'spirit', bonusValue: 5, goldCost: 180, requiredLevel: 6, worldID: 'sel',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 5 }, { materialID: 'cristal_investiture', amount: 2 }], glowColor: 0xddaa44 },
   // Shadesmar (universal)
-  { id: 'ench_cosmeric', name: 'Enchantement Cosmérique', description: '+3 à toutes les stats', statType: 'all', bonusValue: 3, goldCost: 800, requiredLevel: 8, worldID: 'shadesmar' },
+  { id: 'ench_cosmeric', name: 'Enchantement Cosmérique', description: '+3 à toutes les stats', statType: 'all', bonusValue: 3, goldCost: 400, requiredLevel: 8, worldID: 'shadesmar',
+    materialCost: [{ materialID: 'poudre_arcane', amount: 8 }, { materialID: 'cristal_investiture', amount: 3 }, { materialID: 'sable_blanc', amount: 2 }], glowColor: 0xeeddff },
 ];
 
 // ─── Rarity Upgrade ─────────────────────────────────────────────
@@ -187,12 +200,23 @@ export class ForgeManager {
     const ench = ENCHANTMENTS.find(e => e.id === enchantmentID);
     if (!ench) return { success: false, message: 'Enchantement inconnu', goldSpent: 0 };
 
-    if (champ.level < ench.requiredLevel) {
-      return { success: false, message: `Niveau ${ench.requiredLevel} requis`, goldSpent: 0 };
+    // Check enchanting profession level
+    const enchLevel = ProfessionManager.shared.professions.get('enchanting')?.level ?? 1;
+    if (enchLevel < ench.requiredLevel) {
+      return { success: false, message: `Enchantement Nv.${ench.requiredLevel} requis (actuel: ${enchLevel})`, goldSpent: 0 };
     }
 
     if (champ.gold < ench.goldCost) {
       return { success: false, message: `Or insuffisant (${ench.goldCost} requis)`, goldSpent: 0 };
+    }
+
+    // Check material costs
+    const profInv = ProfessionManager.shared.inventory;
+    for (const mat of ench.materialCost) {
+      const owned = profInv.get(mat.materialID) ?? 0;
+      if (owned < mat.amount) {
+        return { success: false, message: `Matériaux insuffisants`, goldSpent: 0 };
+      }
     }
 
     const existing = this.appliedEnchantments.get(itemID) ?? [];
@@ -203,7 +227,13 @@ export class ForgeManager {
       return { success: false, message: 'Enchantement déjà appliqué', goldSpent: 0 };
     }
 
+    // Consume gold and materials
     champ.gold -= ench.goldCost;
+    for (const mat of ench.materialCost) {
+      const current = profInv.get(mat.materialID) ?? 0;
+      profInv.set(mat.materialID, current - mat.amount);
+    }
+    ProfessionManager.shared.save();
     existing.push(enchantmentID);
     this.appliedEnchantments.set(itemID, existing);
 
@@ -254,6 +284,19 @@ export class ForgeManager {
     const idx = RARITY_ORDER.indexOf(currentRarity);
     if (idx < 0 || idx >= RARITY_ORDER.length - 1) return null;
     return RARITY_ORDER[idx + 1];
+  }
+
+  /** Get the dominant glow color for an item's enchantments */
+  getEnchantGlowColor(itemID: string): number | null {
+    const enchIDs = this.appliedEnchantments.get(itemID);
+    if (!enchIDs || enchIDs.length === 0) return null;
+    const ench = ENCHANTMENTS.find(e => e.id === enchIDs[enchIDs.length - 1]);
+    return ench?.glowColor ?? null;
+  }
+
+  /** Check if an item has any enchantments */
+  hasEnchantments(itemID: string): boolean {
+    return (this.appliedEnchantments.get(itemID)?.length ?? 0) > 0;
   }
 
   reset(): void {

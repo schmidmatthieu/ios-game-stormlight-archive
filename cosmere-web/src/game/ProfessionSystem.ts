@@ -1,5 +1,8 @@
 // ─── Profession System — gathering, crafting professions ─────────────
 
+import { GameManager } from './GameManager';
+import { gameData } from '../data/DataLoader';
+
 export type ProfessionType = 'mining' | 'herbalism' | 'woodcutting' | 'skinning' | 'enchanting';
 
 export interface ProfessionState {
@@ -183,6 +186,7 @@ export class ProfessionManager {
 
   professions: Map<ProfessionType, ProfessionState> = new Map();
   inventory: Map<string, number> = new Map(); // materialID → count
+  craftBonuses: Map<string, number> = new Map(); // itemID → bonus stats from profession level
 
   constructor() {
     const types: ProfessionType[] = ['mining', 'herbalism', 'woodcutting', 'skinning', 'enchanting'];
@@ -286,10 +290,88 @@ export class ProfessionManager {
       this.inventory.set(mat.materialID, current - mat.amount);
     }
 
+    // Add crafted item to champion inventory
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      for (let i = 0; i < recipe.result.amount; i++) {
+        champ.inventoryItemIDs.push(recipe.result.itemID);
+      }
+    }
+
+    // Profession level bonus applied to crafted items
+    const profState = this.professions.get(recipe.profession)!;
+    const levelBonus = Math.floor(profState.level / 5); // +1 stat per 5 profession levels
+    if (levelBonus > 0) {
+      this.craftBonuses.set(recipe.result.itemID, levelBonus);
+    }
+
     // Grant crafting XP
     this.addXP(recipe.profession, recipe.requiredLevel * 15 + 20);
 
-    return { success: true, message: `${recipe.name} fabrique !` };
+    return { success: true, message: `${recipe.name} fabriqué !${levelBonus > 0 ? ` (+${levelBonus} bonus)` : ''}` };
+  }
+
+  // ── Disenchanting ──────────────────────────────────────
+
+  /** Get the crafting bonus for a crafted item */
+  getCraftBonus(itemID: string): number {
+    return this.craftBonuses.get(itemID) ?? 0;
+  }
+
+  /** Disenchant an item from champion inventory into enchanting materials */
+  disenchant(itemID: string): { success: boolean; message: string; materials: { id: string; name: string; amount: number }[] } {
+    const champ = GameManager.shared.champion;
+    if (!champ) return { success: false, message: 'Aucun champion', materials: [] };
+
+    const idx = champ.inventoryItemIDs.indexOf(itemID);
+    if (idx === -1) return { success: false, message: 'Objet non trouvé', materials: [] };
+
+    // Check equipped items
+    const eq = champ.equipment;
+    const equippedIDs = [eq.mainWeapon, eq.offhand, eq.helmet, eq.chest, eq.shoulders, eq.gloves, eq.boots, eq.legs, eq.cape, eq.belt, eq.ring1, eq.ring2, eq.amulet];
+    if (equippedIDs.includes(itemID)) {
+      return { success: false, message: 'Impossible de désenchanter un objet équipé', materials: [] };
+    }
+
+    // Remove from inventory
+    champ.inventoryItemIDs.splice(idx, 1);
+
+    // Determine materials gained based on item rarity
+    const gained: { id: string; name: string; amount: number }[] = [];
+    const item = gameData.item(itemID);
+    const rarity = item?.rarity ?? 'common';
+
+    // Always get poudre_arcane (base material)
+    const baseAmount = rarity === 'common' ? 1 : rarity === 'uncommon' ? 2 : rarity === 'rare' ? 3 : rarity === 'epic' ? 5 : rarity === 'legendary' ? 8 : 12;
+    this.addMaterial('poudre_arcane', baseAmount);
+    gained.push({ id: 'poudre_arcane', name: 'Poudre Arcane', amount: baseAmount });
+
+    // Rare+ items also grant cristal_investiture
+    if (['rare', 'epic', 'legendary', 'cosmeric'].includes(rarity)) {
+      const crystalAmount = rarity === 'rare' ? 1 : rarity === 'epic' ? 2 : rarity === 'legendary' ? 3 : 5;
+      this.addMaterial('cristal_investiture', crystalAmount);
+      gained.push({ id: 'cristal_investiture', name: 'Cristal d\'Investiture', amount: crystalAmount });
+    }
+
+    // Epic+ items also grant sable_blanc
+    if (['epic', 'legendary', 'cosmeric'].includes(rarity)) {
+      const sandAmount = rarity === 'epic' ? 1 : rarity === 'legendary' ? 2 : 4;
+      this.addMaterial('sable_blanc', sandAmount);
+      gained.push({ id: 'sable_blanc', name: 'Sable Blanc', amount: sandAmount });
+    }
+
+    // Grant enchanting XP
+    this.addXP('enchanting', baseAmount * 5);
+
+    return {
+      success: true,
+      message: `${item?.name ?? itemID} désenchanté !`,
+      materials: gained,
+    };
+  }
+
+  private addMaterial(id: string, amount: number): void {
+    this.inventory.set(id, (this.inventory.get(id) ?? 0) + amount);
   }
 
   // ── Labels ───────────────────────────────────────────
@@ -310,6 +392,7 @@ export class ProfessionManager {
     const data = {
       professions: Array.from(this.professions.values()),
       inventory: Array.from(this.inventory.entries()),
+      craftBonuses: Array.from(this.craftBonuses.entries()),
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { /* noop */ }
   }
@@ -318,11 +401,12 @@ export class ProfessionManager {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-      const data = JSON.parse(raw) as { professions: ProfessionState[]; inventory: [string, number][] };
+      const data = JSON.parse(raw) as { professions: ProfessionState[]; inventory: [string, number][]; craftBonuses?: [string, number][] };
       for (const p of data.professions) {
         this.professions.set(p.type, p);
       }
       this.inventory = new Map(data.inventory);
+      if (data.craftBonuses) this.craftBonuses = new Map(data.craftBonuses);
     } catch { /* noop */ }
   }
 }
