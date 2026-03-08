@@ -37,15 +37,15 @@
     "reward": {
       "xp": 100,
       "gold": 50,
-      "items": [
-        "steel_vial",
-        "iron_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "steel_vial",
+        "iron_vial"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_main_1",
@@ -99,16 +99,16 @@
     "reward": {
       "xp": 200,
       "gold": 120,
-      "items": [
-        "tin_vial",
-        "pewter_vial",
-        "koloss_blade_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "tin_vial",
+        "pewter_vial",
+        "koloss_blade_shard"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_main_2",
@@ -154,16 +154,16 @@
     "reward": {
       "xp": 500,
       "gold": 300,
-      "items": [
-        "inquisitor_spike",
-        "atium_bead",
-        "guard_armor_piece"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "inquisitor_spike",
+        "atium_bead",
+        "guard_armor_piece"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_main_3",
@@ -217,14 +217,14 @@
     "reward": {
       "xp": 80,
       "gold": 40,
-      "items": [
-        "tin_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "tin_vial"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_1",
@@ -278,15 +278,15 @@
     "reward": {
       "xp": 60,
       "gold": 100,
-      "items": [
-        "pewter_vial",
-        "pewter_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 5
         }
+      ],
+      "itemIDs": [
+        "pewter_vial",
+        "pewter_vial"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_2",
@@ -332,16 +332,16 @@
     "reward": {
       "xp": 250,
       "gold": 150,
-      "items": [
-        "stormlight_chip",
-        "stormlight_chip",
-        "stormlight_mark"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "stormlight_chip",
+        "stormlight_chip",
+        "stormlight_mark"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_main_1",
@@ -395,16 +395,16 @@
     "reward": {
       "xp": 400,
       "gold": 250,
-      "items": [
-        "stormlight_mark",
-        "carapace_armor_piece",
-        "voidspren_essence"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "stormlight_mark",
+        "carapace_armor_piece",
+        "voidspren_essence"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_main_2",
@@ -450,16 +450,16 @@
     "reward": {
       "xp": 750,
       "gold": 500,
-      "items": [
-        "thunderclast_heart",
-        "honorblade_shard",
-        "stormlight_broam"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "thunderclast_heart",
+        "honorblade_shard",
+        "stormlight_broam"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_main_3",
@@ -505,15 +505,15 @@
     "reward": {
       "xp": 300,
       "gold": 350,
-      "items": [
-        "gemheart_fragment",
-        "carapace_plate"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "gemheart_fragment",
+        "carapace_plate"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_1",
@@ -559,15 +559,15 @@
     "reward": {
       "xp": 200,
       "gold": 150,
-      "items": [
-        "stormlight_mark",
-        "stormlight_chip"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "stormlight_mark",
+        "stormlight_chip"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_2",
@@ -621,16 +621,16 @@
     "reward": {
       "xp": 400,
       "gold": 250,
-      "items": [
-        "desert_water_flask",
-        "white_sand_pouch",
-        "raider_scimitar"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "desert_water_flask",
+        "white_sand_pouch",
+        "raider_scimitar"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_main_1",
@@ -692,16 +692,16 @@
     "reward": {
       "xp": 550,
       "gold": 350,
-      "items": [
-        "wyrm_scale",
-        "sandling_carapace",
-        "white_sand_pouch"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "wyrm_scale",
+        "sandling_carapace",
+        "white_sand_pouch"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_main_2",
@@ -747,16 +747,16 @@
     "reward": {
       "xp": 800,
       "gold": 550,
-      "items": [
-        "sand_lord_crown",
-        "dark_sand_core",
-        "darkside_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "sand_lord_crown",
+        "dark_sand_core",
+        "darkside_shard"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_main_3",
@@ -810,15 +810,15 @@
     "reward": {
       "xp": 300,
       "gold": 200,
-      "items": [
-        "desert_water_flask",
-        "wyrm_scale"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "desert_water_flask",
+        "wyrm_scale"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_1",
@@ -872,16 +872,16 @@
     "reward": {
       "xp": 350,
       "gold": 200,
-      "items": [
-        "white_sand_pouch",
-        "sandling_carapace",
-        "sandling_carapace"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "white_sand_pouch",
+        "sandling_carapace",
+        "sandling_carapace"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_2",
@@ -935,16 +935,16 @@
     "reward": {
       "xp": 550,
       "gold": 350,
-      "items": [
-        "nightmare_ink",
-        "hion_shard",
-        "shadow_fabric"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "nightmare_ink",
+        "hion_shard",
+        "shadow_fabric"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_main_1",
@@ -998,16 +998,16 @@
     "reward": {
       "xp": 700,
       "gold": 450,
-      "items": [
-        "shadow_cloak_piece",
-        "shadow_fabric",
-        "nightmare_ink"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "shadow_cloak_piece",
+        "shadow_fabric",
+        "nightmare_ink"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_main_2",
@@ -1061,16 +1061,16 @@
     "reward": {
       "xp": 1000,
       "gold": 700,
-      "items": [
-        "nightmare_heart",
-        "sentinel_core",
-        "painters_masterwork"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "nightmare_heart",
+        "sentinel_core",
+        "painters_masterwork"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_main_3",
@@ -1124,16 +1124,16 @@
     "reward": {
       "xp": 450,
       "gold": 300,
-      "items": [
-        "hion_shard",
-        "hion_shard",
-        "nightmare_ink"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "hion_shard",
+        "hion_shard",
+        "nightmare_ink"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_1",
@@ -1187,16 +1187,16 @@
     "reward": {
       "xp": 400,
       "gold": 350,
-      "items": [
-        "machine_core_fragment",
-        "hion_shard",
-        "shadow_fabric"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "machine_core_fragment",
+        "hion_shard",
+        "shadow_fabric"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_2",
@@ -1234,14 +1234,14 @@
     "reward": {
       "xp": 600,
       "gold": 400,
-      "items": [
-        "stormlight_broam"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "stormlight_broam"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_main_1",
@@ -1279,15 +1279,15 @@
     "reward": {
       "xp": 650,
       "gold": 450,
-      "items": [
-        "stormlight_broam",
-        "darkside_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "darkside_shard"
       ]
     },
     "dialogueTreeID": "dialogue_sel_main_1",
@@ -1333,11 +1333,6 @@
     "reward": {
       "xp": 900,
       "gold": 600,
-      "items": [
-        "voidspren_essence",
-        "nightmare_ink",
-        "stormlight_broam"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
@@ -1355,6 +1350,11 @@
           "worldID": "komashi",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "voidspren_essence",
+        "nightmare_ink",
+        "stormlight_broam"
       ]
     },
     "dialogueTreeID": "dialogue_cosmere_main_1",
@@ -1416,12 +1416,6 @@
     "reward": {
       "xp": 1200,
       "gold": 800,
-      "items": [
-        "atium_bead",
-        "stormlight_broam",
-        "dark_sand_core",
-        "painters_masterwork"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
@@ -1439,6 +1433,12 @@
           "worldID": "komashi",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "stormlight_broam",
+        "dark_sand_core",
+        "painters_masterwork"
       ]
     },
     "dialogueTreeID": "dialogue_cosmere_main_2",
@@ -1492,13 +1492,6 @@
     "reward": {
       "xp": 2000,
       "gold": 1500,
-      "items": [
-        "atium_bead",
-        "honorblade_shard",
-        "sand_lord_crown",
-        "nightmare_heart",
-        "painters_masterwork"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
@@ -1524,6 +1517,13 @@
           "worldID": "sel",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "honorblade_shard",
+        "sand_lord_crown",
+        "nightmare_heart",
+        "painters_masterwork"
       ]
     },
     "dialogueTreeID": "dialogue_cosmere_main_3",
@@ -1569,10 +1569,6 @@
     "reward": {
       "xp": 500,
       "gold": 400,
-      "items": [
-        "stormlight_broam",
-        "atium_bead"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
@@ -1582,6 +1578,10 @@
           "worldID": "scadrial",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "atium_bead"
       ]
     },
     "dialogueTreeID": null,
@@ -1627,18 +1627,18 @@
     "reward": {
       "xp": 350,
       "gold": 500,
-      "items": [
-        "atium_bead",
-        "steel_vial",
-        "iron_vial",
-        "tin_vial",
-        "pewter_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "steel_vial",
+        "iron_vial",
+        "tin_vial",
+        "pewter_vial"
       ]
     },
     "dialogueTreeID": null,
@@ -1692,16 +1692,16 @@
     "reward": {
       "xp": 600,
       "gold": 500,
-      "items": [
-        "painters_masterwork",
-        "shadow_cloak_piece",
-        "nightmare_ink"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "painters_masterwork",
+        "shadow_cloak_piece",
+        "nightmare_ink"
       ]
     },
     "dialogueTreeID": "dialogue_hidden_painter",
@@ -1756,15 +1756,15 @@
     "reward": {
       "xp": 350,
       "gold": 200,
-      "items": [
-        "awakened_blade",
-        "chromatic_thread"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "awakened_blade",
+        "chromatic_thread"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_main_2"
@@ -1810,16 +1810,16 @@
     "reward": {
       "xp": 700,
       "gold": 400,
-      "items": [
-        "returned_bloom",
-        "god_king_scepter",
-        "divine_breath_crystal"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "returned_bloom",
+        "god_king_scepter",
+        "divine_breath_crystal"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_main_3"
@@ -1865,15 +1865,15 @@
     "reward": {
       "xp": 120,
       "gold": 80,
-      "items": [
-        "chromatic_thread",
-        "breath_essence"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "chromatic_thread",
+        "breath_essence"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_1"
@@ -1919,14 +1919,14 @@
     "reward": {
       "xp": 100,
       "gold": 60,
-      "items": [
-        "breath_essence"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "breath_essence"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_2"
@@ -1980,16 +1980,16 @@
     "reward": {
       "xp": 400,
       "gold": 250,
-      "items": [
-        "dakhor_bone_charm",
-        "aon_glyph_stone",
-        "elantrian_robe"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "dakhor_bone_charm",
+        "aon_glyph_stone",
+        "elantrian_robe"
       ]
     },
     "dialogueTreeID": "dialogue_sel_main_2"
@@ -2035,16 +2035,16 @@
     "reward": {
       "xp": 900,
       "gold": 500,
-      "items": [
-        "pool_of_devotion_vial",
-        "splinter_of_devotion",
-        "seons_light"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "pool_of_devotion_vial",
+        "splinter_of_devotion",
+        "seons_light"
       ]
     },
     "dialogueTreeID": "dialogue_sel_main_3"
@@ -2090,15 +2090,15 @@
     "reward": {
       "xp": 130,
       "gold": 80,
-      "items": [
-        "seons_light",
-        "aon_glyph_stone"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "seons_light",
+        "aon_glyph_stone"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_1"
@@ -2144,15 +2144,15 @@
     "reward": {
       "xp": 150,
       "gold": 100,
-      "items": [
-        "elantrian_robe",
-        "pool_of_devotion_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "elantrian_robe",
+        "pool_of_devotion_vial"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_2"
@@ -2198,15 +2198,15 @@
     "reward": {
       "xp": 500,
       "gold": 300,
-      "items": [
-        "divine_breath_crystal",
-        "returned_bloom"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "divine_breath_crystal",
+        "returned_bloom"
       ]
     },
     "dialogueTreeID": "dialogue_hidden_breath"
@@ -2252,15 +2252,15 @@
     "reward": {
       "xp": 600,
       "gold": 350,
-      "items": [
-        "splinter_of_devotion",
-        "pool_of_devotion_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "splinter_of_devotion",
+        "pool_of_devotion_vial"
       ]
     },
     "dialogueTreeID": "dialogue_hidden_aon"
@@ -2314,11 +2314,11 @@
     "reward": {
       "xp": 1500,
       "gold": 1000,
-      "items": [
+      "reputationChanges": [],
+      "itemIDs": [
         "cosmere_nexus_gem",
         "shard_fragment"
-      ],
-      "reputationChanges": []
+      ]
     },
     "dialogueTreeID": "dialogue_hidden_hopper"
   },
@@ -2329,7 +2329,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 8,
-    "prerequisites": ["scadrial_main_2"],
+    "prerequisites": [
+      "scadrial_main_2"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2360,15 +2362,15 @@
     "reward": {
       "xp": 175,
       "gold": 100,
-      "items": [
-        "steel_vial",
-        "tin_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "steel_vial",
+        "tin_vial"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_3",
@@ -2381,7 +2383,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 15,
-    "prerequisites": ["scadrial_side_3"],
+    "prerequisites": [
+      "scadrial_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2404,15 +2408,15 @@
     "reward": {
       "xp": 350,
       "gold": 250,
-      "items": [
-        "pewter_vial",
-        "koloss_blade_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "pewter_vial",
+        "koloss_blade_shard"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_4",
@@ -2425,7 +2429,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 30,
-    "prerequisites": ["scadrial_side_4"],
+    "prerequisites": [
+      "scadrial_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2448,15 +2454,15 @@
     "reward": {
       "xp": 900,
       "gold": 700,
-      "items": [
-        "atium_bead",
-        "inquisitor_spike"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "inquisitor_spike"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_5",
@@ -2469,7 +2475,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 40,
-    "prerequisites": ["scadrial_side_5"],
+    "prerequisites": [
+      "scadrial_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2500,15 +2508,15 @@
     "reward": {
       "xp": 1300,
       "gold": 1100,
-      "items": [
-        "kandra_blessing",
-        "atium_bead"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "kandra_blessing",
+        "atium_bead"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_6",
@@ -2521,7 +2529,9 @@
     "type": "side",
     "worldID": "scadrial",
     "requiredLevel": 55,
-    "prerequisites": ["scadrial_side_6"],
+    "prerequisites": [
+      "scadrial_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2552,15 +2562,15 @@
     "reward": {
       "xp": 1500,
       "gold": 1500,
-      "items": [
-        "master_atium",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "scadrial",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "master_atium",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_scadrial_side_7",
@@ -2573,7 +2583,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 8,
-    "prerequisites": ["roshar_main_1"],
+    "prerequisites": [
+      "roshar_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2604,15 +2616,15 @@
     "reward": {
       "xp": 180,
       "gold": 110,
-      "items": [
-        "gemheart_fragment",
-        "stormlight_chip"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "gemheart_fragment",
+        "stormlight_chip"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_3",
@@ -2625,7 +2637,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 15,
-    "prerequisites": ["roshar_side_3"],
+    "prerequisites": [
+      "roshar_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2656,15 +2670,15 @@
     "reward": {
       "xp": 350,
       "gold": 220,
-      "items": [
-        "stormlight_mark",
-        "carapace_armor_piece"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "stormlight_mark",
+        "carapace_armor_piece"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_4",
@@ -2677,7 +2691,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 22,
-    "prerequisites": ["roshar_side_4"],
+    "prerequisites": [
+      "roshar_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2708,15 +2724,15 @@
     "reward": {
       "xp": 600,
       "gold": 450,
-      "items": [
-        "carapace_plate",
-        "honorblade_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "carapace_plate",
+        "honorblade_shard"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_5",
@@ -2729,7 +2745,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 45,
-    "prerequisites": ["roshar_side_5"],
+    "prerequisites": [
+      "roshar_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2760,15 +2778,15 @@
     "reward": {
       "xp": 1400,
       "gold": 1200,
-      "items": [
-        "soulcaster_fragment",
-        "perfect_gemheart"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "soulcaster_fragment",
+        "perfect_gemheart"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_6",
@@ -2781,7 +2799,9 @@
     "type": "side",
     "worldID": "roshar",
     "requiredLevel": 58,
-    "prerequisites": ["roshar_side_6"],
+    "prerequisites": [
+      "roshar_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2812,15 +2832,15 @@
     "reward": {
       "xp": 1500,
       "gold": 1500,
-      "items": [
-        "honor_shard_fragment",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "honor_shard_fragment",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_roshar_side_7",
@@ -2833,7 +2853,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 8,
-    "prerequisites": ["taldain_main_1"],
+    "prerequisites": [
+      "taldain_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2864,15 +2886,15 @@
     "reward": {
       "xp": 175,
       "gold": 100,
-      "items": [
-        "desert_water_flask",
-        "white_sand_pouch"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "desert_water_flask",
+        "white_sand_pouch"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_3",
@@ -2885,7 +2907,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 15,
-    "prerequisites": ["taldain_side_3"],
+    "prerequisites": [
+      "taldain_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2908,15 +2932,15 @@
     "reward": {
       "xp": 300,
       "gold": 250,
-      "items": [
-        "wyrm_scale",
-        "sandling_carapace"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "wyrm_scale",
+        "sandling_carapace"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_4",
@@ -2929,7 +2953,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 30,
-    "prerequisites": ["taldain_side_4"],
+    "prerequisites": [
+      "taldain_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -2952,15 +2978,15 @@
     "reward": {
       "xp": 850,
       "gold": 650,
-      "items": [
-        "dark_sand_core",
-        "sand_lord_crown"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "dark_sand_core",
+        "sand_lord_crown"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_5",
@@ -2973,7 +2999,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 40,
-    "prerequisites": ["taldain_side_5"],
+    "prerequisites": [
+      "taldain_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3004,15 +3032,15 @@
     "reward": {
       "xp": 1300,
       "gold": 1100,
-      "items": [
-        "darkside_shard",
-        "sand_lord_crown"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "darkside_shard",
+        "sand_lord_crown"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_6",
@@ -3025,7 +3053,9 @@
     "type": "side",
     "worldID": "taldain",
     "requiredLevel": 55,
-    "prerequisites": ["taldain_side_6"],
+    "prerequisites": [
+      "taldain_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3056,15 +3086,15 @@
     "reward": {
       "xp": 1500,
       "gold": 1400,
-      "items": [
-        "divine_sand",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "taldain",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "divine_sand",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_taldain_side_7",
@@ -3077,7 +3107,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 8,
-    "prerequisites": ["komashi_main_1"],
+    "prerequisites": [
+      "komashi_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3100,15 +3132,15 @@
     "reward": {
       "xp": 160,
       "gold": 90,
-      "items": [
-        "nightmare_ink",
-        "hion_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "nightmare_ink",
+        "hion_shard"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_3",
@@ -3121,7 +3153,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 15,
-    "prerequisites": ["komashi_side_3"],
+    "prerequisites": [
+      "komashi_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3144,15 +3178,15 @@
     "reward": {
       "xp": 320,
       "gold": 210,
-      "items": [
-        "hion_shard",
-        "shadow_fabric"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "hion_shard",
+        "shadow_fabric"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_4",
@@ -3165,7 +3199,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 22,
-    "prerequisites": ["komashi_side_4"],
+    "prerequisites": [
+      "komashi_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3188,15 +3224,15 @@
     "reward": {
       "xp": 550,
       "gold": 420,
-      "items": [
-        "shadow_cloak_piece",
-        "nightmare_ink"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "shadow_cloak_piece",
+        "nightmare_ink"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_5",
@@ -3209,7 +3245,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 40,
-    "prerequisites": ["komashi_side_5"],
+    "prerequisites": [
+      "komashi_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3232,15 +3270,15 @@
     "reward": {
       "xp": 1250,
       "gold": 1050,
-      "items": [
-        "nightmare_heart",
-        "painters_masterwork"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "nightmare_heart",
+        "painters_masterwork"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_6",
@@ -3253,7 +3291,9 @@
     "type": "side",
     "worldID": "komashi",
     "requiredLevel": 55,
-    "prerequisites": ["komashi_side_6"],
+    "prerequisites": [
+      "komashi_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3284,15 +3324,15 @@
     "reward": {
       "xp": 1500,
       "gold": 1400,
-      "items": [
-        "eternal_pigment",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "komashi",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "eternal_pigment",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_komashi_side_7",
@@ -3305,7 +3345,9 @@
     "type": "side",
     "worldID": "nalthis",
     "requiredLevel": 8,
-    "prerequisites": ["nalthis_main_1"],
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3336,15 +3378,15 @@
     "reward": {
       "xp": 190,
       "gold": 100,
-      "items": [
-        "breath_essence",
-        "chromatic_thread"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "breath_essence",
+        "chromatic_thread"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_3",
@@ -3357,7 +3399,9 @@
     "type": "side",
     "worldID": "nalthis",
     "requiredLevel": 15,
-    "prerequisites": ["nalthis_side_3"],
+    "prerequisites": [
+      "nalthis_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3380,15 +3424,15 @@
     "reward": {
       "xp": 350,
       "gold": 280,
-      "items": [
-        "divine_breath_crystal",
-        "chromatic_thread"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "divine_breath_crystal",
+        "chromatic_thread"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_4",
@@ -3401,7 +3445,9 @@
     "type": "side",
     "worldID": "nalthis",
     "requiredLevel": 22,
-    "prerequisites": ["nalthis_side_4"],
+    "prerequisites": [
+      "nalthis_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3432,15 +3478,15 @@
     "reward": {
       "xp": 600,
       "gold": 480,
-      "items": [
-        "awakened_blade",
-        "breath_essence"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "awakened_blade",
+        "breath_essence"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_5",
@@ -3453,7 +3499,9 @@
     "type": "side",
     "worldID": "nalthis",
     "requiredLevel": 40,
-    "prerequisites": ["nalthis_side_5"],
+    "prerequisites": [
+      "nalthis_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3484,15 +3532,15 @@
     "reward": {
       "xp": 1200,
       "gold": 1100,
-      "items": [
-        "returned_bloom",
-        "divine_breath_crystal"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "returned_bloom",
+        "divine_breath_crystal"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_6",
@@ -3505,7 +3553,9 @@
     "type": "side",
     "worldID": "nalthis",
     "requiredLevel": 55,
-    "prerequisites": ["nalthis_side_6"],
+    "prerequisites": [
+      "nalthis_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3536,15 +3586,15 @@
     "reward": {
       "xp": 1500,
       "gold": 1400,
-      "items": [
-        "endowment_essence",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "nalthis",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "endowment_essence",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_nalthis_side_7",
@@ -3557,7 +3607,9 @@
     "type": "side",
     "worldID": "sel",
     "requiredLevel": 8,
-    "prerequisites": ["sel_main_1"],
+    "prerequisites": [
+      "sel_main_1"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3588,15 +3640,15 @@
     "reward": {
       "xp": 180,
       "gold": 95,
-      "items": [
-        "aon_glyph_stone",
-        "dakhor_bone_charm"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "aon_glyph_stone",
+        "dakhor_bone_charm"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_3",
@@ -3609,7 +3661,9 @@
     "type": "side",
     "worldID": "sel",
     "requiredLevel": 15,
-    "prerequisites": ["sel_side_3"],
+    "prerequisites": [
+      "sel_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3640,15 +3694,15 @@
     "reward": {
       "xp": 340,
       "gold": 230,
-      "items": [
-        "pool_of_devotion_vial",
-        "seons_light"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "pool_of_devotion_vial",
+        "seons_light"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_4",
@@ -3661,7 +3715,9 @@
     "type": "side",
     "worldID": "sel",
     "requiredLevel": 22,
-    "prerequisites": ["sel_side_4"],
+    "prerequisites": [
+      "sel_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3692,15 +3748,15 @@
     "reward": {
       "xp": 650,
       "gold": 480,
-      "items": [
-        "dakhor_bone_charm",
-        "elantrian_robe"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "dakhor_bone_charm",
+        "elantrian_robe"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_5",
@@ -3713,7 +3769,9 @@
     "type": "side",
     "worldID": "sel",
     "requiredLevel": 40,
-    "prerequisites": ["sel_side_5"],
+    "prerequisites": [
+      "sel_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3736,15 +3794,15 @@
     "reward": {
       "xp": 1250,
       "gold": 1050,
-      "items": [
-        "splinter_of_devotion",
-        "pool_of_devotion_vial"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "splinter_of_devotion",
+        "pool_of_devotion_vial"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_6",
@@ -3757,7 +3815,9 @@
     "type": "side",
     "worldID": "sel",
     "requiredLevel": 55,
-    "prerequisites": ["sel_side_6"],
+    "prerequisites": [
+      "sel_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3788,15 +3848,15 @@
     "reward": {
       "xp": 1500,
       "gold": 1500,
-      "items": [
-        "divine_shard_fragment",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "sel",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "divine_shard_fragment",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_sel_side_7",
@@ -3809,7 +3869,9 @@
     "type": "side",
     "worldID": "shadesmar",
     "requiredLevel": 10,
-    "prerequisites": ["hidden_shadesmar_passage"],
+    "prerequisites": [
+      "hidden_shadesmar_passage"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3840,15 +3902,15 @@
     "reward": {
       "xp": 200,
       "gold": 120,
-      "items": [
-        "stormlight_chip",
-        "voidspren_essence"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 10
         }
+      ],
+      "itemIDs": [
+        "stormlight_chip",
+        "voidspren_essence"
       ]
     },
     "dialogueTreeID": "dialogue_shadesmar_side_3",
@@ -3861,7 +3923,9 @@
     "type": "side",
     "worldID": "shadesmar",
     "requiredLevel": 25,
-    "prerequisites": ["shadesmar_side_3"],
+    "prerequisites": [
+      "shadesmar_side_3"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3884,15 +3948,15 @@
     "reward": {
       "xp": 500,
       "gold": 400,
-      "items": [
-        "stormlight_broam",
-        "voidspren_essence"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 15
         }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "voidspren_essence"
       ]
     },
     "dialogueTreeID": "dialogue_shadesmar_side_4",
@@ -3905,7 +3969,9 @@
     "type": "side",
     "worldID": "shadesmar",
     "requiredLevel": 35,
-    "prerequisites": ["shadesmar_side_4"],
+    "prerequisites": [
+      "shadesmar_side_4"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3936,15 +4002,15 @@
     "reward": {
       "xp": 800,
       "gold": 650,
-      "items": [
-        "stormlight_broam",
-        "honorblade_shard"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
           "amount": 20
         }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "honorblade_shard"
       ]
     },
     "dialogueTreeID": "dialogue_shadesmar_side_5",
@@ -3957,7 +4023,9 @@
     "type": "side",
     "worldID": "shadesmar",
     "requiredLevel": 45,
-    "prerequisites": ["shadesmar_side_5"],
+    "prerequisites": [
+      "shadesmar_side_5"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -3988,10 +4056,6 @@
     "reward": {
       "xp": 1400,
       "gold": 1200,
-      "items": [
-        "cosmere_nexus_gem",
-        "shard_fragment"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
@@ -4001,6 +4065,10 @@
           "worldID": "scadrial",
           "amount": 25
         }
+      ],
+      "itemIDs": [
+        "cosmere_nexus_gem",
+        "shard_fragment"
       ]
     },
     "dialogueTreeID": "dialogue_shadesmar_side_6",
@@ -4013,7 +4081,9 @@
     "type": "side",
     "worldID": "shadesmar",
     "requiredLevel": 60,
-    "prerequisites": ["shadesmar_side_6"],
+    "prerequisites": [
+      "shadesmar_side_6"
+    ],
     "status": "locked",
     "objectives": [
       {
@@ -4044,10 +4114,6 @@
     "reward": {
       "xp": 1500,
       "gold": 1500,
-      "items": [
-        "cosmic_shard",
-        "cosmere_nexus_gem"
-      ],
       "reputationChanges": [
         {
           "worldID": "roshar",
@@ -4073,6 +4139,10 @@
           "worldID": "sel",
           "amount": 30
         }
+      ],
+      "itemIDs": [
+        "cosmic_shard",
+        "cosmere_nexus_gem"
       ]
     },
     "dialogueTreeID": "dialogue_shadesmar_side_7",

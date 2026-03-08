@@ -20,7 +20,12 @@
     "goldMin": 1,
     "goldMax": 5,
     "lootTable": [
-      { "itemID": "tin_vial", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "tin_vial",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -44,8 +49,18 @@
     "goldMin": 5,
     "goldMax": 15,
     "lootTable": [
-      { "itemID": "pewter_vial", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "wraith_bone", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "pewter_vial",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "wraith_bone",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -69,8 +84,18 @@
     "goldMin": 10,
     "goldMax": 30,
     "lootTable": [
-      { "itemID": "koloss_blade_shard", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "steel_vial", "dropChance": 0.6, "minQuantity": 2, "maxQuantity": 4 }
+      {
+        "itemID": "koloss_blade_shard",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "steel_vial",
+        "dropChance": 0.6,
+        "minQuantity": 2,
+        "maxQuantity": 4
+      }
     ]
   },
   {
@@ -94,7 +119,12 @@
     "goldMin": 8,
     "goldMax": 20,
     "lootTable": [
-      { "itemID": "guard_armor_piece", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "guard_armor_piece",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -111,15 +141,29 @@
     "detectionRange": 15.0,
     "attackRange": 3.0,
     "behavior": "berserk",
-    "abilities": ["steel_push_boss", "iron_pull_boss", "pewter_rage"],
+    "abilities": [
+      "steel_push_boss",
+      "iron_pull_boss",
+      "pewter_rage"
+    ],
     "spriteName": "enemy_steel_inquisitor",
     "spriteScale": 1.3,
     "xpReward": 500,
     "goldMin": 50,
     "goldMax": 100,
     "lootTable": [
-      { "itemID": "inquisitor_spike", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "atium_bead", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "inquisitor_spike",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "atium_bead",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -143,8 +187,18 @@
     "goldMin": 5,
     "goldMax": 15,
     "lootTable": [
-      { "itemID": "stormlight_chip", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 3 },
-      { "itemID": "carapace_armor_piece", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "stormlight_chip",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 3
+      },
+      {
+        "itemID": "carapace_armor_piece",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -161,15 +215,28 @@
     "detectionRange": 8.0,
     "attackRange": 4.0,
     "behavior": "guard",
-    "abilities": ["tail_sweep", "carapace_shield"],
+    "abilities": [
+      "tail_sweep",
+      "carapace_shield"
+    ],
     "spriteName": "enemy_chasmfiend_juvenile",
     "spriteScale": 2.0,
     "xpReward": 120,
     "goldMin": 20,
     "goldMax": 50,
     "lootTable": [
-      { "itemID": "gemheart_fragment", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "carapace_plate", "dropChance": 0.25, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "gemheart_fragment",
+        "dropChance": 0.8,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "carapace_plate",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -186,14 +253,21 @@
     "detectionRange": 7.0,
     "attackRange": 2.5,
     "behavior": "ranged",
-    "abilities": ["void_bolt"],
+    "abilities": [
+      "void_bolt"
+    ],
     "spriteName": "enemy_voidbringer_scout",
     "spriteScale": 1.1,
     "xpReward": 55,
     "goldMin": 8,
     "goldMax": 20,
     "lootTable": [
-      { "itemID": "voidspren_essence", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -210,15 +284,28 @@
     "detectionRange": 8.0,
     "attackRange": 3.0,
     "behavior": "patrol",
-    "abilities": ["void_lashing", "gravitation_surge"],
+    "abilities": [
+      "void_lashing",
+      "gravitation_surge"
+    ],
     "spriteName": "enemy_voidbringer_soldier",
     "spriteScale": 1.2,
     "xpReward": 85,
     "goldMin": 15,
     "goldMax": 35,
     "lootTable": [
-      { "itemID": "voidlight_gem", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "fused_armor_shard", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "voidlight_gem",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "fused_armor_shard",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -235,16 +322,35 @@
     "detectionRange": 12.0,
     "attackRange": 5.0,
     "behavior": "berserk",
-    "abilities": ["stone_slam", "earthquake", "rock_throw"],
+    "abilities": [
+      "stone_slam",
+      "earthquake",
+      "rock_throw"
+    ],
     "spriteName": "enemy_thunderclast",
     "spriteScale": 3.0,
     "xpReward": 800,
     "goldMin": 80,
     "goldMax": 150,
     "lootTable": [
-      { "itemID": "thunderclast_heart", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "perfect_gemheart", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "honorblade_shard", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "thunderclast_heart",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "perfect_gemheart",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "honorblade_shard",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -261,15 +367,27 @@
     "detectionRange": 8.0,
     "attackRange": 3.0,
     "behavior": "ambush",
-    "abilities": ["burrow_strike"],
+    "abilities": [
+      "burrow_strike"
+    ],
     "spriteName": "enemy_sand_wyrm",
     "spriteScale": 1.4,
     "xpReward": 45,
     "goldMin": 6,
     "goldMax": 18,
     "lootTable": [
-      { "itemID": "white_sand_pouch", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "wyrm_scale", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "white_sand_pouch",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "wyrm_scale",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -293,8 +411,18 @@
     "goldMin": 3,
     "goldMax": 10,
     "lootTable": [
-      { "itemID": "desert_water_flask", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "raider_scimitar", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "desert_water_flask",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "raider_scimitar",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -311,15 +439,28 @@
     "detectionRange": 5.0,
     "attackRange": 2.0,
     "behavior": "guard",
-    "abilities": ["sand_armor", "crystal_burst"],
+    "abilities": [
+      "sand_armor",
+      "crystal_burst"
+    ],
     "spriteName": "enemy_sandling",
     "spriteScale": 1.6,
     "xpReward": 80,
     "goldMin": 12,
     "goldMax": 35,
     "lootTable": [
-      { "itemID": "sandling_carapace", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "white_sand_pouch", "dropChance": 0.7, "minQuantity": 2, "maxQuantity": 5 }
+      {
+        "itemID": "sandling_carapace",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "white_sand_pouch",
+        "dropChance": 0.7,
+        "minQuantity": 2,
+        "maxQuantity": 5
+      }
     ]
   },
   {
@@ -336,14 +477,22 @@
     "detectionRange": 6.0,
     "attackRange": 2.5,
     "behavior": "guard",
-    "abilities": ["dark_absorption", "sand_slam"],
+    "abilities": [
+      "dark_absorption",
+      "sand_slam"
+    ],
     "spriteName": "enemy_dark_golem",
     "spriteScale": 1.8,
     "xpReward": 90,
     "goldMin": 15,
     "goldMax": 40,
     "lootTable": [
-      { "itemID": "dark_sand_core", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "dark_sand_core",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -360,15 +509,29 @@
     "detectionRange": 15.0,
     "attackRange": 5.0,
     "behavior": "ranged",
-    "abilities": ["dark_sand_storm", "shadow_tendrils", "eclipse"],
+    "abilities": [
+      "dark_sand_storm",
+      "shadow_tendrils",
+      "eclipse"
+    ],
     "spriteName": "enemy_sand_lord",
     "spriteScale": 2.0,
     "xpReward": 650,
     "goldMin": 60,
     "goldMax": 120,
     "lootTable": [
-      { "itemID": "sand_lord_crown", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "darkside_shard", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "sand_lord_crown",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "darkside_shard",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -385,14 +548,21 @@
     "detectionRange": 7.0,
     "attackRange": 1.5,
     "behavior": "ambush",
-    "abilities": ["fear_touch"],
+    "abilities": [
+      "fear_touch"
+    ],
     "spriteName": "enemy_lesser_nightmare",
     "spriteScale": 1.0,
     "xpReward": 25,
     "goldMin": 3,
     "goldMax": 8,
     "lootTable": [
-      { "itemID": "nightmare_ink", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -409,15 +579,28 @@
     "detectionRange": 8.0,
     "attackRange": 2.5,
     "behavior": "berserk",
-    "abilities": ["nightmare_scream", "shadow_clone"],
+    "abilities": [
+      "nightmare_scream",
+      "shadow_clone"
+    ],
     "spriteName": "enemy_greater_nightmare",
     "spriteScale": 1.3,
     "xpReward": 55,
     "goldMin": 8,
     "goldMax": 22,
     "lootTable": [
-      { "itemID": "nightmare_ink", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "shadow_fabric", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "shadow_fabric",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -434,15 +617,29 @@
     "detectionRange": 10.0,
     "attackRange": 3.0,
     "behavior": "ranged",
-    "abilities": ["hion_drain", "shadow_step", "terror_gaze"],
+    "abilities": [
+      "hion_drain",
+      "shadow_step",
+      "terror_gaze"
+    ],
     "spriteName": "enemy_shadow_seeker",
     "spriteScale": 1.2,
     "xpReward": 95,
     "goldMin": 15,
     "goldMax": 40,
     "lootTable": [
-      { "itemID": "hion_shard", "dropChance": 0.6, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "shadow_cloak_piece", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "hion_shard",
+        "dropChance": 0.6,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "shadow_cloak_piece",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -459,15 +656,28 @@
     "detectionRange": 9.0,
     "attackRange": 3.5,
     "behavior": "guard",
-    "abilities": ["void_barrier", "nightmare_chains"],
+    "abilities": [
+      "void_barrier",
+      "nightmare_chains"
+    ],
     "spriteName": "enemy_nightmare_sentinel",
     "spriteScale": 1.5,
     "xpReward": 110,
     "goldMin": 20,
     "goldMax": 50,
     "lootTable": [
-      { "itemID": "sentinel_core", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "nightmare_ink", "dropChance": 0.8, "minQuantity": 2, "maxQuantity": 4 }
+      {
+        "itemID": "sentinel_core",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.8,
+        "minQuantity": 2,
+        "maxQuantity": 4
+      }
     ]
   },
   {
@@ -484,16 +694,36 @@
     "detectionRange": 20.0,
     "attackRange": 6.0,
     "behavior": "support",
-    "abilities": ["spawn_nightmares", "reality_warp", "total_darkness", "machine_pulse"],
+    "abilities": [
+      "spawn_nightmares",
+      "reality_warp",
+      "total_darkness",
+      "machine_pulse"
+    ],
     "spriteName": "enemy_father_nightmares",
     "spriteScale": 3.5,
     "xpReward": 1200,
     "goldMin": 100,
     "goldMax": 200,
     "lootTable": [
-      { "itemID": "nightmare_heart", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "machine_core_fragment", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "painters_masterwork", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "nightmare_heart",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "machine_core_fragment",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "painters_masterwork",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -517,7 +747,18 @@
     "goldMin": 2,
     "goldMax": 8,
     "lootTable": [
-      { "itemID": "breath_essence", "dropChance": 0.25, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "breath_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -541,8 +782,24 @@
     "goldMin": 6,
     "goldMax": 18,
     "lootTable": [
-      { "itemID": "breath_essence", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "chromatic_thread", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "breath_essence",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "chromatic_thread",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -559,15 +816,34 @@
     "detectionRange": 9.0,
     "attackRange": 3.0,
     "behavior": "ambush",
-    "abilities": ["breath_drain", "color_blast"],
+    "abilities": [
+      "breath_drain",
+      "color_blast"
+    ],
     "spriteName": "enemy_breath_thief",
     "spriteScale": 1.1,
     "xpReward": 85,
     "goldMin": 12,
     "goldMax": 35,
     "lootTable": [
-      { "itemID": "chromatic_thread", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "awakened_blade", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "chromatic_thread",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "awakened_blade",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -584,15 +860,33 @@
     "detectionRange": 8.0,
     "attackRange": 2.5,
     "behavior": "guard",
-    "abilities": ["perfected_strike"],
+    "abilities": [
+      "perfected_strike"
+    ],
     "spriteName": "enemy_royal_lifeless",
     "spriteScale": 1.2,
     "xpReward": 100,
     "goldMin": 18,
     "goldMax": 45,
     "lootTable": [
-      { "itemID": "chromatic_thread", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "returned_bloom", "dropChance": 0.08, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "chromatic_thread",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "returned_bloom",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -609,16 +903,35 @@
     "detectionRange": 15.0,
     "attackRange": 4.0,
     "behavior": "berserk",
-    "abilities": ["divine_breath_blast", "color_storm", "lifeless_army"],
+    "abilities": [
+      "divine_breath_blast",
+      "color_storm",
+      "lifeless_army"
+    ],
     "spriteName": "enemy_returned_champion",
     "spriteScale": 1.8,
     "xpReward": 700,
     "goldMin": 60,
     "goldMax": 130,
     "lootTable": [
-      { "itemID": "returned_bloom", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "god_king_scepter", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "divine_breath_crystal", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "returned_bloom",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "god_king_scepter",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "divine_breath_crystal",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -642,7 +955,12 @@
     "goldMin": 3,
     "goldMax": 10,
     "lootTable": [
-      { "itemID": "aon_glyph_stone", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "aon_glyph_stone",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -659,15 +977,27 @@
     "detectionRange": 7.0,
     "attackRange": 2.0,
     "behavior": "berserk",
-    "abilities": ["bone_twist"],
+    "abilities": [
+      "bone_twist"
+    ],
     "spriteName": "enemy_dakhor_monk",
     "spriteScale": 1.2,
     "xpReward": 60,
     "goldMin": 8,
     "goldMax": 22,
     "lootTable": [
-      { "itemID": "aon_glyph_stone", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 2 },
-      { "itemID": "dakhor_bone_charm", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "aon_glyph_stone",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "dakhor_bone_charm",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -684,15 +1014,28 @@
     "detectionRange": 9.0,
     "attackRange": 4.0,
     "behavior": "ranged",
-    "abilities": ["skaze_bolt", "corruption_aura"],
+    "abilities": [
+      "skaze_bolt",
+      "corruption_aura"
+    ],
     "spriteName": "enemy_skaze_touched",
     "spriteScale": 1.2,
     "xpReward": 90,
     "goldMin": 14,
     "goldMax": 38,
     "lootTable": [
-      { "itemID": "elantrian_robe", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "seons_light", "dropChance": 0.08, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "elantrian_robe",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "seons_light",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -709,15 +1052,28 @@
     "detectionRange": 8.0,
     "attackRange": 3.5,
     "behavior": "support",
-    "abilities": ["failed_aon", "slime_burst"],
+    "abilities": [
+      "failed_aon",
+      "slime_burst"
+    ],
     "spriteName": "enemy_corrupted_elantrian",
     "spriteScale": 1.3,
     "xpReward": 110,
     "goldMin": 18,
     "goldMax": 48,
     "lootTable": [
-      { "itemID": "elantrian_robe", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "pool_of_devotion_vial", "dropChance": 0.08, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "elantrian_robe",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "pool_of_devotion_vial",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -734,16 +1090,36 @@
     "detectionRange": 18.0,
     "attackRange": 5.5,
     "behavior": "ranged",
-    "abilities": ["dominion_decree", "aon_shatter", "divine_wrath", "realm_tear"],
+    "abilities": [
+      "dominion_decree",
+      "aon_shatter",
+      "divine_wrath",
+      "realm_tear"
+    ],
     "spriteName": "enemy_dominion_avatar",
     "spriteScale": 2.5,
     "xpReward": 900,
     "goldMin": 80,
     "goldMax": 160,
     "lootTable": [
-      { "itemID": "pool_of_devotion_vial", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "splinter_of_devotion", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "seons_light", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "pool_of_devotion_vial",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "splinter_of_devotion",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "seons_light",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -767,7 +1143,12 @@
     "goldMin": 5,
     "goldMax": 12,
     "lootTable": [
-      { "itemID": "cognitive_bead", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 2 }
+      {
+        "itemID": "cognitive_bead",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
     ]
   },
   {
@@ -784,14 +1165,21 @@
     "detectionRange": 7.0,
     "attackRange": 2.0,
     "behavior": "patrol",
-    "abilities": ["phase_shift"],
+    "abilities": [
+      "phase_shift"
+    ],
     "spriteName": "enemy_hostile_spren",
     "spriteScale": 1.0,
     "xpReward": 45,
     "goldMin": 8,
     "goldMax": 18,
     "lootTable": [
-      { "itemID": "spren_essence", "dropChance": 0.25, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "spren_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -808,15 +1196,28 @@
     "detectionRange": 8.0,
     "attackRange": 2.5,
     "behavior": "guard",
-    "abilities": ["voidlight_blast", "gravity_shift"],
+    "abilities": [
+      "voidlight_blast",
+      "gravity_shift"
+    ],
     "spriteName": "enemy_fused_errant",
     "spriteScale": 1.2,
     "xpReward": 75,
     "goldMin": 15,
     "goldMax": 30,
     "lootTable": [
-      { "itemID": "voidlight_crystal", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "fused_carapace", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "voidlight_crystal",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "fused_carapace",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -833,14 +1234,22 @@
     "detectionRange": 9.0,
     "attackRange": 3.0,
     "behavior": "guard",
-    "abilities": ["corruption_aura", "fear_pulse"],
+    "abilities": [
+      "corruption_aura",
+      "fear_pulse"
+    ],
     "spriteName": "enemy_unmade_shard",
     "spriteScale": 1.5,
     "xpReward": 100,
     "goldMin": 20,
     "goldMax": 40,
     "lootTable": [
-      { "itemID": "unmade_fragment", "dropChance": 0.2, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "unmade_fragment",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   },
   {
@@ -857,15 +1266,573 @@
     "detectionRange": 14.0,
     "attackRange": 5.0,
     "behavior": "boss",
-    "abilities": ["shard_beam", "reality_tear", "summon_shades", "phase_ultimate"],
+    "abilities": [
+      "shard_beam",
+      "reality_tear",
+      "summon_shades",
+      "phase_ultimate"
+    ],
     "spriteName": "enemy_shattered_shard",
     "spriteScale": 2.0,
     "xpReward": 1500,
     "goldMin": 200,
     "goldMax": 400,
     "lootTable": [
-      { "itemID": "shard_fragment", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 1 },
-      { "itemID": "cosmere_nexus_gem", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 }
+      {
+        "itemID": "shard_fragment",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "cosmere_nexus_gem",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "ash_scavenger",
+    "name": "Charognard des Cendres",
+    "description": "Une créature famélique qui fouille les dépôts de cendres à la recherche de nourriture. Attaque en meute.",
+    "worldID": "scadrial",
+    "tier": "minion",
+    "level": 2,
+    "maxHP": 25,
+    "damage": 4,
+    "defense": 1,
+    "speed": 1.6,
+    "detectionRange": 6.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_ash_scavenger",
+    "spriteScale": 0.9,
+    "xpReward": 12,
+    "goldMin": 1,
+    "goldMax": 4,
+    "lootTable": [
+      {
+        "itemID": "skaa_leather_gloves",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "skaa_work_boots",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "pewter_thug",
+    "name": "Brute au Pewter",
+    "description": "Un allomancien renégat qui brûle du pewter pour obtenir une force brutale. Ses coups sont dévastateurs.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 3,
+    "maxHP": 75,
+    "damage": 14,
+    "defense": 6,
+    "speed": 1.0,
+    "detectionRange": 5.0,
+    "attackRange": 2.0,
+    "behavior": "berserk",
+    "abilities": [
+      "pewter_rage"
+    ],
+    "spriteName": "enemy_pewter_thug",
+    "spriteScale": 1.3,
+    "xpReward": 40,
+    "goldMin": 5,
+    "goldMax": 12,
+    "lootTable": [
+      {
+        "itemID": "pewter_vial",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "skaa_trousers",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "coinshot_bandit",
+    "name": "Bandit Tire-Monnaie",
+    "description": "Un allomancien qui propulse des pièces de monnaie comme des projectiles mortels. Attaque à distance.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 55,
+    "damage": 18,
+    "defense": 3,
+    "speed": 1.5,
+    "detectionRange": 8.0,
+    "attackRange": 6.0,
+    "behavior": "ranged",
+    "abilities": [
+      "coin_push"
+    ],
+    "spriteName": "enemy_coinshot",
+    "spriteScale": 1.0,
+    "xpReward": 45,
+    "goldMin": 10,
+    "goldMax": 25,
+    "lootTable": [
+      {
+        "itemID": "steel_vial",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "coinshot_boots",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "crab_spren",
+    "name": "Cremlin Géant",
+    "description": "Un crustacé rocharin agressif de taille inhabituelle. Sa carapace dure comme la pierre le protège.",
+    "worldID": "roshar",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 40,
+    "damage": 7,
+    "defense": 8,
+    "speed": 0.8,
+    "detectionRange": 4.0,
+    "attackRange": 1.5,
+    "behavior": "guard",
+    "abilities": [],
+    "spriteName": "enemy_crab_spren",
+    "spriteScale": 1.0,
+    "xpReward": 18,
+    "goldMin": 2,
+    "goldMax": 6,
+    "lootTable": [
+      {
+        "itemID": "parshendi_warskirt",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "stormform_listener",
+    "name": "Auditeur Forme-Tempête",
+    "description": "Un Auditeur ayant adopté la Forme de la Tempête, canalisant la foudre de l'Éternorage.",
+    "worldID": "roshar",
+    "tier": "elite",
+    "level": 6,
+    "maxHP": 140,
+    "damage": 25,
+    "defense": 10,
+    "speed": 1.4,
+    "detectionRange": 8.0,
+    "attackRange": 4.0,
+    "behavior": "ranged",
+    "abilities": [
+      "storm_bolt",
+      "thunder_clap"
+    ],
+    "spriteName": "enemy_stormform",
+    "spriteScale": 1.2,
+    "xpReward": 90,
+    "goldMin": 12,
+    "goldMax": 28,
+    "lootTable": [
+      {
+        "itemID": "shardplate_gauntlets",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "windrunner_boots",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "skybreaker_squire",
+    "name": "Écuyer Brise-Ciel",
+    "description": "Un écuyer de l'ordre des Brise-Ciels, armé de la loi et d'un Lien Nahel.",
+    "worldID": "roshar",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 90,
+    "damage": 16,
+    "defense": 12,
+    "speed": 1.3,
+    "detectionRange": 7.0,
+    "attackRange": 2.5,
+    "behavior": "patrol",
+    "abilities": [
+      "gravitational_surge"
+    ],
+    "spriteName": "enemy_skybreaker",
+    "spriteScale": 1.1,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "shardplate_greaves",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "sand_scorpion",
+    "name": "Scorpion des Sables",
+    "description": "Un arthropode géant du Côté Jour de Taldain, dont le dard empoisonné paralyse ses proies.",
+    "worldID": "taldain",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 35,
+    "damage": 10,
+    "defense": 4,
+    "speed": 1.8,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "ambush",
+    "abilities": [
+      "poison_sting"
+    ],
+    "spriteName": "enemy_sand_scorpion",
+    "spriteScale": 0.9,
+    "xpReward": 22,
+    "goldMin": 3,
+    "goldMax": 8,
+    "lootTable": [
+      {
+        "itemID": "sand_master_leggings",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "dayside_nomad",
+    "name": "Nomade du Côté Jour",
+    "description": "Un guerrier nomade qui a appris à maîtriser le sable blanc mais qui en abuse, devenant hostile.",
+    "worldID": "taldain",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 70,
+    "damage": 15,
+    "defense": 5,
+    "speed": 1.4,
+    "detectionRange": 6.0,
+    "attackRange": 3.0,
+    "behavior": "ranged",
+    "abilities": [
+      "sand_whip"
+    ],
+    "spriteName": "enemy_dayside_nomad",
+    "spriteScale": 1.0,
+    "xpReward": 48,
+    "goldMin": 6,
+    "goldMax": 15,
+    "lootTable": [
+      {
+        "itemID": "sand_master_leggings",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "ink_tendril",
+    "name": "Vrille d'Encre",
+    "description": "Un cauchemar mineur qui se manifeste sous forme de tentacules d'encre noire. Rapide et insaisissable.",
+    "worldID": "komashi",
+    "tier": "minion",
+    "level": 4,
+    "maxHP": 28,
+    "damage": 8,
+    "defense": 2,
+    "speed": 2.0,
+    "detectionRange": 5.0,
+    "attackRange": 2.0,
+    "behavior": "ambush",
+    "abilities": [],
+    "spriteName": "enemy_ink_tendril",
+    "spriteScale": 0.8,
+    "xpReward": 20,
+    "goldMin": 2,
+    "goldMax": 6,
+    "lootTable": [
+      {
+        "itemID": "nightmare_woven_legs",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "nightmare_beast",
+    "name": "Bête Cauchemardesque",
+    "description": "Un cauchemar ayant pris la forme d'une bête sauvage. Ses griffes d'encre déchirent la réalité.",
+    "worldID": "komashi",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 100,
+    "damage": 22,
+    "defense": 7,
+    "speed": 1.5,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "berserk",
+    "abilities": [
+      "ink_slash",
+      "nightmare_howl"
+    ],
+    "spriteName": "enemy_nightmare_beast",
+    "spriteScale": 1.3,
+    "xpReward": 60,
+    "goldMin": 8,
+    "goldMax": 20,
+    "lootTable": [
+      {
+        "itemID": "nightmare_woven_legs",
+        "dropChance": 0.12,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "drab_thief",
+    "name": "Voleur de Souffle Terne",
+    "description": "Un individu ayant perdu tous ses Souffles, devenu Terne. Désespéré, il attaque pour voler des Souffles.",
+    "worldID": "nalthis",
+    "tier": "minion",
+    "level": 4,
+    "maxHP": 35,
+    "damage": 8,
+    "defense": 3,
+    "speed": 1.3,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_drab_thief",
+    "spriteScale": 1.0,
+    "xpReward": 18,
+    "goldMin": 2,
+    "goldMax": 7,
+    "lootTable": [
+      {
+        "itemID": "awakened_gloves",
+        "dropChance": 0.06,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "awakened_construct",
+    "name": "Construction Éveillée",
+    "description": "Un objet animé par l'Éveil, devenu incontrôlable. Ses mouvements sont mécaniques mais puissants.",
+    "worldID": "nalthis",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 110,
+    "damage": 20,
+    "defense": 12,
+    "speed": 0.9,
+    "detectionRange": 4.0,
+    "attackRange": 2.0,
+    "behavior": "guard",
+    "abilities": [
+      "cloth_bind"
+    ],
+    "spriteName": "enemy_awakened_construct",
+    "spriteScale": 1.4,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "awakened_gloves",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "pahn_kahl_rebel",
+    "name": "Rebelle Pahn Kahl",
+    "description": "Un guerrier Pahn Kahl qui lutte contre la domination de Hallandren. Armé de lames éveillées.",
+    "worldID": "nalthis",
+    "tier": "elite",
+    "level": 7,
+    "maxHP": 145,
+    "damage": 24,
+    "defense": 9,
+    "speed": 1.5,
+    "detectionRange": 7.0,
+    "attackRange": 2.5,
+    "behavior": "patrol",
+    "abilities": [
+      "awakened_blade",
+      "color_drain"
+    ],
+    "spriteName": "enemy_pahn_kahl",
+    "spriteScale": 1.1,
+    "xpReward": 80,
+    "goldMin": 12,
+    "goldMax": 25,
+    "lootTable": [
+      {
+        "itemID": "awakened_gloves",
+        "dropChance": 0.12,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "elantris_revenant",
+    "name": "Revenant d'Elantris",
+    "description": "Un ancien Élantrien dont la transformation a échoué, errant dans les ruines, toujours animé par le Dor.",
+    "worldID": "sel",
+    "tier": "minion",
+    "level": 5,
+    "maxHP": 45,
+    "damage": 10,
+    "defense": 4,
+    "speed": 0.9,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_elantris_revenant",
+    "spriteScale": 1.0,
+    "xpReward": 25,
+    "goldMin": 3,
+    "goldMax": 10,
+    "lootTable": [
+      {
+        "itemID": "aon_inscribed_gloves",
+        "dropChance": 0.06,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "dakhor_monk_sandals",
+        "dropChance": 0.06,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "fjordell_templar",
+    "name": "Templier Fjordell",
+    "description": "Un guerrier-prêtre fanatique du Shu-Dereth. Sa foi lui confère une résistance à la douleur.",
+    "worldID": "sel",
+    "tier": "soldier",
+    "level": 7,
+    "maxHP": 120,
+    "damage": 22,
+    "defense": 11,
+    "speed": 1.1,
+    "detectionRange": 6.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": [
+      "zealous_strike"
+    ],
+    "spriteName": "enemy_fjordell_templar",
+    "spriteScale": 1.2,
+    "xpReward": 65,
+    "goldMin": 10,
+    "goldMax": 22,
+    "lootTable": [
+      {
+        "itemID": "dakhor_monk_sandals",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "shadesmar_lurker",
+    "name": "Rôdeur du Shadesmar",
+    "description": "Une entité cognitive qui se cache dans les profondeurs du royaume des esprits, aspirant la conscience.",
+    "worldID": "shadesmar",
+    "tier": "soldier",
+    "level": 8,
+    "maxHP": 95,
+    "damage": 20,
+    "defense": 5,
+    "speed": 1.8,
+    "detectionRange": 8.0,
+    "attackRange": 3.0,
+    "behavior": "ambush",
+    "abilities": [
+      "mind_drain"
+    ],
+    "spriteName": "enemy_shadesmar_lurker",
+    "spriteScale": 1.0,
+    "xpReward": 50,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "cosmere_strider_boots",
+        "dropChance": 0.05,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
     ]
   }
 ]

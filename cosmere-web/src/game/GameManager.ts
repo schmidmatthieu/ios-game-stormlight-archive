@@ -260,8 +260,18 @@ export class GameManager {
     if (!cost.canPromote || !cost.nextRarity || this.champion.gold < cost.gold) return false;
     this.champion.gold -= cost.gold;
     item.rarity = cost.nextRarity;
-    // Bonus: promoting adds +2 to all stats
+    // Bonus: promoting adds +2 to all existing stats
     for (const b of item.statBonuses) b.value += 2;
+    // Bonus: add a new random stat that the item doesn't already have
+    const allStats = ['vigor', 'strength', 'agility', 'spirit', 'luck', 'investiture'];
+    const existingStats = new Set(item.statBonuses.map(b => b.stat));
+    const available = allStats.filter(s => !existingStats.has(s));
+    if (available.length > 0) {
+      const newStat = available[Math.floor(Math.random() * available.length)];
+      const rarityIdx = RARITY_ORDER.indexOf(cost.nextRarity);
+      const newValue = Math.max(1, rarityIdx + 1);
+      item.statBonuses.push({ stat: newStat, value: newValue });
+    }
     ItemModStore.shared.recordUpgrade(itemID);
     return true;
   }

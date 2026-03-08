@@ -6,6 +6,7 @@ import { RARITY_COLORS, RARITY_ORDER } from '../data/types';
 import { scaled, UI_COLORS } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import { MusicManager } from '../game/MusicSystem';
+import { applyEnchantment } from '../game/EnchantmentData';
 import { SLOT_LABELS, STAT_LABELS, txt } from './InventoryConstants';
 import type { InventoryFilterState, SlotFilter, RarityFilter } from './InventoryFilters';
 import { matchesSlotFilter, matchesRarityFilter, SLOT_FILTER_ROW1, SLOT_FILTER_ROW2, SLOT_FILTER_LABELS, RARITY_FILTERS, RARITY_FILTER_LABELS, RARITY_FILTER_COLORS } from './InventoryFilters';
@@ -447,7 +448,7 @@ export function showItemTooltip(
   }
   ly += bh + scaled(6, L);
 
-  // ─── Action Row 2: Upgrade + Promote ──────────────────────────
+  // ─── Action Row 2: Upgrade + Promote (for all items) ──────────
   const upCost = GameManager.getUpgradeCost(item.id);
   const canUp = champ.gold >= upCost.gold;
   const upW = scaled(90, L);
@@ -475,6 +476,21 @@ export function showItemTooltip(
       GameManager.shared.save();
       onAction();
     });
+
+  // ─── Action Row 3: Enchant (if player has enchantment items) ──
+  ly += bh + scaled(4, L);
+  const enchantIDs = champ.inventoryItemIDs.filter(id => id.startsWith('enchant_'));
+  if (enchantIDs.length > 0) {
+    const enchW = tw - 12;
+    addTooltipBtn(c, tx + 6, ly, enchW, bh,
+      0x112222, 0x44aa88, `Enchanter (${enchantIDs.length} dispo.)`, 7,
+      0x66ddaa, L, () => {
+        // Apply first available enchantment
+        const eid = enchantIDs[0];
+        applyEnchantment(champ, eid, item.id);
+        onAction();
+      });
+  }
 
   return c;
 }
