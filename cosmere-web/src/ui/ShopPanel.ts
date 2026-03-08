@@ -4,7 +4,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { getLayoutInfo, fontSize, scaled, panelSize, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from './ResponsiveLayout';
-import type { Champion, ItemRarity } from '../data/types';
+import type { Champion, ChampionClass, ItemRarity } from '../data/types';
 
 // ─── Shop Item Type ─────────────────────────────────────────────
 
@@ -94,6 +94,41 @@ const WORLD_ITEMS: Record<string, ShopItem[]> = {
   ],
 };
 
+// ─── Class-Specific Gear (only shown to matching class) ─────────
+
+const CLASS_ITEMS: Record<ChampionClass, ShopItem[]> = {
+  mistborn: [
+    { name: 'Ceinture d\'allomancien', cost: 110, effect: 'belt_vig', value: 6, rarity: 'rare', description: 'Ceinture : Vigueur +6 (spécial Brumeux)', category: 'armor' },
+    { name: 'Manteau de brume', cost: 160, effect: 'cape_all', value: 2, rarity: 'rare', description: 'Cape : Tous stats +2 (spécial Brumeux)', category: 'armor' },
+    { name: 'Fioles doubles', cost: 45, effect: 'inv', value: 80, rarity: 'uncommon', description: 'Investiture +80 (double dose)', category: 'potion' },
+  ],
+  radiant: [
+    { name: 'Armure de Shardplate légère', cost: 180, effect: 'chest_def', value: 12, rarity: 'rare', description: 'Torse : Défense +12 (spécial Radieux)', category: 'armor' },
+    { name: 'Bottes de Lashing', cost: 130, effect: 'boots_agi', value: 7, rarity: 'rare', description: 'Bottes : Agilité +7 (spécial Radieux)', category: 'armor' },
+    { name: 'Sphère infusée parfaite', cost: 50, effect: 'inv', value: 85, rarity: 'uncommon', description: 'Investiture +85 (Lumière pure)', category: 'potion' },
+  ],
+  awakener: [
+    { name: 'Gants chromatiques', cost: 120, effect: 'gloves_str', value: 6, rarity: 'rare', description: 'Gants : Force +6 (spécial Éveilleur)', category: 'armor' },
+    { name: 'Corde éveillée', cost: 90, effect: 'weapon_str', value: 8, rarity: 'uncommon', description: 'Arme : Force +8 (spécial Éveilleur)', category: 'weapon' },
+    { name: 'Elixir de BioChroma', cost: 55, effect: 'inv', value: 90, rarity: 'uncommon', description: 'Investiture +90 (Souffle concentré)', category: 'potion' },
+  ],
+  elantrian: [
+    { name: 'Robe runique', cost: 150, effect: 'chest_spi', value: 10, rarity: 'rare', description: 'Torse : Esprit +10 (spécial Élantrien)', category: 'armor' },
+    { name: 'Baguette d\'Aon', cost: 140, effect: 'weapon_spi', value: 9, rarity: 'rare', description: 'Arme : Esprit +9 (spécial Élantrien)', category: 'weapon' },
+    { name: 'Essence du Dor', cost: 50, effect: 'inv', value: 85, rarity: 'uncommon', description: 'Investiture +85 (Dor distillé)', category: 'potion' },
+  ],
+  sandMaster: [
+    { name: 'Plastron de Dayside', cost: 140, effect: 'chest_def', value: 9, rarity: 'rare', description: 'Torse : Défense +9 (spécial Maître du Sable)', category: 'armor' },
+    { name: 'Fouet de sable', cost: 110, effect: 'weapon_str', value: 7, rarity: 'uncommon', description: 'Arme : Force +7 (spécial Maître du Sable)', category: 'weapon' },
+    { name: 'Gourde enchantée', cost: 35, effect: 'hp', value: 70, rarity: 'uncommon', description: 'PV +70 (Eau pure de Dayside)', category: 'potion' },
+  ],
+  nightmarePainter: [
+    { name: 'Kimono du Peintre', cost: 130, effect: 'chest_spi', value: 8, rarity: 'rare', description: 'Torse : Esprit +8 (spécial Peintre)', category: 'armor' },
+    { name: 'Pinceau ancestral', cost: 150, effect: 'weapon_spi', value: 10, rarity: 'rare', description: 'Arme : Esprit +10 (spécial Peintre)', category: 'weapon' },
+    { name: 'Encre de rêve', cost: 45, effect: 'inv', value: 75, rarity: 'uncommon', description: 'Investiture +75 (Encre onirique)', category: 'potion' },
+  ],
+};
+
 // ─── Rotating Stock (changes daily based on date seed) ──────────
 
 function getRotatingItems(worldID: string, playerLevel: number): ShopItem[] {
@@ -154,10 +189,13 @@ function getEpicRotatingPieces(worldID: string): ShopItem[] {
 
 // ─── Build Final Item List ──────────────────────────────────────
 
-function getShopItems(worldID: string, playerLevel: number): ShopItem[] {
+function getShopItems(worldID: string, playerLevel: number, championClass: ChampionClass): ShopItem[] {
   const items: ShopItem[] = [...BASE_ITEMS];
   const worldSpecific = WORLD_ITEMS[worldID] ?? [];
   items.push(...worldSpecific);
+  // Class-specific gear available only for the player's class
+  const classGear = CLASS_ITEMS[championClass] ?? [];
+  items.push(...classGear);
   items.push(...getRotatingItems(worldID, playerLevel));
   return items;
 }
@@ -178,7 +216,7 @@ export function showShopPanel(
   panel.zIndex = 10000;
   const layout = getLayoutInfo(screenW, screenH);
   const worldID = champ.currentWorldID ?? 'scadrial';
-  const items = getShopItems(worldID, champ.level);
+  const items = getShopItems(worldID, champ.level, champ.championClass);
 
   // Overlay
   const overlay = new Graphics();

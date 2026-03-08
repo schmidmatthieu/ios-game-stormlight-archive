@@ -224,28 +224,63 @@ export class SaveManager {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
-      input.onchange = () => {
+      // Must be in the DOM for some browsers (iOS Safari, some mobile)
+      input.style.position = 'fixed';
+      input.style.top = '-9999px';
+      input.style.left = '-9999px';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+
+      let resolved = false;
+      const cleanup = () => {
+        if (input.parentNode) document.body.removeChild(input);
+      };
+      const finish = (result: boolean) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve(result);
+      };
+
+      input.addEventListener('change', () => {
         const file = input.files?.[0];
-        if (!file) { resolve(false); return; }
+        if (!file) { finish(false); return; }
         const reader = new FileReader();
         reader.onload = () => {
           try {
-            const save: UnifiedSave = JSON.parse(reader.result as string);
-            if (typeof save.version !== 'number' || typeof save.data !== 'object') {
-              resolve(false);
+            const text = reader.result as string;
+            const save: UnifiedSave = JSON.parse(text);
+            if (typeof save.version !== 'number' || typeof save.data !== 'object' || save.data === null) {
+              finish(false);
               return;
             }
+            // Clear old individual keys first to avoid stale data
+            for (const key of INDIVIDUAL_KEYS) {
+              localStorage.removeItem(key);
+            }
+            // Distribute imported data to localStorage
             this.distributeData(save.data);
+            // Update unified save key
             localStorage.setItem(UNIFIED_KEY, JSON.stringify(save));
-            resolve(true);
+            // Also update auto-save slot so the game loads the imported data
+            localStorage.setItem(SLOT_KEY_PREFIX + '0', JSON.stringify(save));
+            finish(true);
           } catch {
-            resolve(false);
+            finish(false);
           }
         };
-        reader.onerror = () => resolve(false);
+        reader.onerror = () => finish(false);
         reader.readAsText(file);
+      });
+
+      // Fallback: if user cancels the file dialog, detect via focus return
+      const onFocus = () => {
+        window.removeEventListener('focus', onFocus);
+        // Small delay to let 'change' fire first if a file was selected
+        setTimeout(() => finish(false), 500);
       };
-      input.oncancel = () => resolve(false);
+      window.addEventListener('focus', onFocus);
+
       input.click();
     });
   }
