@@ -1,5 +1,6 @@
 import type { Champion, ChampionClass, ChampionStats, RadiantOrder, MagicSystemType } from '../data/types';
-import { CLASS_INFO, UPGRADE_MAX_LEVEL, UPGRADE_COST_BASE } from '../data/types';
+import { CLASS_INFO, UPGRADE_COST_BASE, RARITY_ORDER, PROMOTE_COST } from '../data/types';
+import type { ItemRarity } from '../data/types';
 import { ItemModStore } from './ItemModStore';
 import { gameData } from '../data/DataLoader';
 import { MagicSystemManager } from './magic/MagicSystemManager';
@@ -213,16 +214,16 @@ export class GameManager {
     return (this.champion?.baseStats.investiture ?? 10) * 8 + 30;
   }
 
-  // MARK: - Upgrade Items
+  // MARK: - Upgrade Items (infinite level, scaling cost)
 
-  static getUpgradeCost(itemID: string): { gold: number; maxed: boolean; currentLevel: number; maxLevel: number } {
+  static getUpgradeCost(itemID: string): { gold: number; currentLevel: number } {
     const item = gameData.item(itemID);
-    if (!item) return { gold: 0, maxed: true, currentLevel: 0, maxLevel: 0 };
+    if (!item) return { gold: 0, currentLevel: 0 };
     const lvl = item.itemLevel ?? 0;
-    const max = UPGRADE_MAX_LEVEL[item.rarity] ?? 3;
-    if (lvl >= max) return { gold: 0, maxed: true, currentLevel: lvl, maxLevel: max };
     const base = UPGRADE_COST_BASE[item.rarity] ?? 10;
-    return { gold: base * (lvl + 1), maxed: false, currentLevel: lvl, maxLevel: max };
+    // Scaling: base * (lvl+1) with slight exponential growth
+    const gold = Math.floor(base * (lvl + 1) * (1 + lvl * 0.1));
+    return { gold, currentLevel: lvl };
   }
 
   upgradeItem(itemID: string): boolean {
@@ -230,10 +231,37 @@ export class GameManager {
     const item = gameData.item(itemID);
     if (!item) return false;
     const cost = GameManager.getUpgradeCost(itemID);
-    if (cost.maxed || this.champion.gold < cost.gold) return false;
+    if (this.champion.gold < cost.gold) return false;
     this.champion.gold -= cost.gold;
     item.itemLevel = (item.itemLevel ?? 0) + 1;
     for (const b of item.statBonuses) b.value += 1;
+    ItemModStore.shared.recordUpgrade(itemID);
+    return true;
+  }
+
+  // MARK: - Promote Item Rarity
+
+  static getPromoteCost(itemID: string): { gold: number; canPromote: boolean; currentRarity: ItemRarity; nextRarity: ItemRarity | null } {
+    const item = gameData.item(itemID);
+    if (!item) return { gold: 0, canPromote: false, currentRarity: 'common', nextRarity: null };
+    const idx = RARITY_ORDER.indexOf(item.rarity);
+    if (idx < 0 || idx >= RARITY_ORDER.length - 1) {
+      return { gold: 0, canPromote: false, currentRarity: item.rarity, nextRarity: null };
+    }
+    const gold = PROMOTE_COST[item.rarity] ?? 0;
+    return { gold, canPromote: true, currentRarity: item.rarity, nextRarity: RARITY_ORDER[idx + 1] };
+  }
+
+  promoteItem(itemID: string): boolean {
+    if (!this.champion) return false;
+    const item = gameData.item(itemID);
+    if (!item) return false;
+    const cost = GameManager.getPromoteCost(itemID);
+    if (!cost.canPromote || !cost.nextRarity || this.champion.gold < cost.gold) return false;
+    this.champion.gold -= cost.gold;
+    item.rarity = cost.nextRarity;
+    // Bonus: promoting adds +2 to all stats
+    for (const b of item.statBonuses) b.value += 2;
     ItemModStore.shared.recordUpgrade(itemID);
     return true;
   }

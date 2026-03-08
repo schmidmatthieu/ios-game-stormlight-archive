@@ -8,37 +8,64 @@
     "gridWidth": 40,
     "gridHeight": 40,
     "tileMapFileName": "luthadel_market.sks",
-    "playerSpawnPosition": { "col": 20, "row": 35 },
+    "playerSpawnPosition": {
+      "col": 20,
+      "row": 35
+    },
     "connections": [
       {
         "targetZoneID": "scadrial_ashfields",
         "entryPointName": "north_gate",
-        "exitPosition": { "col": 20, "row": 0 },
+        "exitPosition": {
+          "col": 20,
+          "row": 0
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "scadrial_kredik_shaw",
         "entryPointName": "palace_entrance",
-        "exitPosition": { "col": 38, "row": 20 },
+        "exitPosition": {
+          "col": 38,
+          "row": 20
+        },
         "requiredQuestID": "scadrial_main_2"
+      },
+      {
+        "targetZoneID": "scadrial_catacombs",
+        "entryPointName": "catacombs_gate",
+        "exitPosition": {
+          "col": 20,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "merchant_yeden",
-        "position": { "col": 15, "row": 25 },
+        "position": {
+          "col": 15,
+          "row": 25
+        },
         "dialogueTreeID": "yeden_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "kelsier_contact",
-        "position": { "col": 25, "row": 20 },
+        "position": {
+          "col": 25,
+          "row": 20
+        },
         "dialogueTreeID": "kelsier_intro",
         "isShopkeeper": false
       },
       {
         "npcID": "skaa_informer",
-        "position": { "col": 10, "row": 30 },
+        "position": {
+          "col": 10,
+          "row": 30
+        },
         "dialogueTreeID": "skaa_rumors",
         "isShopkeeper": false
       }
@@ -47,9 +74,17 @@
     "lootPoints": [
       {
         "id": "luthadel_hidden_cache",
-        "position": { "col": 5, "row": 5 },
+        "position": {
+          "col": 5,
+          "row": 5
+        },
         "lootTable": [
-          { "itemID": "steel_vial", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 5 }
+          {
+            "itemID": "steel_vial",
+            "dropChance": 1,
+            "minQuantity": 2,
+            "maxQuantity": 5
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -68,31 +103,46 @@
     "gridWidth": 60,
     "gridHeight": 60,
     "tileMapFileName": "ash_fields.sks",
-    "playerSpawnPosition": { "col": 30, "row": 55 },
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
     "connections": [
       {
         "targetZoneID": "scadrial_hub",
         "entryPointName": "south_gate",
-        "exitPosition": { "col": 30, "row": 58 },
+        "exitPosition": {
+          "col": 30,
+          "row": 58
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "scadrial_kredik_shaw",
         "entryPointName": "back_entrance",
-        "exitPosition": { "col": 55, "row": 5 },
+        "exitPosition": {
+          "col": 55,
+          "row": 5
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "lost_skaa",
-        "position": { "col": 40, "row": 30 },
+        "position": {
+          "col": 40,
+          "row": 30
+        },
         "dialogueTreeID": "lost_skaa_quest",
         "isShopkeeper": false
       },
       {
         "npcID": "wandering_mist_walker",
-        "position": { "col": 25, "row": 40 },
+        "position": {
+          "col": 25,
+          "row": 40
+        },
         "dialogueTreeID": "mist_walker_secret",
         "isShopkeeper": false
       }
@@ -100,31 +150,71 @@
     "enemySpawns": [
       {
         "enemyID": "corrupted_skaa",
-        "position": { "col": 15, "row": 20 },
+        "position": {
+          "col": 15,
+          "row": 20
+        },
         "patrolPath": [
-          { "col": 15, "row": 20 }, { "col": 20, "row": 20 },
-          { "col": 20, "row": 25 }, { "col": 15, "row": 25 }
+          {
+            "col": 15,
+            "row": 20
+          },
+          {
+            "col": 20,
+            "row": 20
+          },
+          {
+            "col": 20,
+            "row": 25
+          },
+          {
+            "col": 15,
+            "row": 25
+          }
         ],
         "respawnTime": 120
       },
       {
         "enemyID": "corrupted_skaa",
-        "position": { "col": 35, "row": 15 },
+        "position": {
+          "col": 35,
+          "row": 15
+        },
         "patrolPath": null,
         "respawnTime": 120
       },
       {
         "enemyID": "mist_wraith",
-        "position": { "col": 45, "row": 40 },
+        "position": {
+          "col": 45,
+          "row": 40
+        },
         "patrolPath": [
-          { "col": 45, "row": 40 }, { "col": 50, "row": 35 },
-          { "col": 50, "row": 45 }, { "col": 45, "row": 40 }
+          {
+            "col": 45,
+            "row": 40
+          },
+          {
+            "col": 50,
+            "row": 35
+          },
+          {
+            "col": 50,
+            "row": 45
+          },
+          {
+            "col": 45,
+            "row": 40
+          }
         ],
         "respawnTime": 180
       },
       {
         "enemyID": "koloss_scout",
-        "position": { "col": 50, "row": 10 },
+        "position": {
+          "col": 50,
+          "row": 10
+        },
         "patrolPath": null,
         "respawnTime": 300
       }
@@ -132,20 +222,46 @@
     "lootPoints": [
       {
         "id": "ash_fields_chest_1",
-        "position": { "col": 25, "row": 10 },
+        "position": {
+          "col": 25,
+          "row": 10
+        },
         "lootTable": [
-          { "itemID": "iron_vial", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 3 },
-          { "itemID": "pewter_vial", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 2 }
+          {
+            "itemID": "iron_vial",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "pewter_vial",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "ash_fields_hidden_ruin",
-        "position": { "col": 50, "row": 50 },
+        "position": {
+          "col": 50,
+          "row": 50
+        },
         "lootTable": [
-          { "itemID": "pewter_vial", "dropChance": 0.7, "minQuantity": 1, "maxQuantity": 2 },
-          { "itemID": "wraith_bone", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "pewter_vial",
+            "dropChance": 0.7,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          },
+          {
+            "itemID": "wraith_bone",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -164,12 +280,18 @@
     "gridWidth": 50,
     "gridHeight": 50,
     "tileMapFileName": "kredik_shaw.sks",
-    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 48
+    },
     "connections": [
       {
         "targetZoneID": "scadrial_hub",
         "entryPointName": "palace_exit",
-        "exitPosition": { "col": 25, "row": 49 },
+        "exitPosition": {
+          "col": 25,
+          "row": 49
+        },
         "requiredQuestID": null
       }
     ],
@@ -177,21 +299,37 @@
     "enemySpawns": [
       {
         "enemyID": "steel_guard",
-        "position": { "col": 20, "row": 30 },
+        "position": {
+          "col": 20,
+          "row": 30
+        },
         "patrolPath": [
-          { "col": 20, "row": 30 }, { "col": 30, "row": 30 }
+          {
+            "col": 20,
+            "row": 30
+          },
+          {
+            "col": 30,
+            "row": 30
+          }
         ],
         "respawnTime": null
       },
       {
         "enemyID": "steel_guard",
-        "position": { "col": 25, "row": 20 },
+        "position": {
+          "col": 25,
+          "row": 20
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "steel_inquisitor",
-        "position": { "col": 25, "row": 5 },
+        "position": {
+          "col": 25,
+          "row": 5
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -210,37 +348,64 @@
     "gridWidth": 45,
     "gridHeight": 45,
     "tileMapFileName": "war_camps.sks",
-    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
     "connections": [
       {
         "targetZoneID": "roshar_shattered_plains",
         "entryPointName": "east_bridge",
-        "exitPosition": { "col": 43, "row": 22 },
+        "exitPosition": {
+          "col": 43,
+          "row": 22
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "roshar_urithiru",
         "entryPointName": "oathgate",
-        "exitPosition": { "col": 5, "row": 5 },
+        "exitPosition": {
+          "col": 5,
+          "row": 5
+        },
         "requiredQuestID": "roshar_main_2"
+      },
+      {
+        "targetZoneID": "roshar_chasms",
+        "entryPointName": "chasms_gate",
+        "exitPosition": {
+          "col": 22,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "gemstone_merchant",
-        "position": { "col": 18, "row": 30 },
+        "position": {
+          "col": 18,
+          "row": 30
+        },
         "dialogueTreeID": "gem_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "bridge_captain",
-        "position": { "col": 30, "row": 35 },
+        "position": {
+          "col": 30,
+          "row": 35
+        },
         "dialogueTreeID": "bridge_captain_quest",
         "isShopkeeper": false
       },
       {
         "npcID": "ardent_scholar",
-        "position": { "col": 10, "row": 25 },
+        "position": {
+          "col": 10,
+          "row": 25
+        },
         "dialogueTreeID": "ardent_lore",
         "isShopkeeper": false
       }
@@ -260,31 +425,46 @@
     "gridWidth": 70,
     "gridHeight": 70,
     "tileMapFileName": "shattered_plains.sks",
-    "playerSpawnPosition": { "col": 5, "row": 35 },
+    "playerSpawnPosition": {
+      "col": 5,
+      "row": 35
+    },
     "connections": [
       {
         "targetZoneID": "roshar_hub",
         "entryPointName": "west_bridge",
-        "exitPosition": { "col": 0, "row": 35 },
+        "exitPosition": {
+          "col": 0,
+          "row": 35
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "roshar_urithiru",
         "entryPointName": "hidden_path",
-        "exitPosition": { "col": 65, "row": 5 },
+        "exitPosition": {
+          "col": 65,
+          "row": 5
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "bridgeman_survivor",
-        "position": { "col": 20, "row": 50 },
+        "position": {
+          "col": 20,
+          "row": 50
+        },
         "dialogueTreeID": "bridgeman_story",
         "isShopkeeper": false
       },
       {
         "npcID": "spren_guide",
-        "position": { "col": 50, "row": 40 },
+        "position": {
+          "col": 50,
+          "row": 40
+        },
         "dialogueTreeID": "spren_hints",
         "isShopkeeper": false
       }
@@ -292,30 +472,63 @@
     "enemySpawns": [
       {
         "enemyID": "parshendi_warrior",
-        "position": { "col": 30, "row": 30 },
+        "position": {
+          "col": 30,
+          "row": 30
+        },
         "patrolPath": [
-          { "col": 30, "row": 30 }, { "col": 35, "row": 25 },
-          { "col": 40, "row": 30 }, { "col": 35, "row": 35 }
+          {
+            "col": 30,
+            "row": 30
+          },
+          {
+            "col": 35,
+            "row": 25
+          },
+          {
+            "col": 40,
+            "row": 30
+          },
+          {
+            "col": 35,
+            "row": 35
+          }
         ],
         "respawnTime": 150
       },
       {
         "enemyID": "parshendi_warrior",
-        "position": { "col": 50, "row": 20 },
+        "position": {
+          "col": 50,
+          "row": 20
+        },
         "patrolPath": null,
         "respawnTime": 150
       },
       {
         "enemyID": "chasmfiend_juvenile",
-        "position": { "col": 55, "row": 50 },
+        "position": {
+          "col": 55,
+          "row": 50
+        },
         "patrolPath": null,
         "respawnTime": 600
       },
       {
         "enemyID": "voidbringer_scout",
-        "position": { "col": 60, "row": 10 },
+        "position": {
+          "col": 60,
+          "row": 10
+        },
         "patrolPath": [
-          { "col": 60, "row": 10 }, { "col": 65, "row": 15 }
+          {
+            "col": 60,
+            "row": 10
+          },
+          {
+            "col": 65,
+            "row": 15
+          }
         ],
         "respawnTime": 200
       }
@@ -323,20 +536,46 @@
     "lootPoints": [
       {
         "id": "plains_gemheart",
-        "position": { "col": 45, "row": 35 },
+        "position": {
+          "col": 45,
+          "row": 35
+        },
         "lootTable": [
-          { "itemID": "stormlight_broam", "dropChance": 0.6, "minQuantity": 1, "maxQuantity": 1 },
-          { "itemID": "stormlight_mark", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 3 }
+          {
+            "itemID": "stormlight_broam",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "stormlight_mark",
+            "dropChance": 1,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "plains_hidden_chasm",
-        "position": { "col": 60, "row": 60 },
+        "position": {
+          "col": 60,
+          "row": 60
+        },
         "lootTable": [
-          { "itemID": "gemheart_fragment", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
-          { "itemID": "carapace_armor_piece", "dropChance": 0.6, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "gemheart_fragment",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "carapace_armor_piece",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -355,12 +594,18 @@
     "gridWidth": 55,
     "gridHeight": 55,
     "tileMapFileName": "urithiru.sks",
-    "playerSpawnPosition": { "col": 27, "row": 50 },
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
     "connections": [
       {
         "targetZoneID": "roshar_hub",
         "entryPointName": "oathgate_return",
-        "exitPosition": { "col": 27, "row": 52 },
+        "exitPosition": {
+          "col": 27,
+          "row": 52
+        },
         "requiredQuestID": null
       }
     ],
@@ -368,19 +613,28 @@
     "enemySpawns": [
       {
         "enemyID": "voidbringer_soldier",
-        "position": { "col": 20, "row": 35 },
+        "position": {
+          "col": 20,
+          "row": 35
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "voidbringer_soldier",
-        "position": { "col": 35, "row": 35 },
+        "position": {
+          "col": 35,
+          "row": 35
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "thunderclast",
-        "position": { "col": 27, "row": 10 },
+        "position": {
+          "col": 27,
+          "row": 10
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -399,37 +653,64 @@
     "gridWidth": 45,
     "gridHeight": 45,
     "tileMapFileName": "kezare_city.sks",
-    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
     "connections": [
       {
         "targetZoneID": "taldain_white_dunes",
         "entryPointName": "city_gate",
-        "exitPosition": { "col": 40, "row": 22 },
+        "exitPosition": {
+          "col": 40,
+          "row": 22
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "taldain_darkside",
         "entryPointName": "terminus",
-        "exitPosition": { "col": 5, "row": 5 },
+        "exitPosition": {
+          "col": 5,
+          "row": 5
+        },
         "requiredQuestID": "taldain_main_2"
+      },
+      {
+        "targetZoneID": "taldain_kerzt",
+        "entryPointName": "kerzt_gate",
+        "exitPosition": {
+          "col": 22,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "water_merchant",
-        "position": { "col": 18, "row": 30 },
+        "position": {
+          "col": 18,
+          "row": 30
+        },
         "dialogueTreeID": "water_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "sand_master_trainer",
-        "position": { "col": 28, "row": 25 },
+        "position": {
+          "col": 28,
+          "row": 25
+        },
         "dialogueTreeID": "dojo_training",
         "isShopkeeper": false
       },
       {
         "npcID": "kenton_ally",
-        "position": { "col": 22, "row": 20 },
+        "position": {
+          "col": 22,
+          "row": 20
+        },
         "dialogueTreeID": "kenton_intro",
         "isShopkeeper": false
       }
@@ -438,9 +719,17 @@
     "lootPoints": [
       {
         "id": "kezare_hidden_well",
-        "position": { "col": 8, "row": 8 },
+        "position": {
+          "col": 8,
+          "row": 8
+        },
         "lootTable": [
-          { "itemID": "desert_water_flask", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 }
+          {
+            "itemID": "desert_water_flask",
+            "dropChance": 1,
+            "minQuantity": 2,
+            "maxQuantity": 4
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -459,31 +748,46 @@
     "gridWidth": 65,
     "gridHeight": 65,
     "tileMapFileName": "white_dunes.sks",
-    "playerSpawnPosition": { "col": 5, "row": 32 },
+    "playerSpawnPosition": {
+      "col": 5,
+      "row": 32
+    },
     "connections": [
       {
         "targetZoneID": "taldain_hub",
         "entryPointName": "city_return",
-        "exitPosition": { "col": 0, "row": 32 },
+        "exitPosition": {
+          "col": 0,
+          "row": 32
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "taldain_darkside",
         "entryPointName": "border_crossing",
-        "exitPosition": { "col": 62, "row": 32 },
+        "exitPosition": {
+          "col": 62,
+          "row": 32
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "lost_traveler",
-        "position": { "col": 30, "row": 45 },
+        "position": {
+          "col": 30,
+          "row": 45
+        },
         "dialogueTreeID": "lost_traveler_quest",
         "isShopkeeper": false
       },
       {
         "npcID": "sand_hermit",
-        "position": { "col": 55, "row": 50 },
+        "position": {
+          "col": 55,
+          "row": 50
+        },
         "dialogueTreeID": "hermit_wisdom",
         "isShopkeeper": false
       }
@@ -491,30 +795,63 @@
     "enemySpawns": [
       {
         "enemyID": "sand_wyrm",
-        "position": { "col": 20, "row": 20 },
+        "position": {
+          "col": 20,
+          "row": 20
+        },
         "patrolPath": [
-          { "col": 20, "row": 20 }, { "col": 30, "row": 15 },
-          { "col": 35, "row": 25 }, { "col": 20, "row": 20 }
+          {
+            "col": 20,
+            "row": 20
+          },
+          {
+            "col": 30,
+            "row": 15
+          },
+          {
+            "col": 35,
+            "row": 25
+          },
+          {
+            "col": 20,
+            "row": 20
+          }
         ],
         "respawnTime": 120
       },
       {
         "enemyID": "sand_raider",
-        "position": { "col": 40, "row": 40 },
+        "position": {
+          "col": 40,
+          "row": 40
+        },
         "patrolPath": null,
         "respawnTime": 100
       },
       {
         "enemyID": "sand_raider",
-        "position": { "col": 50, "row": 25 },
+        "position": {
+          "col": 50,
+          "row": 25
+        },
         "patrolPath": [
-          { "col": 50, "row": 25 }, { "col": 55, "row": 30 }
+          {
+            "col": 50,
+            "row": 25
+          },
+          {
+            "col": 55,
+            "row": 30
+          }
         ],
         "respawnTime": 100
       },
       {
         "enemyID": "sandling",
-        "position": { "col": 35, "row": 50 },
+        "position": {
+          "col": 35,
+          "row": 50
+        },
         "patrolPath": null,
         "respawnTime": 180
       }
@@ -522,20 +859,46 @@
     "lootPoints": [
       {
         "id": "dunes_oasis_cache",
-        "position": { "col": 45, "row": 15 },
+        "position": {
+          "col": 45,
+          "row": 15
+        },
         "lootTable": [
-          { "itemID": "desert_water_flask", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 3 },
-          { "itemID": "white_sand_pouch", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 2 }
+          {
+            "itemID": "desert_water_flask",
+            "dropChance": 1,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "white_sand_pouch",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "dunes_buried_temple",
-        "position": { "col": 10, "row": 10 },
+        "position": {
+          "col": 10,
+          "row": 10
+        },
         "lootTable": [
-          { "itemID": "white_sand_pouch", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 },
-          { "itemID": "wyrm_scale", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "white_sand_pouch",
+            "dropChance": 1,
+            "minQuantity": 2,
+            "maxQuantity": 4
+          },
+          {
+            "itemID": "wyrm_scale",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -554,12 +917,18 @@
     "gridWidth": 50,
     "gridHeight": 50,
     "tileMapFileName": "darkside.sks",
-    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 48
+    },
     "connections": [
       {
         "targetZoneID": "taldain_hub",
         "entryPointName": "terminus_return",
-        "exitPosition": { "col": 25, "row": 49 },
+        "exitPosition": {
+          "col": 25,
+          "row": 49
+        },
         "requiredQuestID": null
       }
     ],
@@ -567,19 +936,28 @@
     "enemySpawns": [
       {
         "enemyID": "dark_sand_golem",
-        "position": { "col": 15, "row": 30 },
+        "position": {
+          "col": 15,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "dark_sand_golem",
-        "position": { "col": 35, "row": 30 },
+        "position": {
+          "col": 35,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "sand_lord",
-        "position": { "col": 25, "row": 8 },
+        "position": {
+          "col": 25,
+          "row": 8
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -598,37 +976,64 @@
     "gridWidth": 40,
     "gridHeight": 40,
     "tileMapFileName": "kilahito_town.sks",
-    "playerSpawnPosition": { "col": 20, "row": 35 },
+    "playerSpawnPosition": {
+      "col": 20,
+      "row": 35
+    },
     "connections": [
       {
         "targetZoneID": "komashi_nightmare_streets",
         "entryPointName": "dark_alley",
-        "exitPosition": { "col": 38, "row": 20 },
+        "exitPosition": {
+          "col": 38,
+          "row": 20
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "komashi_shroud",
         "entryPointName": "shrine_path",
-        "exitPosition": { "col": 5, "row": 5 },
+        "exitPosition": {
+          "col": 5,
+          "row": 5
+        },
         "requiredQuestID": "komashi_main_2"
+      },
+      {
+        "targetZoneID": "komashi_outer_streets",
+        "entryPointName": "streets_gate",
+        "exitPosition": {
+          "col": 20,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "ink_merchant",
-        "position": { "col": 15, "row": 25 },
+        "position": {
+          "col": 15,
+          "row": 25
+        },
         "dialogueTreeID": "ink_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "yokihijo_elder",
-        "position": { "col": 25, "row": 15 },
+        "position": {
+          "col": 25,
+          "row": 15
+        },
         "dialogueTreeID": "stacking_training",
         "isShopkeeper": false
       },
       {
         "npcID": "painter_nikaro",
-        "position": { "col": 20, "row": 20 },
+        "position": {
+          "col": 20,
+          "row": 20
+        },
         "dialogueTreeID": "nikaro_intro",
         "isShopkeeper": false
       }
@@ -648,25 +1053,37 @@
     "gridWidth": 55,
     "gridHeight": 55,
     "tileMapFileName": "nightmare_streets.sks",
-    "playerSpawnPosition": { "col": 5, "row": 27 },
+    "playerSpawnPosition": {
+      "col": 5,
+      "row": 27
+    },
     "connections": [
       {
         "targetZoneID": "komashi_hub",
         "entryPointName": "safe_district",
-        "exitPosition": { "col": 0, "row": 27 },
+        "exitPosition": {
+          "col": 0,
+          "row": 27
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "komashi_shroud",
         "entryPointName": "shroud_gate",
-        "exitPosition": { "col": 52, "row": 5 },
+        "exitPosition": {
+          "col": 52,
+          "row": 5
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "frightened_painter",
-        "position": { "col": 10, "row": 40 },
+        "position": {
+          "col": 10,
+          "row": 40
+        },
         "dialogueTreeID": "painter_lost_brush",
         "isShopkeeper": false
       }
@@ -674,30 +1091,63 @@
     "enemySpawns": [
       {
         "enemyID": "lesser_nightmare",
-        "position": { "col": 20, "row": 20 },
+        "position": {
+          "col": 20,
+          "row": 20
+        },
         "patrolPath": [
-          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
-          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+          {
+            "col": 20,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 15
+          },
+          {
+            "col": 30,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 25
+          }
         ],
         "respawnTime": 90
       },
       {
         "enemyID": "lesser_nightmare",
-        "position": { "col": 40, "row": 35 },
+        "position": {
+          "col": 40,
+          "row": 35
+        },
         "patrolPath": null,
         "respawnTime": 90
       },
       {
         "enemyID": "greater_nightmare",
-        "position": { "col": 35, "row": 15 },
+        "position": {
+          "col": 35,
+          "row": 15
+        },
         "patrolPath": [
-          { "col": 35, "row": 15 }, { "col": 40, "row": 10 }
+          {
+            "col": 35,
+            "row": 15
+          },
+          {
+            "col": 40,
+            "row": 10
+          }
         ],
         "respawnTime": 240
       },
       {
         "enemyID": "shadow_seeker",
-        "position": { "col": 45, "row": 40 },
+        "position": {
+          "col": 45,
+          "row": 40
+        },
         "patrolPath": null,
         "respawnTime": 200
       }
@@ -705,20 +1155,46 @@
     "lootPoints": [
       {
         "id": "nightmare_ink_pot",
-        "position": { "col": 30, "row": 40 },
+        "position": {
+          "col": 30,
+          "row": 40
+        },
         "lootTable": [
-          { "itemID": "nightmare_ink", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 2 },
-          { "itemID": "hion_shard", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "nightmare_ink",
+            "dropChance": 1,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          },
+          {
+            "itemID": "hion_shard",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "nightmare_hidden_shrine",
-        "position": { "col": 48, "row": 48 },
+        "position": {
+          "col": 48,
+          "row": 48
+        },
         "lootTable": [
-          { "itemID": "hion_shard", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 2 },
-          { "itemID": "shadow_fabric", "dropChance": 0.25, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "hion_shard",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          },
+          {
+            "itemID": "shadow_fabric",
+            "dropChance": 0.25,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -737,12 +1213,18 @@
     "gridWidth": 50,
     "gridHeight": 50,
     "tileMapFileName": "the_shroud.sks",
-    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 48
+    },
     "connections": [
       {
         "targetZoneID": "komashi_hub",
         "entryPointName": "shrine_return",
-        "exitPosition": { "col": 25, "row": 49 },
+        "exitPosition": {
+          "col": 25,
+          "row": 49
+        },
         "requiredQuestID": null
       }
     ],
@@ -750,19 +1232,28 @@
     "enemySpawns": [
       {
         "enemyID": "nightmare_sentinel",
-        "position": { "col": 15, "row": 30 },
+        "position": {
+          "col": 15,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "nightmare_sentinel",
-        "position": { "col": 35, "row": 30 },
+        "position": {
+          "col": 35,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "father_of_nightmares",
-        "position": { "col": 25, "row": 8 },
+        "position": {
+          "col": 25,
+          "row": 8
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -781,37 +1272,64 @@
     "gridWidth": 45,
     "gridHeight": 45,
     "tileMapFileName": "ttelir_court.sks",
-    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
     "connections": [
       {
         "targetZoneID": "nalthis_jungle",
         "entryPointName": "city_gate",
-        "exitPosition": { "col": 43, "row": 22 },
+        "exitPosition": {
+          "col": 43,
+          "row": 22
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "nalthis_god_king_palace",
         "entryPointName": "palace_entrance",
-        "exitPosition": { "col": 5, "row": 5 },
+        "exitPosition": {
+          "col": 5,
+          "row": 5
+        },
         "requiredQuestID": "nalthis_main_2"
+      },
+      {
+        "targetZoneID": "nalthis_denth_hideout",
+        "entryPointName": "hideout_gate",
+        "exitPosition": {
+          "col": 22,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "breath_merchant",
-        "position": { "col": 18, "row": 30 },
+        "position": {
+          "col": 18,
+          "row": 30
+        },
         "dialogueTreeID": "breath_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "vivenna_ally",
-        "position": { "col": 28, "row": 25 },
+        "position": {
+          "col": 28,
+          "row": 25
+        },
         "dialogueTreeID": "vivenna_intro",
         "isShopkeeper": false
       },
       {
         "npcID": "returned_priest",
-        "position": { "col": 10, "row": 20 },
+        "position": {
+          "col": 10,
+          "row": 20
+        },
         "dialogueTreeID": "returned_lore",
         "isShopkeeper": false
       }
@@ -820,9 +1338,17 @@
     "lootPoints": [
       {
         "id": "ttelir_hidden_cache",
-        "position": { "col": 8, "row": 8 },
+        "position": {
+          "col": 8,
+          "row": 8
+        },
         "lootTable": [
-          { "itemID": "breath_essence", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 }
+          {
+            "itemID": "breath_essence",
+            "dropChance": 1,
+            "minQuantity": 2,
+            "maxQuantity": 4
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -841,25 +1367,37 @@
     "gridWidth": 60,
     "gridHeight": 60,
     "tileMapFileName": "hallandren_jungle.sks",
-    "playerSpawnPosition": { "col": 5, "row": 30 },
+    "playerSpawnPosition": {
+      "col": 5,
+      "row": 30
+    },
     "connections": [
       {
         "targetZoneID": "nalthis_hub",
         "entryPointName": "city_return",
-        "exitPosition": { "col": 0, "row": 30 },
+        "exitPosition": {
+          "col": 0,
+          "row": 30
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "nalthis_god_king_palace",
         "entryPointName": "jungle_path",
-        "exitPosition": { "col": 55, "row": 5 },
+        "exitPosition": {
+          "col": 55,
+          "row": 5
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "color_researcher",
-        "position": { "col": 25, "row": 50 },
+        "position": {
+          "col": 25,
+          "row": 50
+        },
         "dialogueTreeID": "color_research_quest",
         "isShopkeeper": false
       }
@@ -867,30 +1405,63 @@
     "enemySpawns": [
       {
         "enemyID": "lifeless_soldier",
-        "position": { "col": 20, "row": 20 },
+        "position": {
+          "col": 20,
+          "row": 20
+        },
         "patrolPath": [
-          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
-          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+          {
+            "col": 20,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 15
+          },
+          {
+            "col": 30,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 25
+          }
         ],
         "respawnTime": 120
       },
       {
         "enemyID": "lifeless_soldier",
-        "position": { "col": 40, "row": 35 },
+        "position": {
+          "col": 40,
+          "row": 35
+        },
         "patrolPath": null,
         "respawnTime": 120
       },
       {
         "enemyID": "awakened_beast",
-        "position": { "col": 35, "row": 15 },
+        "position": {
+          "col": 35,
+          "row": 15
+        },
         "patrolPath": [
-          { "col": 35, "row": 15 }, { "col": 40, "row": 10 }
+          {
+            "col": 35,
+            "row": 15
+          },
+          {
+            "col": 40,
+            "row": 10
+          }
         ],
         "respawnTime": 180
       },
       {
         "enemyID": "breath_thief",
-        "position": { "col": 50, "row": 40 },
+        "position": {
+          "col": 50,
+          "row": 40
+        },
         "patrolPath": null,
         "respawnTime": 240
       }
@@ -898,20 +1469,46 @@
     "lootPoints": [
       {
         "id": "jungle_breath_cache",
-        "position": { "col": 30, "row": 45 },
+        "position": {
+          "col": 30,
+          "row": 45
+        },
         "lootTable": [
-          { "itemID": "breath_essence", "dropChance": 1.0, "minQuantity": 1, "maxQuantity": 3 },
-          { "itemID": "chromatic_thread", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "breath_essence",
+            "dropChance": 1,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "chromatic_thread",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "jungle_ancient_altar",
-        "position": { "col": 50, "row": 10 },
+        "position": {
+          "col": 50,
+          "row": 10
+        },
         "lootTable": [
-          { "itemID": "chromatic_thread", "dropChance": 0.7, "minQuantity": 1, "maxQuantity": 2 },
-          { "itemID": "awakened_blade", "dropChance": 0.15, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "chromatic_thread",
+            "dropChance": 0.7,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          },
+          {
+            "itemID": "awakened_blade",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -930,12 +1527,18 @@
     "gridWidth": 50,
     "gridHeight": 50,
     "tileMapFileName": "god_king_palace.sks",
-    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 48
+    },
     "connections": [
       {
         "targetZoneID": "nalthis_hub",
         "entryPointName": "palace_exit",
-        "exitPosition": { "col": 25, "row": 49 },
+        "exitPosition": {
+          "col": 25,
+          "row": 49
+        },
         "requiredQuestID": null
       }
     ],
@@ -943,19 +1546,28 @@
     "enemySpawns": [
       {
         "enemyID": "royal_lifeless_guard",
-        "position": { "col": 15, "row": 30 },
+        "position": {
+          "col": 15,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "royal_lifeless_guard",
-        "position": { "col": 35, "row": 30 },
+        "position": {
+          "col": 35,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "returned_champion",
-        "position": { "col": 25, "row": 8 },
+        "position": {
+          "col": 25,
+          "row": 8
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -974,37 +1586,64 @@
     "gridWidth": 45,
     "gridHeight": 45,
     "tileMapFileName": "elantris_city.sks",
-    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
     "connections": [
       {
         "targetZoneID": "sel_fjorden",
         "entryPointName": "east_gate",
-        "exitPosition": { "col": 43, "row": 22 },
+        "exitPosition": {
+          "col": 43,
+          "row": 22
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "sel_spirit_pool",
         "entryPointName": "hidden_passage",
-        "exitPosition": { "col": 5, "row": 5 },
+        "exitPosition": {
+          "col": 5,
+          "row": 5
+        },
         "requiredQuestID": "sel_main_2"
+      },
+      {
+        "targetZoneID": "sel_hrathen_fortress",
+        "entryPointName": "fortress_gate",
+        "exitPosition": {
+          "col": 22,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "aon_scholar",
-        "position": { "col": 18, "row": 30 },
+        "position": {
+          "col": 18,
+          "row": 30
+        },
         "dialogueTreeID": "aon_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "raoden_ally",
-        "position": { "col": 28, "row": 25 },
+        "position": {
+          "col": 28,
+          "row": 25
+        },
         "dialogueTreeID": "raoden_intro",
         "isShopkeeper": false
       },
       {
         "npcID": "hrathen_priest",
-        "position": { "col": 10, "row": 20 },
+        "position": {
+          "col": 10,
+          "row": 20
+        },
         "dialogueTreeID": "hrathen_lore",
         "isShopkeeper": false
       }
@@ -1013,9 +1652,17 @@
     "lootPoints": [
       {
         "id": "elantris_hidden_cache",
-        "position": { "col": 8, "row": 8 },
+        "position": {
+          "col": 8,
+          "row": 8
+        },
         "lootTable": [
-          { "itemID": "aon_glyph_stone", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 }
+          {
+            "itemID": "aon_glyph_stone",
+            "dropChance": 1,
+            "minQuantity": 2,
+            "maxQuantity": 4
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -1034,25 +1681,37 @@
     "gridWidth": 60,
     "gridHeight": 60,
     "tileMapFileName": "fjorden_lands.sks",
-    "playerSpawnPosition": { "col": 5, "row": 30 },
+    "playerSpawnPosition": {
+      "col": 5,
+      "row": 30
+    },
     "connections": [
       {
         "targetZoneID": "sel_hub",
         "entryPointName": "west_return",
-        "exitPosition": { "col": 0, "row": 30 },
+        "exitPosition": {
+          "col": 0,
+          "row": 30
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "sel_spirit_pool",
         "entryPointName": "mountain_pass",
-        "exitPosition": { "col": 55, "row": 5 },
+        "exitPosition": {
+          "col": 55,
+          "row": 5
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "refugee_elantrian",
-        "position": { "col": 15, "row": 50 },
+        "position": {
+          "col": 15,
+          "row": 50
+        },
         "dialogueTreeID": "refugee_story",
         "isShopkeeper": false
       }
@@ -1060,30 +1719,63 @@
     "enemySpawns": [
       {
         "enemyID": "derethi_warrior",
-        "position": { "col": 20, "row": 20 },
+        "position": {
+          "col": 20,
+          "row": 20
+        },
         "patrolPath": [
-          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
-          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+          {
+            "col": 20,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 15
+          },
+          {
+            "col": 30,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 25
+          }
         ],
         "respawnTime": 120
       },
       {
         "enemyID": "derethi_warrior",
-        "position": { "col": 40, "row": 35 },
+        "position": {
+          "col": 40,
+          "row": 35
+        },
         "patrolPath": null,
         "respawnTime": 120
       },
       {
         "enemyID": "dakhor_monk",
-        "position": { "col": 35, "row": 15 },
+        "position": {
+          "col": 35,
+          "row": 15
+        },
         "patrolPath": [
-          { "col": 35, "row": 15 }, { "col": 40, "row": 10 }
+          {
+            "col": 35,
+            "row": 15
+          },
+          {
+            "col": 40,
+            "row": 10
+          }
         ],
         "respawnTime": 200
       },
       {
         "enemyID": "skaze_touched",
-        "position": { "col": 50, "row": 40 },
+        "position": {
+          "col": 50,
+          "row": 40
+        },
         "patrolPath": null,
         "respawnTime": 250
       }
@@ -1091,20 +1783,46 @@
     "lootPoints": [
       {
         "id": "fjorden_altar_cache",
-        "position": { "col": 30, "row": 45 },
+        "position": {
+          "col": 30,
+          "row": 45
+        },
         "lootTable": [
-          { "itemID": "aon_glyph_stone", "dropChance": 0.8, "minQuantity": 1, "maxQuantity": 2 },
-          { "itemID": "dakhor_bone_charm", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "aon_glyph_stone",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 2
+          },
+          {
+            "itemID": "dakhor_bone_charm",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "fjorden_hidden_shrine",
-        "position": { "col": 50, "row": 10 },
+        "position": {
+          "col": 50,
+          "row": 10
+        },
         "lootTable": [
-          { "itemID": "dakhor_bone_charm", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 },
-          { "itemID": "seons_light", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "dakhor_bone_charm",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "seons_light",
+            "dropChance": 0.1,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -1123,12 +1841,18 @@
     "gridWidth": 50,
     "gridHeight": 50,
     "tileMapFileName": "spirit_pool.sks",
-    "playerSpawnPosition": { "col": 25, "row": 48 },
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 48
+    },
     "connections": [
       {
         "targetZoneID": "sel_hub",
         "entryPointName": "pool_exit",
-        "exitPosition": { "col": 25, "row": 49 },
+        "exitPosition": {
+          "col": 25,
+          "row": 49
+        },
         "requiredQuestID": null
       }
     ],
@@ -1136,19 +1860,28 @@
     "enemySpawns": [
       {
         "enemyID": "corrupted_elantrian",
-        "position": { "col": 15, "row": 30 },
+        "position": {
+          "col": 15,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "corrupted_elantrian",
-        "position": { "col": 35, "row": 30 },
+        "position": {
+          "col": 35,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "dominion_avatar",
-        "position": { "col": 25, "row": 8 },
+        "position": {
+          "col": 25,
+          "row": 8
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -1167,37 +1900,64 @@
     "gridWidth": 45,
     "gridHeight": 45,
     "tileMapFileName": "celestia_port.sks",
-    "playerSpawnPosition": { "col": 22, "row": 40 },
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
     "connections": [
       {
         "targetZoneID": "shadesmar_depths",
         "entryPointName": "descent_path",
-        "exitPosition": { "col": 40, "row": 22 },
+        "exitPosition": {
+          "col": 40,
+          "row": 22
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "shadesmar_nexus",
         "entryPointName": "nexus_gate",
-        "exitPosition": { "col": 5, "row": 5 },
+        "exitPosition": {
+          "col": 5,
+          "row": 5
+        },
         "requiredQuestID": "shadesmar_main_2"
+      },
+      {
+        "targetZoneID": "shadesmar_bead_ocean",
+        "entryPointName": "ocean_gate",
+        "exitPosition": {
+          "col": 22,
+          "row": 5
+        },
+        "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "cognitive_merchant",
-        "position": { "col": 18, "row": 30 },
+        "position": {
+          "col": 18,
+          "row": 30
+        },
         "dialogueTreeID": "cognitive_shop",
         "isShopkeeper": true
       },
       {
         "npcID": "worldhopper_sage",
-        "position": { "col": 28, "row": 20 },
+        "position": {
+          "col": 28,
+          "row": 20
+        },
         "dialogueTreeID": "sage_cosmere_lore",
         "isShopkeeper": false
       },
       {
         "npcID": "lost_herald",
-        "position": { "col": 10, "row": 25 },
+        "position": {
+          "col": 10,
+          "row": 25
+        },
         "dialogueTreeID": "herald_warning",
         "isShopkeeper": false
       }
@@ -1206,10 +1966,23 @@
     "lootPoints": [
       {
         "id": "celestia_hidden_vault",
-        "position": { "col": 38, "row": 8 },
+        "position": {
+          "col": 38,
+          "row": 8
+        },
         "lootTable": [
-          { "itemID": "cognitive_bead", "dropChance": 1.0, "minQuantity": 3, "maxQuantity": 5 },
-          { "itemID": "spren_essence", "dropChance": 0.5, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "cognitive_bead",
+            "dropChance": 1,
+            "minQuantity": 3,
+            "maxQuantity": 5
+          },
+          {
+            "itemID": "spren_essence",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -1228,31 +2001,46 @@
     "gridWidth": 65,
     "gridHeight": 65,
     "tileMapFileName": "bead_ocean.sks",
-    "playerSpawnPosition": { "col": 5, "row": 32 },
+    "playerSpawnPosition": {
+      "col": 5,
+      "row": 32
+    },
     "connections": [
       {
         "targetZoneID": "shadesmar_hub",
         "entryPointName": "ascent_path",
-        "exitPosition": { "col": 0, "row": 32 },
+        "exitPosition": {
+          "col": 0,
+          "row": 32
+        },
         "requiredQuestID": null
       },
       {
         "targetZoneID": "shadesmar_nexus",
         "entryPointName": "rift_entrance",
-        "exitPosition": { "col": 62, "row": 5 },
+        "exitPosition": {
+          "col": 62,
+          "row": 5
+        },
         "requiredQuestID": null
       }
     ],
     "npcSpawns": [
       {
         "npcID": "stranded_sailor",
-        "position": { "col": 30, "row": 45 },
+        "position": {
+          "col": 30,
+          "row": 45
+        },
         "dialogueTreeID": "sailor_rescue",
         "isShopkeeper": false
       },
       {
         "npcID": "ancient_spren",
-        "position": { "col": 50, "row": 20 },
+        "position": {
+          "col": 50,
+          "row": 20
+        },
         "dialogueTreeID": "ancient_spren_wisdom",
         "isShopkeeper": false
       }
@@ -1260,39 +2048,85 @@
     "enemySpawns": [
       {
         "enemyID": "cognitive_shade",
-        "position": { "col": 20, "row": 20 },
+        "position": {
+          "col": 20,
+          "row": 20
+        },
         "patrolPath": [
-          { "col": 20, "row": 20 }, { "col": 25, "row": 15 },
-          { "col": 30, "row": 20 }, { "col": 25, "row": 25 }
+          {
+            "col": 20,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 15
+          },
+          {
+            "col": 30,
+            "row": 20
+          },
+          {
+            "col": 25,
+            "row": 25
+          }
         ],
         "respawnTime": 100
       },
       {
         "enemyID": "cognitive_shade",
-        "position": { "col": 45, "row": 40 },
+        "position": {
+          "col": 45,
+          "row": 40
+        },
         "patrolPath": null,
         "respawnTime": 100
       },
       {
         "enemyID": "hostile_spren",
-        "position": { "col": 35, "row": 15 },
+        "position": {
+          "col": 35,
+          "row": 15
+        },
         "patrolPath": [
-          { "col": 35, "row": 15 }, { "col": 40, "row": 10 },
-          { "col": 45, "row": 15 }
+          {
+            "col": 35,
+            "row": 15
+          },
+          {
+            "col": 40,
+            "row": 10
+          },
+          {
+            "col": 45,
+            "row": 15
+          }
         ],
         "respawnTime": 150
       },
       {
         "enemyID": "fused_errant",
-        "position": { "col": 55, "row": 25 },
+        "position": {
+          "col": 55,
+          "row": 25
+        },
         "patrolPath": null,
         "respawnTime": 300
       },
       {
         "enemyID": "hostile_spren",
-        "position": { "col": 25, "row": 50 },
+        "position": {
+          "col": 25,
+          "row": 50
+        },
         "patrolPath": [
-          { "col": 25, "row": 50 }, { "col": 30, "row": 55 }
+          {
+            "col": 25,
+            "row": 50
+          },
+          {
+            "col": 30,
+            "row": 55
+          }
         ],
         "respawnTime": 150
       }
@@ -1300,20 +2134,46 @@
     "lootPoints": [
       {
         "id": "depths_bead_cluster",
-        "position": { "col": 40, "row": 35 },
+        "position": {
+          "col": 40,
+          "row": 35
+        },
         "lootTable": [
-          { "itemID": "cognitive_bead", "dropChance": 1.0, "minQuantity": 2, "maxQuantity": 4 },
-          { "itemID": "spren_essence", "dropChance": 0.4, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "cognitive_bead",
+            "dropChance": 1,
+            "minQuantity": 2,
+            "maxQuantity": 4
+          },
+          {
+            "itemID": "spren_essence",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": false,
         "respawns": true
       },
       {
         "id": "depths_sunken_shrine",
-        "position": { "col": 15, "row": 55 },
+        "position": {
+          "col": 15,
+          "row": 55
+        },
         "lootTable": [
-          { "itemID": "voidlight_crystal", "dropChance": 0.3, "minQuantity": 1, "maxQuantity": 1 },
-          { "itemID": "unmade_fragment", "dropChance": 0.1, "minQuantity": 1, "maxQuantity": 1 }
+          {
+            "itemID": "voidlight_crystal",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "unmade_fragment",
+            "dropChance": 0.1,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
         ],
         "isHidden": true,
         "respawns": false
@@ -1332,12 +2192,18 @@
     "gridWidth": 55,
     "gridHeight": 55,
     "tileMapFileName": "cosmere_nexus.sks",
-    "playerSpawnPosition": { "col": 27, "row": 52 },
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 52
+    },
     "connections": [
       {
         "targetZoneID": "shadesmar_hub",
         "entryPointName": "nexus_exit",
-        "exitPosition": { "col": 27, "row": 53 },
+        "exitPosition": {
+          "col": 27,
+          "row": 53
+        },
         "requiredQuestID": null
       }
     ],
@@ -1345,25 +2211,37 @@
     "enemySpawns": [
       {
         "enemyID": "unmade_shard",
-        "position": { "col": 15, "row": 30 },
+        "position": {
+          "col": 15,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "unmade_shard",
-        "position": { "col": 40, "row": 30 },
+        "position": {
+          "col": 40,
+          "row": 30
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "fused_errant",
-        "position": { "col": 27, "row": 38 },
+        "position": {
+          "col": 27,
+          "row": 38
+        },
         "patrolPath": null,
         "respawnTime": null
       },
       {
         "enemyID": "shattered_shard_avatar",
-        "position": { "col": 27, "row": 8 },
+        "position": {
+          "col": 27,
+          "row": 8
+        },
         "patrolPath": null,
         "respawnTime": null
       }
@@ -1372,5 +2250,5179 @@
     "ambientMusicTrack": "shadesmar_boss_ambient",
     "weatherEffect": "none",
     "recommendedLevel": 12
+  },
+  {
+    "id": "scadrial_catacombs",
+    "name": "Catacombes de Luthadel",
+    "description": "Les tunnels souterrains sous Luthadel, repaire des voleurs et des contrebandiers allomantiques.",
+    "worldID": "scadrial",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "scadrial_catacombs.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 32,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_pits",
+        "entryPointName": "pits_entry",
+        "exitPosition": {
+          "col": 10,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "underground_merchant",
+        "position": {
+          "col": 20,
+          "row": 40
+        },
+        "dialogueTreeID": "underground_shop",
+        "isShopkeeper": true
+      },
+      {
+        "npcID": "rebel_scout",
+        "position": {
+          "col": 10,
+          "row": 25
+        },
+        "dialogueTreeID": "rebel_info",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "cave_rat",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "corrupted_skaa",
+        "position": {
+          "col": 25,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "cave_rat",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "smuggler",
+        "position": {
+          "col": 40,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "catacombs_cache_1",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "lootTable": [
+          {
+            "itemID": "steel_vial",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "iron_vial",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "scadrial_catacombs_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 8
+  },
+  {
+    "id": "scadrial_pits",
+    "name": "Les Puits de Hathsin",
+    "description": "Les mines mortelles où les skaa sont envoyés mourir. Des cristaux d'atium brillent dans les profondeurs.",
+    "worldID": "scadrial",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "scadrial_pits.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_catacombs",
+        "entryPointName": "catacombs_entry",
+        "exitPosition": {
+          "col": 8,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_fadrex",
+        "entryPointName": "fadrex_entry",
+        "exitPosition": {
+          "col": 25,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "pit_prisoner",
+        "position": {
+          "col": 25,
+          "row": 50
+        },
+        "dialogueTreeID": "prisoner_plea",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "pit_guardian",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "pit_guardian",
+        "position": {
+          "col": 40,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "crystal_golem",
+        "position": {
+          "col": 30,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "pit_overseer",
+        "position": {
+          "col": 50,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "cave_spider",
+        "position": {
+          "col": 15,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "pits_crystal_1",
+        "position": {
+          "col": 45,
+          "row": 35
+        },
+        "lootTable": [
+          {
+            "itemID": "atium_shard",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "pewter_vial",
+            "dropChance": 0.7,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "scadrial_pits_ambient",
+    "weatherEffect": "ashfall",
+    "recommendedLevel": 15
+  },
+  {
+    "id": "scadrial_fadrex",
+    "name": "Fadrex City",
+    "description": "Une cité fortifiée sous les cendres, dernier bastion de résistance contre le Lord Dirigeant.",
+    "worldID": "scadrial",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "scadrial_fadrex.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_pits",
+        "entryPointName": "pits_entry",
+        "exitPosition": {
+          "col": 5,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_tyrian",
+        "entryPointName": "tyrian_entry",
+        "exitPosition": {
+          "col": 12,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "fadrex_governor",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "dialogueTreeID": "fadrex_politics",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "weapons_dealer",
+        "position": {
+          "col": 30,
+          "row": 45
+        },
+        "dialogueTreeID": "weapons_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "city_guard",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "city_guard",
+        "position": {
+          "col": 35,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "obligator",
+        "position": {
+          "col": 25,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "steel_inquisitor_junior",
+        "position": {
+          "col": 45,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "fadrex_armory",
+        "position": {
+          "col": 40,
+          "row": 40
+        },
+        "lootTable": [
+          {
+            "itemID": "guard_armor_piece",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "koloss_blade_shard",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "scadrial_fadrex_ambient",
+    "weatherEffect": "ashfall",
+    "recommendedLevel": 22
+  },
+  {
+    "id": "scadrial_tyrian",
+    "name": "Les Fosses de Tyrian",
+    "description": "Un donjon souterrain infesté de koloss enragés et de créatures corrompues par l'Investiture.",
+    "worldID": "scadrial",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "scadrial_tyrian.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_fadrex",
+        "entryPointName": "fadrex_entry",
+        "exitPosition": {
+          "col": 18,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_well",
+        "entryPointName": "well_entry",
+        "exitPosition": {
+          "col": 28,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "koloss_berserker",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "koloss_berserker",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "koloss_berserker",
+        "position": {
+          "col": 35,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "mist_horror",
+        "position": {
+          "col": 20,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "mist_horror",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "tyrian_depths_chest",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "atium_bead",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "inquisitor_spike",
+            "dropChance": 0.1,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "scadrial_dungeon_ambient",
+    "weatherEffect": "mist",
+    "recommendedLevel": 30
+  },
+  {
+    "id": "scadrial_well",
+    "name": "Le Puits de l'Ascension",
+    "description": "Le lieu mythique où l'Investiture de Préservation se concentre. Une puissance immense attend celui qui ose s'en approcher.",
+    "worldID": "scadrial",
+    "type": "boss",
+    "gridWidth": 40,
+    "gridHeight": 40,
+    "tileMapFileName": "scadrial_well.sks",
+    "playerSpawnPosition": {
+      "col": 20,
+      "row": 35
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_tyrian",
+        "entryPointName": "tyrian_entry",
+        "exitPosition": {
+          "col": 22,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_kandra_caves",
+        "entryPointName": "caves_entry",
+        "exitPosition": {
+          "col": 27,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "well_guardian",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "well_guardian",
+        "position": {
+          "col": 25,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "preservation_avatar",
+        "position": {
+          "col": 20,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "scadrial_well_boss",
+    "weatherEffect": "mist",
+    "recommendedLevel": 40
+  },
+  {
+    "id": "scadrial_kandra_caves",
+    "name": "Grottes des Kandra",
+    "description": "Le réseau de grottes des Kandra, êtres métamorphes gardiens des Puits d'Ati. Les Bénédictions anciennes y sont cachées.",
+    "worldID": "scadrial",
+    "type": "exploration",
+    "gridWidth": 65,
+    "gridHeight": 65,
+    "tileMapFileName": "scadrial_kandra_caves.sks",
+    "playerSpawnPosition": {
+      "col": 32,
+      "row": 60
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_well",
+        "entryPointName": "well_entry",
+        "exitPosition": {
+          "col": 33,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "scadrial_atium_mines",
+        "entryPointName": "mines_entry",
+        "exitPosition": {
+          "col": 53,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "kandra_elder",
+        "position": {
+          "col": 55,
+          "row": 55
+        },
+        "dialogueTreeID": "kandra_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "corrupted_kandra",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "corrupted_kandra",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "kandra_elder_guard",
+        "position": {
+          "col": 30,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "blessing_wraith",
+        "position": {
+          "col": 50,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "blessing_wraith",
+        "position": {
+          "col": 15,
+          "row": 50
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "kandra_blessing_cache",
+        "position": {
+          "col": 35,
+          "row": 45
+        },
+        "lootTable": [
+          {
+            "itemID": "kandra_blessing",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "atium_bead",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "scadrial_kandra_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 50
+  },
+  {
+    "id": "scadrial_atium_mines",
+    "name": "Mines d'Atium",
+    "description": "La source ultime d'atium, gardée par les serviteurs de Ruine. Seuls les plus puissants allomanciens survivent.",
+    "worldID": "scadrial",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "scadrial_atium_mines.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "scadrial_kandra_caves",
+        "entryPointName": "caves_entry",
+        "exitPosition": {
+          "col": 35,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "atium_golem",
+        "position": {
+          "col": 15,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "atium_golem",
+        "position": {
+          "col": 35,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "ruin_champion",
+        "position": {
+          "col": 25,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "scadrial_atium_boss",
+    "weatherEffect": "ashfall",
+    "recommendedLevel": 60
+  },
+  {
+    "id": "roshar_chasms",
+    "name": "Les Chasmes",
+    "description": "Les profonds gouffres entre les plateaux des Plaines Brisées, infestés de chasmfiends juvéniles et de créatures étranges.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 60,
+    "tileMapFileName": "roshar_chasms.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 15,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_natanatan",
+        "entryPointName": "natanatan_entry",
+        "exitPosition": {
+          "col": 40,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "lost_bridgeman",
+        "position": {
+          "col": 35,
+          "row": 50
+        },
+        "dialogueTreeID": "bridgeman_rescue",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "chasmling",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "chasmling",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "chasmling",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "cremling_swarm",
+        "position": {
+          "col": 20,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "chasm_gemheart",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "gemheart_shard",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "stormlight_chip",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_chasms_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 8
+  },
+  {
+    "id": "roshar_natanatan",
+    "name": "Ruines de Natanatan",
+    "description": "Les vestiges d'un royaume oublié, où les sprens corrompus hantent les ruines et les Idéaux oubliés résonnent.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "roshar_natanatan.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_chasms",
+        "entryPointName": "chasms_entry",
+        "exitPosition": {
+          "col": 9,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_kholinar",
+        "entryPointName": "kholinar_entry",
+        "exitPosition": {
+          "col": 51,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "ancient_herald",
+        "position": {
+          "col": 10,
+          "row": 10
+        },
+        "dialogueTreeID": "herald_wisdom",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "corrupted_spren",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "corrupted_spren",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "void_spren",
+        "position": {
+          "col": 45,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "parshendi_scout",
+        "position": {
+          "col": 50,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "natanatan_relic",
+        "position": {
+          "col": 30,
+          "row": 10
+        },
+        "lootTable": [
+          {
+            "itemID": "ancient_scroll",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "stormlight_mark",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_ruins_ambient",
+    "weatherEffect": "highstorm",
+    "recommendedLevel": 15
+  },
+  {
+    "id": "roshar_kholinar",
+    "name": "Kholinar",
+    "description": "La capitale d'Alethkar, occupée par les Fusionnés. Les rues sont patrouillées par des Régressés et des troupes ennemies.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 70,
+    "gridHeight": 70,
+    "tileMapFileName": "roshar_kholinar.sks",
+    "playerSpawnPosition": {
+      "col": 35,
+      "row": 65
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_natanatan",
+        "entryPointName": "natanatan_entry",
+        "exitPosition": {
+          "col": 23,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_frostlands",
+        "entryPointName": "frostlands_entry",
+        "exitPosition": {
+          "col": 27,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "kholinar_refugee",
+        "position": {
+          "col": 15,
+          "row": 60
+        },
+        "dialogueTreeID": "refugee_quest",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "wall_guard_merchant",
+        "position": {
+          "col": 50,
+          "row": 60
+        },
+        "dialogueTreeID": "kholinar_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 55,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "regressor",
+        "position": {
+          "col": 30,
+          "row": 50
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "void_captain",
+        "position": {
+          "col": 60,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "kholinar_armory",
+        "position": {
+          "col": 45,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "shardblade_shard",
+            "dropChance": 0.1,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "stormlight_sphere",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_kholinar_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 22
+  },
+  {
+    "id": "roshar_frostlands",
+    "name": "Les Terres Gelées",
+    "description": "Les régions glaciales de l'est de Roshar, où les hauteorages frappent avec une violence inouïe.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "roshar_frostlands.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_kholinar",
+        "entryPointName": "kholinar_entry",
+        "exitPosition": {
+          "col": 6,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_reshi_isles",
+        "entryPointName": "isles_entry",
+        "exitPosition": {
+          "col": 22,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "frost_spren",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "frost_spren",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "glacier_beast",
+        "position": {
+          "col": 25,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "glacier_beast",
+        "position": {
+          "col": 45,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "thunderclast_minor",
+        "position": {
+          "col": 40,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "frost_cache",
+        "position": {
+          "col": 30,
+          "row": 30
+        },
+        "lootTable": [
+          {
+            "itemID": "stormlight_mark",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "frost_gemheart",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_frost_ambient",
+    "weatherEffect": "highstorm",
+    "recommendedLevel": 30
+  },
+  {
+    "id": "roshar_reshi_isles",
+    "name": "Les Îles Reshi",
+    "description": "Des îles vivantes portées par des greatshells colossaux. Les peuples Reshi y pratiquent d'anciens rituels.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "roshar_reshi_isles.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_frostlands",
+        "entryPointName": "frostlands_entry",
+        "exitPosition": {
+          "col": 27,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_aimia",
+        "entryPointName": "aimia_entry",
+        "exitPosition": {
+          "col": 31,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "reshi_king",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "dialogueTreeID": "reshi_ritual",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "reshi_guardian",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "reshi_guardian",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "greatshell_parasite",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "deep_one",
+        "position": {
+          "col": 40,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "reshi_pearl",
+        "position": {
+          "col": 30,
+          "row": 40
+        },
+        "lootTable": [
+          {
+            "itemID": "reshi_pearl",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "stormlight_sphere",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_reshi_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 40
+  },
+  {
+    "id": "roshar_aimia",
+    "name": "Aimia",
+    "description": "L'île mystérieuse et interdite, autrefois protégée par les Chevaliers Radiants. Des secrets cosmérique y sommeillent.",
+    "worldID": "roshar",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "roshar_aimia.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_reshi_isles",
+        "entryPointName": "isles_entry",
+        "exitPosition": {
+          "col": 43,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "roshar_honor_palace",
+        "entryPointName": "palace_entry",
+        "exitPosition": {
+          "col": 10,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "aimian_sage",
+        "position": {
+          "col": 45,
+          "row": 50
+        },
+        "dialogueTreeID": "aimia_secrets",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "aimian_guardian",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "aimian_guardian",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "soulcaster_golem",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "larkin_swarm",
+        "position": {
+          "col": 50,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "unmade_echo",
+        "position": {
+          "col": 15,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "aimia_vault",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "soulcaster_fragment",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "ancient_scroll",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "roshar_aimia_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 50
+  },
+  {
+    "id": "roshar_honor_palace",
+    "name": "Palais de l'Honneur",
+    "description": "Le lieu où l'Éclat d'Honneur fut brisé. Les Défaits rôdent dans ses salles éthérées.",
+    "worldID": "roshar",
+    "type": "boss",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "roshar_honor_palace.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "roshar_aimia",
+        "entryPointName": "aimia_entry",
+        "exitPosition": {
+          "col": 39,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "unmade_echo",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "unmade_echo",
+        "position": {
+          "col": 30,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "honor_avatar",
+        "position": {
+          "col": 22,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "roshar_honor_boss",
+    "weatherEffect": "highstorm",
+    "recommendedLevel": 60
+  },
+  {
+    "id": "taldain_kerzt",
+    "name": "Désert de Kerzt",
+    "description": "Un désert impitoyable où le sable blanc brûle sous le soleil de Taldain. Les vers des sables y sont rois.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "taldain_kerzt.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 31,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_oasis",
+        "entryPointName": "oasis_entry",
+        "exitPosition": {
+          "col": 35,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "nomad_trader",
+        "position": {
+          "col": 15,
+          "row": 50
+        },
+        "dialogueTreeID": "nomad_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "sand_crawler",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "sand_crawler",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "sand_worm_small",
+        "position": {
+          "col": 30,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "desert_bandit",
+        "position": {
+          "col": 50,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "kerzt_oasis_cache",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "lootTable": [
+          {
+            "itemID": "water_flask",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "sand_crystal",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_kerzt_ambient",
+    "weatherEffect": "sandstorm",
+    "recommendedLevel": 8
+  },
+  {
+    "id": "taldain_oasis",
+    "name": "L'Oasis Cachée",
+    "description": "Une source d'eau miraculeuse cachée sous les dunes, gardée par d'anciens maîtres du sable.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 40,
+    "gridHeight": 40,
+    "tileMapFileName": "taldain_oasis.sks",
+    "playerSpawnPosition": {
+      "col": 20,
+      "row": 35
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_kerzt",
+        "entryPointName": "kerzt_entry",
+        "exitPosition": {
+          "col": 27,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_lossandin",
+        "entryPointName": "lossandin_entry",
+        "exitPosition": {
+          "col": 24,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "sand_sage",
+        "position": {
+          "col": 10,
+          "row": 30
+        },
+        "dialogueTreeID": "sand_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "oasis_guardian",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "oasis_guardian",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "water_elemental",
+        "position": {
+          "col": 20,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "oasis_spring",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "enchanted_water",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "sand_crystal",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_oasis_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 15
+  },
+  {
+    "id": "taldain_lossandin",
+    "name": "Lossandin",
+    "description": "Un village de maîtres du sable, assiégé par des créatures du Darkside.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "taldain_lossandin.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_oasis",
+        "entryPointName": "oasis_entry",
+        "exitPosition": {
+          "col": 32,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_deep_sand",
+        "entryPointName": "sand_entry",
+        "exitPosition": {
+          "col": 35,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "lossandin_elder",
+        "position": {
+          "col": 10,
+          "row": 45
+        },
+        "dialogueTreeID": "lossandin_quest",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "sand_weaponsmith",
+        "position": {
+          "col": 40,
+          "row": 50
+        },
+        "dialogueTreeID": "sand_weapons_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "darkside_raider",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "darkside_raider",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "sand_elemental",
+        "position": {
+          "col": 45,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "darkside_shaman",
+        "position": {
+          "col": 25,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "lossandin_vault",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "sand_whip",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "sand_crystal",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_lossandin_ambient",
+    "weatherEffect": "sandstorm",
+    "recommendedLevel": 22
+  },
+  {
+    "id": "taldain_deep_sand",
+    "name": "Les Sables Profonds",
+    "description": "Les profondeurs du désert où le sable est vivant et les vers géants chassent sans relâche.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 65,
+    "gridHeight": 65,
+    "tileMapFileName": "taldain_deep_sand.sks",
+    "playerSpawnPosition": {
+      "col": 32,
+      "row": 60
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_lossandin",
+        "entryPointName": "lossandin_entry",
+        "exitPosition": {
+          "col": 5,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_sand_temple",
+        "entryPointName": "temple_entry",
+        "exitPosition": {
+          "col": 36,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "giant_sand_worm",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "sand_elemental",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "sand_elemental",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "deep_sand_horror",
+        "position": {
+          "col": 50,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "deep_sand_horror",
+        "position": {
+          "col": 30,
+          "row": 50
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "deep_sand_crystal",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "lootTable": [
+          {
+            "itemID": "living_sand",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "sand_crystal",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_deep_ambient",
+    "weatherEffect": "sandstorm",
+    "recommendedLevel": 30
+  },
+  {
+    "id": "taldain_sand_temple",
+    "name": "Temple du Sable",
+    "description": "Un temple ancestral enfoui sous les dunes, où les premiers maîtres du sable pratiquaient leurs rituels.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "taldain_sand_temple.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_deep_sand",
+        "entryPointName": "sand_entry",
+        "exitPosition": {
+          "col": 25,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_dayside_peak",
+        "entryPointName": "peak_entry",
+        "exitPosition": {
+          "col": 9,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "ancient_sand_master",
+        "position": {
+          "col": 10,
+          "row": 35
+        },
+        "dialogueTreeID": "ancient_teachings",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "sand_priest",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "sand_priest",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "temple_guardian",
+        "position": {
+          "col": 20,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "sand_golem",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "temple_altar",
+        "position": {
+          "col": 22,
+          "row": 8
+        },
+        "lootTable": [
+          {
+            "itemID": "divine_sand",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "enchanted_water",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_temple_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 40
+  },
+  {
+    "id": "taldain_dayside_peak",
+    "name": "Pic du Jour",
+    "description": "Le point culminant du Dayside, où la lumière de Taldain est la plus intense. L'Investiture solaire y est palpable.",
+    "worldID": "taldain",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "taldain_dayside_peak.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_sand_temple",
+        "entryPointName": "temple_entry",
+        "exitPosition": {
+          "col": 19,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "taldain_autonomy_shrine",
+        "entryPointName": "shrine_entry",
+        "exitPosition": {
+          "col": 34,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "solar_elemental",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "solar_elemental",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "peak_warden",
+        "position": {
+          "col": 25,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "investiture_wraith",
+        "position": {
+          "col": 40,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "investiture_wraith",
+        "position": {
+          "col": 15,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "peak_summit",
+        "position": {
+          "col": 25,
+          "row": 5
+        },
+        "lootTable": [
+          {
+            "itemID": "solar_crystal",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "divine_sand",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "taldain_peak_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 50
+  },
+  {
+    "id": "taldain_autonomy_shrine",
+    "name": "Sanctuaire d'Autonomie",
+    "description": "Le lieu sacré de l'Éclat d'Autonomie. Sa puissance défend ce sanctuaire avec une férocité divine.",
+    "worldID": "taldain",
+    "type": "boss",
+    "gridWidth": 40,
+    "gridHeight": 40,
+    "tileMapFileName": "taldain_autonomy_shrine.sks",
+    "playerSpawnPosition": {
+      "col": 20,
+      "row": 35
+    },
+    "connections": [
+      {
+        "targetZoneID": "taldain_dayside_peak",
+        "entryPointName": "peak_entry",
+        "exitPosition": {
+          "col": 36,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "autonomy_sentinel",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "autonomy_sentinel",
+        "position": {
+          "col": 25,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "autonomy_avatar",
+        "position": {
+          "col": 20,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "taldain_autonomy_boss",
+    "weatherEffect": "sandstorm",
+    "recommendedLevel": 60
+  },
+  {
+    "id": "komashi_outer_streets",
+    "name": "Rues Extérieures de Kilahito",
+    "description": "Les quartiers périphériques de Kilahito, où les cauchemars commencent à se matérialiser la nuit.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "komashi_outer_streets.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 9,
+          "row": 4
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_dream_garden",
+        "entryPointName": "garden_entry",
+        "exitPosition": {
+          "col": 6,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "street_vendor",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "dialogueTreeID": "street_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "lesser_nightmare",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "lesser_nightmare",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "ink_shade",
+        "position": {
+          "col": 25,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "nightmare_hound",
+        "position": {
+          "col": 45,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "street_stash",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "dream_ink",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "ink_vial",
+            "dropChance": 0.8,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_streets_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 8
+  },
+  {
+    "id": "komashi_dream_garden",
+    "name": "Le Jardin des Rêves",
+    "description": "Un jardin onirique où les rêves prennent forme. Les fleurs émettent une lumière surnaturelle.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "komashi_dream_garden.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_outer_streets",
+        "entryPointName": "streets_entry",
+        "exitPosition": {
+          "col": 34,
+          "row": 4
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_ink_district",
+        "entryPointName": "district_entry",
+        "exitPosition": {
+          "col": 5,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "dream_keeper",
+        "position": {
+          "col": 10,
+          "row": 10
+        },
+        "dialogueTreeID": "dream_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "dream_flower_horror",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "dream_flower_horror",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "garden_nightmare",
+        "position": {
+          "col": 20,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "corrupted_dreamer",
+        "position": {
+          "col": 35,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "garden_shrine",
+        "position": {
+          "col": 22,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "dream_petal",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "dream_ink",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_garden_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 15
+  },
+  {
+    "id": "komashi_ink_district",
+    "name": "Quartier de l'Encre",
+    "description": "Le quartier des artistes et des peintres de Kilahito, maintenant infesté de créatures d'encre vivante.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "komashi_ink_district.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_dream_garden",
+        "entryPointName": "garden_entry",
+        "exitPosition": {
+          "col": 31,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_deep_shroud",
+        "entryPointName": "shroud_entry",
+        "exitPosition": {
+          "col": 24,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "ink_master",
+        "position": {
+          "col": 40,
+          "row": 45
+        },
+        "dialogueTreeID": "ink_teachings",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "pigment_dealer",
+        "position": {
+          "col": 10,
+          "row": 35
+        },
+        "dialogueTreeID": "pigment_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "ink_demon",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "ink_demon",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "ink_demon",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "master_ink_shade",
+        "position": {
+          "col": 45,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "corrupted_painter",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "ink_vault",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "midnight_ink",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "dream_ink",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_ink_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 22
+  },
+  {
+    "id": "komashi_deep_shroud",
+    "name": "Le Linceul Profond",
+    "description": "Les profondeurs du Linceul, où les cauchemars les plus anciens et les plus puissants résident.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "komashi_deep_shroud.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_ink_district",
+        "entryPointName": "district_entry",
+        "exitPosition": {
+          "col": 9,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_nightmare_core",
+        "entryPointName": "core_entry",
+        "exitPosition": {
+          "col": 44,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "deep_nightmare",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "deep_nightmare",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "shroud_horror",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "shroud_horror",
+        "position": {
+          "col": 15,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "ancient_nightmare",
+        "position": {
+          "col": 50,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "shroud_core",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "shroud_essence",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "midnight_ink",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_deep_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 30
+  },
+  {
+    "id": "komashi_nightmare_core",
+    "name": "Coeur du Cauchemar",
+    "description": "Le nexus central d'où émanent tous les cauchemars. La réalité y est instable.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "komashi_nightmare_core.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_deep_shroud",
+        "entryPointName": "shroud_entry",
+        "exitPosition": {
+          "col": 21,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_spirit_realm",
+        "entryPointName": "realm_entry",
+        "exitPosition": {
+          "col": 32,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "core_nightmare",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "core_nightmare",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "primordial_shard",
+        "position": {
+          "col": 20,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "reality_tear",
+        "position": {
+          "col": 35,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "core_crystal",
+        "position": {
+          "col": 22,
+          "row": 15
+        },
+        "lootTable": [
+          {
+            "itemID": "nightmare_core",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "shroud_essence",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_core_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 40
+  },
+  {
+    "id": "komashi_spirit_realm",
+    "name": "Le Royaume des Esprits",
+    "description": "Une dimension parallèle accessible aux peintres les plus doués. Les esprits y dansent dans la lumière.",
+    "worldID": "komashi",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "komashi_spirit_realm.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_nightmare_core",
+        "entryPointName": "core_entry",
+        "exitPosition": {
+          "col": 35,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "komashi_eternal_night",
+        "entryPointName": "night_entry",
+        "exitPosition": {
+          "col": 46,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "spirit_elder",
+        "position": {
+          "col": 45,
+          "row": 45
+        },
+        "dialogueTreeID": "spirit_wisdom",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "spirit_guardian",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "spirit_guardian",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "ethereal_nightmare",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "spirit_king_guard",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "ethereal_nightmare",
+        "position": {
+          "col": 50,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "spirit_altar",
+        "position": {
+          "col": 25,
+          "row": 10
+        },
+        "lootTable": [
+          {
+            "itemID": "eternal_pigment",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "spirit_essence",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "komashi_spirit_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 50
+  },
+  {
+    "id": "komashi_eternal_night",
+    "name": "La Nuit Éternelle",
+    "description": "Le plan d'existence du cauchemar originel. L'obscurité y est absolue et la terreur palpable.",
+    "worldID": "komashi",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "komashi_eternal_night.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "komashi_spirit_realm",
+        "entryPointName": "realm_entry",
+        "exitPosition": {
+          "col": 22,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "night_sentinel",
+        "position": {
+          "col": 15,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "night_sentinel",
+        "position": {
+          "col": 35,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "eternal_nightmare_lord",
+        "position": {
+          "col": 25,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "komashi_eternal_boss",
+    "weatherEffect": null,
+    "recommendedLevel": 60
+  },
+  {
+    "id": "nalthis_denth_hideout",
+    "name": "Repaire de Denth",
+    "description": "La planque secrète du mercenaire Denth, pleine de pièges et de voleurs de Souffles.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "nalthis_denth_hideout.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 40,
+          "row": 4
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_court_gods",
+        "entryPointName": "gods_entry",
+        "exitPosition": {
+          "col": 36,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "captive_merchant",
+        "position": {
+          "col": 10,
+          "row": 40
+        },
+        "dialogueTreeID": "captive_info",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "breath_thief",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "breath_thief",
+        "position": {
+          "col": 30,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "hideout_guard",
+        "position": {
+          "col": 15,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "trap_construct",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "denth_stash",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "breath_essence",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "chromatic_thread",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_hideout_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 8
+  },
+  {
+    "id": "nalthis_court_gods",
+    "name": "Cour des Dieux",
+    "description": "Le palais des Retournés, où chaque dieu vit dans un luxe ostentatoire. Les intrigues politiques y sont mortelles.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "nalthis_court_gods.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_denth_hideout",
+        "entryPointName": "hideout_entry",
+        "exitPosition": {
+          "col": 16,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_idris",
+        "entryPointName": "idris_entry",
+        "exitPosition": {
+          "col": 7,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "returned_god",
+        "position": {
+          "col": 15,
+          "row": 10
+        },
+        "dialogueTreeID": "divine_audience",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "court_artisan",
+        "position": {
+          "col": 10,
+          "row": 40
+        },
+        "dialogueTreeID": "court_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "court_assassin",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "court_assassin",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "lifeless_guard",
+        "position": {
+          "col": 25,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "lifeless_guard",
+        "position": {
+          "col": 40,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "court_treasury",
+        "position": {
+          "col": 30,
+          "row": 10
+        },
+        "lootTable": [
+          {
+            "itemID": "divine_breath",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "chromatic_thread",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_court_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 15
+  },
+  {
+    "id": "nalthis_idris",
+    "name": "Idris",
+    "description": "Le royaume montagneux d'Idris, austère et guerrier. Les Lifeless rôdent aux frontières.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "nalthis_idris.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_court_gods",
+        "entryPointName": "gods_entry",
+        "exitPosition": {
+          "col": 40,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_chromatic_fields",
+        "entryPointName": "fields_entry",
+        "exitPosition": {
+          "col": 46,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "idris_priestess",
+        "position": {
+          "col": 50,
+          "row": 50
+        },
+        "dialogueTreeID": "idris_faith",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "mountain_smith",
+        "position": {
+          "col": 40,
+          "row": 45
+        },
+        "dialogueTreeID": "mountain_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "idris_bandit",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "lifeless_soldier",
+        "position": {
+          "col": 35,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "lifeless_soldier",
+        "position": {
+          "col": 15,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "lifeless_captain",
+        "position": {
+          "col": 45,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "mountain_beast",
+        "position": {
+          "col": 25,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "idris_armory",
+        "position": {
+          "col": 30,
+          "row": 30
+        },
+        "lootTable": [
+          {
+            "itemID": "idris_blade",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "breath_essence",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_idris_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 22
+  },
+  {
+    "id": "nalthis_chromatic_fields",
+    "name": "Champs Chromatiques",
+    "description": "Des plaines vibrantes de couleur, où l'Investiture de la Donation se manifeste sous forme de lumière pure.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "nalthis_chromatic_fields.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_idris",
+        "entryPointName": "idris_entry",
+        "exitPosition": {
+          "col": 41,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_tear_edgli",
+        "entryPointName": "edgli_entry",
+        "exitPosition": {
+          "col": 38,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "color_phantom",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "color_phantom",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "awakened_construct",
+        "position": {
+          "col": 15,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "awakened_construct",
+        "position": {
+          "col": 50,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "chromatic_crystal",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "chromatic_essence",
+            "dropChance": 0.25,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "divine_breath",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_chromatic_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 30
+  },
+  {
+    "id": "nalthis_tear_edgli",
+    "name": "Larme d'Edgli",
+    "description": "Un lieu sacré où les fleurs de la Donation poussent dans une profusion de couleurs. Les gardiens divins protègent ce sanctuaire.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "nalthis_tear_edgli.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_chromatic_fields",
+        "entryPointName": "fields_entry",
+        "exitPosition": {
+          "col": 38,
+          "row": 4
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_breath_sanctum",
+        "entryPointName": "sanctum_entry",
+        "exitPosition": {
+          "col": 28,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "edgli_priestess",
+        "position": {
+          "col": 10,
+          "row": 35
+        },
+        "dialogueTreeID": "edgli_blessing",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "edgli_guardian",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "edgli_guardian",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "divine_construct",
+        "position": {
+          "col": 20,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "tear_keeper",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "tear_pool",
+        "position": {
+          "col": 22,
+          "row": 8
+        },
+        "lootTable": [
+          {
+            "itemID": "divine_tear",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "chromatic_essence",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_tear_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 40
+  },
+  {
+    "id": "nalthis_breath_sanctum",
+    "name": "Sanctuaire des Souffles",
+    "description": "Un temple antique dédié au pouvoir du Souffle. Les échos de milliers de Souffles résonnent dans l'air.",
+    "worldID": "nalthis",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "nalthis_breath_sanctum.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_tear_edgli",
+        "entryPointName": "edgli_entry",
+        "exitPosition": {
+          "col": 27,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "nalthis_endowment_peak",
+        "entryPointName": "peak_entry",
+        "exitPosition": {
+          "col": 25,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "sanctum_guardian",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "sanctum_guardian",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "breath_wraith",
+        "position": {
+          "col": 15,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "ancient_lifeless",
+        "position": {
+          "col": 40,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "ancient_lifeless",
+        "position": {
+          "col": 25,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "sanctum_altar",
+        "position": {
+          "col": 25,
+          "row": 10
+        },
+        "lootTable": [
+          {
+            "itemID": "perfected_breath",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "divine_tear",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "nalthis_sanctum_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 50
+  },
+  {
+    "id": "nalthis_endowment_peak",
+    "name": "Pic de la Donation",
+    "description": "Le sommet où l'Éclat de la Donation réside. Son avatar défend ce lieu avec la puissance de tous les Souffles.",
+    "worldID": "nalthis",
+    "type": "boss",
+    "gridWidth": 40,
+    "gridHeight": 40,
+    "tileMapFileName": "nalthis_endowment_peak.sks",
+    "playerSpawnPosition": {
+      "col": 20,
+      "row": 35
+    },
+    "connections": [
+      {
+        "targetZoneID": "nalthis_breath_sanctum",
+        "entryPointName": "sanctum_entry",
+        "exitPosition": {
+          "col": 8,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "endowment_sentinel",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "endowment_sentinel",
+        "position": {
+          "col": 25,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "endowment_avatar",
+        "position": {
+          "col": 20,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "nalthis_endowment_boss",
+    "weatherEffect": null,
+    "recommendedLevel": 60
+  },
+  {
+    "id": "sel_hrathen_fortress",
+    "name": "Forteresse de Hrathen",
+    "description": "La forteresse du grand prêtre Derethi, remplie de moines fanatiques et de soldats Dakhor.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "sel_hrathen_fortress.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 33,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_pool_depths",
+        "entryPointName": "depths_entry",
+        "exitPosition": {
+          "col": 33,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "captured_elantrian",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "dialogueTreeID": "elantrian_rescue",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "derethi_monk",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "derethi_monk",
+        "position": {
+          "col": 35,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "fortress_guard",
+        "position": {
+          "col": 25,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      },
+      {
+        "enemyID": "derethi_acolyte",
+        "position": {
+          "col": 40,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 144
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "fortress_armory",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "sacred_text",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "dor_fragment",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_fortress_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 8
+  },
+  {
+    "id": "sel_pool_depths",
+    "name": "Profondeurs du Pool",
+    "description": "Les cavernes sous le Pool de l'Esprit, imprégnées de Dor brut. La réalité y est instable.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "sel_pool_depths.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_hrathen_fortress",
+        "entryPointName": "fortress_entry",
+        "exitPosition": {
+          "col": 33,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_dakhor_monastery",
+        "entryPointName": "monastery_entry",
+        "exitPosition": {
+          "col": 12,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "pool_researcher",
+        "position": {
+          "col": 10,
+          "row": 30
+        },
+        "dialogueTreeID": "pool_research",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "pool_horror",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "pool_horror",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "dor_wisp",
+        "position": {
+          "col": 20,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      },
+      {
+        "enemyID": "pool_lurker",
+        "position": {
+          "col": 35,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 165
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "pool_crystal",
+        "position": {
+          "col": 22,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "dor_fragment",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "pool_essence",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_pool_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 15
+  },
+  {
+    "id": "sel_dakhor_monastery",
+    "name": "Monastère Dakhor",
+    "description": "Le monastère secret où les moines Dakhor transforment leurs os en armes vivantes par le pouvoir du Dor.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "sel_dakhor_monastery.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_pool_depths",
+        "entryPointName": "depths_entry",
+        "exitPosition": {
+          "col": 18,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_teod",
+        "entryPointName": "teod_entry",
+        "exitPosition": {
+          "col": 40,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "defector_monk",
+        "position": {
+          "col": 50,
+          "row": 50
+        },
+        "dialogueTreeID": "defector_info",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "dakhor_master",
+        "position": {
+          "col": 45,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      },
+      {
+        "enemyID": "bone_golem",
+        "position": {
+          "col": 25,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 186
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "dakhor_reliquary",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "dakhor_bone",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "sacred_text",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_dakhor_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 22
+  },
+  {
+    "id": "sel_teod",
+    "name": "Teod",
+    "description": "Le royaume insulaire allié d'Arelon, menacé par l'invasion Fjorden.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "sel_teod.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_dakhor_monastery",
+        "entryPointName": "monastery_entry",
+        "exitPosition": {
+          "col": 40,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_dor_rift",
+        "entryPointName": "rift_entry",
+        "exitPosition": {
+          "col": 30,
+          "row": 2
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "teod_princess",
+        "position": {
+          "col": 10,
+          "row": 10
+        },
+        "dialogueTreeID": "teod_alliance",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "teod_smith",
+        "position": {
+          "col": 40,
+          "row": 45
+        },
+        "dialogueTreeID": "teod_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "fjorden_soldier",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "fjorden_soldier",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "fjorden_captain",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "sea_beast",
+        "position": {
+          "col": 15,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      },
+      {
+        "enemyID": "sea_beast",
+        "position": {
+          "col": 45,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 210
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "teod_vault",
+        "position": {
+          "col": 25,
+          "row": 30
+        },
+        "lootTable": [
+          {
+            "itemID": "teod_blade",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "dor_fragment",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_teod_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 30
+  },
+  {
+    "id": "sel_dor_rift",
+    "name": "Faille du Dor",
+    "description": "Une déchirure dans la réalité où le Dor s'écoule librement. Les entités du Dor y pullulent.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "sel_dor_rift.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_teod",
+        "entryPointName": "teod_entry",
+        "exitPosition": {
+          "col": 34,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_devotion_shrine",
+        "entryPointName": "shrine_entry",
+        "exitPosition": {
+          "col": 22,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "dor_entity",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "dor_entity",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "rift_guardian",
+        "position": {
+          "col": 20,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "dor_elemental",
+        "position": {
+          "col": 35,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "rift_core",
+        "position": {
+          "col": 22,
+          "row": 15
+        },
+        "lootTable": [
+          {
+            "itemID": "rift_crystal",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "dor_essence",
+            "dropChance": 0.35,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_rift_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 40
+  },
+  {
+    "id": "sel_devotion_shrine",
+    "name": "Sanctuaire de la Dévotion",
+    "description": "Le lieu où l'Éclat de la Dévotion fut autrefois hébergé. Son pouvoir résiduel attire les dévots et les entités.",
+    "worldID": "sel",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "sel_devotion_shrine.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_dor_rift",
+        "entryPointName": "rift_entry",
+        "exitPosition": {
+          "col": 32,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "sel_dominion_throne",
+        "entryPointName": "throne_entry",
+        "exitPosition": {
+          "col": 11,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "devotion_keeper",
+        "position": {
+          "col": 45,
+          "row": 45
+        },
+        "dialogueTreeID": "devotion_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "devotion_guardian",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "devotion_guardian",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "dor_archon",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      },
+      {
+        "enemyID": "dor_archon",
+        "position": {
+          "col": 50,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 270
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "devotion_altar",
+        "position": {
+          "col": 25,
+          "row": 10
+        },
+        "lootTable": [
+          {
+            "itemID": "devotion_shard",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "dor_essence",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "sel_devotion_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 50
+  },
+  {
+    "id": "sel_dominion_throne",
+    "name": "Trône de la Domination",
+    "description": "Le siège de pouvoir de l'Éclat de la Domination. Un avatar de puissance pure attend les intrus.",
+    "worldID": "sel",
+    "type": "boss",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "sel_dominion_throne.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "sel_devotion_shrine",
+        "entryPointName": "shrine_entry",
+        "exitPosition": {
+          "col": 29,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "dominion_sentinel",
+        "position": {
+          "col": 15,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "dominion_sentinel",
+        "position": {
+          "col": 30,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "dominion_avatar",
+        "position": {
+          "col": 22,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "sel_dominion_boss",
+    "weatherEffect": null,
+    "recommendedLevel": 60
+  },
+  {
+    "id": "shadesmar_bead_ocean",
+    "name": "L'Océan de Billes",
+    "description": "Un vaste océan de billes de verre représentant chaque objet du monde physique. Naviguer y est périlleux.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "shadesmar_bead_ocean.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_hub",
+        "entryPointName": "hub_entry",
+        "exitPosition": {
+          "col": 42,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_cognitive_realm",
+        "entryPointName": "realm_entry",
+        "exitPosition": {
+          "col": 51,
+          "row": 3
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "spren_ferryman",
+        "position": {
+          "col": 15,
+          "row": 50
+        },
+        "dialogueTreeID": "ferry_service",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "bead_lurker",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "bead_lurker",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "cognitive_phantom",
+        "position": {
+          "col": 30,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "sea_spren",
+        "position": {
+          "col": 50,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "ocean_cache",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "cognitive_bead",
+            "dropChance": 0.6,
+            "minQuantity": 1,
+            "maxQuantity": 3
+          },
+          {
+            "itemID": "spren_essence",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_ocean_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 10
+  },
+  {
+    "id": "shadesmar_cognitive_realm",
+    "name": "Le Royaume Cognitif",
+    "description": "Les terres fermes du Shadesmar, où les pensées et les concepts prennent forme physique.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "shadesmar_cognitive_realm.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_bead_ocean",
+        "entryPointName": "ocean_entry",
+        "exitPosition": {
+          "col": 13,
+          "row": 4
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_lasting_integrity",
+        "entryPointName": "integrity_entry",
+        "exitPosition": {
+          "col": 17,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "cognitive_scholar",
+        "position": {
+          "col": 10,
+          "row": 10
+        },
+        "dialogueTreeID": "cognitive_studies",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "spren_merchant",
+        "position": {
+          "col": 40,
+          "row": 45
+        },
+        "dialogueTreeID": "spren_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "cognitive_beast",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 174
+      },
+      {
+        "enemyID": "cognitive_beast",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 174
+      },
+      {
+        "enemyID": "void_walker",
+        "position": {
+          "col": 25,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 174
+      },
+      {
+        "enemyID": "thought_predator",
+        "position": {
+          "col": 45,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 174
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "cognitive_shrine",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "thought_crystal",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "cognitive_bead",
+            "dropChance": 0.5,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_cognitive_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 18
+  },
+  {
+    "id": "shadesmar_lasting_integrity",
+    "name": "Intégrité Perpétuelle",
+    "description": "La forteresse des honorsprens dans Shadesmar. Un lieu de jugement et de vérité absolue.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "shadesmar_lasting_integrity.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_cognitive_realm",
+        "entryPointName": "realm_entry",
+        "exitPosition": {
+          "col": 8,
+          "row": 5
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_elsecaller_path",
+        "entryPointName": "path_entry",
+        "exitPosition": {
+          "col": 11,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "honorspren_judge",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "dialogueTreeID": "integrity_trial",
+        "isShopkeeper": false
+      },
+      {
+        "npcID": "integrity_quartermaster",
+        "position": {
+          "col": 30,
+          "row": 45
+        },
+        "dialogueTreeID": "integrity_shop",
+        "isShopkeeper": true
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "corrupted_honorspren",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 195
+      },
+      {
+        "enemyID": "corrupted_honorspren",
+        "position": {
+          "col": 35,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 195
+      },
+      {
+        "enemyID": "integrity_warden",
+        "position": {
+          "col": 25,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 195
+      },
+      {
+        "enemyID": "void_infiltrator",
+        "position": {
+          "col": 40,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 195
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "integrity_vault",
+        "position": {
+          "col": 28,
+          "row": 20
+        },
+        "lootTable": [
+          {
+            "itemID": "honor_essence",
+            "dropChance": 0.25,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "thought_crystal",
+            "dropChance": 0.4,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_integrity_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 25
+  },
+  {
+    "id": "shadesmar_elsecaller_path",
+    "name": "Voie de l'Elsecaller",
+    "description": "Un passage secret entre les royaumes, utilisé par les Elsecallers pour traverser Shadesmar.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 55,
+    "gridHeight": 55,
+    "tileMapFileName": "shadesmar_elsecaller_path.sks",
+    "playerSpawnPosition": {
+      "col": 27,
+      "row": 50
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_lasting_integrity",
+        "entryPointName": "integrity_entry",
+        "exitPosition": {
+          "col": 8,
+          "row": 1
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_spiritual_rift",
+        "entryPointName": "rift_entry",
+        "exitPosition": {
+          "col": 26,
+          "row": 5
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "void_creature",
+        "position": {
+          "col": 20,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 225
+      },
+      {
+        "enemyID": "void_creature",
+        "position": {
+          "col": 40,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 225
+      },
+      {
+        "enemyID": "path_guardian",
+        "position": {
+          "col": 30,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 225
+      },
+      {
+        "enemyID": "realm_stalker",
+        "position": {
+          "col": 15,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 225
+      },
+      {
+        "enemyID": "realm_stalker",
+        "position": {
+          "col": 50,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 225
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "path_nexus",
+        "position": {
+          "col": 35,
+          "row": 25
+        },
+        "lootTable": [
+          {
+            "itemID": "path_fragment",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "void_essence",
+            "dropChance": 0.35,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_elsecaller_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 35
+  },
+  {
+    "id": "shadesmar_spiritual_rift",
+    "name": "Faille Spirituelle",
+    "description": "Une déchirure entre le Royaume Cognitif et le Royaume Spirituel. Les entités des deux plans s'y affrontent.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 45,
+    "gridHeight": 45,
+    "tileMapFileName": "shadesmar_spiritual_rift.sks",
+    "playerSpawnPosition": {
+      "col": 22,
+      "row": 40
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_elsecaller_path",
+        "entryPointName": "path_entry",
+        "exitPosition": {
+          "col": 29,
+          "row": 3
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_beyond",
+        "entryPointName": "beyond_entry",
+        "exitPosition": {
+          "col": 16,
+          "row": 4
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "spiritual_entity",
+        "position": {
+          "col": 15,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 255
+      },
+      {
+        "enemyID": "spiritual_entity",
+        "position": {
+          "col": 30,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 255
+      },
+      {
+        "enemyID": "rift_horror",
+        "position": {
+          "col": 20,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 255
+      },
+      {
+        "enemyID": "between_walker",
+        "position": {
+          "col": 35,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 255
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "rift_core",
+        "position": {
+          "col": 22,
+          "row": 15
+        },
+        "lootTable": [
+          {
+            "itemID": "rift_shard",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "void_essence",
+            "dropChance": 0.3,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_rift_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 45
+  },
+  {
+    "id": "shadesmar_beyond",
+    "name": "L'Au-Delà",
+    "description": "Les confins de Shadesmar, aux portes du Royaume Spirituel. Nul n'en est revenu inchangé.",
+    "worldID": "shadesmar",
+    "type": "exploration",
+    "gridWidth": 60,
+    "gridHeight": 60,
+    "tileMapFileName": "shadesmar_beyond.sks",
+    "playerSpawnPosition": {
+      "col": 30,
+      "row": 55
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_spiritual_rift",
+        "entryPointName": "rift_entry",
+        "exitPosition": {
+          "col": 13,
+          "row": 2
+        },
+        "requiredQuestID": null
+      },
+      {
+        "targetZoneID": "shadesmar_adonalsium",
+        "entryPointName": "adonalsium_entry",
+        "exitPosition": {
+          "col": 15,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [
+      {
+        "npcID": "cosmic_sage",
+        "position": {
+          "col": 45,
+          "row": 50
+        },
+        "dialogueTreeID": "cosmic_lore",
+        "isShopkeeper": false
+      }
+    ],
+    "enemySpawns": [
+      {
+        "enemyID": "beyond_entity",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 285
+      },
+      {
+        "enemyID": "beyond_entity",
+        "position": {
+          "col": 40,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 285
+      },
+      {
+        "enemyID": "cosmic_horror",
+        "position": {
+          "col": 30,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 285
+      },
+      {
+        "enemyID": "spiritual_guardian",
+        "position": {
+          "col": 15,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 285
+      },
+      {
+        "enemyID": "spiritual_guardian",
+        "position": {
+          "col": 50,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 285
+      }
+    ],
+    "lootPoints": [
+      {
+        "id": "beyond_altar",
+        "position": {
+          "col": 25,
+          "row": 10
+        },
+        "lootTable": [
+          {
+            "itemID": "cosmic_essence",
+            "dropChance": 0.15,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          },
+          {
+            "itemID": "spiritual_shard",
+            "dropChance": 0.2,
+            "minQuantity": 1,
+            "maxQuantity": 1
+          }
+        ],
+        "isHidden": false,
+        "respawns": true
+      }
+    ],
+    "ambientMusicTrack": "shadesmar_beyond_ambient",
+    "weatherEffect": null,
+    "recommendedLevel": 55
+  },
+  {
+    "id": "shadesmar_adonalsium",
+    "name": "Vestige d'Adonalsium",
+    "description": "L'épicentre cosmique où Adonalsium fut brisé. Le pouvoir résiduel y est incommensurable.",
+    "worldID": "shadesmar",
+    "type": "boss",
+    "gridWidth": 50,
+    "gridHeight": 50,
+    "tileMapFileName": "shadesmar_adonalsium.sks",
+    "playerSpawnPosition": {
+      "col": 25,
+      "row": 45
+    },
+    "connections": [
+      {
+        "targetZoneID": "shadesmar_beyond",
+        "entryPointName": "beyond_entry",
+        "exitPosition": {
+          "col": 35,
+          "row": 1
+        },
+        "requiredQuestID": null
+      }
+    ],
+    "npcSpawns": [],
+    "enemySpawns": [
+      {
+        "enemyID": "cosmic_sentinel",
+        "position": {
+          "col": 15,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "cosmic_sentinel",
+        "position": {
+          "col": 35,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      },
+      {
+        "enemyID": "adonalsium_echo",
+        "position": {
+          "col": 25,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": null
+      }
+    ],
+    "lootPoints": [],
+    "ambientMusicTrack": "shadesmar_adonalsium_boss",
+    "weatherEffect": null,
+    "recommendedLevel": 65
   }
 ]

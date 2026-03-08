@@ -2,76 +2,93 @@ import { Container, Graphics } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
 import type { Item, EquipmentSlot } from '../data/types';
-import { RARITY_COLORS } from '../data/types';
+import { RARITY_COLORS, RARITY_ORDER } from '../data/types';
 import { scaled, UI_COLORS } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import { MusicManager } from '../game/MusicSystem';
 import { SLOT_LABELS, STAT_LABELS, txt } from './InventoryConstants';
 import type { InventoryFilterState, SlotFilter, RarityFilter } from './InventoryFilters';
-import { matchesSlotFilter, matchesRarityFilter, SLOT_FILTER_LABELS, RARITY_FILTER_LABELS, RARITY_FILTER_COLORS } from './InventoryFilters';
+import { matchesSlotFilter, matchesRarityFilter, SLOT_FILTER_ROW1, SLOT_FILTER_ROW2, SLOT_FILTER_LABELS, RARITY_FILTERS, RARITY_FILTER_LABELS, RARITY_FILTER_COLORS } from './InventoryFilters';
+
+// ─── Filtered item with original inventory index ─────────────────────
+
+interface FilteredEntry {
+  id: string;
+  invIndex: number; // index in champion.inventoryItemIDs
+}
 
 // ─── Filter Bar ──────────────────────────────────────────────────────
+
+function renderChipRow(
+  cc: Container, cx: number, chipY: number, cw: number, chipH: number, L: LayoutInfo,
+  items: { key: string; label: string; active: boolean; color: number }[],
+  onSelect: (key: string) => void,
+): void {
+  // Calculate chip width to fit all items within panel width
+  const totalGap = scaled(3, L) * (items.length - 1);
+  const availW = cw - 28;
+  const chipW = Math.floor((availW - totalGap) / items.length);
+  items.forEach((it, i) => {
+    const chipX = cx + 14 + i * (chipW + scaled(3, L));
+    const cg = new Graphics();
+    cg.roundRect(chipX, chipY, chipW, chipH, 3)
+      .fill({ color: it.active ? 0x222233 : 0x111122, alpha: it.active ? 0.9 : 0.5 })
+      .stroke({ color: it.active ? it.color : 0x333344, width: 1, alpha: it.active ? 0.8 : 0.3 });
+    cg.eventMode = 'static'; cg.cursor = 'pointer';
+    cg.on('pointerdown', () => onSelect(it.key));
+    cc.addChild(cg);
+    const ct = txt(it.label, 6, it.active ? it.color : UI_COLORS.textMuted, L, it.active);
+    ct.anchor.set(0.5); ct.x = chipX + chipW / 2; ct.y = chipY + chipH / 2;
+    cc.addChild(ct);
+  });
+}
 
 function renderFilterBar(
   cc: Container, cx: number, y: number, cw: number, layout: LayoutInfo,
   state: InventoryFilterState, refresh: () => void,
 ): number {
   const L = layout;
-  const fl = txt('Filtres:', 8, UI_COLORS.textMuted, L, true);
-  fl.x = cx + 14; fl.y = y; cc.addChild(fl);
+  const chipH = scaled(17, L);
+  const rowGap = scaled(3, L);
 
-  // Slot filter chips
-  const slotFilters: SlotFilter[] = ['all', 'weapon', 'armor', 'accessory', 'consumable', 'enchant'];
-  const chipH = scaled(18, L);
-  let chipX = cx + 14;
-  const chipY = y + scaled(14, L);
-  for (const sf of slotFilters) {
-    const label = SLOT_FILTER_LABELS[sf];
-    const active = state.slotFilter === sf;
-    const cg = new Graphics();
-    const cw2 = Math.max(scaled(38, L), label.length * scaled(6, L));
-    cg.roundRect(chipX, chipY, cw2, chipH, 3)
-      .fill({ color: active ? 0x332244 : 0x111122, alpha: active ? 0.9 : 0.5 })
-      .stroke({ color: active ? UI_COLORS.textGold : 0x333344, width: 1, alpha: active ? 0.8 : 0.3 });
-    cg.eventMode = 'static'; cg.cursor = 'pointer';
-    cg.on('pointerdown', () => { state.slotFilter = sf; refresh(); });
-    cc.addChild(cg);
-    const ct = txt(label, 7, active ? UI_COLORS.textGold : UI_COLORS.textMuted, L, active);
-    ct.anchor.set(0.5); ct.x = chipX + cw2 / 2; ct.y = chipY + chipH / 2;
-    cc.addChild(ct);
-    chipX += cw2 + scaled(4, L);
-  }
+  // Row 1: Category filters
+  renderChipRow(cc, cx, y, cw, chipH, L,
+    SLOT_FILTER_ROW1.map(sf => ({
+      key: sf, label: SLOT_FILTER_LABELS[sf], active: state.slotFilter === sf,
+      color: state.slotFilter === sf ? UI_COLORS.textGold : 0xcccccc,
+    })),
+    (key) => { state.slotFilter = key as SlotFilter; refresh(); },
+  );
+  y += chipH + rowGap;
 
-  // Rarity filter chips
-  const rarityFilters: RarityFilter[] = ['all', 'common', 'uncommon', 'rare', 'epic', 'legendary'];
-  chipX = cx + 14;
-  const chipY2 = chipY + chipH + scaled(4, L);
-  for (const rf of rarityFilters) {
-    const label = RARITY_FILTER_LABELS[rf];
-    const active = state.rarityFilter === rf;
-    const color = RARITY_FILTER_COLORS[rf];
-    const cg = new Graphics();
-    const cw2 = Math.max(scaled(38, L), label.length * scaled(6, L));
-    cg.roundRect(chipX, chipY2, cw2, chipH, 3)
-      .fill({ color: active ? 0x222233 : 0x111122, alpha: active ? 0.9 : 0.5 })
-      .stroke({ color: active ? color : 0x333344, width: 1, alpha: active ? 0.8 : 0.3 });
-    cg.eventMode = 'static'; cg.cursor = 'pointer';
-    cg.on('pointerdown', () => { state.rarityFilter = rf; refresh(); });
-    cc.addChild(cg);
-    const ct = txt(label, 7, active ? color : UI_COLORS.textMuted, L, active);
-    ct.anchor.set(0.5); ct.x = chipX + cw2 / 2; ct.y = chipY2 + chipH / 2;
-    cc.addChild(ct);
-    chipX += cw2 + scaled(4, L);
-  }
+  // Row 2: Individual slot filters
+  renderChipRow(cc, cx, y, cw, chipH, L,
+    SLOT_FILTER_ROW2.map(sf => ({
+      key: sf, label: SLOT_FILTER_LABELS[sf], active: state.slotFilter === sf,
+      color: state.slotFilter === sf ? 0x66bbee : 0xcccccc,
+    })),
+    (key) => { state.slotFilter = key as SlotFilter; refresh(); },
+  );
+  y += chipH + rowGap;
 
-  return chipY2 + chipH + scaled(8, L);
+  // Row 3: Rarity filters
+  renderChipRow(cc, cx, y, cw, chipH, L,
+    RARITY_FILTERS.map(rf => ({
+      key: rf, label: RARITY_FILTER_LABELS[rf], active: state.rarityFilter === rf,
+      color: RARITY_FILTER_COLORS[rf],
+    })),
+    (key) => { state.rarityFilter = key as RarityFilter; refresh(); },
+  );
+  y += chipH + scaled(6, L);
+
+  return y;
 }
 
 // ─── Bulk Action Bar ─────────────────────────────────────────────────
 
 function renderBulkBar(
   cc: Container, cx: number, y: number, cw: number, layout: LayoutInfo,
-  state: InventoryFilterState, filteredIDs: string[], refresh: () => void,
+  state: InventoryFilterState, entries: FilteredEntry[], refresh: () => void,
 ): number {
   const L = layout;
   const barH = scaled(26, L);
@@ -85,7 +102,7 @@ function renderBulkBar(
   toggleBg.eventMode = 'static'; toggleBg.cursor = 'pointer';
   toggleBg.on('pointerdown', () => {
     state.bulkMode = !state.bulkMode;
-    if (!state.bulkMode) state.selectedIDs.clear();
+    if (!state.bulkMode) state.selectedIndices.clear();
     refresh();
   });
   cc.addChild(toggleBg);
@@ -95,7 +112,8 @@ function renderBulkBar(
   cc.addChild(toggleLabel);
 
   if (state.bulkMode) {
-    const count = state.selectedIDs.size;
+    const count = state.selectedIndices.size;
+    const allIndices = entries.map(e => e.invIndex);
     let bx = cx + 14 + toggleW + scaled(8, L);
 
     // Select all / deselect
@@ -105,29 +123,49 @@ function renderBulkBar(
       .fill({ color: 0x222244, alpha: 0.8 }).stroke({ color: 0x4466aa, width: 1 });
     selAllBg.eventMode = 'static'; selAllBg.cursor = 'pointer';
     selAllBg.on('pointerdown', () => {
-      if (count === filteredIDs.length) state.selectedIDs.clear();
-      else { state.selectedIDs.clear(); for (const id of filteredIDs) state.selectedIDs.add(id); }
+      if (count === allIndices.length) state.selectedIndices.clear();
+      else { state.selectedIndices.clear(); for (const idx of allIndices) state.selectedIndices.add(idx); }
       refresh();
     });
     cc.addChild(selAllBg);
-    const selAllLabel = txt(count === filteredIDs.length ? 'Tout ×' : 'Tout \u2713', 8, 0x6688cc, L, true);
+    const selAllLabel = txt(count === allIndices.length ? 'Tout \u00d7' : 'Tout \u2713', 8, 0x6688cc, L, true);
     selAllLabel.anchor.set(0.5); selAllLabel.x = bx + selAllW / 2; selAllLabel.y = y + barH / 2;
     cc.addChild(selAllLabel);
     bx += selAllW + scaled(6, L);
 
     if (count > 0) {
+      // Gather selected IDs (from indices)
+      const champ = GameManager.shared.champion;
+      const selectedIDs: string[] = [];
+      if (champ) {
+        for (const idx of state.selectedIndices) {
+          if (idx < champ.inventoryItemIDs.length) selectedIDs.push(champ.inventoryItemIDs[idx]);
+        }
+      }
+
       // Bulk sell
       let totalGold = 0;
-      for (const id of state.selectedIDs) totalGold += GameManager.getItemSellPrice(id);
+      for (const id of selectedIDs) totalGold += GameManager.getItemSellPrice(id);
       const sellW = scaled(70, L);
       const sellBg = new Graphics();
       sellBg.roundRect(bx, y, sellW, barH, 4)
         .fill({ color: 0x332211, alpha: 0.8 }).stroke({ color: 0xcc9933, width: 1 });
       sellBg.eventMode = 'static'; sellBg.cursor = 'pointer';
       sellBg.on('pointerdown', () => {
-        GameManager.shared.bulkSell([...state.selectedIDs]);
+        // Remove from highest index first to preserve lower indices
+        const sorted = [...state.selectedIndices].sort((a, b) => b - a);
+        if (champ) {
+          for (const idx of sorted) {
+            if (idx < champ.inventoryItemIDs.length) {
+              const id = champ.inventoryItemIDs[idx];
+              const gold = GameManager.getItemSellPrice(id);
+              champ.inventoryItemIDs.splice(idx, 1);
+              champ.gold += gold;
+            }
+          }
+        }
         GameManager.shared.save();
-        state.selectedIDs.clear();
+        state.selectedIndices.clear();
         refresh();
       });
       cc.addChild(sellBg);
@@ -138,26 +176,36 @@ function renderBulkBar(
 
       // Bulk disenchant
       let totalEss = 0;
-      for (const id of state.selectedIDs) totalEss += GameManager.getDisenchantResult(id).amount;
+      for (const id of selectedIDs) totalEss += GameManager.getDisenchantResult(id).amount;
       const disW = scaled(70, L);
       const disBg = new Graphics();
       disBg.roundRect(bx, y, disW, barH, 4)
         .fill({ color: 0x221133, alpha: 0.8 }).stroke({ color: 0x9955ee, width: 1 });
       disBg.eventMode = 'static'; disBg.cursor = 'pointer';
       disBg.on('pointerdown', () => {
-        GameManager.shared.bulkDisenchant([...state.selectedIDs]);
+        const sorted = [...state.selectedIndices].sort((a, b) => b - a);
+        if (champ) {
+          for (const idx of sorted) {
+            if (idx < champ.inventoryItemIDs.length) {
+              const id = champ.inventoryItemIDs[idx];
+              const result = GameManager.getDisenchantResult(id);
+              champ.inventoryItemIDs.splice(idx, 1);
+              champ.gold += result.amount;
+            }
+          }
+        }
         GameManager.shared.save();
-        state.selectedIDs.clear();
+        state.selectedIndices.clear();
         refresh();
       });
       cc.addChild(disBg);
-      const disLabel = txt(`Déch. +${totalEss}`, 7, 0xbb88ee, L, true);
+      const disLabel = txt(`D\u00e9ch. +${totalEss}`, 7, 0xbb88ee, L, true);
       disLabel.anchor.set(0.5); disLabel.x = bx + disW / 2; disLabel.y = y + barH / 2;
       cc.addChild(disLabel);
     }
 
     // Count indicator
-    const countLabel = txt(`${count}/${filteredIDs.length}`, 8, UI_COLORS.textMuted, L);
+    const countLabel = txt(`${count}/${allIndices.length}`, 8, UI_COLORS.textMuted, L);
     countLabel.anchor.set(1, 0.5); countLabel.x = cx + cw - 14; countLabel.y = y + barH / 2;
     cc.addChild(countLabel);
   }
@@ -194,25 +242,27 @@ export function renderInventoryTab(
   const eq = champ.equipment as unknown as Record<string, string | null>;
   const equippedSet = new Set(Object.values(eq).filter(Boolean) as string[]);
 
-  // Filter items
-  const allItems = champ.inventoryItemIDs.filter(id => !equippedSet.has(id));
-  const filteredItems = allItems.filter(id => {
+  // Build filtered entries with original inventory indices
+  const entries: FilteredEntry[] = [];
+  champ.inventoryItemIDs.forEach((id, invIndex) => {
+    if (equippedSet.has(id)) return;
     const it = gameData.item(id);
-    if (!it) return false;
+    if (!it) return;
     const slot = it.slot as string;
-    // Map enchant items to 'enchant' slot filter
     const slotForFilter = id.startsWith('enchant_') ? 'enchant' : slot === 'consumable' ? 'consumable' : slot;
-    if (!matchesSlotFilter(slotForFilter, filterState.slotFilter)) return false;
-    if (!matchesRarityFilter(it.rarity, filterState.rarityFilter)) return false;
-    return true;
+    if (!matchesSlotFilter(slotForFilter, filterState.slotFilter)) return;
+    if (!matchesRarityFilter(it.rarity, filterState.rarityFilter)) return;
+    entries.push({ id, invIndex });
   });
 
-  // Bulk action bar
-  // Clean up selected IDs that are no longer in filtered list
-  for (const id of [...filterState.selectedIDs]) {
-    if (!filteredItems.includes(id)) filterState.selectedIDs.delete(id);
+  // Clean up selected indices that are no longer in filtered entries
+  const validIndices = new Set(entries.map(e => e.invIndex));
+  for (const idx of [...filterState.selectedIndices]) {
+    if (!validIndices.has(idx)) filterState.selectedIndices.delete(idx);
   }
-  y = renderBulkBar(cc, cx, y, cw, L, filterState, filteredItems, refresh);
+
+  // Bulk action bar
+  y = renderBulkBar(cc, cx, y, cw, L, filterState, entries, refresh);
 
   // Potion quick-slots (only if no filter or consumable filter)
   if (filterState.slotFilter === 'all' || filterState.slotFilter === 'consumable') {
@@ -249,7 +299,7 @@ export function renderInventoryTab(
   }
 
   // Equipment grid
-  if (filteredItems.length === 0) {
+  if (entries.length === 0) {
     const em = txt('Aucun objet correspondant aux filtres.', 10, UI_COLORS.textMuted, L);
     em.anchor.set(0.5, 0); em.x = cx + cw / 2; em.y = y + 20; cc.addChild(em);
     return;
@@ -257,12 +307,12 @@ export function renderInventoryTab(
 
   const cols = 4, pad = 12, gap = scaled(6, L);
   const cell = Math.floor((cw - pad * 2 - gap * (cols - 1)) / cols);
-  filteredItems.forEach((itemID, idx) => {
-    const item = gameData.item(itemID); if (!item) return;
-    const col = idx % cols, row = Math.floor(idx / cols);
+  entries.forEach((entry, gridIdx) => {
+    const item = gameData.item(entry.id); if (!item) return;
+    const col = gridIdx % cols, row = Math.floor(gridIdx / cols);
     const cx2 = cx + pad + col * (cell + gap), cy2 = y + row * (cell + gap + scaled(10, L));
     const rc = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
-    const isSelected = filterState.selectedIDs.has(itemID);
+    const isSelected = filterState.selectedIndices.has(entry.invIndex);
 
     const g = new Graphics();
     g.roundRect(cx2, cy2, cell, cell, 4).fill({ color: isSelected ? 0x222244 : 0x111122, alpha: 0.75 })
@@ -272,8 +322,8 @@ export function renderInventoryTab(
 
     if (filterState.bulkMode) {
       g.on('pointerdown', () => {
-        if (isSelected) filterState.selectedIDs.delete(itemID);
-        else filterState.selectedIDs.add(itemID);
+        if (isSelected) filterState.selectedIndices.delete(entry.invIndex);
+        else filterState.selectedIndices.add(entry.invIndex);
         refresh();
       });
       // Checkbox indicator
@@ -305,7 +355,14 @@ export function renderInventoryTab(
   });
 }
 
-// ─── Item Tooltip (with upgrade) ─────────────────────────────────────
+// ─── Rarity Labels ───────────────────────────────────────────────────
+
+const RARITY_LABELS: Record<string, string> = {
+  common: 'Commun', uncommon: 'Insolite', rare: 'Rare',
+  epic: '\u00c9pique', legendary: 'L\u00e9gend.', cosmeric: 'Cosm\u00e8re',
+};
+
+// ─── Item Tooltip (with upgrade + promote) ───────────────────────────
 
 export function showItemTooltip(
   panel: Container, item: Item, slot: EquipmentSlot | string,
@@ -315,7 +372,7 @@ export function showItemTooltip(
 ): Container {
   const champ = GameManager.shared.champion; if (!champ) return new Container();
   const L = layout;
-  const tw = scaled(210, L), th = scaled(210, L);
+  const tw = scaled(220, L), th = scaled(240, L);
   const tx = Math.max(10, Math.min(screenW - tw - 10, ax - tw / 2));
   const ty = Math.max(10, Math.min(screenH - th - 10, ay - th - 10));
   const rc = RARITY_COLORS[item.rarity] ?? 0xaaaaaa;
@@ -334,7 +391,9 @@ export function showItemTooltip(
   const nm = txt(nameStr, 11, rc, L, true); nm.x = tx + 10; nm.y = ly; c.addChild(nm);
   ly += scaled(16, L);
 
-  const sl = txt(`Emplacement: ${SLOT_LABELS[item.slot] ?? item.slot}`, 8, UI_COLORS.textMuted, L);
+  // Slot + rarity
+  const rarLabel = RARITY_LABELS[item.rarity] ?? item.rarity;
+  const sl = txt(`${SLOT_LABELS[item.slot] ?? item.slot} \u2022 ${rarLabel}`, 8, UI_COLORS.textMuted, L);
   sl.x = tx + 10; sl.y = ly; c.addChild(sl);
   ly += scaled(14, L);
 
@@ -357,63 +416,66 @@ export function showItemTooltip(
       }
     }
   }
-  ly += scaled(6, L);
+  ly += scaled(4, L);
 
-  // Action buttons
-  const bw = scaled(46, L), bh = scaled(18, L), bg2 = scaled(4, L);
+  // ─── Action Row 1: Equip/Sell/Disenchant ──────────────────────
+  const bw = scaled(48, L), bh = scaled(20, L), bg2 = scaled(4, L);
   const inInv = champ.inventoryItemIDs.includes(item.id);
   if (inInv) {
-    // Equip
-    addTooltipBtn(c, tx + 6, ly, bw, bh, 0x224422, 0x44aa44, 'Équiper', 7, 0x66cc44, L, () => {
+    addTooltipBtn(c, tx + 6, ly, bw, bh, 0x224422, 0x44aa44, '\u00c9quiper', 7, 0x66cc44, L, () => {
       MusicManager.shared.playSFX('equip');
       GameManager.shared.equipItem(item.id, item.slot);
       onAction();
     });
-    // Sell
     const sp = GameManager.getItemSellPrice(item.id);
     addTooltipBtn(c, tx + 6 + bw + bg2, ly, bw, bh, 0x332211, 0xcc9933, `${sp}g`, 7, 0xe6cc33, L, () => {
       MusicManager.shared.playSFX('loot_common');
       GameManager.shared.sellItem(item.id);
       onAction();
     });
-    // Disenchant
     const dr = GameManager.getDisenchantResult(item.id);
-    addTooltipBtn(c, tx + 6 + 2 * (bw + bg2), ly, bw, bh, 0x221133, 0x9955ee, `Déch.+${dr.amount}`, 6, 0xbb88ee, L, () => {
+    addTooltipBtn(c, tx + 6 + 2 * (bw + bg2), ly, bw * 1.5, bh, 0x221133, 0x9955ee, `D\u00e9ch.+${dr.amount}`, 6, 0xbb88ee, L, () => {
       MusicManager.shared.playSFX('magic_aondor');
       GameManager.shared.disenchantItem(item.id);
       onAction();
     });
-    // Upgrade
-    const upCost = GameManager.getUpgradeCost(item.id);
-    const canUp = !upCost.maxed && champ.gold >= upCost.gold;
-    const upLabel = upCost.maxed ? 'MAX' : `Up ${upCost.gold}g`;
-    addTooltipBtn(c, tx + 6 + 3 * (bw + bg2), ly, bw, bh,
-      canUp ? 0x112233 : 0x111122, canUp ? 0x44aadd : 0x333344,
-      upLabel, 6, canUp ? 0x66ccff : 0x555555, L, () => {
-        if (!canUp) return;
-        GameManager.shared.upgradeItem(item.id);
-        GameManager.shared.save();
-        onAction();
-      });
   } else {
-    // Item is equipped
-    addTooltipBtn(c, tx + 6, ly, bw * 1.2, bh, 0x442222, 0xcc4444, 'Retirer', 8, 0xcc6644, L, () => {
+    addTooltipBtn(c, tx + 6, ly, bw * 1.3, bh, 0x442222, 0xcc4444, 'Retirer', 8, 0xcc6644, L, () => {
       GameManager.shared.unequipItem(slot);
       onAction();
     });
-    // Upgrade equipped item
-    const upCost = GameManager.getUpgradeCost(item.id);
-    const canUp = !upCost.maxed && champ.gold >= upCost.gold;
-    const upLabel = upCost.maxed ? `+${upCost.currentLevel} MAX` : `Up +${upCost.currentLevel + 1} (${upCost.gold}g)`;
-    addTooltipBtn(c, tx + 6 + bw * 1.2 + bg2, ly, bw * 1.8, bh,
-      canUp ? 0x112233 : 0x111122, canUp ? 0x44aadd : 0x333344,
-      upLabel, 7, canUp ? 0x66ccff : 0x555555, L, () => {
-        if (!canUp) return;
-        GameManager.shared.upgradeItem(item.id);
-        GameManager.shared.save();
-        onAction();
-      });
   }
+  ly += bh + scaled(6, L);
+
+  // ─── Action Row 2: Upgrade + Promote ──────────────────────────
+  const upCost = GameManager.getUpgradeCost(item.id);
+  const canUp = champ.gold >= upCost.gold;
+  const upW = scaled(90, L);
+  addTooltipBtn(c, tx + 6, ly, upW, bh,
+    canUp ? 0x112233 : 0x111122, canUp ? 0x44aadd : 0x333344,
+    `Am\u00e9liorer +${upCost.currentLevel + 1} (${upCost.gold}g)`, 7,
+    canUp ? 0x66ccff : 0x555555, L, () => {
+      if (!canUp) return;
+      GameManager.shared.upgradeItem(item.id);
+      GameManager.shared.save();
+      onAction();
+    });
+
+  const promCost = GameManager.getPromoteCost(item.id);
+  const canProm = promCost.canPromote && champ.gold >= promCost.gold;
+  const nextRarColor = promCost.nextRarity ? (RARITY_COLORS[promCost.nextRarity] ?? 0xaaaaaa) : 0x555555;
+  const nextRarLabel = promCost.nextRarity ? (RARITY_LABELS[promCost.nextRarity] ?? promCost.nextRarity) : 'MAX';
+  const promLabel = promCost.canPromote ? `\u2191 ${nextRarLabel} (${promCost.gold}g)` : 'Raret\u00e9 MAX';
+  const promW = tw - upW - 18;
+  addTooltipBtn(c, tx + 6 + upW + bg2, ly, promW, bh,
+    canProm ? 0x1a1122 : 0x111122, canProm ? nextRarColor : 0x333344,
+    promLabel, 6, canProm ? nextRarColor : 0x555555, L, () => {
+      if (!canProm) return;
+      GameManager.shared.promoteItem(item.id);
+      GameManager.shared.save();
+      onAction();
+    });
+
   return c;
 }
 

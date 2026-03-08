@@ -1472,7 +1472,7 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private refreshMinimap(): void {
-    refreshMinimapModule(this.minimap, this.playerScreenPos, this.enemies, this.npcs, this.lootPoints, this.zone.connections);
+    refreshMinimapModule(this.minimap, this.playerScreenPos, this.enemies, this.npcs, this.lootPoints, this.zone.connections, this.zone);
   }
 
   private checkQuestCompletion(): void {

@@ -196,12 +196,17 @@ export function respawnPlayer(
 // ─── Minimap Refresh ────────────────────────────────────────────
 
 export function refreshMinimap(
-  minimap: { refresh: (px: number, py: number, enemies: any[], npcs: any[], exits: any[], loot: any[]) => void },
+  minimap: {
+    refresh: (px: number, py: number, enemies: any[], npcs: any[], exits: any[], loot: any[]) => void;
+    setObjective: (wx: number, wy: number, label: string) => void;
+    clearObjective: () => void;
+  },
   playerScreenPos: { x: number; y: number },
   enemies: EnemyInstance[],
   npcs: NPCInstance[],
   lootPoints: LootInstance[],
   connections: ZoneConnection[],
+  zone: Zone,
 ): void {
   const enemyDots = enemies
     .filter(e => !e.isDead)
@@ -223,6 +228,83 @@ export function refreshMinimap(
     .map(l => ({ x: l.position.x, y: l.position.y, color: 0xee9944 }));
 
   minimap.refresh(playerScreenPos.x, playerScreenPos.y, enemyDots, npcDots, exitDots, lootDots);
+
+  // ─── Quest Objective Marker ─────────────────────────────────
+  resolveQuestObjective(minimap, zone, enemies, npcs);
+}
+
+/** Resolve active quest objectives to world positions and set minimap marker */
+function resolveQuestObjective(
+  minimap: { setObjective: (wx: number, wy: number, label: string) => void; clearObjective: () => void },
+  zone: Zone,
+  enemies: EnemyInstance[],
+  npcs: NPCInstance[],
+): void {
+  const activeQuests = QuestManager.shared.getActiveQuests();
+  if (activeQuests.length === 0) { minimap.clearObjective(); return; }
+
+  // Find first incomplete objective in the current zone's quests
+  for (const { quest, state } of activeQuests) {
+    if (quest.worldID !== zone.worldID) continue;
+
+    for (const obj of quest.objectives) {
+      const progress = state.objectiveProgress[obj.id] ?? 0;
+      if (progress >= obj.requiredCount) continue; // already complete
+
+      const pos = resolveObjectivePosition(obj.type, obj.targetID, zone, enemies, npcs);
+      if (pos) {
+        const remaining = obj.requiredCount - progress;
+        const label = remaining > 1 ? `${obj.description} (${progress}/${obj.requiredCount})` : obj.description;
+        minimap.setObjective(pos.x, pos.y, label);
+        return;
+      }
+    }
+  }
+  minimap.clearObjective();
+}
+
+function resolveObjectivePosition(
+  type: string, targetID: string, zone: Zone,
+  enemies: EnemyInstance[], npcs: NPCInstance[],
+): { x: number; y: number } | null {
+  switch (type) {
+    case 'talkTo': {
+      // Check live NPCs first
+      const npc = npcs.find(n => n.id === targetID);
+      if (npc) return npc.position;
+      // Fallback to zone spawn data
+      const spawn = zone.npcSpawns.find(s => s.npcID === targetID);
+      if (spawn) return isoToScreen(spawn.position.col, spawn.position.row);
+      return null;
+    }
+    case 'kill':
+    case 'defeat': {
+      // Find nearest alive enemy of this type
+      const alive = enemies.filter(e => !e.isDead && e.data.id === targetID);
+      if (alive.length > 0) return alive[0].position;
+      // Fallback to spawn point
+      const espawn = zone.enemySpawns.find(s => s.enemyID === targetID);
+      if (espawn) return isoToScreen(espawn.position.col, espawn.position.row);
+      return null;
+    }
+    case 'collect': {
+      // Look in loot points
+      const loot = zone.lootPoints.find(l => l.id === targetID || l.lootTable.some(lt => lt.itemID === targetID));
+      if (loot) return isoToScreen(loot.position.col, loot.position.row);
+      return null;
+    }
+    case 'explore': {
+      // If the target zone matches current, point to center; otherwise point to exit
+      if (targetID === zone.id) {
+        return isoToScreen(Math.floor(zone.gridWidth / 2), Math.floor(zone.gridHeight / 2));
+      }
+      const exit = zone.connections.find(c => c.targetZoneID === targetID);
+      if (exit) return isoToScreen(exit.exitPosition.col, exit.exitPosition.row);
+      return null;
+    }
+    default:
+      return null;
+  }
 }
 
 // ─── Quest Completion ───────────────────────────────────────────
