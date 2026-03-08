@@ -5,6 +5,7 @@ import { AchievementManager } from '../game/AchievementSystem';
 import { CompanionManager } from '../game/CompanionSystem';
 import { NPCRelationshipManager } from '../game/NPCRelationships';
 import { SaveManager } from '../game/SaveManager';
+import { CloudSaveManager } from '../game/CloudSaveManager';
 import { getLayoutInfo, fontSize, scaled, panelRadius, buttonHeight, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 
@@ -25,11 +26,13 @@ export function showPauseMenu(
   overlay.eventMode = 'static';
   menu.addChild(overlay);
 
+  const isLoggedIn = CloudSaveManager.shared.isLoggedIn;
+
   const radius = panelRadius(layout);
   const panelW = Math.min(scaled(220, layout), screenW - 40);
   const btnH = buttonHeight(layout);
   const btnSpacing = btnH + scaled(12, layout);
-  const buttonCount = (onWorldMap ? 4 : 3) + 2; // +2 for export/import
+  const buttonCount = (onWorldMap ? 4 : 3) + 2 + (isLoggedIn ? 2 : 0); // +2 export/import, +2 cloud if logged in
   const panelH = scaled(60, layout) + buttonCount * btnSpacing;
   const px = (screenW - panelW) / 2;
   const py = (screenH - panelH) / 2;
@@ -63,7 +66,13 @@ export function showPauseMenu(
         AchievementManager.shared.save();
         CompanionManager.shared.save();
         NPCRelationshipManager.shared.save();
-        showFloatingText(playerPos.x, playerPos.y - 40, 'Partie sauvegard\u00E9e!', UI_COLORS.success);
+        showFloatingText(playerPos.x, playerPos.y - 40, 'Partie sauvegardée!', UI_COLORS.success);
+        // Also auto-save to cloud if logged in
+        if (CloudSaveManager.shared.isLoggedIn) {
+          CloudSaveManager.shared.saveSlot(0).then((ok) => {
+            if (ok) showFloatingText(playerPos.x, playerPos.y - 60, 'Cloud sync OK', 0x88cc88);
+          }).catch(() => { /* silent fail for auto-sync */ });
+        }
         onResume();
       },
     },
@@ -95,6 +104,44 @@ export function showPauseMenu(
     },
   });
   nextIdx++;
+
+  // Cloud save buttons (only when logged in)
+  if (isLoggedIn) {
+    const username = CloudSaveManager.shared.user?.username ?? '';
+    buttons.push({
+      label: `☁ Sauver cloud (${username})`, y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x1a3a4a,
+      action: () => {
+        GameManager.shared.save();
+        CloudSaveManager.shared.saveSlot(0).then((ok) => {
+          if (ok) {
+            showFloatingText(playerPos.x, playerPos.y - 40, 'Sauvegarde cloud OK!', 0x88cc88);
+          } else {
+            showFloatingText(playerPos.x, playerPos.y - 40, 'Erreur cloud', UI_COLORS.btnDanger);
+          }
+        }).catch(() => {
+          showFloatingText(playerPos.x, playerPos.y - 40, 'Serveur inaccessible', UI_COLORS.btnDanger);
+        });
+      },
+    });
+    nextIdx++;
+
+    buttons.push({
+      label: '☁ Charger cloud', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x1a3a4a,
+      action: () => {
+        CloudSaveManager.shared.downloadToLocal(0).then((ok) => {
+          if (ok) {
+            showFloatingText(playerPos.x, playerPos.y - 40, 'Cloud chargé! Rechargement...', 0x88cc88);
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            showFloatingText(playerPos.x, playerPos.y - 40, 'Aucune sauvegarde cloud', UI_COLORS.btnDanger);
+          }
+        }).catch(() => {
+          showFloatingText(playerPos.x, playerPos.y - 40, 'Serveur inaccessible', UI_COLORS.btnDanger);
+        });
+      },
+    });
+    nextIdx++;
+  }
 
   if (onWorldMap) {
     buttons.push({
