@@ -237,7 +237,7 @@ export class MainMenuScene extends Container implements GameScene {
     // Version
     const verSize = fontSize(9, layout);
     const ver = new Text({
-      text: 'v1.2 — Prototype Web',
+      text: 'v1.3 — Prototype Web',
       style: new TextStyle({ fontFamily: 'monospace', fontSize: verSize, fill: 0x444444 }),
     });
     ver.anchor.set(0.5);
