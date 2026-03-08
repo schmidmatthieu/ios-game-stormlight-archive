@@ -13,7 +13,7 @@ import { NPCScheduleManager } from '../../game/NPCScheduleSystem';
 import { SaveManager } from '../../game/SaveManager';
 import { addReputation, showRankUpEffect } from '../../game/ReputationSystem';
 import { showDialoguePanel, showShopPanel } from '../../ui/DialoguePanel';
-import { interactWith, createEnvironmentSprite } from '../../systems/EnvironmentInteractions';
+import { interactWith, createEnvironmentSprite, drawConnectionLine } from '../../systems/EnvironmentInteractions';
 import { gatherFromNode as gatherFromNodeSystem } from '../../systems/GatheringNodes';
 import { registerBuildingZone } from '../BuildingZoneGenerator';
 import { isoToScreen } from './ZoneTypes';
@@ -176,7 +176,8 @@ export function interactWithEnvObject(obj: EnvironmentObject, host: InteractionH
 
   if (result.message) {
     const pos = isoToScreen(obj.position.col, obj.position.row);
-    host.showFloatingText(pos.x, pos.y - 30, result.message, 0xffdd44);
+    const color = result.linkedAction ? 0x88ccff : 0xffdd44;
+    host.showFloatingText(pos.x, pos.y - 30, result.message, color);
   }
 
   if (result.xpReward > 0) {
@@ -184,35 +185,84 @@ export function interactWithEnvObject(obj: EnvironmentObject, host: InteractionH
     GameManager.shared.grantXP(ngpRewards.xp);
   }
 
+  // Camera shake for impact feedback
+  if (result.cameraShake > 0) {
+    host.shakeCamera(result.cameraShake, 0.1);
+  }
+
+  // Trigger linked object
   if (result.triggerLinkedID) {
     const linked = host.environmentObjects.find(o => o.id === result.triggerLinkedID);
     if (linked && !linked.activated) {
       linked.activated = true;
       const linkedPos = isoToScreen(linked.position.col, linked.position.row);
-      host.showFloatingText(linkedPos.x, linkedPos.y - 30, 'Activé !', 0x88ccff);
-      MusicManager.shared.playSFX('quest_complete');
-      if (linked.type === 'obelisk') {
-        const notifications = HiddenQuestManager.shared.reportTrigger('activate_obelisks', host.zone.worldID, host.zone.worldID);
-        for (const n of notifications) {
-          host.showFloatingText(host.playerScreenPos.x, host.playerScreenPos.y - 70,
-            n.message, n.completed ? 0xffdd44 : 0x88ccff);
-          if (n.completed && n.rewards) {
-            host.showFloatingText(host.playerScreenPos.x, host.playerScreenPos.y - 85,
-              `+${n.rewards.xp}XP +${n.rewards.gold}or`, 0x66cc44);
+
+      // Delayed activation effect for dramatic feel
+      setTimeout(() => {
+        MusicManager.shared.playSFX('quest_complete');
+
+        // Different messages and colors per linked action type
+        switch (result.linkedAction) {
+          case 'reveal_chest':
+            host.showFloatingText(linkedPos.x, linkedPos.y - 30, '🎁 Coffre révélé !', 0xffdd44);
+            break;
+          case 'disable_traps': {
+            host.showFloatingText(linkedPos.x, linkedPos.y - 30, '🛡️ Pièges neutralisés !', 0x44ddaa);
+            // Actually disable all traps in the zone
+            for (const trap of host.environmentObjects) {
+              if ((trap.type === 'spikeTrap' || trap.type === 'poisonVent') && !trap.activated) {
+                trap.activated = true;
+                trap.cooldownTimer = 999999; // effectively permanent disable
+                trap.sprite.alpha = 0.3;
+              }
+            }
+            break;
+          }
+          case 'open_passage':
+            host.showFloatingText(linkedPos.x, linkedPos.y - 30, '🚪 Passage ouvert !', 0xcc88ff);
+            host.shakeCamera(1.5, 0.15);
+            break;
+          case 'activate_obelisk':
+          default:
+            host.showFloatingText(linkedPos.x, linkedPos.y - 30, '✨ Activé !', 0x88ccff);
+            break;
+        }
+
+        // Hidden quest tracking for obelisks
+        if (linked.type === 'obelisk') {
+          const notifications = HiddenQuestManager.shared.reportTrigger('activate_obelisks', host.zone.worldID, host.zone.worldID);
+          for (const n of notifications) {
+            host.showFloatingText(host.playerScreenPos.x, host.playerScreenPos.y - 70,
+              n.message, n.completed ? 0xffdd44 : 0x88ccff);
+            if (n.completed && n.rewards) {
+              host.showFloatingText(host.playerScreenPos.x, host.playerScreenPos.y - 85,
+                `+${n.rewards.xp}XP +${n.rewards.gold}or`, 0x66cc44);
+            }
           }
         }
-      }
-      linked.sprite.removeChildren();
-      const newSprite = createEnvironmentSprite(linked);
-      for (const child of newSprite.children) linked.sprite.addChild(child);
+
+        // Bonus XP for revealing chests / opening passages
+        if (result.linkedAction === 'reveal_chest' || result.linkedAction === 'open_passage') {
+          const bonusXP = result.linkedAction === 'reveal_chest' ? 10 : 15;
+          GameManager.shared.grantXP(bonusXP);
+          host.showFloatingText(host.playerScreenPos.x, host.playerScreenPos.y - 50,
+            `+${bonusXP}XP`, 0x66cc44);
+        }
+
+        // Refresh linked sprite
+        linked.sprite.removeChildren();
+        const newLinkedSprite = createEnvironmentSprite(linked);
+        for (const child of newLinkedSprite.children) linked.sprite.addChild(child);
+      }, 400);
     }
   }
 
+  // Breakable destroyed effect
   if (obj.type === 'breakable' && obj.activated) {
-    obj.sprite.alpha = 0.2;
-    host.shakeCamera(1, 0.05);
+    host.shakeCamera(1.5, 0.08);
   }
 
+  // Refresh sprite
   obj.sprite.removeChildren();
   const newSprite = createEnvironmentSprite(obj);
   for (const child of newSprite.children) obj.sprite.addChild(child);

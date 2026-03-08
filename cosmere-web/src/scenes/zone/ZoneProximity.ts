@@ -156,7 +156,10 @@ export function checkProximity(dt: number, host: ProximityHost): ProximityResult
       }
     }
 
-    if (dist < 45 && (obj.type === 'lever' || obj.type === 'breakable' || obj.type === 'obelisk' || obj.type === 'pushBlock')) {
+    const interactable = obj.type === 'lever' || obj.type === 'breakable' || obj.type === 'obelisk'
+      || obj.type === 'pushBlock' || (obj.type === 'hiddenChest' && obj.activated)
+      || (obj.type === 'secretDoor' && obj.activated);
+    if (dist < 45 && interactable) {
       nearbyEnvObject = obj;
     }
   }
@@ -192,6 +195,7 @@ export function checkProximity(dt: number, host: ProximityHost): ProximityResult
     mode = 'loot';
     const typeLabels: Record<string, string> = {
       lever: 'Actionner le levier', breakable: 'Briser', obelisk: 'Examiner', pushBlock: 'Pousser',
+      hiddenChest: 'Ouvrir le coffre', secretDoor: 'Entrer dans le passage',
     };
     promptText = typeLabels[nearbyEnvObject.type] ?? 'Interagir';
   } else if (nearbyLoot) {

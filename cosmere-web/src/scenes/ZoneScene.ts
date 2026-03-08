@@ -45,7 +45,7 @@ import { SaveManager } from '../game/SaveManager';
 import { Pathfinder, smoothPath } from '../systems/Pathfinding';
 import { createBehaviorState, updateBehavior } from '../systems/EnemyBehaviors';
 import type { BehaviorState } from '../systems/EnemyBehaviors';
-import { generateEnvironmentObjects, createEnvironmentSprite } from '../systems/EnvironmentInteractions';
+import { generateEnvironmentObjects, createEnvironmentSprite, drawConnectionLine } from '../systems/EnvironmentInteractions';
 import { spawnGatheringNodes, findNearbyNode, gatherFromNode, updateGatheringNodes } from '../systems/GatheringNodes';
 import type { GatheringNode } from '../systems/GatheringNodes';
 import { ProfessionManager } from '../game/ProfessionSystem';
@@ -884,6 +884,13 @@ export class ZoneScene extends Container implements GameScene {
     for (const obj of this.environmentObjects) {
       obj.sprite = createEnvironmentSprite(obj);
       this.worldContainer.addChild(obj.sprite);
+    }
+    // Draw connection lines between levers and their linked targets
+    for (const obj of this.environmentObjects) {
+      if (obj.linkedID) {
+        const target = this.environmentObjects.find(o => o.id === obj.linkedID);
+        if (target) drawConnectionLine(this.worldContainer, obj, target);
+      }
     }
 
     // Spawn gathering nodes for professions
