@@ -54,6 +54,7 @@ export function buildPlayerCharacter(container: Container, cls: ChampionClass): 
     { x: -5, y: -16 }, { x: -9, y: 4 }, { x: -6, y: 4 }, { x: -3, y: -16 },
   ]).fill({ color: lighten(capeColor, 0.3), alpha: 0.3 });
   cape.pivot.set(0, -4);  // Pivot at cape top for sway
+  cape.position.set(0, -4);
   container.addChild(cape);
 
   // Left leg (boot + leg)
@@ -62,6 +63,7 @@ export function buildPlayerCharacter(container: Container, cls: ChampionClass): 
   leftLeg.roundRect(-6, -3, 5, 5, 1).fill({ color: 0x3a2a1a, alpha: 0.9 }); // boot
   leftLeg.roundRect(-5, -3, 2, 3, 1).fill({ color: 0x4a3a2a, alpha: 0.5 }); // boot highlight
   leftLeg.pivot.set(-3, -10); // Pivot at hip joint
+  leftLeg.position.set(-3, -10);
   container.addChild(leftLeg);
 
   // Right leg (boot + leg)
@@ -69,6 +71,7 @@ export function buildPlayerCharacter(container: Container, cls: ChampionClass): 
   rightLeg.rect(1, -10, 4, 8).fill({ color: 0x333344, alpha: 0.9 }); // leg
   rightLeg.roundRect(1, -3, 5, 5, 1).fill({ color: 0x3a2a1a, alpha: 0.9 }); // boot
   rightLeg.pivot.set(3, -10); // Pivot at hip joint
+  rightLeg.position.set(3, -10);
   container.addChild(rightLeg);
 
   // Torso (belt + chest + shoulder pads)
@@ -105,6 +108,7 @@ export function buildPlayerCharacter(container: Container, cls: ChampionClass): 
   // Hand
   leftArm.circle(-11, -8, 1.5).fill({ color: 0xddaa88, alpha: 0.8 });
   leftArm.pivot.set(-11, -22); // Pivot at shoulder
+  leftArm.position.set(-11, -22);
   container.addChild(leftArm);
 
   // Right arm
@@ -114,12 +118,14 @@ export function buildPlayerCharacter(container: Container, cls: ChampionClass): 
   // Hand
   rightArm.circle(11, -8, 1.5).fill({ color: 0xddaa88, alpha: 0.8 });
   rightArm.pivot.set(11, -22); // Pivot at shoulder
+  rightArm.position.set(11, -22);
   container.addChild(rightArm);
 
   // Weapon (attached to right arm)
   const weapon = new Graphics();
   drawWeapon(weapon, cls, weaponColor);
   weapon.pivot.set(11, -12); // Pivot at grip point
+  weapon.position.set(11, -12);
   container.addChild(weapon);
 
   // Head (head + hair + eyes + headgear)
@@ -140,6 +146,7 @@ export function buildPlayerCharacter(container: Container, cls: ChampionClass): 
   // Headgear
   drawHeadgear(head, cls);
   head.pivot.set(0, -30); // Pivot at neck
+  head.position.set(0, -30);
   container.addChild(head);
 
   return { cape, leftLeg, rightLeg, torso, leftArm, rightArm, weapon, head };

@@ -233,6 +233,14 @@ export function applyAnimationToPlayer(
   }
 }
 
+// Base positions for body parts (must match pivot values in PlayerRenderer)
+const BASE_POS = {
+  leftLeg: { x: -3, y: -10 },
+  rightLeg: { x: 3, y: -10 },
+  weapon: { x: 11, y: -12 },
+  head: { x: 0, y: -30 },
+};
+
 /** Animate individual body parts with the animator's limb offsets */
 function applyLimbAnimation(parts: PlayerBodyParts, anim: CharacterAnimator): void {
   // Left arm - rotate at shoulder pivot
@@ -243,22 +251,22 @@ function applyLimbAnimation(parts: PlayerBodyParts, anim: CharacterAnimator): vo
 
   // Weapon follows right arm + weapon angle
   parts.weapon.rotation = anim.rightArmAngle + anim.weaponAngle;
-  // Weapon Y tracks arm position
-  parts.weapon.y = Math.sin(anim.rightArmAngle) * 2;
+  // Weapon Y tracks arm position (offset from base position)
+  parts.weapon.y = BASE_POS.weapon.y + Math.sin(anim.rightArmAngle) * 2;
 
-  // Left leg - slide up/down for walk cycle
-  parts.leftLeg.y = anim.leftLegOffset;
+  // Left leg - slide up/down for walk cycle (offset from base position)
+  parts.leftLeg.y = BASE_POS.leftLeg.y + anim.leftLegOffset;
 
-  // Right leg - opposite phase
-  parts.rightLeg.y = anim.rightLegOffset;
+  // Right leg - opposite phase (offset from base position)
+  parts.rightLeg.y = BASE_POS.rightLeg.y + anim.rightLegOffset;
 
   // Cape sway - subtle rotation at top attachment
   parts.cape.rotation = anim.bodyTilt * 0.5;
   // Cape trails behind during walk (offset bottom)
   parts.cape.skew.x = -anim.leftLegOffset * 0.015;
 
-  // Head bobs slightly counter to body
-  parts.head.y = -anim.bodyBob * 0.3;
+  // Head bobs slightly counter to body (offset from base position)
+  parts.head.y = BASE_POS.head.y + (-anim.bodyBob * 0.3);
   // Head tilts slightly opposite to body tilt for natural feel
   parts.head.rotation = -anim.bodyTilt * 0.3;
 }

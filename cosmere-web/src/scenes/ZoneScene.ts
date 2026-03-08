@@ -46,6 +46,9 @@ import { Pathfinder, smoothPath } from '../systems/Pathfinding';
 import { createBehaviorState, updateBehavior } from '../systems/EnemyBehaviors';
 import type { BehaviorState } from '../systems/EnemyBehaviors';
 import { generateEnvironmentObjects, createEnvironmentSprite, interactWith, checkTrapTrigger } from '../systems/EnvironmentInteractions';
+import { spawnGatheringNodes, findNearbyNode, gatherFromNode, updateGatheringNodes } from '../systems/GatheringNodes';
+import type { GatheringNode } from '../systems/GatheringNodes';
+import { ProfessionManager } from '../game/ProfessionSystem';
 import type { EnvironmentObject } from '../systems/EnvironmentInteractions';
 import { HiddenQuestManager } from '../systems/HiddenQuests';
 import { ObjectPool } from '../systems/ObjectPool';
@@ -61,7 +64,7 @@ import { WorldMapScene } from './WorldMapScene';
 import { NPCScheduleManager } from '../game/NPCScheduleSystem';
 import { PotionManager } from '../game/PotionSystem';
 import { createPotionHotbar } from '../ui/PotionHotbar';
-import { showBuildingInterior } from './BuildingInteriorScene';
+import { registerBuildingZone } from './BuildingZoneGenerator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import { renderEnhancedTilemap } from '../rendering/TileRenderer';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
@@ -226,6 +229,8 @@ export class ZoneScene extends Container implements GameScene {
   private nearbySecret: SecretArea | null = null;
   private environmentObjects: EnvironmentObject[] = [];
   private nearbyEnvObject: EnvironmentObject | null = null;
+  private gatheringNodes: GatheringNode[] = [];
+  private nearbyGatherNode: GatheringNode | null = null;
   private enemyBehaviors: Map<string, BehaviorState> = new Map();
 
   // Boss fight
@@ -696,6 +701,8 @@ export class ZoneScene extends Container implements GameScene {
       case 'loot':
         if (this.nearbySecret) {
           this.interactWithSecret(this.nearbySecret);
+        } else if (this.nearbyGatherNode) {
+          this.gatherFromNode(this.nearbyGatherNode);
         } else if (this.nearbyEnvObject) {
           this.interactWithEnvObject(this.nearbyEnvObject);
         } else if (this.nearbyLoot) {
@@ -706,36 +713,54 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private enterBuilding(building: EnterableBuilding): void {
-    if (this.dialoguePanel) return;
-    this.isPaused = true;
+    if (this.isTransitioning) return;
 
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
+    const champ = GameManager.shared.champion;
+    if (!champ) return;
 
-    // Use the new Baldur's Gate style interior system
-    this.dialoguePanel = showBuildingInterior(
-      this.uiContainer, w, h,
-      building.name, this.zone.worldID,
-      (rewards) => {
-        const champ = GameManager.shared.champion;
-        if (champ) {
-          champ.gold += rewards.gold;
-          GameManager.shared.grantXP(rewards.xp);
-          const repResult = addReputation(this.zone.worldID, 3);
-          if (repResult.rankUp) {
-            showRankUpEffect(this.uiContainer, w, h, repResult.rankName, this.zone.worldID);
-          }
-          if (this.repBadge) this.repBadge.refresh();
-          if (rewards.xp > 0 || rewards.gold > 0) {
-            this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 30,
-              `+${rewards.xp}XP +${rewards.gold}or`, 0x66cc44);
-          }
-        }
-        this.dialoguePanel = null;
-        this.isPaused = false;
-      },
+    this.isTransitioning = true;
+
+    // Generate and register the interior zone
+    const interiorZoneID = registerBuildingZone(
+      building.name,
+      this.zone.worldID,
+      this.zone.id,
+      building.col,
+      building.row,
     );
 
+    const targetZone = gameData.zone(interiorZoneID);
+    if (!targetZone) { this.isTransitioning = false; return; }
+
+    // Fade transition (same as zone exit)
+    MusicManager.shared.playSFX('dash');
+    const flash = new Graphics();
+    flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: 0 });
+    flash.zIndex = 99999;
+    this.uiContainer.addChild(flash);
+
+    let elapsed = 0;
+    let last = performance.now();
+    const fadeOut = () => {
+      if (flash.destroyed) return;
+      const now = performance.now();
+      const dtSec = (now - last) / 1000;
+      last = now;
+      elapsed += dtSec;
+      flash.clear();
+      flash.rect(0, 0, this.app.screen.width, this.app.screen.height)
+        .fill({ color: 0x000000, alpha: Math.min(1, elapsed / 0.4) });
+      if (elapsed < 0.4) {
+        requestAnimationFrame(fadeOut);
+      } else {
+        champ.currentZoneID = interiorZoneID;
+        champ.gridPosition = { ...targetZone.playerSpawnPosition };
+        GameManager.shared.save();
+        SaveManager.shared.autoSave();
+        this.router.goto(ZoneScene);
+      }
+    };
+    requestAnimationFrame(fadeOut);
   }
 
   private interactWithSecret(secret: SecretArea): void {
@@ -824,6 +849,18 @@ export class ZoneScene extends Container implements GameScene {
     obj.sprite.removeChildren();
     const newSprite = createEnvironmentSprite(obj);
     for (const child of newSprite.children) obj.sprite.addChild(child);
+  }
+
+  private gatherFromNode(node: GatheringNode): void {
+    const result = gatherFromNode(node, this.zone.worldID);
+    const rarityColors: Record<string, number> = {
+      common: 0xaaaaaa, uncommon: 0x55cc55, rare: 0x5588ee, epic: 0x9955ee,
+    };
+    const color = result.success ? (rarityColors[result.rarity] ?? 0xffdd44) : 0xaaaaaa;
+    this.showFloatingText(node.screenX, node.screenY - 30, result.message, color);
+    if (result.success) {
+      MusicManager.shared.playSFX('loot_common');
+    }
   }
 
   private interactWithNPC(spawn: { npcID: string; isShopkeeper: boolean; dialogueTreeID: string | null }): void {
@@ -1215,6 +1252,19 @@ export class ZoneScene extends Container implements GameScene {
       obj.sprite = createEnvironmentSprite(obj);
       this.worldContainer.addChild(obj.sprite);
     }
+
+    // Spawn gathering nodes for professions
+    ProfessionManager.shared.load();
+    const existingPositions = [
+      ...this.npcs.map(n => ({ col: Math.round(n.position.x / 32), row: Math.round(n.position.y / 16) })),
+      ...this.enterableBuildings.map(b => ({ col: b.col, row: b.row })),
+    ];
+    this.gatheringNodes = spawnGatheringNodes(
+      this.worldContainer, isoToScreen,
+      this.zone.gridWidth, this.zone.gridHeight,
+      this.zone.worldID, this.zone.playerSpawnPosition,
+      this.zone.connections, existingPositions,
+    );
 
     // Report zone exploration for hidden quests
     HiddenQuestManager.shared.reportTrigger('visit_secret_area', this.zone.worldID, this.zone.worldID);
@@ -1639,7 +1689,11 @@ export class ZoneScene extends Container implements GameScene {
       }
     }
 
-    // Determine mode (priority: NPC > Building > Exit > Secret > Loot > EnvObj > Attack)
+    // Check gathering nodes
+    this.nearbyGatherNode = findNearbyNode(this.playerScreenPos, this.gatheringNodes);
+    updateGatheringNodes(this.gatheringNodes, dt);
+
+    // Determine mode (priority: NPC > Building > Exit > Secret > Loot > GatherNode > EnvObj > Attack)
     let newMode: ActionMode = 'attack';
     let promptText = '';
     if (this.nearbyNPC && minNPCDist < minExitDist && minNPCDist < minLootDist) {
@@ -1656,6 +1710,12 @@ export class ZoneScene extends Container implements GameScene {
       newMode = 'loot';
       promptText = this.nearbySecret.type === 'treasure' ? 'Ouvrir le coffre'
         : this.nearbySecret.type === 'shrine' ? 'Prier au sanctuaire' : 'Explorer';
+    } else if (this.nearbyGatherNode) {
+      newMode = 'loot';
+      const nodeLabels: Record<string, string> = {
+        mining: 'Miner', herbalism: 'Récolter', woodcutting: 'Couper', skinning: 'Dépecer', enchanting: 'Canaliser',
+      };
+      promptText = nodeLabels[this.nearbyGatherNode.type] ?? 'Récolter';
     } else if (this.nearbyEnvObject) {
       newMode = 'loot';
       const typeLabels: Record<string, string> = {

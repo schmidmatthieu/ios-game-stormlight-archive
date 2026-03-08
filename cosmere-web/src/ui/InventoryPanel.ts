@@ -21,16 +21,6 @@ const STAT_LABELS: Record<string, string> = {
   vigor: 'VIG', strength: 'FOR', agility: 'AGI', spirit: 'ESP', luck: 'CHA', investiture: 'INV',
 };
 
-function slotPositions(s: number): Record<string, { x: number; y: number }> {
-  return {
-    helmet: { x: 0, y: -58 * s }, shoulders: { x: -28 * s, y: -42 * s },
-    chest: { x: 28 * s, y: -36 * s }, cape: { x: -28 * s, y: -28 * s },
-    gloves: { x: -30 * s, y: -8 * s }, belt: { x: 28 * s, y: -16 * s },
-    legs: { x: 28 * s, y: 2 * s }, boots: { x: -28 * s, y: 10 * s },
-    mainWeapon: { x: 34 * s, y: -50 * s }, offhand: { x: -34 * s, y: -50 * s },
-    amulet: { x: 0, y: -32 * s }, ring1: { x: -30 * s, y: -2 * s }, ring2: { x: 30 * s, y: -2 * s },
-  };
-}
 
 function txt(text: string, size: number, fill: number, layout: LayoutInfo, bold = false): Text {
   return new Text({ text, style: new TextStyle({
@@ -192,59 +182,31 @@ export class InventoryPanel extends Container {
     if (!champ) return;
     const eq = champ.equipment as unknown as Record<string, string | null>;
     const L = this.layout;
-    const centerX = cx + cw / 2, centerY = cy + scaled(80, L);
 
-    // Player preview (3x scale)
+    let y = cy + 4;
+
+    // Header: Character preview (left) + Stats (right)
+    const previewSize = scaled(60, L);
     const pg = new Graphics();
     drawPlayerCharacter(pg, champ.championClass);
-    pg.scale.set(3); pg.x = centerX; pg.y = centerY + scaled(40, L);
+    pg.scale.set(2);
+    pg.x = cx + scaled(14, L) + previewSize / 2;
+    pg.y = y + previewSize - scaled(8, L);
     this.cc.addChild(pg);
 
-    // Class label
+    // Class label next to preview
     const info = CLASS_INFO[champ.championClass];
-    const cl = txt(`${champ.name} — ${info.name} Nv.${champ.level}`, 10, UI_COLORS.textGold, L, true);
-    cl.anchor.set(0.5, 0); cl.x = centerX; cl.y = cy + 2;
+    const cl = txt(`${champ.name}`, 10, UI_COLORS.textGold, L, true);
+    cl.x = cx + scaled(14, L) + previewSize + scaled(10, L);
+    cl.y = y + 2;
     this.cc.addChild(cl);
 
-    // Equipment slots around character
-    const positions = slotPositions(L.scale);
-    const ss = scaled(18, L);
-    for (const slot of EQUIPMENT_SLOTS) {
-      const p = positions[slot]; if (!p) continue;
-      const sx = centerX + p.x, sy = centerY + p.y;
-      const itemID = eq[slot];
-      const item = itemID ? gameData.item(itemID) : null;
-      const rc = item ? (RARITY_COLORS[item.rarity] ?? 0xaaaaaa) : 0x333344;
+    const classLabel = txt(`${info.name} — Niveau ${champ.level}`, 8, UI_COLORS.textSecondary, L);
+    classLabel.x = cx + scaled(14, L) + previewSize + scaled(10, L);
+    classLabel.y = y + scaled(16, L);
+    this.cc.addChild(classLabel);
 
-      const g = new Graphics();
-      g.roundRect(sx - ss / 2, sy - ss / 2, ss, ss, 3)
-        .fill({ color: 0x111122, alpha: 0.8 })
-        .stroke({ color: rc, width: item ? 1.5 : 0.8, alpha: item ? 0.9 : 0.4 });
-      if (item) g.roundRect(sx - ss / 2 + 2, sy - ss / 2 + 2, ss - 4, ss - 4, 2).fill({ color: rc, alpha: 0.25 });
-      g.eventMode = 'static'; g.cursor = 'pointer';
-      g.on('pointerdown', () => { if (item) this.showTooltip(item, slot, sx, sy); });
-      this.cc.addChild(g);
-
-      const sl = txt(SLOT_LABELS[slot] ?? slot, 6, UI_COLORS.textMuted, L);
-      sl.anchor.set(0.5, 0); sl.x = sx; sl.y = sy + ss / 2 + 1;
-      this.cc.addChild(sl);
-
-      // Connection line
-      const ln = new Graphics();
-      ln.moveTo(sx, sy).lineTo(centerX, centerY + p.y * 0.3).stroke({ color: rc, width: 0.5, alpha: 0.2 });
-      this.cc.addChild(ln);
-    }
-
-    // Stats summary
-    const sY = centerY + scaled(90, L);
-    const bg = new Graphics();
-    bg.roundRect(cx + 10, sY, cw - 20, scaled(50, L), 5)
-      .fill({ color: 0x111122, alpha: 0.7 }).stroke({ color: UI_COLORS.borderSubtle, width: 0.8, alpha: 0.4 });
-    this.cc.addChild(bg);
-    const st = txt('STATISTIQUES TOTALES', 8, UI_COLORS.textGold, L, true);
-    st.anchor.set(0.5, 0); st.x = cx + cw / 2; st.y = sY + 4;
-    this.cc.addChild(st);
-
+    // Compact stats next to preview
     const totals: Record<string, number> = { ...champ.baseStats };
     for (const slot of EQUIPMENT_SLOTS) {
       const id = eq[slot]; if (!id) continue;
@@ -252,15 +214,101 @@ export class InventoryPanel extends Container {
       for (const b of it.statBonuses) if (totals[b.stat] !== undefined) totals[b.stat] += b.value;
     }
     const base = champ.baseStats as unknown as Record<string, number>;
-    const colW = (cw - 40) / 3;
+    const statsX = cx + scaled(14, L) + previewSize + scaled(10, L);
+    const statsY = y + scaled(30, L);
+    const statCols = 3;
+    const statColW = (cw - previewSize - scaled(38, L)) / statCols;
     ['vigor', 'strength', 'agility', 'spirit', 'luck', 'investiture'].forEach((s, i) => {
       const bonus = totals[s] - base[s];
-      const t = txt(`${STAT_LABELS[s]}: ${totals[s]}${bonus > 0 ? ` (+${bonus})` : ''}`, 8,
+      const t = txt(`${STAT_LABELS[s]}: ${totals[s]}${bonus > 0 ? ` (+${bonus})` : ''}`, 7,
         bonus > 0 ? UI_COLORS.success : UI_COLORS.textSecondary, L);
-      t.x = cx + 20 + (i % 3) * colW;
-      t.y = sY + 18 + Math.floor(i / 3) * scaled(14, L);
+      t.x = statsX + (i % statCols) * statColW;
+      t.y = statsY + Math.floor(i / statCols) * scaled(12, L);
       this.cc.addChild(t);
     });
+
+    y += previewSize + scaled(10, L);
+
+    // Separator line
+    const sep = new Graphics();
+    sep.rect(cx + 12, y, cw - 24, 1).fill({ color: UI_COLORS.borderSubtle, alpha: 0.3 });
+    this.cc.addChild(sep);
+    y += scaled(8, L);
+
+    // Equipment slots as a clean list with generous spacing
+    const rowH = scaled(32, L);
+    const rowPad = scaled(4, L);
+    const iconSize = scaled(22, L);
+
+    for (const slot of EQUIPMENT_SLOTS) {
+      const itemID = eq[slot];
+      const item = itemID ? gameData.item(itemID) : null;
+      const rc = item ? (RARITY_COLORS[item.rarity] ?? 0xaaaaaa) : 0x333344;
+
+      // Row background
+      const row = new Graphics();
+      row.roundRect(cx + 10, y, cw - 20, rowH, 5)
+        .fill({ color: 0x111122, alpha: 0.6 })
+        .stroke({ color: rc, width: item ? 1 : 0.5, alpha: item ? 0.6 : 0.2 });
+      row.eventMode = 'static';
+      row.cursor = 'pointer';
+      row.on('pointerdown', () => {
+        if (item) this.showTooltip(item, slot, cx + cw / 2, y);
+      });
+      this.cc.addChild(row);
+
+      // Slot icon box
+      const iconX = cx + 16;
+      const iconY = y + (rowH - iconSize) / 2;
+      const iconBg = new Graphics();
+      iconBg.roundRect(iconX, iconY, iconSize, iconSize, 3)
+        .fill({ color: 0x0a0a18, alpha: 0.8 })
+        .stroke({ color: rc, width: item ? 1.2 : 0.5, alpha: item ? 0.7 : 0.3 });
+      if (item) {
+        iconBg.roundRect(iconX + 2, iconY + 2, iconSize - 4, iconSize - 4, 2)
+          .fill({ color: rc, alpha: 0.2 });
+      }
+      this.cc.addChild(iconBg);
+
+      // Slot abbreviation in icon
+      const slotChar = (SLOT_LABELS[slot] ?? slot).charAt(0);
+      const ic = txt(slotChar, 10, item ? rc : 0x444455, L, true);
+      ic.anchor.set(0.5);
+      ic.x = iconX + iconSize / 2;
+      ic.y = iconY + iconSize / 2;
+      this.cc.addChild(ic);
+
+      // Slot label
+      const slotLabel = txt(SLOT_LABELS[slot] ?? slot, 8, UI_COLORS.textMuted, L);
+      slotLabel.x = iconX + iconSize + scaled(8, L);
+      slotLabel.y = y + scaled(3, L);
+      this.cc.addChild(slotLabel);
+
+      // Item name or empty
+      if (item) {
+        const itemName = txt(item.name, 9, rc, L, true);
+        itemName.x = iconX + iconSize + scaled(8, L);
+        itemName.y = y + scaled(16, L);
+        this.cc.addChild(itemName);
+
+        // Stats on the right side
+        if (item.statBonuses.length > 0) {
+          const statsStr = item.statBonuses.map(b => `+${b.value} ${STAT_LABELS[b.stat] ?? b.stat}`).join('  ');
+          const statsLabel = txt(statsStr, 7, UI_COLORS.success, L);
+          statsLabel.anchor.set(1, 0.5);
+          statsLabel.x = cx + cw - 18;
+          statsLabel.y = y + rowH / 2;
+          this.cc.addChild(statsLabel);
+        }
+      } else {
+        const emptyLabel = txt('— vide —', 8, 0x444455, L);
+        emptyLabel.x = iconX + iconSize + scaled(8, L);
+        emptyLabel.y = y + scaled(10, L);
+        this.cc.addChild(emptyLabel);
+      }
+
+      y += rowH + rowPad;
+    }
   }
 
   // ─── Inventory Tab ──────────────────────────────────────────────
