@@ -6,7 +6,6 @@ import { gameData } from '../data/DataLoader';
 import { VirtualJoystick } from '../ui/VirtualJoystick';
 import { ActionButtons } from '../ui/ActionButtons';
 import { HUD } from '../ui/HUD';
-import { showDialoguePanel, showShopPanel } from '../ui/DialoguePanel';
 import { QuestTracker } from '../ui/QuestTracker';
 import { Minimap } from '../ui/Minimap';
 import { showDeathScreen } from '../ui/DeathScreen';
@@ -45,7 +44,7 @@ import { SaveManager } from '../game/SaveManager';
 import { Pathfinder, smoothPath } from '../systems/Pathfinding';
 import { createBehaviorState, updateBehavior } from '../systems/EnemyBehaviors';
 import type { BehaviorState } from '../systems/EnemyBehaviors';
-import { generateEnvironmentObjects, createEnvironmentSprite, interactWith, checkTrapTrigger } from '../systems/EnvironmentInteractions';
+import { generateEnvironmentObjects, createEnvironmentSprite } from '../systems/EnvironmentInteractions';
 import { spawnGatheringNodes, findNearbyNode, gatherFromNode, updateGatheringNodes } from '../systems/GatheringNodes';
 import type { GatheringNode } from '../systems/GatheringNodes';
 import { ProfessionManager } from '../game/ProfessionSystem';
@@ -55,21 +54,18 @@ import { ObjectPool } from '../systems/ObjectPool';
 import { updateSkillVFX, clearSkillVFX } from '../systems/SkillAnimations';
 import { NewGamePlusManager } from '../systems/NewGamePlus';
 import { CompanionManager } from '../game/CompanionSystem';
-import { NPCRelationshipManager, LEVEL_LABELS, LEVEL_COLORS } from '../game/NPCRelationships';
 import { ComboManager, createComboDisplay } from '../game/ComboSystem';
 import { WorldEventManager } from '../game/WorldEvents';
 import type { WorldEventEffect } from '../game/WorldEvents';
 import { createWorldEventBanner } from '../ui/WorldEventBanner';
 import { WorldMapScene } from './WorldMapScene';
-import { NPCScheduleManager } from '../game/NPCScheduleSystem';
 import { PotionManager } from '../game/PotionSystem';
 import { createPotionHotbar } from '../ui/PotionHotbar';
-import { registerBuildingZone } from './BuildingZoneGenerator';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
 import { renderEnhancedTilemap } from '../rendering/TileRenderer';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
-import { addReputation, createReputationBadge, showRankUpEffect, getBonusXPMultiplier } from '../game/ReputationSystem';
+import { createReputationBadge } from '../game/ReputationSystem';
 import { StatusEffectManager, createStatusBar, spawnStatusParticle } from '../game/StatusEffects';
 import type { ActiveStatusEffect } from '../game/StatusEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
@@ -128,7 +124,53 @@ import type { KillHost } from './zone/ZoneCombat';
 import {
   updateEnemyAI as updateEnemyAIModule,
 } from './zone/ZoneEnemyAI';
+import {
+  handleAttack as handleAttackModule,
+  handleSkill as handleSkillModule,
+  handleUltimate as handleUltimateModule,
+  usePotion as usePotionModule,
+  enemyAttacksPlayer as enemyAttacksPlayerModule,
+} from './zone/ZoneActions';
+import type { ActionHost } from './zone/ZoneActions';
+import {
+  checkProximity as checkProximityModule,
+} from './zone/ZoneProximity';
+import type { ProximityHost } from './zone/ZoneProximity';
+import {
+  showFloatingText as showFloatingTextModule,
+  showLevelUp as showLevelUpModule,
+  shakeCamera as shakeCameraModule,
+  updateCamera as updateCameraModule,
+  handlePlayerDeath as handlePlayerDeathModule,
+  respawnPlayer as respawnPlayerModule,
+  refreshMinimap as refreshMinimapModule,
+  checkQuestCompletion as checkQuestCompletionModule,
+  sortZOrder as sortZOrderModule,
+} from './zone/ZoneVisuals';
 import type { AIHost, CachedPath } from './zone/ZoneEnemyAI';
+import {
+  spawnNPCs as spawnNPCsModule,
+  formatNPCName as formatNPCNameModule,
+  spawnLootPoints as spawnLootPointsModule,
+  collectLoot as collectLootModule,
+  spawnEnemies as spawnEnemiesModule,
+  drawEnemyHP as drawEnemyHPModule,
+  renderExits as renderExitsModule,
+} from './zone/ZoneSpawning';
+import {
+  handleInteraction as handleInteractionModule,
+  enterBuilding as enterBuildingModule,
+  interactWithSecret as interactWithSecretModule,
+  interactWithEnvObject as interactWithEnvObjectModule,
+  gatherFromNode as gatherFromNodeModule,
+  interactWithNPC as interactWithNPCModule,
+  closeDialogue as closeDialogueModule,
+} from './zone/ZoneInteraction';
+import type { InteractionHost } from './zone/ZoneInteraction';
+import {
+  checkZoneExit as checkZoneExitModule,
+} from './zone/ZoneTransitions';
+import type { TransitionHost } from './zone/ZoneTransitions';
 
 // ─── Zone Scene ────────────────────────────────────────────────
 export class ZoneScene extends Container implements GameScene {
@@ -605,351 +647,87 @@ export class ZoneScene extends Container implements GameScene {
   // ─── NPCs ────────────────────────────────────────────────────
 
   private spawnNPCs(): void {
-    for (const spawn of this.zone.npcSpawns) {
-      const pos = isoToScreen(spawn.position.col, spawn.position.row);
-      const container = new Container();
-      container.zIndex = pos.y;
-
-      // Shadow
-      const shadow = new Graphics();
-      shadow.ellipse(0, 2, 10, 4).fill({ color: 0x000000, alpha: 0.25 });
-      container.addChild(shadow);
-
-      const sprite = new Graphics();
-
-      if (spawn.isShopkeeper) {
-        // Shopkeeper - distinctive look
-        sprite.poly([
-          { x: -9, y: -3 }, { x: -7, y: -18 },
-          { x: 0, y: -22 }, { x: 7, y: -18 }, { x: 9, y: -3 },
-        ]).fill({ color: 0x886633, alpha: 0.9 });
-        sprite.circle(0, -26, 5.5).fill({ color: 0xddbb88, alpha: 0.95 });
-        // Hat
-        sprite.ellipse(0, -31, 8, 3).fill({ color: 0x664422, alpha: 0.9 });
-        // Shop icon
-        sprite.rect(-3, -16, 6, 6).fill({ color: 0xe6cc33, alpha: 0.7 });
-      } else {
-        // Regular NPC
-        sprite.poly([
-          { x: -8, y: -3 }, { x: -6, y: -18 },
-          { x: 0, y: -21 }, { x: 6, y: -18 }, { x: 8, y: -3 },
-        ]).fill({ color: 0x555577, alpha: 0.9 });
-        sprite.circle(0, -25, 5.5).fill({ color: 0xddbb88, alpha: 0.95 });
-        // Quest indicator (!)
-        const hasQuest = spawn.dialogueTreeID != null;
-        if (hasQuest) {
-          sprite.circle(0, -36, 5).fill({ color: 0xeedd44, alpha: 0.8 });
-          const bangStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x332200, fontWeight: 'bold' });
-          const bang = new Text({ text: '!', style: bangStyle });
-          bang.anchor.set(0.5);
-          bang.y = -36;
-          container.addChild(bang);
-        }
-      }
-      container.addChild(sprite);
-
-      // Name label
-      const npcName = this.formatNPCName(spawn.npcID);
-      const nameStyle = new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: 8,
-        fill: spawn.isShopkeeper ? 0xe6cc33 : 0xaaaacc,
-        dropShadow: { color: 0x000000, blur: 2, distance: 1 },
-      });
-      const nameText = new Text({ text: npcName, style: nameStyle });
-      nameText.anchor.set(0.5);
-      nameText.y = -40;
-      container.addChild(nameText);
-
-      container.x = pos.x;
-      container.y = pos.y;
-
-      // Make interactive
-      container.eventMode = 'static';
-      container.cursor = 'pointer';
-      container.on('pointerdown', () => this.interactWithNPC(spawn));
-
-      this.worldContainer.addChild(container);
-
-      this.npcs.push({
-        id: spawn.npcID,
-        position: pos,
-        sprite: container,
-        nameText,
-        isShopkeeper: spawn.isShopkeeper,
-      });
-    }
+    this.npcs = spawnNPCsModule(this.zone, this.worldContainer, (spawn) => this.interactWithNPC(spawn));
   }
 
   private formatNPCName(npcID: string): string {
-    return npcID.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return formatNPCNameModule(npcID);
   }
 
   private handleInteraction(mode: ActionMode): void {
-    switch (mode) {
-      case 'talk':
-        if (this.nearbyNPC) {
-          const spawn = this.zone.npcSpawns.find(s => s.npcID === this.nearbyNPC!.id);
-          if (spawn) this.interactWithNPC(spawn);
-        }
-        break;
-      case 'enter':
-        if (this.nearbyBuilding) {
-          this.enterBuilding(this.nearbyBuilding);
-        }
-        // Zone exit handled by checkZoneExit
-        break;
-      case 'loot':
-        if (this.nearbySecret) {
-          this.interactWithSecret(this.nearbySecret);
-        } else if (this.nearbyGatherNode) {
-          this.gatherFromNode(this.nearbyGatherNode);
-        } else if (this.nearbyEnvObject) {
-          this.interactWithEnvObject(this.nearbyEnvObject);
-        } else if (this.nearbyLoot) {
-          this.collectLoot(this.nearbyLoot.id);
-        }
-        break;
-    }
+    const h = this.buildInteractionHost();
+    handleInteractionModule(mode, h);
+    this.applyInteractionState(h);
   }
 
   private enterBuilding(building: EnterableBuilding): void {
-    if (this.isTransitioning) return;
-
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    this.isTransitioning = true;
-
-    // Generate and register the interior zone
-    const interiorZoneID = registerBuildingZone(
-      building.name,
-      this.zone.worldID,
-      this.zone.id,
-      building.col,
-      building.row,
-    );
-
-    const targetZone = gameData.zone(interiorZoneID);
-    if (!targetZone) { this.isTransitioning = false; return; }
-
-    // Fade transition (same as zone exit)
-    MusicManager.shared.playSFX('dash');
-    const flash = new Graphics();
-    flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: 0 });
-    flash.zIndex = 99999;
-    this.uiContainer.addChild(flash);
-
-    let elapsed = 0;
-    let last = performance.now();
-    const fadeOut = () => {
-      if (flash.destroyed) return;
-      const now = performance.now();
-      const dtSec = (now - last) / 1000;
-      last = now;
-      elapsed += dtSec;
-      flash.clear();
-      flash.rect(0, 0, this.app.screen.width, this.app.screen.height)
-        .fill({ color: 0x000000, alpha: Math.min(1, elapsed / 0.4) });
-      if (elapsed < 0.4) {
-        requestAnimationFrame(fadeOut);
-      } else {
-        champ.currentZoneID = interiorZoneID;
-        champ.gridPosition = { ...targetZone.playerSpawnPosition };
-        GameManager.shared.save();
-        SaveManager.shared.autoSave();
-        this.router.goto(ZoneScene);
-      }
-    };
-    requestAnimationFrame(fadeOut);
+    const h = this.buildInteractionHost();
+    enterBuildingModule(building, h);
+    this.applyInteractionState(h);
   }
 
   private interactWithSecret(secret: SecretArea): void {
-    if (!secret.revealed) return;
-
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    // Grant rewards
-    champ.gold += secret.loot.gold;
-    GameManager.shared.grantXP(secret.loot.xp);
-    const secretRepResult = addReputation(this.zone.worldID, 5);
-    if (secretRepResult.rankUp) {
-      showRankUpEffect(this.uiContainer, this.app.screen.width, this.app.screen.height, secretRepResult.rankName, this.zone.worldID);
-    }
-    if (this.repBadge) this.repBadge.refresh();
-
-    if (secret.type === 'shrine') {
-      MusicManager.shared.playSFX('heal');
-      // Shrine: full heal, full investiture, strong long-lasting buffs
-      champ.currentHP = GameManager.shared.maxHP;
-      champ.currentInvestiture = GameManager.shared.maxInvestiture;
-      this.playerStatusEffects.apply('regenerating', 120, 5);     // 2 min regen (+5 HP/tick)
-      this.playerStatusEffects.apply('shielded', 120, 2);         // 2 min shield (40% DR)
-      this.playerStatusEffects.apply('strengthened', 120, 1.5);   // 2 min +50% damage
-      this.playerStatusEffects.apply('haste', 90, 1);             // 90s speed boost
-      this.showFloatingText(secret.x, secret.y - 30, 'Bénédiction! PV, Inv, +50% Dégâts, Bouclier, Régén, Hâte!', 0x88ccff);
-    } else {
-      this.showFloatingText(secret.x, secret.y - 30,
-        `${secret.loot.itemHint}! +${secret.loot.xp}XP +${secret.loot.gold}or`, 0xffdd44);
-    }
-
-    // Remove from interactable
-    secret.sprite.alpha = 0.3;
-    this.secretAreas = this.secretAreas.filter(s => s !== secret);
+    const h = this.buildInteractionHost();
+    interactWithSecretModule(secret, h);
+    this.applyInteractionState(h);
   }
 
   private interactWithEnvObject(obj: EnvironmentObject): void {
-    const result = interactWith(obj);
-    MusicManager.shared.playSFX(result.sfx);
-
-    if (result.message) {
-      const pos = isoToScreen(obj.position.col, obj.position.row);
-      this.showFloatingText(pos.x, pos.y - 30, result.message, 0xffdd44);
-    }
-
-    if (result.xpReward > 0) {
-      const ngpRewards = NewGamePlusManager.shared.applyToRewards(result.xpReward, 0);
-      GameManager.shared.grantXP(ngpRewards.xp);
-    }
-
-    // Trigger linked object (e.g., lever → obelisk)
-    if (result.triggerLinkedID) {
-      const linked = this.environmentObjects.find(o => o.id === result.triggerLinkedID);
-      if (linked && !linked.activated) {
-        linked.activated = true;
-        const linkedPos = isoToScreen(linked.position.col, linked.position.row);
-        this.showFloatingText(linkedPos.x, linkedPos.y - 30, 'Activé !', 0x88ccff);
-        MusicManager.shared.playSFX('quest_complete');
-        // Report obelisk activation for hidden quests
-        if (linked.type === 'obelisk') {
-          const notifications = HiddenQuestManager.shared.reportTrigger('activate_obelisks', this.zone.worldID, this.zone.worldID);
-          for (const n of notifications) {
-            this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 70,
-              n.message, n.completed ? 0xffdd44 : 0x88ccff);
-            if (n.completed && n.rewards) {
-              this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 85,
-                `+${n.rewards.xp}XP +${n.rewards.gold}or`, 0x66cc44);
-            }
-          }
-        }
-        // Redraw linked sprite
-        linked.sprite.removeChildren();
-        const newSprite = createEnvironmentSprite(linked);
-        for (const child of newSprite.children) linked.sprite.addChild(child);
-      }
-    }
-
-    // Handle breakable — hide sprite, drop loot
-    if (obj.type === 'breakable' && obj.activated) {
-      obj.sprite.alpha = 0.2;
-      this.shakeCamera(1, 0.05);
-    }
-
-    // Redraw current object sprite
-    obj.sprite.removeChildren();
-    const newSprite = createEnvironmentSprite(obj);
-    for (const child of newSprite.children) obj.sprite.addChild(child);
+    interactWithEnvObjectModule(obj, this.buildInteractionHost());
   }
 
   private gatherFromNode(node: GatheringNode): void {
-    const result = gatherFromNode(node, this.zone.worldID);
-    const rarityColors: Record<string, number> = {
-      common: 0xaaaaaa, uncommon: 0x55cc55, rare: 0x5588ee, epic: 0x9955ee,
-    };
-    const color = result.success ? (rarityColors[result.rarity] ?? 0xffdd44) : 0xaaaaaa;
-    this.showFloatingText(node.screenX, node.screenY - 30, result.message, color);
-    if (result.success) {
-      MusicManager.shared.playSFX('loot_common');
-    }
+    gatherFromNodeModule(node, this.buildInteractionHost());
   }
 
   private interactWithNPC(spawn: { npcID: string; isShopkeeper: boolean; dialogueTreeID: string | null }): void {
-    const npc = this.npcs.find(n => n.id === spawn.npcID);
-    if (!npc) return;
-
-    // Check if NPC is sleeping (unavailable)
-    const schedMgr = NPCScheduleManager.shared;
-    if (schedMgr.hasSchedule(spawn.npcID) && !schedMgr.isAvailable(spawn.npcID)) {
-      this.showFloatingText(npc.position.x, npc.position.y - 50, '💤 Dort...', 0x6677aa);
-      return;
-    }
-
-    if (spawn.isShopkeeper) {
-      this.showShop(spawn.npcID);
-    } else {
-      this.showDialogue(spawn.npcID, spawn.dialogueTreeID);
-    }
-  }
-
-  private showDialogue(npcID: string, _dialogueTreeID: string | null): void {
-    if (this.dialoguePanel) return;
-    this.isPaused = true;
-
-    // Track quest progress and NPC relationship
-    QuestManager.shared.onNPCTalkedTo(npcID);
-    // Also trigger escort completion when talking to an escort NPC
-    QuestManager.shared.onEscortComplete(npcID);
-    this.checkQuestCompletion();
-    const npcName = this.formatNPCName(npcID);
-    NPCRelationshipManager.shared.recordTalk(npcID, npcName, this.zone.worldID);
-
-    // Check for relationship level up
-    const levelUp = NPCRelationshipManager.shared.popLevelUp();
-    if (levelUp) {
-      const color = LEVEL_COLORS[levelUp.level] ?? 0xffffff;
-      const label = LEVEL_LABELS[levelUp.level] ?? levelUp.level;
-      setTimeout(() => {
-        this.showFloatingText(
-          this.playerScreenPos.x, this.playerScreenPos.y - 70,
-          `${levelUp.npcName}: ${label}!`, color,
-        );
-      }, 500);
-    }
-
-    // Show relationship info as floating text
-    const level = NPCRelationshipManager.shared.getLevel(npcID);
-    const levelLabel = LEVEL_LABELS[level];
-    const levelColor = LEVEL_COLORS[level];
-    const affinity = NPCRelationshipManager.shared.getAffinityPercent(npcID);
-    this.showFloatingText(
-      this.playerScreenPos.x + 30, this.playerScreenPos.y - 40,
-      `${levelLabel} (${affinity}%)`, levelColor,
-    );
-
-    // Show time-based dialogue override from schedule
-    const timeDialogue = NPCScheduleManager.shared.getTimeDialogue(npcID);
-    if (timeDialogue) {
-      const npcInst = this.npcs.find(n => n.id === npcID);
-      if (npcInst) {
-        this.showFloatingText(npcInst.position.x, npcInst.position.y - 60, timeDialogue, 0xddddaa);
-      }
-    }
-
-    this.dialoguePanel = showDialoguePanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      this.zone.worldID, npcName, () => this.closeDialogue(),
-    );
+    const h = this.buildInteractionHost();
+    interactWithNPCModule(spawn, h);
+    this.applyInteractionState(h);
   }
 
   private closeDialogue(): void {
-    if (this.dialoguePanel) {
-      MusicManager.shared.playSFX('close_menu');
-      this.dialoguePanel.destroy({ children: true });
-      this.dialoguePanel = null;
-    }
-    this.isPaused = false;
+    const h = this.buildInteractionHost();
+    closeDialogueModule(h);
+    this.applyInteractionState(h);
   }
 
-  private showShop(npcID: string): void {
-    if (this.dialoguePanel) return;
-    MusicManager.shared.playSFX('open_menu');
-    this.isPaused = true;
-    this.dialoguePanel = showShopPanel(
-      this.uiContainer, this.app.screen.width, this.app.screen.height,
-      () => this.closeDialogue(),
-      (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
-      this.playerScreenPos,
-    );
+  private buildInteractionHost(): InteractionHost {
+    return {
+      zone: this.zone,
+      npcs: this.npcs,
+      enterableBuildings: this.enterableBuildings,
+      secretAreas: this.secretAreas,
+      environmentObjects: this.environmentObjects,
+      gatheringNodes: this.gatheringNodes,
+      lootPoints: this.lootPoints,
+      playerScreenPos: this.playerScreenPos,
+      playerStatusEffects: this.playerStatusEffects,
+      uiContainer: this.uiContainer,
+      screenWidth: this.app.screen.width,
+      screenHeight: this.app.screen.height,
+      isTransitioning: this.isTransitioning,
+      dialoguePanel: this.dialoguePanel,
+      isPaused: this.isPaused,
+      repBadge: this.repBadge,
+      nearbyNPC: this.nearbyNPC,
+      nearbyBuilding: this.nearbyBuilding,
+      nearbySecret: this.nearbySecret,
+      nearbyEnvObject: this.nearbyEnvObject,
+      nearbyGatherNode: this.nearbyGatherNode,
+      nearbyLoot: this.nearbyLoot,
+      showFloatingText: (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      shakeCamera: (i, d) => this.shakeCamera(i, d),
+      checkQuestCompletion: () => this.checkQuestCompletion(),
+      collectLoot: (id) => this.collectLoot(id),
+      gotoZoneScene: () => this.router.goto(ZoneScene),
+    };
+  }
+
+  private applyInteractionState(h: InteractionHost): void {
+    this.isTransitioning = h.isTransitioning;
+    this.dialoguePanel = h.dialoguePanel;
+    this.isPaused = h.isPaused;
   }
 
   // NOTE: Toolbar buttons have been extracted to ZoneToolbar.ts
@@ -1043,205 +821,21 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Loot Points ─────────────────────────────────────────────
 
   private spawnLootPoints(): void {
-    for (const loot of this.zone.lootPoints) {
-      const pos = isoToScreen(loot.position.col, loot.position.row);
-      const container = new Container();
-      container.zIndex = pos.y;
-
-      if (!loot.isHidden) {
-        // Visible chest
-        const chest = new Graphics();
-        // Base
-        chest.roundRect(-8, -6, 16, 10, 2).fill({ color: 0x664422, alpha: 0.9 });
-        // Lid
-        chest.roundRect(-9, -12, 18, 7, 2).fill({ color: 0x775533, alpha: 0.9 });
-        // Lock
-        chest.circle(0, -8, 2).fill({ color: 0xe6cc33, alpha: 0.9 });
-        // Glow
-        chest.circle(0, -6, 14).fill({ color: 0xeedd44, alpha: 0.06 });
-        container.addChild(chest);
-
-        // Sparkle particles
-        for (let i = 0; i < 3; i++) {
-          const sparkle = new Graphics();
-          sparkle.star(0, 0, 4, 2, 1).fill({ color: 0xeedd88, alpha: 0.4 });
-          sparkle.x = (Math.random() - 0.5) * 16;
-          sparkle.y = -8 + (Math.random() - 0.5) * 10;
-          container.addChild(sparkle);
-        }
-      } else {
-        // Hidden loot - subtle shimmer
-        const shimmer = new Graphics();
-        shimmer.circle(0, -2, 4).fill({ color: 0xeedd88, alpha: 0.15 });
-        container.addChild(shimmer);
-      }
-
-      container.x = pos.x;
-      container.y = pos.y;
-
-      // Interactive
-      container.eventMode = 'static';
-      container.cursor = 'pointer';
-      container.on('pointerdown', () => this.collectLoot(loot.id));
-
-      this.worldContainer.addChild(container);
-
-      this.lootPoints.push({
-        id: loot.id,
-        position: pos,
-        sprite: container,
-        collected: false,
-        isHidden: loot.isHidden,
-      });
-    }
+    this.lootPoints = spawnLootPointsModule(this.zone, this.worldContainer, (id) => this.collectLoot(id));
   }
 
   private collectLoot(lootId: string): void {
-    const instance = this.lootPoints.find(l => l.id === lootId);
-    if (!instance || instance.collected) return;
-
-    const playerDist = Math.hypot(instance.position.x - this.playerScreenPos.x, instance.position.y - this.playerScreenPos.y);
-    if (playerDist > 60) {
-      this.showFloatingText(instance.position.x, instance.position.y - 20, 'Trop loin!', 0xff6644);
-      return;
-    }
-
-    instance.collected = true;
-    instance.sprite.visible = false;
-
-    // Give rewards
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    const lootData = this.zone.lootPoints.find(l => l.id === lootId);
-    if (!lootData) return;
-
-    let itemsFound = 0;
-    for (const entry of lootData.lootTable) {
-      if (Math.random() < entry.dropChance) {
-        itemsFound++;
-        const qty = entry.minQuantity + Math.floor(Math.random() * (entry.maxQuantity - entry.minQuantity + 1));
-        for (let i = 0; i < qty; i++) {
-          champ.inventoryItemIDs.push(entry.itemID);
-          QuestManager.shared.onItemCollected(entry.itemID);
-        }
-      }
-    }
-
-    this.checkQuestCompletion();
-    this.showFloatingText(instance.position.x, instance.position.y - 20,
-      itemsFound > 0 ? `+${itemsFound} objet(s)!` : 'Vide...', 0xeedd88);
+    collectLootModule(
+      lootId, this.lootPoints, this.zone, this.playerScreenPos,
+      (x, y, msg, color) => this.showFloatingText(x, y, msg, color),
+      () => this.checkQuestCompletion(),
+    );
   }
 
-  // ─── Enemies ─────────────────────────────────────────────────
-
   private spawnEnemies(): void {
-    for (const spawn of this.zone.enemySpawns) {
-      const data = gameData.enemy(spawn.enemyID);
-      if (!data) continue;
-
-      const pos = isoToScreen(spawn.position.col, spawn.position.row);
-      const container = new Container();
-      container.zIndex = pos.y;
-
-      // Shadow
-      const shadow = new Graphics();
-      const size = data.tier === 'boss' ? 14 : data.tier === 'elite' ? 11 : 8;
-      shadow.ellipse(0, 2, size + 2, 4).fill({ color: 0x000000, alpha: 0.25 });
-      container.addChild(shadow);
-
-      const sprite = new Graphics();
-      drawEnemySprite(sprite, data, size);
-      container.addChild(sprite);
-
-      // HP bar
-      const hpBar = new Graphics();
-      hpBar.y = -size * 2 - 14;
-      this.drawEnemyHP(hpBar, 1);
-      container.addChild(hpBar);
-
-      // Name
-      const tierColors: Record<string, number> = {
-        minion: 0xaa8877, soldier: 0xcc6655, elite: 0xcc66dd, boss: 0xff8833,
-      };
-      const nameStyle = new TextStyle({
-        fontFamily: 'sans-serif', fontSize: 7,
-        fill: tierColors[data.tier] ?? 0xaa8877,
-        dropShadow: { color: 0x000000, blur: 2, distance: 1 },
-      });
-      const nameText = new Text({ text: data.name, style: nameStyle });
-      nameText.anchor.set(0.5);
-      nameText.y = -size * 2 - 22;
-      container.addChild(nameText);
-
-      container.x = pos.x;
-      container.y = pos.y;
-      this.worldContainer.addChild(container);
-
-      // NG+ difficulty scaling
-      const ngpStats = NewGamePlusManager.shared.applyToEnemy(data.maxHP, data.damage, data.speed);
-
-      // NG+ elite upgrade chance for minions
-      if (data.tier === 'minion' && NewGamePlusManager.shared.shouldUpgradeToElite()) {
-        data.tier = 'elite' as typeof data.tier;
-      }
-
-      // Roll affixes for elite/boss enemies
-      const affixes = rollAffixes(data.tier);
-      const affixState = affixes.length > 0 ? createAffixState(affixes) : undefined;
-      const hpMult = affixState ? getAffixHPMultiplier(affixState) : 1;
-      const finalMaxHP = Math.floor(ngpStats.hp * hpMult);
-
-      const enemy: EnemyInstance = {
-        data, spawn,
-        hp: finalMaxHP,
-        maxHP: finalMaxHP,
-        position: { ...pos },
-        gridPos: { ...spawn.position },
-        sprite: container,
-        hpBar,
-        nameText,
-        isDead: false,
-        attackCooldown: 0,
-        state: 'idle',
-        respawnTimer: 0,
-        animTimer: Math.random() * Math.PI * 2,
-        affixState,
-        enemyAnim: createEnemyAnimState(),
-      };
-
-      // Affix label under name
-      if (affixState && affixes.length > 0) {
-        const affixText = new Text({
-          text: getAffixLabel(affixState),
-          style: new TextStyle({
-            fontFamily: 'sans-serif', fontSize: 5,
-            fill: getAffixColor(affixState),
-            dropShadow: { color: 0x000000, blur: 2, distance: 1 },
-          }),
-        });
-        affixText.anchor.set(0.5);
-        affixText.y = -size * 2 - 30;
-        container.addChild(affixText);
-        enemy.affixLabel = affixText;
-      }
-
-      // Initialize boss state for boss enemies
-      if (data.tier === 'boss') {
-        enemy.bossState = new BossState(data.id);
-      }
-
-      this.enemies.push(enemy);
-
-      // Initialize AI behavior state
-      const behaviorKey = data.id + '_' + spawn.position.col + '_' + spawn.position.row;
-      const patrolWaypoints = spawn.patrolPath
-        ? spawn.patrolPath.map(p => isoToScreen(p.col, p.row))
-        : null;
-      this.enemyBehaviors.set(behaviorKey, createBehaviorState(
-        data.behavior, pos.x, pos.y, data.attackRange,
-      ));
-    }
+    const result = spawnEnemiesModule(this.zone, this.worldContainer, (bar, pct) => this.drawEnemyHP(bar, pct));
+    this.enemies = result.enemies;
+    this.enemyBehaviors = result.behaviors;
 
     // Generate environment objects (puzzles, traps, breakables)
     this.environmentObjects = generateEnvironmentObjects(
@@ -1270,81 +864,12 @@ export class ZoneScene extends Container implements GameScene {
     HiddenQuestManager.shared.reportTrigger('visit_secret_area', this.zone.worldID, this.zone.worldID);
   }
 
-  // Enemy sprite drawing delegated to EnemyRenderer module
-
   private drawEnemyHP(bar: Graphics, pct: number): void {
-    bar.clear();
-    const w = 32;
-    // Background
-    bar.roundRect(-w / 2, 0, w, 4, 1).fill({ color: 0x111111, alpha: 0.8 });
-    bar.roundRect(-w / 2, 0, w, 4, 1).stroke({ color: 0x333333, width: 0.5 });
-    if (pct > 0) {
-      const color = pct > 0.6 ? 0x44cc44 : pct > 0.3 ? 0xcccc44 : 0xcc4444;
-      bar.roundRect(-w / 2, 0, w * Math.max(0, pct), 4, 1).fill(color);
-    }
+    drawEnemyHPModule(bar, pct);
   }
 
-  // ─── Exits ───────────────────────────────────────────────────
-
   private renderExits(): void {
-    for (const conn of this.zone.connections) {
-      const pos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
-      const container = new Container();
-      container.zIndex = pos.y + 1;
-
-      // Portal effect
-      const portal = new Graphics();
-      // Outer glow
-      portal.circle(0, -10, 18).fill({ color: 0x4499ff, alpha: 0.06 });
-      portal.circle(0, -10, 12).fill({ color: 0x66bbff, alpha: 0.1 });
-
-      // Diamond marker
-      portal.poly([
-        { x: 0, y: -24 },
-        { x: 14, y: -10 },
-        { x: 0, y: 4 },
-        { x: -14, y: -10 },
-      ]).fill({ color: 0x66ccff, alpha: 0.25 })
-        .stroke({ color: 0x88ddff, width: 1.5, alpha: 0.7 });
-
-      // Arrow
-      portal.poly([
-        { x: 0, y: -18 }, { x: 5, y: -12 }, { x: -5, y: -12 },
-      ]).fill({ color: 0xaaeeff, alpha: 0.6 });
-
-      container.addChild(portal);
-
-      // Label
-      const targetZone = gameData.zone(conn.targetZoneID);
-      const targetName = targetZone?.name ?? conn.targetZoneID;
-      const label = new Text({
-        text: `→ ${targetName}`,
-        style: new TextStyle({
-          fontFamily: 'Georgia, serif', fontSize: 8, fill: 0x88ccff,
-          dropShadow: { color: 0x000000, blur: 3, distance: 1 },
-        }),
-      });
-      label.anchor.set(0.5, 0);
-      label.y = 10;
-      container.addChild(label);
-
-      // Locked indicator
-      if (conn.requiredQuestID) {
-        const champ = GameManager.shared.champion;
-        const isLocked = !champ?.completedQuestIDs.includes(conn.requiredQuestID);
-        if (isLocked) {
-          const lockStyle = new TextStyle({ fontFamily: 'sans-serif', fontSize: 10, fill: 0xff6644 });
-          const lock = new Text({ text: '🔒', style: lockStyle });
-          lock.anchor.set(0.5);
-          lock.y = -28;
-          container.addChild(lock);
-        }
-      }
-
-      container.x = pos.x;
-      container.y = pos.y;
-      this.worldContainer.addChild(container);
-    }
+    renderExitsModule(this.zone, this.worldContainer);
   }
 
   // ─── Particles & Weather ─────────────────────────────────────
@@ -1572,161 +1097,30 @@ export class ZoneScene extends Container implements GameScene {
   // ─── NPC Proximity ───────────────────────────────────────────
 
   private checkProximity(dt: number = 1 / 60): void {
-    this.nearbyNPC = null;
-    this.nearbyExit = null;
-    this.nearbyLoot = null;
-    this.nearbyBuilding = null;
-    this.nearbySecret = null;
+    const result = checkProximityModule(dt, {
+      playerScreenPos: this.playerScreenPos,
+      npcs: this.npcs,
+      lootPoints: this.lootPoints,
+      enterableBuildings: this.enterableBuildings,
+      secretAreas: this.secretAreas,
+      environmentObjects: this.environmentObjects,
+      gatheringNodes: this.gatheringNodes,
+      zone: this.zone,
+      showFloatingText: (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      showDamageNumber: (x, y, amt, crit, col?) => this.showDamageNumber(x, y, amt, crit, col),
+      shakeCamera: (i, d) => this.shakeCamera(i, d),
+      handlePlayerDeath: () => this.handlePlayerDeath(),
+    });
+    this.nearbyNPC = result.nearbyNPC;
+    this.nearbyExit = result.nearbyExit;
+    this.nearbyLoot = result.nearbyLoot;
+    this.nearbyBuilding = result.nearbyBuilding;
+    this.nearbySecret = result.nearbySecret;
+    this.nearbyEnvObject = result.nearbyEnvObject;
+    this.nearbyGatherNode = result.nearbyGatherNode;
 
-    // Check NPCs
-    let minNPCDist = Infinity;
-    for (const npc of this.npcs) {
-      const dist = Math.hypot(npc.position.x - this.playerScreenPos.x, npc.position.y - this.playerScreenPos.y);
-      if (dist < 55 && dist < minNPCDist) {
-        minNPCDist = dist;
-        this.nearbyNPC = npc;
-      }
-    }
-
-    // Check zone exits
-    let minExitDist = Infinity;
-    for (const conn of this.zone.connections) {
-      const exitPos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
-      const dist = Math.hypot(exitPos.x - this.playerScreenPos.x, exitPos.y - this.playerScreenPos.y);
-      if (dist < 55 && dist < minExitDist) {
-        minExitDist = dist;
-        this.nearbyExit = conn;
-      }
-    }
-
-    // Check loot
-    let minLootDist = Infinity;
-    for (const loot of this.lootPoints) {
-      if (loot.collected) continue;
-      const dist = Math.hypot(loot.position.x - this.playerScreenPos.x, loot.position.y - this.playerScreenPos.y);
-      if (dist < 55 && dist < minLootDist) {
-        minLootDist = dist;
-        this.nearbyLoot = loot;
-      }
-    }
-
-    // Check enterable buildings
-    let minBuildingDist = Infinity;
-    for (const b of this.enterableBuildings) {
-      const dist = Math.hypot(b.x - this.playerScreenPos.x, b.y - this.playerScreenPos.y);
-      if (dist < b.interactionRadius && dist < minBuildingDist) {
-        minBuildingDist = dist;
-        this.nearbyBuilding = b;
-      }
-    }
-
-    // Check secret areas (reveal when close)
-    for (const s of this.secretAreas) {
-      if (s.revealed) continue;
-      const dist = Math.hypot(s.x - this.playerScreenPos.x, s.y - this.playerScreenPos.y);
-      if (dist < s.interactionRadius) {
-        revealSecret(s, this.zone.worldID);
-        this.showFloatingText(s.x, s.y - 20, '✦ Zone secrète découverte!', 0xffdd44);
-        this.nearbySecret = s;
-        // Report secret area discovery for hidden quests
-        const hqNotifs = HiddenQuestManager.shared.reportTrigger('visit_secret_area', this.zone.worldID, this.zone.worldID);
-        for (const n of hqNotifs) {
-          this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 70, n.message, n.completed ? 0xffdd44 : 0x88ccff);
-        }
-      }
-    }
-    // Check already revealed secrets for loot
-    for (const s of this.secretAreas) {
-      if (!s.revealed) continue;
-      const dist = Math.hypot(s.x - this.playerScreenPos.x, s.y - this.playerScreenPos.y);
-      if (dist < 40) {
-        this.nearbySecret = s;
-        break;
-      }
-    }
-
-    // Check environment objects (interactables + traps)
-    this.nearbyEnvObject = null;
-    const playerGrid = screenToIso(this.playerScreenPos.x, this.playerScreenPos.y);
-    const pCol = Math.round(playerGrid.col);
-    const pRow = Math.round(playerGrid.row);
-    for (const obj of this.environmentObjects) {
-      if (obj.activated && (obj.type === 'breakable' || obj.type === 'obelisk')) continue;
-      const objPos = isoToScreen(obj.position.col, obj.position.row);
-      const dist = Math.hypot(objPos.x - this.playerScreenPos.x, objPos.y - this.playerScreenPos.y);
-
-      // Reveal hidden traps when very close
-      if (obj.hidden && dist < 30) {
-        obj.hidden = false;
-        obj.sprite.alpha = 1;
-      }
-
-      // Check trap triggers
-      if (obj.type === 'spikeTrap' || obj.type === 'poisonVent') {
-        const trapResult = checkTrapTrigger(obj, pCol, pRow, dt);
-        if (trapResult) {
-          const trapDmgMult = NewGamePlusManager.shared.getDifficulty().trapDamageMult;
-          const champ = GameManager.shared.champion;
-          if (champ) {
-            const dmg = Math.floor(trapResult.damage * trapDmgMult);
-            champ.currentHP -= dmg;
-            this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, dmg, false, 0xff4444);
-            MusicManager.shared.playSFX(trapResult.sfx);
-            if (trapResult.message) this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 55, trapResult.message, 0xff6644);
-            this.shakeCamera(2, 0.1);
-            if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
-          }
-          // Redraw trap sprite as activated
-          obj.sprite.removeChildren();
-          const newSprite = createEnvironmentSprite(obj);
-          for (const child of newSprite.children) obj.sprite.addChild(child);
-        }
-      }
-
-      // Nearby interactable
-      if (dist < 45 && (obj.type === 'lever' || obj.type === 'breakable' || obj.type === 'obelisk' || obj.type === 'pushBlock')) {
-        this.nearbyEnvObject = obj;
-      }
-    }
-
-    // Check gathering nodes
-    this.nearbyGatherNode = findNearbyNode(this.playerScreenPos, this.gatheringNodes);
-    updateGatheringNodes(this.gatheringNodes, dt);
-
-    // Determine mode (priority: NPC > Building > Exit > Secret > Loot > GatherNode > EnvObj > Attack)
-    let newMode: ActionMode = 'attack';
-    let promptText = '';
-    if (this.nearbyNPC && minNPCDist < minExitDist && minNPCDist < minLootDist) {
-      newMode = 'talk';
-      promptText = this.nearbyNPC.isShopkeeper ? 'Ouvrir la boutique' : 'Parler';
-    } else if (this.nearbyBuilding && minBuildingDist < minExitDist) {
-      newMode = 'enter';
-      promptText = this.nearbyBuilding.name;
-    } else if (this.nearbyExit && minExitDist < minLootDist) {
-      newMode = 'enter';
-      const targetZone = gameData.zone(this.nearbyExit.targetZoneID);
-      promptText = `→ ${targetZone?.name ?? this.nearbyExit.targetZoneID}`;
-    } else if (this.nearbySecret) {
-      newMode = 'loot';
-      promptText = this.nearbySecret.type === 'treasure' ? 'Ouvrir le coffre'
-        : this.nearbySecret.type === 'shrine' ? 'Prier au sanctuaire' : 'Explorer';
-    } else if (this.nearbyGatherNode) {
-      newMode = 'loot';
-      const nodeLabels: Record<string, string> = {
-        mining: 'Miner', herbalism: 'Récolter', woodcutting: 'Couper', skinning: 'Dépecer', enchanting: 'Canaliser',
-      };
-      promptText = nodeLabels[this.nearbyGatherNode.type] ?? 'Récolter';
-    } else if (this.nearbyEnvObject) {
-      newMode = 'loot';
-      const typeLabels: Record<string, string> = {
-        lever: 'Actionner le levier', breakable: 'Briser', obelisk: 'Examiner', pushBlock: 'Pousser',
-      };
-      promptText = typeLabels[this.nearbyEnvObject.type] ?? 'Interagir';
-    } else if (this.nearbyLoot) {
-      newMode = 'loot';
-      promptText = 'Ramasser';
-    }
-
+    const newMode = result.mode;
+    const promptText = result.promptText;
     this.actionButtons.setMode(newMode);
 
     // Show/hide prompt
@@ -1753,334 +1147,54 @@ export class ZoneScene extends Container implements GameScene {
     }
   }
 
-  // ─── Combat ──────────────────────────────────────────────────
+  // ─── Combat ── → delegated to ZoneActions module ─────────────
+
+  private get actionHost(): ActionHost {
+    return {
+      worldContainer: this.worldContainer,
+      uiContainer: this.uiContainer,
+      screenWidth: this.app.screen.width,
+      screenHeight: this.app.screen.height,
+      playerScreenPos: this.playerScreenPos,
+      playerFacing: this.playerFacing,
+      enemies: this.enemies,
+      playerStatusEffects: this.playerStatusEffects,
+      playerAnimator: this.playerAnimator,
+      worldMechanics: this.worldMechanics,
+      particles: this.particles,
+      attackCooldown: this.attackCooldown,
+      actionButtons: this.actionButtons,
+      potionHotbar: this.potionHotbar,
+      showDamageNumber: (x: number, y: number, amt: number, crit: boolean, col?: number, style?: any, combo?: number) => this.showDamageNumber(x, y, amt, crit, col, style, combo),
+      showFloatingText: (x: number, y: number, msg: string, c: number) => this.showFloatingText(x, y, msg, c),
+      drawEnemyHP: (bar: any, pct: number) => this.drawEnemyHP(bar, pct),
+      shakeCamera: (i: number, d: number) => this.shakeCamera(i, d),
+      killEnemy: (e: EnemyInstance) => this.killEnemy(e),
+      handlePlayerDeath: () => this.handlePlayerDeath(),
+    };
+  }
 
   private handleAttack(): void {
     if (this.attackCooldown > 0) return;
-    this.attackCooldown = this.ATTACK_COOLDOWN;
-
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    // Attack animation
-    this.playerAnimator.setState('attack');
-    MusicManager.shared.enterCombat();
-
-    // Attack visual
-    this.showAttackEffect();
-
-    const range = 60;
-    let closest: EnemyInstance | null = null;
-    let closestDist = Infinity;
-
-    for (const enemy of this.enemies) {
-      if (enemy.isDead) continue;
-      const dist = Math.hypot(enemy.position.x - this.playerScreenPos.x, enemy.position.y - this.playerScreenPos.y);
-      if (dist < range && dist < closestDist) {
-        closest = enemy;
-        closestDist = dist;
-      }
-    }
-
-    if (!closest) return;
-
-    // Shield check (affix)
-    if (closest.affixState?.shieldActive) {
-      MusicManager.shared.playSFX('block');
-      this.showDamageNumber(closest.position.x, closest.position.y - 30, 0, false, 0x4488ff, 'block');
-      return;
-    }
-
-    const baseDmg = Math.max(1, champ.baseStats.strength + Math.floor(Math.random() * 5));
-    const statusDmgMult = this.playerStatusEffects.getDamageMultiplier();
-    const comboResult = ComboManager.shared.registerHit();
-    const damage = Math.floor(baseDmg * statusDmgMult * comboResult.multiplier * getCompanionDamageBonus());
-    const isCrit = Math.random() < champ.baseStats.luck * 0.01;
-    const totalDmg = isCrit ? damage * 2 : damage;
-
-    closest.hp -= totalDmg;
-    const dmgStyle: DamageStyle = isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'normal';
-    MusicManager.shared.playSFX(isCrit ? 'crit' : comboResult.combo >= 5 ? 'combo' : 'hit');
-    this.showDamageNumber(closest.position.x, closest.position.y - 30, totalDmg, isCrit, undefined, dmgStyle, comboResult.combo);
-    this.drawEnemyHP(closest.hpBar, closest.hp / closest.maxHP);
-
-    // Thorns affix: reflect damage back to player
-    if (closest.affixState) {
-      const thornsDmg = getThornsDamage(closest.affixState, totalDmg);
-      if (thornsDmg > 0) {
-        champ.currentHP = Math.max(0, champ.currentHP - thornsDmg);
-        this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, thornsDmg, false, 0x88aa44, 'poison');
-      }
-      // Vampiric affix: enemy heals from being hit (on their turn, simulated)
-      const vampHeal = getVampiricHeal(closest.affixState, totalDmg);
-      if (vampHeal > 0) {
-        closest.hp = Math.min(closest.maxHP, closest.hp + vampHeal);
-        this.showDamageNumber(closest.position.x, closest.position.y - 20, vampHeal, false, 0xcc2244, 'heal');
-      }
-    }
-
-    // Hit flash + shake animation
-    animateEnemyHit(closest.sprite);
-    if (closest.enemyAnim) triggerEnemyHurt(closest.enemyAnim);
-    createHitImpact(
-      this.worldContainer, closest.position.x, closest.position.y,
-      champ.championClass, isCrit, this.particles as any,
-    );
-
-    // Directional slash mark
-    const hitAngle = Math.atan2(closest.position.y - this.playerScreenPos.y, closest.position.x - this.playerScreenPos.x);
-    createDirectionalSlash(this.worldContainer, closest.position.x, closest.position.y, hitAngle, isCrit, isCrit ? 0xffdd44 : 0xcccccc);
-
-    // Crit flash and hit stop
-    if (isCrit) {
-      createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
-      triggerHitStop(0.05);
-      this.shakeCamera(4, 0.2);
-    }
-
-    const innerSprite = closest.sprite.children[1] as Graphics;
-    if (innerSprite) {
-      innerSprite.tint = 0xff4444;
-      setTimeout(() => { if (!closest!.isDead && innerSprite) innerSprite.tint = 0xffffff; }, 120);
-    }
-
-    if (closest.hp <= 0) {
-      this.killEnemy(closest);
-    }
-  }
-
-  private showAttackEffect(): void {
-    createAttackEffect(
-      this.worldContainer,
-      this.playerScreenPos.x, this.playerScreenPos.y,
-      this.playerFacing,
-      GameManager.shared.champion?.championClass ?? 'mistborn',
-    );
+    this.attackCooldown = handleAttackModule(this.actionHost);
   }
 
   private handleSkill(index: number): void {
-    const champ = GameManager.shared.champion;
-    if (!champ || index >= champ.equippedSkillIDs.length) return;
-
-    const skillID = champ.equippedSkillIDs[index];
-    const skill = gameData.skill(skillID);
-    if (!skill) return;
-
-    if (champ.currentInvestiture < skill.investitureCost) return;
-    champ.currentInvestiture -= skill.investitureCost;
-    this.actionButtons.startCooldown(index, skill.cooldown);
-
-    // Cast animation
-    this.playerAnimator.setState('cast');
-
-    // Magic SFX based on champion class
-    const classSfxMap: Record<string, string> = {
-      mistborn: 'magic_allomancy', radiant: 'magic_surgebinding',
-      awakener: 'magic_awakening', elantrian: 'magic_aondor',
-      sandMaster: 'magic_sand', nightmarePainter: 'magic_paint',
-    };
-    MusicManager.shared.playSFX(classSfxMap[champ.championClass] ?? 'magic_surgebinding');
-
-    // Skill visual effect
-    this.showSkillEffect(skill.range * 32);
-
-    const range = skill.range * 32;
-    for (const enemy of this.enemies) {
-      if (enemy.isDead) continue;
-      const dist = Math.hypot(enemy.position.x - this.playerScreenPos.x, enemy.position.y - this.playerScreenPos.y);
-      if (dist < range) {
-        // Apply talent magic damage bonus and investiture cost reduction
-        const talents = GameManager.shared.talentSystem;
-        const magicBonus = 1 + (talents?.getBonus('magicDamagePercent') ?? 0);
-        const baseDmg = skill.baseDamage + Math.floor(champ.baseStats.spirit * 0.5);
-        const damage = Math.floor(baseDmg * magicBonus);
-        // Apply skill-specific effects
-        const isCrit = Math.random() < (champ.baseStats.luck * 0.01 + (talents?.getBonus('critChancePercent') ?? 0));
-        const critMult = 2 * (1 + (talents?.getBonus('critDamagePercent') ?? 0));
-        const finalDmg = isCrit ? Math.floor(damage * critMult) : damage;
-        enemy.hp -= finalDmg;
-        this.showDamageNumber(enemy.position.x, enemy.position.y - 30, finalDmg, isCrit);
-        if (isCrit) {
-          createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
-          triggerHitStop(0.05);
-        }
-        createHitImpact(this.worldContainer, enemy.position.x, enemy.position.y, champ.championClass, isCrit, this.particles as any);
-        animateEnemyHit(enemy.sprite);
-        if (enemy.enemyAnim) triggerEnemyHurt(enemy.enemyAnim);
-
-        // Skill-specific mechanical effects
-        if (skill.id === 'steel_push' && dist > 0) {
-          // Knockback: push enemy away from player
-          const pushDX = (enemy.position.x - this.playerScreenPos.x) / dist;
-          const pushDY = (enemy.position.y - this.playerScreenPos.y) / dist;
-          const knockDist = 60;
-          enemy.position.x += pushDX * knockDist;
-          enemy.position.y += pushDY * knockDist;
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-        } else if (skill.id === 'iron_pull' && dist > 30) {
-          // Pull: drag enemy toward player
-          const pullDX = (this.playerScreenPos.x - enemy.position.x) / dist;
-          const pullDY = (this.playerScreenPos.y - enemy.position.y) / dist;
-          const pullDist = Math.min(dist - 30, 80);
-          enemy.position.x += pullDX * pullDist;
-          enemy.position.y += pullDY * pullDist;
-          enemy.sprite.x = enemy.position.x;
-          enemy.sprite.y = enemy.position.y;
-        }
-
-        // Apply status effects from skill data
-        if (skill.statusEffects) {
-          for (const se of skill.statusEffects) {
-            if (Math.random() < (se.chance ?? 1)) {
-              // For enemy debuffs, we show visual feedback
-              this.showFloatingText(enemy.position.x, enemy.position.y - 40, `${se.effectType}!`, 0xffaa44);
-            }
-          }
-        }
-
-        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
-        if (enemy.hp <= 0) this.killEnemy(enemy);
-      }
-    }
+    handleSkillModule(index, this.actionHost);
   }
-
-  private showSkillEffect(range: number): void {
-    const cls = GameManager.shared.champion?.championClass ?? 'mistborn';
-    createSkillEffect(
-      this.worldContainer,
-      this.playerScreenPos.x, this.playerScreenPos.y,
-      range, cls, this.particles,
-    );
-    // Lingering ground mark where skill was cast
-    createSkillGroundMark(
-      this.worldContainer,
-      this.playerScreenPos.x, this.playerScreenPos.y,
-      range, cls,
-    );
-  }
-
-  // ─── Ultimate Ability ────────────────────────────────────────
 
   private handleUltimate(): void {
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    // Ultimate costs 50% of max investiture
-    const cost = Math.floor(GameManager.shared.maxInvestiture * 0.5);
-    if (champ.currentInvestiture < cost) {
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 60, 'Investiture insuffisante!', 0xff4444);
-      return;
-    }
-    champ.currentInvestiture -= cost;
-
-    // Cast animation
-    this.playerAnimator.setState('cast');
-    MusicManager.shared.playSFX('magic_surgebinding');
-
-    // Ultimate: massive AOE damage based on class
-    const cls = champ.championClass;
-    const baseDmg = 80 + champ.level * 10 + champ.baseStats.spirit * 2;
-    const talents = GameManager.shared.talentSystem;
-    const magicBonus = 1 + (talents?.getBonus('magicDamagePercent') ?? 0);
-    const ultimateDmg = Math.floor(baseDmg * magicBonus);
-    const range = 200; // Large AOE radius
-
-    // Visual effect
-    this.showSkillEffect(range);
-    createCritFlash(this.uiContainer, this.app.screen.width, this.app.screen.height);
-    this.shakeCamera(8, 0.4);
-
-    // Hit all enemies in range
-    let killCount = 0;
-    for (const enemy of this.enemies) {
-      if (enemy.isDead) continue;
-      const dist = Math.hypot(enemy.position.x - this.playerScreenPos.x, enemy.position.y - this.playerScreenPos.y);
-      if (dist < range) {
-        enemy.hp -= ultimateDmg;
-        this.showDamageNumber(enemy.position.x, enemy.position.y - 30, ultimateDmg, true, 0xffdd44);
-        animateEnemyHit(enemy.sprite);
-        if (enemy.enemyAnim) triggerEnemyHurt(enemy.enemyAnim);
-        this.drawEnemyHP(enemy.hpBar, enemy.hp / enemy.maxHP);
-        if (enemy.hp <= 0) {
-          this.killEnemy(enemy);
-          killCount++;
-        }
-      }
-    }
-
-    if (killCount > 0) {
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 80, `ULTIME! ${killCount} éliminé(s)!`, 0xffcc33);
-    }
+    handleUltimateModule(this.actionHost);
   }
 
-  // ─── Potion Use ──────────────────────────────────────────────
-
   private usePotion(slotIndex: number): void {
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    const effect = PotionManager.shared.usePotion(slotIndex);
-    if (!effect) {
-      MusicManager.shared.playSFX('error');
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 50, 'Pas de potion!', 0xff6644);
-      return;
-    }
-
-    MusicManager.shared.playSFX('potion');
-
-    if (effect.healPercent) {
-      const heal = Math.floor(GameManager.shared.maxHP * effect.healPercent);
-      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + heal);
-      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, heal, false, 0x44ff66);
-    }
-    if (effect.investiturePercent) {
-      const restore = Math.floor(GameManager.shared.maxInvestiture * effect.investiturePercent);
-      champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + restore);
-      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, restore, false, 0x8866ff);
-    }
-    if (effect.statusType && effect.statusDuration) {
-      this.playerStatusEffects.apply(
-        effect.statusType as any,
-        effect.statusDuration,
-        effect.statusMagnitude ?? 1,
-      );
-    }
-
-    if (this.potionHotbar) this.potionHotbar.refresh();
+    usePotionModule(slotIndex, this.actionHost);
   }
 
   private enemyAttacksPlayer(enemy: EnemyInstance, behaviorDmgMult: number = 1): void {
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    const defense = champ.baseStats.vigor / 2;
-    const nightmareMult = this.worldMechanics instanceof KomashiMechanics
-      ? (this.worldMechanics as KomashiMechanics).getDamageMultiplier() : 1;
-    const bossMult = enemy.bossState
-      ? enemy.bossState.getCurrentPhase(enemy.hp / enemy.maxHP).damageMultiplier : 1;
-    const affixDmgMult = enemy.affixState
-      ? getAffixDamageMultiplier(enemy.affixState, enemy.hp / enemy.maxHP) : 1;
-    const ngpDmgMult = NewGamePlusManager.shared.getDifficulty().enemyDamageMult;
-    const shieldReduction = 1 - this.playerStatusEffects.getDamageReduction();
-    const damage = Math.max(1, Math.floor((enemy.data.damage - defense) * nightmareMult * bossMult * affixDmgMult * behaviorDmgMult * ngpDmgMult * shieldReduction));
-    champ.currentHP -= damage;
-
-    this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 40, damage, false, 0xff4444);
-    MusicManager.shared.playSFX('hit');
-
-    // Hurt animation
-    this.playerAnimator.setState('hurt');
-
-    // Screen shake effect
-    this.shakeCamera(3, 0.15);
-
-    if (champ.currentHP <= 0) {
-      champ.currentHP = 0;
-      this.playerAnimator.setState('death');
-      this.handlePlayerDeath();
-    }
+    enemyAttacksPlayerModule(enemy, behaviorDmgMult, this.actionHost);
   }
+
 
   private killEnemy(enemy: EnemyInstance): void {
     const kh = this.killHost;
@@ -2254,293 +1368,73 @@ export class ZoneScene extends Container implements GameScene {
   }
 
   private handlePlayerDeath(): void {
-    if (this.deathScreen) return;
-    this.isPaused = true;
-    AchievementManager.shared.recordDeath();
-    AchievementManager.shared.check();
-
-    this.deathScreen = showDeathScreen(
-      this.uiContainer,
-      this.app.screen.width,
-      this.app.screen.height,
-      () => this.respawnPlayer(),
+    const result = handlePlayerDeathModule(
+      this.uiContainer, this.app.screen.width, this.app.screen.height,
+      this.deathScreen, this.isPaused, () => this.respawnPlayer(),
     );
+    this.deathScreen = result.deathScreen;
+    this.isPaused = result.isPaused;
   }
 
   private respawnPlayer(): void {
-    if (this.deathScreen) {
-      this.deathScreen.destroy({ children: true });
-      this.deathScreen = null;
-    }
-
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    // Restore HP/investiture to full
-    champ.currentHP = GameManager.shared.maxHP;
-    champ.currentInvestiture = GameManager.shared.maxInvestiture;
-
-    // Move player to zone spawn point
-    const spawnPos = isoToScreen(this.zone.playerSpawnPosition.col, this.zone.playerSpawnPosition.row);
-    this.playerScreenPos.x = spawnPos.x;
-    this.playerScreenPos.y = spawnPos.y;
-    this.playerGridPos = { ...this.zone.playerSpawnPosition };
-    this.playerContainer.x = spawnPos.x;
-    this.playerContainer.y = spawnPos.y;
-
-    // Flash effect on respawn
-    const flash = new Graphics();
-    flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0xffffff, alpha: 0.3 });
-    flash.zIndex = 10000;
-    this.uiContainer.addChild(flash);
-    let elapsed = 0;
-    let fadeLast = performance.now();
-    const fadeOut = () => {
-      if (flash.destroyed) return;
-      const now = performance.now();
-      const dtSec = (now - fadeLast) / 1000;
-      fadeLast = now;
-      elapsed += dtSec;
-      flash.alpha = Math.max(0, 0.3 - elapsed * 0.6);
-      if (elapsed < 0.5) requestAnimationFrame(fadeOut);
-      else flash.destroy();
-    };
-    requestAnimationFrame(fadeOut);
-
-    this.isPaused = false;
+    const result = respawnPlayerModule(
+      this.deathScreen, this.zone, this.worldContainer, this.uiContainer,
+      this.playerScreenPos, this.playerContainer,
+      this.app.screen.width, this.app.screen.height,
+    );
+    this.deathScreen = result.deathScreen;
+    this.playerGridPos = result.playerGridPos;
+    this.isPaused = result.isPaused;
   }
 
   private refreshMinimap(): void {
-    const enemyDots = this.enemies
-      .filter(e => !e.isDead)
-      .map(e => ({
-        x: e.position.x,
-        y: e.position.y,
-        color: e.data.tier === 'boss' ? 0xff2222 : e.data.tier === 'elite' ? 0xff6644 : 0xcc4444,
-        size: e.data.tier === 'boss' ? 3 : e.data.tier === 'elite' ? 2 : 1.5,
-      }));
-
-    const npcDots = this.npcs.map(n => ({
-      x: n.position.x, y: n.position.y, color: 0x44aaff,
-    }));
-
-    const exitDots = this.zone.connections.map(c => {
-      const pos = isoToScreen(c.exitPosition.col, c.exitPosition.row);
-      return { x: pos.x, y: pos.y, color: 0xeedd44 };
-    });
-
-    const lootDots = this.lootPoints
-      .filter(l => !l.collected)
-      .map(l => ({ x: l.position.x, y: l.position.y, color: 0xee9944 }));
-
-    this.minimap.refresh(
-      this.playerScreenPos.x, this.playerScreenPos.y,
-      enemyDots, npcDots, exitDots, lootDots,
-    );
+    refreshMinimapModule(this.minimap, this.playerScreenPos, this.enemies, this.npcs, this.lootPoints, this.zone.connections);
   }
 
   private checkQuestCompletion(): void {
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    for (const qid of [...champ.activeQuestIDs]) {
-      if (QuestManager.shared.checkQuestCompletion(qid)) {
-        const result = QuestManager.shared.completeQuest(qid);
-        if (result) {
-          MusicManager.shared.playSFX('quest_complete');
-          // Show quest completion reward
-          this.showFloatingText(
-            this.playerScreenPos.x, this.playerScreenPos.y - 50,
-            `Quête terminée! +${result.xp}XP +${result.gold}or`, 0xffcc44,
-          );
-          this.questTracker.refresh();
-        }
-      }
-    }
+    checkQuestCompletionModule(this.playerScreenPos, this.worldContainer, this.questTracker);
   }
 
   private showFloatingText(x: number, y: number, msg: string, color: number): void {
-    const style = new TextStyle({
-      fontFamily: 'Georgia, serif', fontSize: 10, fill: color,
-      dropShadow: { color: 0x000000, blur: 2, distance: 1 },
-    });
-    const txt = new Text({ text: msg, style });
-    txt.anchor.set(0.5);
-    txt.x = x;
-    txt.y = y;
-    txt.zIndex = 100001;
-    this.worldContainer.addChild(txt);
-
-    let elapsed = 0;
-    let txtLast = performance.now();
-    const anim = () => {
-      if (txt.destroyed) return;
-      const now = performance.now();
-      const dtSec = (now - txtLast) / 1000;
-      txtLast = now;
-      elapsed += dtSec;
-      txt.y -= 0.5;
-      txt.alpha = Math.max(0, 1 - elapsed / 2);
-      if (elapsed < 2) requestAnimationFrame(anim);
-      else txt.destroy();
-    };
-    requestAnimationFrame(anim);
+    showFloatingTextModule(this.worldContainer, x, y, msg, color);
   }
 
   private showLevelUp(): void {
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-
-    // Level up aura burst in world space
-    const champ = GameManager.shared.champion;
-    if (champ) {
-      animateLevelUpBurst(this.worldContainer, this.playerScreenPos.x, this.playerScreenPos.y, champ.championClass);
-    }
-
-    // Background flash
-    const flash = new Graphics();
-    flash.rect(0, 0, w, h).fill({ color: 0xe6cc66, alpha: 0.15 });
-    flash.zIndex = 998;
-    this.uiContainer.addChild(flash);
-
-    const style = new TextStyle({
-      fontFamily: 'Georgia, serif', fontSize: 22, fill: 0xe6cc66,
-      fontWeight: 'bold',
-      dropShadow: { color: 0x000000, blur: 4, distance: 2 },
-    });
-    const txt = new Text({ text: 'NIVEAU SUPÉRIEUR!', style });
-    txt.anchor.set(0.5);
-    txt.x = w / 2;
-    txt.y = h / 2 - 50;
-    txt.zIndex = 1000;
-    this.uiContainer.addChild(txt);
-
-    let elapsed = 0;
-    let lvlLast = performance.now();
-    const anim = () => {
-      if (txt.destroyed) return;
-      const now = performance.now();
-      const dtSec = (now - lvlLast) / 1000;
-      lvlLast = now;
-      elapsed += dtSec;
-      txt.y -= 0.3;
-      txt.alpha = Math.max(0, 1 - elapsed / 2.5);
-      flash.alpha = Math.max(0, 0.15 - elapsed / 2);
-      if (elapsed < 2.5) requestAnimationFrame(anim);
-      else { txt.destroy(); flash.destroy(); }
-    };
-    requestAnimationFrame(anim);
+    showLevelUpModule(this.worldContainer, this.uiContainer, this.playerScreenPos, this.app.screen.width, this.app.screen.height);
   }
 
   private shakeCamera(intensity: number, duration: number): void {
-    const originalX = this.worldContainer.x;
-    const originalY = this.worldContainer.y;
-    let elapsed = 0;
-    let shakeLast = performance.now();
-
-    const shake = () => {
-      const now = performance.now();
-      const dtSec = (now - shakeLast) / 1000;
-      shakeLast = now;
-      elapsed += dtSec;
-      const progress = elapsed / duration;
-      const decay = 1 - progress;
-      this.worldContainer.x = originalX + (Math.random() - 0.5) * intensity * 2 * decay;
-      this.worldContainer.y = originalY + (Math.random() - 0.5) * intensity * 2 * decay;
-      if (elapsed < duration) requestAnimationFrame(shake);
-    };
-    requestAnimationFrame(shake);
+    shakeCameraModule(this.worldContainer, intensity, duration);
   }
 
   // ─── Camera ──────────────────────────────────────────────────
 
   private updateCamera(): void {
-    const w = this.app.screen.width;
-    const h = this.app.screen.height;
-
-    const targetX = w / 2 - this.playerScreenPos.x;
-    const targetY = h / 2 - this.playerScreenPos.y;
-
-    this.worldContainer.x += (targetX - this.worldContainer.x) * 0.1;
-    this.worldContainer.y += (targetY - this.worldContainer.y) * 0.1;
+    updateCameraModule(this.worldContainer, this.playerScreenPos, this.app.screen.width, this.app.screen.height);
   }
 
   // ─── Zone Transitions ────────────────────────────────────────
 
   private checkZoneExit(): void {
-    if (this.isTransitioning) return;
-
-    for (const conn of this.zone.connections) {
-      const exitPos = isoToScreen(conn.exitPosition.col, conn.exitPosition.row);
-      const dist = Math.hypot(exitPos.x - this.playerScreenPos.x, exitPos.y - this.playerScreenPos.y);
-
-      if (dist < 30) {
-        const targetZone = gameData.zone(conn.targetZoneID);
-        if (!targetZone) continue;
-
-        if (conn.requiredQuestID) {
-          const champ = GameManager.shared.champion;
-          if (!champ?.completedQuestIDs.includes(conn.requiredQuestID)) continue;
-        }
-
-        const champ = GameManager.shared.champion;
-        if (champ) {
-          this.isTransitioning = true;
-
-          // Complete escort quests when leaving zone (NPC escorted to safety)
-          for (const npc of this.npcs) {
-            QuestManager.shared.onEscortComplete(npc.id);
-          }
-          this.checkQuestCompletion();
-
-          // Transition effect
-          MusicManager.shared.playSFX('dash');
-          const flash = new Graphics();
-          flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: 0 });
-          flash.zIndex = 99999;
-          this.uiContainer.addChild(flash);
-
-          let elapsed = 0;
-          let zoneLast = performance.now();
-          const fadeOut = () => {
-            if (flash.destroyed) return;
-            const now = performance.now();
-            const dtSec = (now - zoneLast) / 1000;
-            zoneLast = now;
-            elapsed += dtSec;
-            flash.clear();
-            flash.rect(0, 0, this.app.screen.width, this.app.screen.height).fill({ color: 0x000000, alpha: Math.min(1, elapsed / 0.4) });
-            if (elapsed < 0.4) {
-              requestAnimationFrame(fadeOut);
-            } else {
-              champ.currentZoneID = conn.targetZoneID;
-              champ.gridPosition = { ...targetZone.playerSpawnPosition };
-              GameManager.shared.save();
-              BestiaryManager.shared.save();
-              AchievementManager.shared.save();
-              CompanionManager.shared.save();
-              NPCRelationshipManager.shared.save();
-              SaveManager.shared.autoSave();
-              this.router.goto(ZoneScene);
-            }
-          };
-          requestAnimationFrame(fadeOut);
-        }
-        return;
-      }
-    }
+    const host: TransitionHost = {
+      isTransitioning: this.isTransitioning,
+      zone: this.zone,
+      playerScreenPos: this.playerScreenPos,
+      npcs: this.npcs,
+      uiContainer: this.uiContainer,
+      screenWidth: this.app.screen.width,
+      screenHeight: this.app.screen.height,
+      checkQuestCompletion: () => this.checkQuestCompletion(),
+      gotoZoneScene: () => this.router.goto(ZoneScene),
+    };
+    checkZoneExitModule(host);
+    this.isTransitioning = host.isTransitioning;
   }
 
   // ─── Z-Sorting ───────────────────────────────────────────────
 
   private sortZOrder(): void {
-    for (const child of this.worldContainer.children) {
-      if (child.zIndex < -900) continue; // Don't re-sort tilemap/edge
-      if (child === this.particleContainer) continue;
-      child.zIndex = child.y;
-    }
-    // Player always on top of same-Y entities
-    this.playerContainer.zIndex = this.playerContainer.y + 0.5;
+    sortZOrderModule(this.worldContainer, this.playerContainer, this.particleContainer);
   }
 
   // darkenColor/lightenColor extracted — use darken/lighten from ColorUtils directly

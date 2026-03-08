@@ -1,183 +1,27 @@
 // ─── Building Interior System — Full-Screen Immersive ─────────────
 // Procedurally generated interior with detailed room views,
 // minimap navigation, and interactive elements.
+//
+// Data, types, and room generation are in BuildingInteriorData.ts.
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { GameManager } from '../game/GameManager';
 import { MusicManager } from '../game/MusicSystem';
 import { lighten, darken } from '../utils/ColorUtils';
+import {
+  WORLD_COLORS, INTERACTABLE_COLORS, INTERACTABLE_LABELS,
+  detectBuildingType, generateRooms, roomLabel, processInteraction,
+} from './BuildingInteriorData';
+import type { Room, Interactable } from './BuildingInteriorData';
 
-// ─── Types ──────────────────────────────────────────────────────
-
-type RoomType = 'corridor' | 'main_hall' | 'bedroom' | 'storage' | 'kitchen' |
-  'shop_counter' | 'altar' | 'library' | 'forge' | 'cellar';
-
-interface Room {
-  x: number; y: number;
-  w: number; h: number;
-  type: RoomType;
-  connections: number[];
-  interactables: Interactable[];
-  explored: boolean;
-}
-
-interface Interactable {
-  type: 'chest' | 'bookshelf' | 'bed' | 'crafting_table' | 'barrel' | 'altar' | 'npc';
-  x: number; y: number;
-  looted: boolean;
-  label: string;
-}
-
-type BuildingType = 'house' | 'shop' | 'tavern' | 'temple' | 'forge' | 'library' | 'guild_hall';
-
-// ─── Constants ──────────────────────────────────────────────────
-
-const WORLD_COLORS: Record<string, { floor: number; wall: number; accent: number }> = {
-  scadrial: { floor: 0x332822, wall: 0x554438, accent: 0xaa6633 },
-  roshar: { floor: 0x1e2830, wall: 0x3a4858, accent: 0x4488cc },
-  taldain: { floor: 0x3a3420, wall: 0x5a5438, accent: 0xddaa55 },
-  nalthis: { floor: 0x1a2820, wall: 0x3a4838, accent: 0x44cc88 },
-  komashi: { floor: 0x281828, wall: 0x483848, accent: 0xaa55cc },
-  sel: { floor: 0x282820, wall: 0x484838, accent: 0xccaa44 },
-  shadesmar: { floor: 0x0e0e20, wall: 0x2a2a44, accent: 0x8866cc },
-};
-
-const ROOM_TEMPLATES: Record<BuildingType, RoomType[]> = {
-  house: ['main_hall', 'bedroom', 'kitchen', 'storage'],
-  shop: ['shop_counter', 'storage', 'cellar'],
-  tavern: ['main_hall', 'kitchen', 'storage', 'bedroom', 'cellar'],
-  temple: ['main_hall', 'altar', 'library', 'storage'],
-  forge: ['forge', 'storage', 'cellar'],
-  library: ['main_hall', 'library', 'library', 'storage'],
-  guild_hall: ['main_hall', 'bedroom', 'forge', 'library', 'storage', 'cellar'],
-};
-
-const LORE_TEXTS = [
-  'Les brumes de Scadrial cachent bien des secrets...',
-  'Un ancien glyphe est gravé dans la pierre.',
-  'Vous trouvez un journal poussiéreux rempli de notes cryptiques.',
-  'Une carte partielle du Shadesmar est esquissée ici.',
-  'Des notes sur l\'Investiture et ses formes multiples.',
-  'Un traité sur les Éclats et leur pouvoir.',
-  'Le journal mentionne des passages secrets entre les mondes.',
-  'Des croquis de créatures inconnues ornent les pages.',
-];
-
-const ITEM_POOL = ['Potion de vie', 'Fiole de brume', 'Sphère infusée', 'Souffle capturé', 'Rune ancienne', 'Parchemin'];
-
-// ─── Layout Generation ──────────────────────────────────────────
-
-function detectBuildingType(name: string): BuildingType {
-  const n = name.toLowerCase();
-  if (n.includes('tavern') || n.includes('auberge')) return 'tavern';
-  if (n.includes('temple') || n.includes('sanctuaire') || n.includes('refuge')) return 'temple';
-  if (n.includes('forge') || n.includes('forgeron') || n.includes('acier')) return 'forge';
-  if (n.includes('biblio') || n.includes('library') || n.includes('salle des')) return 'library';
-  if (n.includes('boutique') || n.includes('shop') || n.includes('march') || n.includes('échange')) return 'shop';
-  if (n.includes('guilde') || n.includes('guild') || n.includes('cache') || n.includes('bastion')) return 'guild_hall';
-  return 'house';
-}
-
-function generateRooms(buildingType: BuildingType): Room[] {
-  const templates = ROOM_TEMPLATES[buildingType];
-  const count = Math.min(templates.length, 3 + Math.floor(Math.random() * 3));
-  const rooms: Room[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const rw = 4 + Math.floor(Math.random() * 3);
-    const rh = 3 + Math.floor(Math.random() * 3);
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    rooms.push({
-      x: col * 8 + 1, y: row * 8 + 1,
-      w: rw, h: rh,
-      type: templates[i % templates.length],
-      connections: [],
-      interactables: [],
-      explored: i === 0,
-    });
-  }
-
-  for (let i = 1; i < rooms.length; i++) {
-    rooms[i - 1].connections.push(i);
-    rooms[i].connections.push(i - 1);
-  }
-  if (rooms.length > 3) {
-    rooms[0].connections.push(rooms.length - 1);
-    rooms[rooms.length - 1].connections.push(0);
-  }
-
-  for (const room of rooms) {
-    populateRoom(room);
-  }
-  return rooms;
-}
-
-function populateRoom(room: Room): void {
-  const cx = room.w / 2;
-  const cy = room.h / 2;
-
-  switch (room.type) {
-    case 'bedroom':
-      room.interactables.push({ type: 'bed', x: cx, y: 1, looted: false, label: 'Lit' });
-      room.interactables.push({ type: 'chest', x: room.w - 1, y: cy, looted: false, label: 'Coffre' });
-      break;
-    case 'storage': case 'cellar':
-      room.interactables.push({ type: 'barrel', x: 1, y: 1, looted: false, label: 'Tonneau' });
-      room.interactables.push({ type: 'chest', x: room.w - 1, y: cy, looted: false, label: 'Coffre' });
-      break;
-    case 'kitchen':
-      room.interactables.push({ type: 'barrel', x: cx, y: 1, looted: false, label: 'Provisions' });
-      room.interactables.push({ type: 'barrel', x: 1, y: cy, looted: false, label: 'Tonneaux de vin' });
-      break;
-    case 'shop_counter':
-      room.interactables.push({ type: 'npc', x: cx, y: 1, looted: false, label: 'Marchand' });
-      room.interactables.push({ type: 'chest', x: room.w - 1, y: cy, looted: false, label: 'Étalage' });
-      break;
-    case 'altar':
-      room.interactables.push({ type: 'altar', x: cx, y: cy, looted: false, label: 'Autel sacré' });
-      break;
-    case 'library':
-      room.interactables.push({ type: 'bookshelf', x: 1, y: 1, looted: false, label: 'Étagère poussiéreuse' });
-      room.interactables.push({ type: 'bookshelf', x: room.w - 1, y: cy, looted: false, label: 'Bibliothèque ancienne' });
-      break;
-    case 'forge':
-      room.interactables.push({ type: 'crafting_table', x: cx, y: cy, looted: false, label: 'Enclume' });
-      room.interactables.push({ type: 'chest', x: room.w - 1, y: 1, looted: false, label: 'Matériaux' });
-      break;
-    case 'main_hall':
-      room.interactables.push({ type: 'chest', x: room.w - 1, y: room.h - 1, looted: false, label: 'Coffre orné' });
-      if (Math.random() < 0.5) {
-        room.interactables.push({ type: 'bookshelf', x: 1, y: 1, looted: false, label: 'Étagère décorative' });
-      }
-      break;
-    default:
-      break;
-  }
-}
-
-// ─── Room label ────────────────────────────────────────────────
-
-function roomLabel(type: RoomType): string {
-  const labels: Record<RoomType, string> = {
-    corridor: 'Couloir', main_hall: 'Salle Principale', bedroom: 'Chambre',
-    storage: 'Réserve', kitchen: 'Cuisine', shop_counter: 'Comptoir',
-    altar: 'Sanctuaire', library: 'Bibliothèque', forge: 'Forge', cellar: 'Cave',
-  };
-  return labels[type];
-}
-
-// ─── Interactable visual config ─────────────────────────────────
-
-const INTERACTABLE_COLORS: Record<string, number> = {
-  chest: 0xccaa33, bookshelf: 0x886644, bed: 0x6666aa,
-  crafting_table: 0xaa6633, barrel: 0x997744, altar: 0xddddff, npc: 0x44cc66,
-};
-
-const INTERACTABLE_LABELS: Record<string, string> = {
-  chest: 'Coffre', bookshelf: 'Livres', bed: 'Lit', crafting_table: 'Atelier',
-  barrel: 'Tonneau', altar: 'Autel', npc: 'Parler',
-};
+// Re-export everything from data module so existing imports keep working
+export {
+  type RoomType, type Room, type Interactable, type BuildingType,
+  type InteractionContext, type InteractionResult,
+  WORLD_COLORS, ROOM_TEMPLATES, LORE_TEXTS, ITEM_POOL,
+  INTERACTABLE_COLORS, INTERACTABLE_LABELS,
+  detectBuildingType, generateRooms, roomLabel, processInteraction,
+} from './BuildingInteriorData';
 
 // ─── Main Entry Point ───────────────────────────────────────────
 
@@ -253,14 +97,13 @@ export function showBuildingInterior(
   roomNameText.y = headerH + 8;
   panel.addChild(roomNameText);
 
-  // ── Main room view (large, detailed rendering of current room)
+  // ── Main room view
   const roomViewY = headerH + 32;
   const roomViewH = screenH - roomViewY - 120;
   const roomViewW = screenW - 20;
-  const roomViewX = 10;
 
   const roomViewContainer = new Container();
-  roomViewContainer.x = roomViewX;
+  roomViewContainer.x = 10;
   roomViewContainer.y = roomViewY;
   panel.addChild(roomViewContainer);
 
@@ -289,11 +132,9 @@ export function showBuildingInterior(
 
   // ── Minimap (bottom-right corner)
   const minimapSize = 80;
-  const minimapX = screenW - minimapSize - 14;
-  const minimapY = roomViewY + roomViewH - minimapSize - 8;
   const minimapContainer = new Container();
-  minimapContainer.x = minimapX;
-  minimapContainer.y = minimapY;
+  minimapContainer.x = screenW - minimapSize - 14;
+  minimapContainer.y = roomViewY + roomViewH - minimapSize - 8;
   panel.addChild(minimapContainer);
 
   // ── Drawing functions
@@ -301,10 +142,8 @@ export function showBuildingInterior(
   function drawRoomView(): void {
     roomViewContainer.removeChildren();
     const room = rooms[currentRoom];
-
     roomNameText.text = roomLabel(room.type);
 
-    // Room background with walls
     const cellSize = Math.min(
       Math.floor(roomViewW / (room.w + 2)),
       Math.floor(roomViewH / (room.h + 2)),
@@ -320,11 +159,9 @@ export function showBuildingInterior(
     // Outer wall shadow
     g.roundRect(offsetX - 2, offsetY - 2, totalW + 4, totalH + 4, 4)
       .fill({ color: 0x000000, alpha: 0.4 });
-
     // Walls
     g.rect(offsetX, offsetY, totalW, totalH)
       .fill({ color: colors.wall, alpha: 0.95 });
-
     // Floor
     g.rect(offsetX + cellSize, offsetY + cellSize, room.w * cellSize, room.h * cellSize)
       .fill({ color: colors.floor, alpha: 0.9 });
@@ -336,7 +173,6 @@ export function showBuildingInterior(
         const ty = offsetY + (fy + 1) * cellSize;
         g.rect(tx, ty, cellSize, cellSize)
           .stroke({ color: lighten(colors.floor, 0.15), width: 0.5, alpha: 0.15 });
-        // Subtle variation
         if ((fx + fy) % 2 === 0) {
           g.rect(tx, ty, cellSize, cellSize)
             .fill({ color: lighten(colors.floor, 0.05), alpha: 0.15 });
@@ -345,11 +181,8 @@ export function showBuildingInterior(
     }
 
     // Wall decorations
-    const wallLight = lighten(colors.wall, 0.2);
-    // Top wall trim
     g.rect(offsetX + cellSize, offsetY + cellSize - 3, room.w * cellSize, 3)
       .fill({ color: darken(colors.wall, 0.15), alpha: 0.8 });
-    // Bottom wall trim
     g.rect(offsetX + cellSize, offsetY + (room.h + 1) * cellSize, room.w * cellSize, 3)
       .fill({ color: darken(colors.wall, 0.15), alpha: 0.8 });
 
@@ -362,109 +195,10 @@ export function showBuildingInterior(
       .fill({ color: 0xffcc66, alpha: 0.04 });
 
     // Door indicators for connected rooms
-    for (const ci of room.connections) {
-      const target = rooms[ci];
-      // Find direction
-      const dx = target.x - room.x;
-      const dy = target.y - room.y;
-      let doorX: number, doorY: number, doorW: number, doorH: number;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        // Horizontal connection
-        doorX = dx > 0
-          ? offsetX + (room.w + 1) * cellSize - 2
-          : offsetX + cellSize - cellSize / 3;
-        doorY = offsetY + (1 + room.h / 2) * cellSize - cellSize / 2;
-        doorW = cellSize / 3;
-        doorH = cellSize;
-      } else {
-        // Vertical connection
-        doorX = offsetX + (1 + room.w / 2) * cellSize - cellSize / 2;
-        doorY = dy > 0
-          ? offsetY + (room.h + 1) * cellSize - 2
-          : offsetY + cellSize - cellSize / 3;
-        doorW = cellSize;
-        doorH = cellSize / 3;
-      }
-
-      // Door frame
-      g.rect(doorX, doorY, doorW, doorH)
-        .fill({ color: 0x332211, alpha: 0.9 });
-      g.rect(doorX + 1, doorY + 1, doorW - 2, doorH - 2)
-        .fill({ color: 0xffcc44, alpha: 0.1 });
-
-      // Door navigation button
-      const doorBtn = new Graphics();
-      doorBtn.roundRect(doorX - 4, doorY - 4, doorW + 8, doorH + 8, 4)
-        .fill({ color: 0x44aa44, alpha: 0.25 })
-        .stroke({ color: 0x88cc88, width: 1.5, alpha: 0.6 });
-      doorBtn.eventMode = 'static';
-      doorBtn.cursor = 'pointer';
-      doorBtn.on('pointerdown', () => moveToRoom(ci));
-      roomViewContainer.addChild(doorBtn);
-
-      // Arrow direction label
-      const arrowLabel = new Text({
-        text: `→ ${roomLabel(target.type)}`,
-        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x88cc88 }),
-      });
-      arrowLabel.anchor.set(0.5);
-      arrowLabel.x = doorX + doorW / 2;
-      arrowLabel.y = doorY - 10;
-      roomViewContainer.addChild(arrowLabel);
-    }
+    drawDoors(room, g, cellSize, offsetX, offsetY);
 
     // Draw interactables
-    for (const inter of room.interactables) {
-      const ix = offsetX + (inter.x + 1) * cellSize;
-      const iy = offsetY + (inter.y + 1) * cellSize;
-      const color = INTERACTABLE_COLORS[inter.type] ?? 0xaaaaaa;
-      const dimmed = inter.looted;
-      const objSize = cellSize * 0.7;
-
-      // Object background
-      const objG = new Graphics();
-      objG.roundRect(ix - objSize / 2, iy - objSize / 2, objSize, objSize, 4)
-        .fill({ color: dimmed ? darken(color, 0.4) : color, alpha: dimmed ? 0.3 : 0.7 })
-        .stroke({ color: dimmed ? 0x444444 : lighten(color, 0.3), width: 1.5, alpha: dimmed ? 0.3 : 0.7 });
-
-      if (!dimmed) {
-        // Glow
-        objG.circle(ix, iy, objSize * 0.7)
-          .fill({ color, alpha: 0.1 });
-      }
-
-      objG.eventMode = 'static';
-      objG.cursor = dimmed ? 'default' : 'pointer';
-      objG.on('pointerdown', () => handleInteract(inter));
-      roomViewContainer.addChild(objG);
-
-      // Label
-      const labelText = new Text({
-        text: inter.label,
-        style: new TextStyle({
-          fontFamily: 'sans-serif', fontSize: 9,
-          fill: dimmed ? 0x555555 : 0xeeddcc,
-          fontWeight: 'bold',
-        }),
-      });
-      labelText.anchor.set(0.5, 0);
-      labelText.x = ix;
-      labelText.y = iy + objSize / 2 + 3;
-      roomViewContainer.addChild(labelText);
-
-      // Action hint
-      if (!dimmed) {
-        const hint = new Text({
-          text: INTERACTABLE_LABELS[inter.type] ?? 'Interagir',
-          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: color }),
-        });
-        hint.anchor.set(0.5, 0);
-        hint.x = ix;
-        hint.y = iy + objSize / 2 + 14;
-        roomViewContainer.addChild(hint);
-      }
-    }
+    drawInteractables(room, cellSize, offsetX, offsetY);
 
     // Player character indicator
     const playerX = offsetX + (1 + room.w / 2) * cellSize;
@@ -478,79 +212,157 @@ export function showBuildingInterior(
     roomViewContainer.addChild(playerG);
   }
 
+  function drawDoors(room: Room, g: Graphics, cellSize: number, offsetX: number, offsetY: number): void {
+    for (const ci of room.connections) {
+      const target = rooms[ci];
+      const dx = target.x - room.x;
+      const dy = target.y - room.y;
+      let doorX: number, doorY: number, doorW: number, doorH: number;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        doorX = dx > 0
+          ? offsetX + (room.w + 1) * cellSize - 2
+          : offsetX + cellSize - cellSize / 3;
+        doorY = offsetY + (1 + room.h / 2) * cellSize - cellSize / 2;
+        doorW = cellSize / 3;
+        doorH = cellSize;
+      } else {
+        doorX = offsetX + (1 + room.w / 2) * cellSize - cellSize / 2;
+        doorY = dy > 0
+          ? offsetY + (room.h + 1) * cellSize - 2
+          : offsetY + cellSize - cellSize / 3;
+        doorW = cellSize;
+        doorH = cellSize / 3;
+      }
+
+      g.rect(doorX, doorY, doorW, doorH)
+        .fill({ color: 0x332211, alpha: 0.9 });
+      g.rect(doorX + 1, doorY + 1, doorW - 2, doorH - 2)
+        .fill({ color: 0xffcc44, alpha: 0.1 });
+
+      const doorBtn = new Graphics();
+      doorBtn.roundRect(doorX - 4, doorY - 4, doorW + 8, doorH + 8, 4)
+        .fill({ color: 0x44aa44, alpha: 0.25 })
+        .stroke({ color: 0x88cc88, width: 1.5, alpha: 0.6 });
+      doorBtn.eventMode = 'static';
+      doorBtn.cursor = 'pointer';
+      doorBtn.on('pointerdown', () => moveToRoom(ci));
+      roomViewContainer.addChild(doorBtn);
+
+      const arrowLabel = new Text({
+        text: `→ ${roomLabel(target.type)}`,
+        style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 8, fill: 0x88cc88 }),
+      });
+      arrowLabel.anchor.set(0.5);
+      arrowLabel.x = doorX + doorW / 2;
+      arrowLabel.y = doorY - 10;
+      roomViewContainer.addChild(arrowLabel);
+    }
+  }
+
+  function drawInteractables(room: Room, cellSize: number, offsetX: number, offsetY: number): void {
+    for (const inter of room.interactables) {
+      const ix = offsetX + (inter.x + 1) * cellSize;
+      const iy = offsetY + (inter.y + 1) * cellSize;
+      const color = INTERACTABLE_COLORS[inter.type] ?? 0xaaaaaa;
+      const dimmed = inter.looted;
+      const objSize = cellSize * 0.7;
+
+      const objG = new Graphics();
+      objG.roundRect(ix - objSize / 2, iy - objSize / 2, objSize, objSize, 4)
+        .fill({ color: dimmed ? darken(color, 0.4) : color, alpha: dimmed ? 0.3 : 0.7 })
+        .stroke({ color: dimmed ? 0x444444 : lighten(color, 0.3), width: 1.5, alpha: dimmed ? 0.3 : 0.7 });
+
+      if (!dimmed) {
+        objG.circle(ix, iy, objSize * 0.7)
+          .fill({ color, alpha: 0.1 });
+      }
+
+      objG.eventMode = 'static';
+      objG.cursor = dimmed ? 'default' : 'pointer';
+      objG.on('pointerdown', () => handleInteract(inter));
+      roomViewContainer.addChild(objG);
+
+      const labelText = new Text({
+        text: inter.label,
+        style: new TextStyle({
+          fontFamily: 'sans-serif', fontSize: 9,
+          fill: dimmed ? 0x555555 : 0xeeddcc,
+          fontWeight: 'bold',
+        }),
+      });
+      labelText.anchor.set(0.5, 0);
+      labelText.x = ix;
+      labelText.y = iy + objSize / 2 + 3;
+      roomViewContainer.addChild(labelText);
+
+      if (!dimmed) {
+        const hint = new Text({
+          text: INTERACTABLE_LABELS[inter.type] ?? 'Interagir',
+          style: new TextStyle({ fontFamily: 'sans-serif', fontSize: 7, fill: color }),
+        });
+        hint.anchor.set(0.5, 0);
+        hint.x = ix;
+        hint.y = iy + objSize / 2 + 14;
+        roomViewContainer.addChild(hint);
+      }
+    }
+  }
+
   function drawMinimap(): void {
     minimapContainer.removeChildren();
     const g = new Graphics();
     minimapContainer.addChild(g);
 
-    // Minimap background
     g.roundRect(-4, -4, minimapSize + 8, minimapSize + 8, 6)
       .fill({ color: 0x0a0815, alpha: 0.85 })
       .stroke({ color: colors.accent, width: 1, alpha: 0.4 });
 
-    // Scale rooms to fit minimap
     let maxX = 0, maxY = 0;
     for (const room of rooms) {
       maxX = Math.max(maxX, room.x + room.w);
       maxY = Math.max(maxY, room.y + room.h);
     }
-    const scaleX = (minimapSize - 8) / (maxX + 2);
-    const scaleY = (minimapSize - 8) / (maxY + 2);
-    const sc = Math.min(scaleX, scaleY);
+    const sc = Math.min((minimapSize - 8) / (maxX + 2), (minimapSize - 8) / (maxY + 2));
 
-    // Draw corridors
     for (let ri = 0; ri < rooms.length; ri++) {
       const ra = rooms[ri];
       for (const ci of ra.connections) {
         if (ci <= ri) continue;
         const rb = rooms[ci];
-        const ax = (ra.x + ra.w / 2) * sc + 4;
-        const ay = (ra.y + ra.h / 2) * sc + 4;
-        const bx = (rb.x + rb.w / 2) * sc + 4;
-        const by = (rb.y + rb.h / 2) * sc + 4;
-        g.moveTo(ax, ay).lineTo(bx, by)
+        g.moveTo((ra.x + ra.w / 2) * sc + 4, (ra.y + ra.h / 2) * sc + 4)
+          .lineTo((rb.x + rb.w / 2) * sc + 4, (rb.y + rb.h / 2) * sc + 4)
           .stroke({ color: 0x554433, width: 2, alpha: 0.5 });
       }
     }
 
-    // Draw rooms
     for (let ri = 0; ri < rooms.length; ri++) {
       const room = rooms[ri];
       const isCurrent = ri === currentRoom;
       const alpha = room.explored ? (isCurrent ? 1.0 : 0.5) : 0.15;
-      const rx = room.x * sc + 4;
-      const ry = room.y * sc + 4;
-      const rw = room.w * sc;
-      const rh = room.h * sc;
-
-      g.rect(rx, ry, rw, rh)
+      g.rect(room.x * sc + 4, room.y * sc + 4, room.w * sc, room.h * sc)
         .fill({ color: isCurrent ? colors.accent : colors.floor, alpha: alpha * 0.8 });
-      g.rect(rx, ry, rw, rh)
+      g.rect(room.x * sc + 4, room.y * sc + 4, room.w * sc, room.h * sc)
         .stroke({ color: colors.wall, width: 1, alpha: alpha * 0.6 });
     }
 
-    // Player dot
     const pr = rooms[currentRoom];
-    const px = (pr.x + pr.w / 2) * sc + 4;
-    const py = (pr.y + pr.h / 2) * sc + 4;
-    g.circle(px, py, 3).fill({ color: 0x44ff88 })
+    g.circle((pr.x + pr.w / 2) * sc + 4, (pr.y + pr.h / 2) * sc + 4, 3)
+      .fill({ color: 0x44ff88 })
       .stroke({ color: 0xffffff, width: 1 });
   }
 
   function drawNavButtons(): void {
     navContainer.removeChildren();
-
     const connections = rooms[currentRoom].connections;
     const btnW = Math.min(120, (screenW - 30) / Math.max(connections.length + 1, 1));
     const btnH = 36;
     const totalW = (connections.length + 1) * (btnW + 8);
     const startX = (screenW - totalW) / 2;
 
-    // Room navigation buttons
     connections.forEach((ci, i) => {
       const target = rooms[ci];
       const bx = startX + i * (btnW + 8);
-
       const btn = new Graphics();
       btn.roundRect(bx, 0, btnW, btnH, 6)
         .fill({ color: 0x224422, alpha: 0.9 })
@@ -570,7 +382,6 @@ export function showBuildingInterior(
       navContainer.addChild(label);
     });
 
-    // Exit button
     const bx = startX + connections.length * (btnW + 8);
     const exitBtnNav = new Graphics();
     exitBtnNav.roundRect(bx, 0, btnW, btnH, 6)
@@ -605,95 +416,36 @@ export function showBuildingInterior(
   }
 
   function handleInteract(inter: Interactable): void {
-    if (inter.looted) {
-      statusText.text = `${inter.label} — déjà fouillé.`;
-      return;
-    }
+    const ctx = {
+      maxHP: champ ? GameManager.shared.maxHP : 0,
+      maxInvestiture: champ ? GameManager.shared.maxInvestiture : 0,
+      currentHP: champ ? champ.currentHP : 0,
+      currentInvestiture: champ ? champ.currentInvestiture : 0,
+      hasChampion: !!champ,
+    };
+    const result = processInteraction(inter, ctx);
 
-    switch (inter.type) {
-      case 'chest': {
-        const gold = 8 + Math.floor(Math.random() * 25);
-        rewards.gold += gold;
-        if (champ) champ.gold += gold;
-        const hasItem = Math.random() < 0.4;
-        let msg = `${inter.label} ouvert ! +${gold} or`;
-        if (hasItem) {
-          const item = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-          rewards.items.push(item);
-          msg += ` et ${item}`;
-        }
-        rewards.xp += 10;
-        if (champ) GameManager.shared.grantXP(10);
-        statusText.text = msg + ' (+10 XP)';
-        MusicManager.shared.playSFX('loot_common');
-        inter.looted = true;
-        break;
-      }
-      case 'bookshelf': {
-        const lore = LORE_TEXTS[Math.floor(Math.random() * LORE_TEXTS.length)];
-        statusText.text = lore;
-        rewards.xp += 8;
-        if (champ) GameManager.shared.grantXP(8);
-        inter.looted = true;
-        break;
-      }
-      case 'bed':
-        if (champ) {
-          const heal = Math.floor(GameManager.shared.maxHP * 0.3);
-          champ.currentHP = Math.min(champ.currentHP + heal, GameManager.shared.maxHP);
-          const invHeal = Math.floor(GameManager.shared.maxInvestiture * 0.2);
-          champ.currentInvestiture = Math.min(champ.currentInvestiture + invHeal, GameManager.shared.maxInvestiture);
-          statusText.text = `Vous vous reposez. +${heal} PV et +${invHeal} Investiture restaurés.`;
-        } else {
-          statusText.text = 'Le lit semble confortable.';
-        }
-        MusicManager.shared.playSFX('heal');
-        inter.looted = true;
-        break;
-      case 'crafting_table':
-        if (champ) {
-          const gold = 3 + Math.floor(Math.random() * 8);
-          rewards.gold += gold;
-          champ.gold += gold;
-          rewards.xp += 15;
-          GameManager.shared.grantXP(15);
-          statusText.text = `Vous inspectez l'atelier et trouvez des matériaux utiles. +${gold} or (+15 XP)`;
-        } else {
-          statusText.text = 'Un atelier de fabrication. Des outils sont disposés sur la table.';
-        }
-        inter.looted = true;
-        break;
-      case 'altar':
-        if (champ) {
-          const invRestore = Math.floor(GameManager.shared.maxInvestiture * 0.4);
-          champ.currentInvestiture = Math.min(champ.currentInvestiture + invRestore, GameManager.shared.maxInvestiture);
-          rewards.xp += 12;
-          GameManager.shared.grantXP(12);
-          statusText.text = `L'autel brille doucement. +${invRestore} Investiture restaurée (+12 XP)`;
-        } else {
-          statusText.text = 'Une énergie ancienne émane de l\'autel.';
-        }
-        MusicManager.shared.playSFX('magic_aondor');
-        inter.looted = true;
-        break;
-      case 'barrel': {
-        const gold = 2 + Math.floor(Math.random() * 8);
-        rewards.gold += gold;
-        if (champ) champ.gold += gold;
-        const hasPotion = Math.random() < 0.5;
-        if (hasPotion) {
-          rewards.items.push('Potion de vie');
-          statusText.text = `${inter.label} : Potion trouvée ! +${gold} or`;
-        } else {
-          statusText.text = `${inter.label} : +${gold} or`;
-        }
-        inter.looted = true;
-        break;
-      }
-      case 'npc':
-        statusText.text = `${inter.label} : "Bienvenue, voyageur ! Je n'ai rien à vendre pour l'instant, mais fouille bien cet endroit."`;
-        break;
+    statusText.text = result.statusText;
+    if (result.gold > 0) {
+      rewards.gold += result.gold;
+      if (champ) champ.gold += result.gold;
     }
+    if (result.xp > 0) {
+      rewards.xp += result.xp;
+      if (champ) GameManager.shared.grantXP(result.xp);
+    }
+    for (const item of result.items) rewards.items.push(item);
+    if (champ && result.healHP > 0) {
+      champ.currentHP = Math.min(champ.currentHP + result.healHP, GameManager.shared.maxHP);
+    }
+    if (champ && result.healInvestiture > 0) {
+      champ.currentInvestiture = Math.min(
+        champ.currentInvestiture + result.healInvestiture, GameManager.shared.maxInvestiture,
+      );
+    }
+    if (result.sfx) MusicManager.shared.playSFX(result.sfx);
+    if (result.markLooted) inter.looted = true;
+
     drawRoomView();
   }
 
