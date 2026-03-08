@@ -219,18 +219,33 @@ export class SaveManager {
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Opens a file picker for save import.
+   * IMPORTANT: This must be called directly from a user gesture handler (pointerdown/click)
+   * to work on iOS Safari / iPad. The input.click() call must be synchronous in the gesture stack.
+   */
   uploadSaveFile(): Promise<boolean> {
-    return new Promise((resolve) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      // Must be in the DOM for some browsers (iOS Safari, some mobile)
-      input.style.position = 'fixed';
-      input.style.top = '-9999px';
-      input.style.left = '-9999px';
-      input.style.opacity = '0';
-      document.body.appendChild(input);
+    // Create and append input synchronously within the user gesture call stack.
+    // iOS Safari requires the file input to be clicked in the same synchronous
+    // execution context as the user interaction (pointerdown/click).
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    // Must be in the DOM and visible enough for iOS Safari to allow the click
+    input.style.position = 'fixed';
+    input.style.top = '0';
+    input.style.left = '0';
+    input.style.width = '100%';
+    input.style.height = '100%';
+    input.style.opacity = '0.001';
+    input.style.zIndex = '99999';
+    input.style.cursor = 'pointer';
+    document.body.appendChild(input);
 
+    // Click synchronously — critical for iOS gesture chain
+    input.click();
+
+    return new Promise((resolve) => {
       let resolved = false;
       const cleanup = () => {
         if (input.parentNode) document.body.removeChild(input);
@@ -273,15 +288,22 @@ export class SaveManager {
         reader.readAsText(file);
       });
 
-      // Fallback: if user cancels the file dialog, detect via focus return
+      // Fallback: if user cancels the file dialog, detect via focus/visibility change
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          // Small delay to let 'change' fire first if a file was selected
+          setTimeout(() => finish(false), 1000);
+        }
+      };
+      // Use visibilitychange instead of focus — more reliable on iOS
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      // Also listen to focus as a fallback for desktop browsers
       const onFocus = () => {
         window.removeEventListener('focus', onFocus);
-        // Small delay to let 'change' fire first if a file was selected
-        setTimeout(() => finish(false), 500);
+        setTimeout(() => finish(false), 1000);
       };
       window.addEventListener('focus', onFocus);
-
-      input.click();
     });
   }
 
