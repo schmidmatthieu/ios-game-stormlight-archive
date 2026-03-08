@@ -5,6 +5,7 @@ import { getLayoutInfo, fontSize, scaled, panelSize, panelRadius, buttonHeight, 
 import { ProfessionManager, MATERIALS, RECIPES } from '../game/ProfessionSystem';
 import { GameManager } from '../game/GameManager';
 import { gameData } from '../data/DataLoader';
+import { ItemModStore } from '../game/ItemModStore';
 import type { ProfessionType, CraftingRecipe } from '../game/ProfessionSystem';
 
 // ─── Rarity Colors ───────────────────────────────────────────────
@@ -733,6 +734,10 @@ function applyEnchantment(champ: import('../data/types').Champion, enchantID: st
   if (!item.name.includes('(E)')) {
     item.name = `${item.name} (E)`;
   }
+
+  // Persist modifications
+  const appliedBonuses = item.statBonuses.map(b => ({ stat: b.stat, value: b.value }));
+  ItemModStore.shared.recordEnchant(targetItemID, appliedBonuses);
 
   // Grant enchanting XP
   ProfessionManager.shared.addEnchantingXP(20 + qualityBonus * 5);

@@ -57,7 +57,16 @@ export interface Item {
   traits: ItemTrait[];
   spriteName: string;
   worldOrigin: WorldID | null;
+  itemLevel?: number;
 }
+
+export const UPGRADE_MAX_LEVEL: Record<ItemRarity, number> = {
+  common: 3, uncommon: 5, rare: 7, epic: 10, legendary: 12, cosmeric: 15,
+};
+
+export const UPGRADE_COST_BASE: Record<ItemRarity, number> = {
+  common: 10, uncommon: 25, rare: 60, epic: 120, legendary: 250, cosmeric: 500,
+};
 
 export interface LootEntry {
   itemID: string;
