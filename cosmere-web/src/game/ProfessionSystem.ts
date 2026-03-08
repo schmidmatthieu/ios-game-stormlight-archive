@@ -1,5 +1,7 @@
 // ─── Profession System — gathering, crafting professions ─────────────
 
+import { GameManager } from './GameManager';
+
 export type ProfessionType = 'mining' | 'herbalism' | 'woodcutting' | 'skinning' | 'enchanting';
 
 export interface ProfessionState {
@@ -286,10 +288,18 @@ export class ProfessionManager {
       this.inventory.set(mat.materialID, current - mat.amount);
     }
 
+    // Add crafted item to champion inventory
+    const champ = GameManager.shared.champion;
+    if (champ) {
+      for (let i = 0; i < recipe.result.amount; i++) {
+        champ.inventoryItemIDs.push(recipe.result.itemID);
+      }
+    }
+
     // Grant crafting XP
     this.addXP(recipe.profession, recipe.requiredLevel * 15 + 20);
 
-    return { success: true, message: `${recipe.name} fabrique !` };
+    return { success: true, message: `${recipe.name} fabriqué !` };
   }
 
   // ── Labels ───────────────────────────────────────────
