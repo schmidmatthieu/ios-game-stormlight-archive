@@ -196,11 +196,11 @@ export function showProfessionPanel(
 
   // ─── Materials Tab ────────────────────────────────────────────
 
+  let matsPage = 0;
+
   function renderMaterials(): void {
     const startY = tabY + 34;
     const colW = Math.floor((panelW - 28) / 2);
-    let col = 0;
-    let row = 0;
     const rowH = 28;
 
     // Only show owned materials
@@ -218,10 +218,23 @@ export function showProfessionPanel(
       return;
     }
 
-    for (const mat of owned) {
+    // 2 columns, so rows per page = available height / rowH
+    const maxRows = Math.floor((panelH - 100) / rowH);
+    const maxItemsPerPage = maxRows * 2; // 2 columns
+    const totalPages = Math.ceil(owned.length / maxItemsPerPage);
+    if (matsPage >= totalPages) matsPage = totalPages - 1;
+    if (matsPage < 0) matsPage = 0;
+
+    const contentStartY = renderPagination(startY, owned.length, maxItemsPerPage, matsPage, (p) => { matsPage = p; renderContent(); });
+
+    const pageMats = owned.slice(matsPage * maxItemsPerPage, (matsPage + 1) * maxItemsPerPage);
+
+    let col = 0;
+    let row = 0;
+    for (const mat of pageMats) {
       const count = mgr.inventory.get(mat.id) ?? 0;
       const ix = px + 14 + col * colW;
-      const iy = startY + row * rowH;
+      const iy = contentStartY + row * rowH;
       const rarityColor = RARITY_COLORS[mat.rarity] ?? 0xaaaaaa;
 
       // Material icon (small colored circle)
@@ -245,13 +258,70 @@ export function showProfessionPanel(
     }
   }
 
+  // ─── Pagination helper ────────────────────────────────────────
+
+  function renderPagination(
+    startY: number, totalItems: number, pageSize: number,
+    currentPage: number, setPage: (p: number) => void,
+  ): number {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    if (totalPages <= 1) return startY;
+    const navY = startY;
+    const navH = 22;
+    const btnW = 50;
+
+    // Previous
+    const canPrev = currentPage > 0;
+    const prevBtn = new Graphics();
+    prevBtn.roundRect(px + 10, navY, btnW, navH, 4)
+      .fill({ color: canPrev ? 0x222233 : 0x111122, alpha: 0.8 })
+      .stroke({ color: canPrev ? 0x666688 : 0x333344, width: 1 });
+    prevBtn.eventMode = 'static'; prevBtn.cursor = canPrev ? 'pointer' : 'default';
+    if (canPrev) prevBtn.on('pointerdown', () => setPage(currentPage - 1));
+    contentContainer.addChild(prevBtn);
+    const prevLabel = new Text({
+      text: '\u25C0 Préc.',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: canPrev ? UI_COLORS.textSecondary : 0x444444 }),
+    });
+    prevLabel.anchor.set(0.5); prevLabel.x = px + 10 + btnW / 2; prevLabel.y = navY + navH / 2;
+    contentContainer.addChild(prevLabel);
+
+    // Page indicator
+    const pageText = new Text({
+      text: `${currentPage + 1}/${totalPages}`,
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: UI_COLORS.textMuted }),
+    });
+    pageText.anchor.set(0.5); pageText.x = screenW / 2; pageText.y = navY + navH / 2;
+    contentContainer.addChild(pageText);
+
+    // Next
+    const canNext = currentPage < totalPages - 1;
+    const nextBtn = new Graphics();
+    nextBtn.roundRect(px + panelW - btnW - 10, navY, btnW, navH, 4)
+      .fill({ color: canNext ? 0x222233 : 0x111122, alpha: 0.8 })
+      .stroke({ color: canNext ? 0x666688 : 0x333344, width: 1 });
+    nextBtn.eventMode = 'static'; nextBtn.cursor = canNext ? 'pointer' : 'default';
+    if (canNext) nextBtn.on('pointerdown', () => setPage(currentPage + 1));
+    contentContainer.addChild(nextBtn);
+    const nextLabel = new Text({
+      text: 'Suiv. \u25B6',
+      style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(8, layout), fill: canNext ? UI_COLORS.textSecondary : 0x444444 }),
+    });
+    nextLabel.anchor.set(0.5); nextLabel.x = px + panelW - 10 - btnW / 2; nextLabel.y = navY + navH / 2;
+    contentContainer.addChild(nextLabel);
+
+    return navY + navH + 4;
+  }
+
   // ─── Recipes Tab ──────────────────────────────────────────────
+
+  let recipePage = 0;
 
   function renderRecipes(): void {
     const startY = tabY + 34;
     const itemH = 54;
     const available = mgr.getAvailableRecipes();
-    const maxItems = Math.floor((panelH - 90) / itemH);
+    const maxItems = Math.floor((panelH - 120) / itemH);
 
     if (available.length === 0) {
       const emptyText = new Text({
@@ -265,8 +335,18 @@ export function showProfessionPanel(
       return;
     }
 
-    available.slice(0, maxItems).forEach((recipe, i) => {
-      const iy = startY + i * itemH;
+    // Clamp page
+    const totalPages = Math.ceil(available.length / maxItems);
+    if (recipePage >= totalPages) recipePage = totalPages - 1;
+    if (recipePage < 0) recipePage = 0;
+
+    // Pagination
+    const contentStartY = renderPagination(startY, available.length, maxItems, recipePage, (p) => { recipePage = p; renderContent(); });
+
+    const pageItems = available.slice(recipePage * maxItems, (recipePage + 1) * maxItems);
+
+    pageItems.forEach((recipe, i) => {
+      const iy = contentStartY + i * itemH;
       const check = mgr.canCraft(recipe.id);
       const profColor = PROFESSION_COLORS[recipe.profession];
 
@@ -325,7 +405,7 @@ export function showProfessionPanel(
       contentContainer.addChild(craftBtn);
 
       const craftLabel = new Text({
-        text: 'Creer',
+        text: 'Créer',
         style: new TextStyle({ fontFamily: 'sans-serif', fontSize: fontSize(9, layout), fill: check.possible ? UI_COLORS.success : UI_COLORS.textMuted }),
       });
       craftLabel.anchor.set(0.5);
@@ -346,6 +426,8 @@ export function showProfessionPanel(
   // ─── Enchant Tab (Apply enchantments to equipment) ──────────────
 
   let selectedEnchantID: string | null = null;
+  let enchantPage = 0;
+  let enchantEquipPage = 0;
 
   function renderEnchant(): void {
     const startY = tabY + 34;
@@ -379,11 +461,20 @@ export function showProfessionPanel(
     contentContainer.addChild(sectionTitle);
 
     if (!selectedEnchantID) {
-      // Show available enchantments
+      // Show available enchantments with pagination
       const itemH = 38;
-      let idx = 0;
-      for (const [enchantID, count] of enchantCounts) {
-        const iy = startY + 18 + idx * itemH;
+      const allEnchants = [...enchantCounts.entries()];
+      const maxItems = Math.floor((panelH - 120) / itemH);
+      const totalPages = Math.ceil(allEnchants.length / maxItems);
+      if (enchantPage >= totalPages) enchantPage = totalPages - 1;
+      if (enchantPage < 0) enchantPage = 0;
+
+      const contentStartY = renderPagination(startY + 16, allEnchants.length, maxItems, enchantPage, (p) => { enchantPage = p; renderContent(); });
+
+      const pageEnchants = allEnchants.slice(enchantPage * maxItems, (enchantPage + 1) * maxItems);
+
+      pageEnchants.forEach(([enchantID, count], idx) => {
+        const iy = contentStartY + idx * itemH;
         const recipe = RECIPES.find(r => r.result.itemID === enchantID);
         const enchName = recipe?.name ?? enchantID;
         const enchDesc = getEnchantDescription(enchantID);
@@ -414,11 +505,10 @@ export function showProfessionPanel(
 
         rowBg.on('pointerdown', () => {
           selectedEnchantID = enchantID;
+          enchantEquipPage = 0;
           renderContent();
         });
-
-        idx++;
-      }
+      });
     } else {
       // Show equipped items to apply enchantment to
       const eq = champ.equipment;
@@ -450,8 +540,17 @@ export function showProfessionPanel(
         contentContainer.addChild(noEquip);
       } else {
         const itemH = 36;
-        equippedSlots.forEach((s, idx) => {
-          const iy = startY + 18 + idx * itemH;
+        const maxItems = Math.floor((panelH - 140) / itemH);
+        const totalPages = Math.ceil(equippedSlots.length / maxItems);
+        if (enchantEquipPage >= totalPages) enchantEquipPage = totalPages - 1;
+        if (enchantEquipPage < 0) enchantEquipPage = 0;
+
+        const contentStartY = renderPagination(startY + 16, equippedSlots.length, maxItems, enchantEquipPage, (p) => { enchantEquipPage = p; renderContent(); });
+
+        const pageSlots = equippedSlots.slice(enchantEquipPage * maxItems, (enchantEquipPage + 1) * maxItems);
+
+        pageSlots.forEach((s, idx) => {
+          const iy = contentStartY + idx * itemH;
           const item = gameData.item(s.itemID!);
           const itemName = item?.name ?? s.itemID!;
           const rarityColor = item ? (RARITY_COLORS[item.rarity as string] ?? 0xaaaaaa) : 0xaaaaaa;
@@ -499,13 +598,13 @@ export function showProfessionPanel(
 
       // Back button
       const backBtn = new Graphics();
-      const backY = startY + 18 + Math.max(equippedSlots.length, 1) * 36 + 8;
+      const backY = py + panelH - 40;
       backBtn.roundRect(px + panelW / 2 - 50, backY, 100, 24, 4)
         .fill({ color: UI_COLORS.btnSecondary, alpha: 0.8 })
         .stroke({ color: 0x666688, width: 1 });
       backBtn.eventMode = 'static';
       backBtn.cursor = 'pointer';
-      backBtn.on('pointerdown', () => { selectedEnchantID = null; renderContent(); });
+      backBtn.on('pointerdown', () => { selectedEnchantID = null; enchantPage = 0; renderContent(); });
       contentContainer.addChild(backBtn);
 
       const backLabel = new Text({
@@ -520,6 +619,8 @@ export function showProfessionPanel(
   }
 
   // ─── Disenchant Tab ─────────────────────────────────────────────
+
+  let disenchantPage = 0;
 
   function renderDisenchant(): void {
     const startY = tabY + 34;
@@ -547,16 +648,22 @@ export function showProfessionPanel(
       return;
     }
 
+    const allEntries = [...itemCounts.entries()];
     const itemH = 42;
-    const maxItems = Math.floor((panelH - 90) / itemH);
-    let idx = 0;
+    const maxItems = Math.floor((panelH - 120) / itemH);
+    const totalPages = Math.ceil(allEntries.length / maxItems);
+    if (disenchantPage >= totalPages) disenchantPage = totalPages - 1;
+    if (disenchantPage < 0) disenchantPage = 0;
 
-    for (const [itemID, count] of itemCounts) {
-      if (idx >= maxItems) break;
+    const contentStartY = renderPagination(startY, allEntries.length, maxItems, disenchantPage, (p) => { disenchantPage = p; renderContent(); });
+
+    const pageEntries = allEntries.slice(disenchantPage * maxItems, (disenchantPage + 1) * maxItems);
+
+    pageEntries.forEach(([itemID, count], idx) => {
       const item = gameData.item(itemID);
-      if (!item) continue;
+      if (!item) return;
 
-      const iy = startY + idx * itemH;
+      const iy = contentStartY + idx * itemH;
       const rarityColor = RARITY_COLORS[item.rarity as string] ?? 0xaaaaaa;
 
       // Row
@@ -578,10 +685,10 @@ export function showProfessionPanel(
       // Preview materials
       const rarity = item.rarity as string;
       const base = rarity === 'common' ? 1 : rarity === 'uncommon' ? 2 : rarity === 'rare' ? 3 : rarity === 'epic' ? 5 : rarity === 'legendary' ? 8 : 12;
-      let preview = `→ ${base}x Poudre Arcane`;
+      let preview = `\u2192 ${base}x Poudre Arcane`;
       if (['rare', 'epic', 'legendary', 'cosmeric'].includes(rarity)) {
-        const c = rarity === 'rare' ? 1 : rarity === 'epic' ? 2 : rarity === 'legendary' ? 3 : 5;
-        preview += `, ${c}x Cristal`;
+        const c2 = rarity === 'rare' ? 1 : rarity === 'epic' ? 2 : rarity === 'legendary' ? 3 : 5;
+        preview += `, ${c2}x Cristal`;
       }
       if (['epic', 'legendary', 'cosmeric'].includes(rarity)) {
         const s = rarity === 'epic' ? 1 : rarity === 'legendary' ? 2 : 4;
@@ -624,9 +731,7 @@ export function showProfessionPanel(
         mgr.save();
         renderContent();
       });
-
-      idx++;
-    }
+    });
   }
 
   // ─── Close Button ─────────────────────────────────────────────
