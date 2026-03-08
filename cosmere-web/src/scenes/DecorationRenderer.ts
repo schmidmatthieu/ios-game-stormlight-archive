@@ -219,9 +219,30 @@ function spawnTerrainRelief(container: Container, zone: Zone, theme: WorldTheme)
     const height = 3 + seededRandom(seed + 3) * 6;
 
     const g = new Graphics();
-    g.ellipse(pos.x, pos.y, size, size * 0.5).fill({ color: darken(theme.tileBase, 0.25), alpha: 0.5 });
-    g.ellipse(pos.x, pos.y + height, size * 0.9, size * 0.45).fill({ color: 0x000000, alpha: 0.15 });
-    g.ellipse(pos.x, pos.y - height, size * 0.8, size * 0.4).fill({ color: lighten(theme.tileBase, 0.15), alpha: 0.4 });
+
+    // Outer ambient shadow (soft spread)
+    g.ellipse(pos.x + 1, pos.y + height + 2, size * 1.05, size * 0.52)
+      .fill({ color: 0x000000, alpha: 0.06 });
+
+    // Main elevation body
+    g.ellipse(pos.x, pos.y, size, size * 0.5)
+      .fill({ color: darken(theme.tileBase, 0.2), alpha: 0.45 });
+
+    // Bottom shadow (gives depth)
+    g.ellipse(pos.x, pos.y + height, size * 0.9, size * 0.45)
+      .fill({ color: 0x000000, alpha: 0.12 });
+
+    // Top highlight (lit surface)
+    g.ellipse(pos.x - 1, pos.y - height, size * 0.75, size * 0.38)
+      .fill({ color: lighten(theme.tileBase, 0.18), alpha: 0.4 });
+
+    // Specular highlight (small bright spot)
+    g.ellipse(pos.x - size * 0.2, pos.y - height * 0.8, size * 0.25, size * 0.12)
+      .fill({ color: lighten(theme.tileBase, 0.35), alpha: 0.2 });
+
+    // Edge rim on bottom-right
+    g.ellipse(pos.x + 2, pos.y + 1, size * 0.95, size * 0.48)
+      .stroke({ color: darken(theme.tileBase, 0.3), width: 0.5, alpha: 0.15 });
 
     g.zIndex = pos.y - 100;
     container.addChild(g);

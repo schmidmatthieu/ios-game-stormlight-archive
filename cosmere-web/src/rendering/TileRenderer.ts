@@ -248,43 +248,75 @@ export function renderEnhancedTilemap(
       const alpha = isEdge ? 0.5 : isNearEdge ? 0.75 : 0.95;
 
       // ── Diamond tile ──
-      g.poly([
+      const pts = [
         { x: x, y: y - 16 },
         { x: x + 32, y: y },
         { x: x, y: y + 16 },
         { x: x - 32, y: y },
-      ]).fill({ color, alpha });
+      ];
+      g.poly(pts).fill({ color, alpha });
 
-      // ── Subtle grid border ──
-      g.poly([
-        { x: x, y: y - 16 },
-        { x: x + 32, y: y },
-        { x: x, y: y + 16 },
-        { x: x - 32, y: y },
-      ]).stroke({ color: theme.tileBorder, width: 0.3, alpha: 0.35 });
-
-      // ── Inner highlight (top-left edge for 3D depth) ──
-      if (rand > 0.4 && !isEdge) {
-        g.moveTo(x - 28, y).lineTo(x, y - 14)
-          .stroke({ color: lighten(theme.tileBorder, 0.15), width: 0.3, alpha: 0.15 });
+      // ── Ambient occlusion (dark seams between tiles) ──
+      if (!isEdge) {
+        g.poly(pts).stroke({ color: darken(theme.tileBorder, 0.35), width: 0.6, alpha: 0.2 });
       }
 
-      // ── Inner shadow (bottom-right edge for 3D depth) ──
-      if (rand > 0.5 && !isEdge) {
-        g.moveTo(x + 28, y).lineTo(x, y + 14)
-          .stroke({ color: darken(theme.tileBorder, 0.2), width: 0.3, alpha: 0.12 });
+      // ── Subtle grid border ──
+      g.poly(pts).stroke({ color: theme.tileBorder, width: 0.3, alpha: 0.25 });
+
+      // ── Inner highlight (top-left edges for 3D bevel) ──
+      if (!isEdge) {
+        // Left edge highlight
+        g.moveTo(x - 30, y).lineTo(x, y - 15)
+          .stroke({ color: lighten(color, 0.2), width: 0.8, alpha: 0.18 });
+        // Top edge highlight
+        g.moveTo(x, y - 15).lineTo(x + 30, y)
+          .stroke({ color: lighten(color, 0.12), width: 0.5, alpha: 0.12 });
+      }
+
+      // ── Inner shadow (bottom-right edges for 3D bevel) ──
+      if (!isEdge) {
+        // Right edge shadow
+        g.moveTo(x + 30, y).lineTo(x, y + 15)
+          .stroke({ color: darken(color, 0.25), width: 0.8, alpha: 0.18 });
+        // Bottom edge shadow
+        g.moveTo(x, y + 15).lineTo(x - 30, y)
+          .stroke({ color: darken(color, 0.18), width: 0.5, alpha: 0.12 });
+      }
+
+      // ── Surface texture (micro-noise for tactile feel) ──
+      if (!isEdge && rand > 0.15) {
+        const noiseCount = 2 + Math.floor(sr(seed + 50) * 3);
+        for (let n = 0; n < noiseCount; n++) {
+          const nx = x + (sr(seed + 60 + n * 3) - 0.5) * 44;
+          const ny = y + (sr(seed + 61 + n * 3) - 0.5) * 20;
+          // Clamp inside diamond
+          const dx = Math.abs(nx - x);
+          const dy = Math.abs(ny - y);
+          if (dx / 32 + dy / 16 < 0.85) {
+            const bright = sr(seed + 62 + n * 3) > 0.5;
+            g.circle(nx, ny, 0.4 + sr(seed + 63 + n) * 0.4)
+              .fill({ color: bright ? lighten(color, 0.15) : darken(color, 0.15), alpha: 0.15 });
+          }
+        }
       }
 
       // ── World-specific terrain details ──
-      if (detailFn && !isEdge && rand > 0.3) {
+      if (detailFn && !isEdge && rand > 0.25) {
         detailFn(g, x, y, seed, theme);
       }
 
       // ── Generic details (pebbles, dust) for tiles without world detail ──
-      if (rand > 0.82 && rand < 0.9 && !isEdge) {
+      if (rand > 0.78 && rand < 0.92 && !isEdge) {
         const cx = x + (sr(seed + 3) - 0.5) * 20;
         const cy = y + (sr(seed + 5) - 0.5) * 10;
-        g.circle(cx, cy, 1 + sr(seed + 6) * 0.5).fill({ color: theme.tileBorder, alpha: 0.25 });
+        // Pebble with shadow
+        g.circle(cx + 0.3, cy + 0.3, 1.2 + sr(seed + 6) * 0.5)
+          .fill({ color: darken(theme.tileBorder, 0.2), alpha: 0.15 });
+        g.circle(cx, cy, 1 + sr(seed + 6) * 0.5)
+          .fill({ color: theme.tileBorder, alpha: 0.3 });
+        g.circle(cx - 0.3, cy - 0.3, 0.5)
+          .fill({ color: lighten(theme.tileBorder, 0.3), alpha: 0.15 });
       }
     }
   }

@@ -46,29 +46,93 @@ export function spawnWalls(
   for (const seg of edgeSegments) {
     const pos = isoToScreen(seg.col, seg.row);
     const g = new Graphics();
+    const wallSeed = seg.col * 7 + seg.row * 13;
 
     // Wall base
-    const h = 18 + seededRandom(seg.col * 7 + seg.row * 13) * 8;
-    g.rect(pos.x - 10, pos.y - h, 20, h)
-      .fill({ color: colors.main, alpha: 0.8 });
+    const h = 20 + seededRandom(wallSeed) * 10;
+    const sideDepth = 10;
+
+    // Ground shadow
+    g.ellipse(pos.x + 2, pos.y + 2, 14, 4)
+      .fill({ color: 0x000000, alpha: 0.12 });
+
+    // Side face (darker, right)
+    g.poly([
+      { x: pos.x + 10, y: pos.y },
+      { x: pos.x + 10, y: pos.y - h },
+      { x: pos.x + 10 + sideDepth, y: pos.y - h + 5 },
+      { x: pos.x + 10 + sideDepth, y: pos.y + 5 },
+    ]).fill({ color: darken(colors.main, 0.25), alpha: 0.85 });
+
     // Front face
-    g.rect(pos.x - 10, pos.y - h, 10, h)
-      .fill({ color: darken(colors.main, 0.15), alpha: 0.8 });
-    // Top
+    g.rect(pos.x - 10, pos.y - h, 20, h)
+      .fill({ color: colors.main, alpha: 0.85 });
+
+    // Brick/stone pattern on front face
+    const brickH = 4;
+    const brickRows = Math.floor(h / brickH);
+    for (let br = 0; br < brickRows; br++) {
+      const by = pos.y - h + br * brickH;
+      const offset = br % 2 === 0 ? 0 : 5;
+      // Horizontal mortar line
+      g.moveTo(pos.x - 10, by).lineTo(pos.x + 10, by)
+        .stroke({ color: darken(colors.main, 0.15), width: 0.4, alpha: 0.25 });
+      // Vertical mortar lines
+      for (let bx = -10 + offset; bx < 10; bx += 10) {
+        g.moveTo(pos.x + bx, by).lineTo(pos.x + bx, by + brickH)
+          .stroke({ color: darken(colors.main, 0.15), width: 0.3, alpha: 0.2 });
+      }
+    }
+
+    // Front face edge highlight (left)
+    g.moveTo(pos.x - 10, pos.y - h).lineTo(pos.x - 10, pos.y)
+      .stroke({ color: lighten(colors.main, 0.15), width: 0.6, alpha: 0.25 });
+
+    // Top face (isometric)
     g.poly([
       { x: pos.x - 12, y: pos.y - h },
       { x: pos.x, y: pos.y - h - 6 },
-      { x: pos.x + 12, y: pos.y - h },
-      { x: pos.x, y: pos.y - h + 2 },
-    ]).fill({ color: lighten(colors.main, 0.1), alpha: 0.7 });
+      { x: pos.x + 12 + sideDepth, y: pos.y - h - 1 },
+      { x: pos.x + sideDepth, y: pos.y - h + 5 },
+    ]).fill({ color: lighten(colors.main, 0.12), alpha: 0.75 });
+    // Top face border
+    g.poly([
+      { x: pos.x - 12, y: pos.y - h },
+      { x: pos.x, y: pos.y - h - 6 },
+      { x: pos.x + 12 + sideDepth, y: pos.y - h - 1 },
+      { x: pos.x + sideDepth, y: pos.y - h + 5 },
+    ]).stroke({ color: lighten(colors.main, 0.2), width: 0.4, alpha: 0.3 });
 
-    // Occasional crack detail
-    if (seededRandom(seg.col * 31 + seg.row * 17) > 0.6) {
+    // Cracks and details
+    const detail = seededRandom(seg.col * 31 + seg.row * 17);
+    if (detail > 0.55) {
+      // Crack
       const cx = pos.x - 5 + seededRandom(seg.col * 11 + seg.row * 23) * 10;
       g.moveTo(cx, pos.y - h * 0.3)
-        .lineTo(cx + 2, pos.y - h * 0.6)
-        .lineTo(cx - 1, pos.y - h * 0.8)
-        .stroke({ color: darken(colors.main, 0.3), width: 0.8, alpha: 0.4 });
+        .lineTo(cx + 2, pos.y - h * 0.5)
+        .lineTo(cx - 1, pos.y - h * 0.7)
+        .stroke({ color: darken(colors.main, 0.35), width: 0.8, alpha: 0.35 });
+    }
+    if (detail > 0.75) {
+      // Moss/lichen at base
+      const mossY = pos.y - 3;
+      g.ellipse(pos.x - 4, mossY, 4, 2)
+        .fill({ color: 0x335522, alpha: 0.2 });
+      g.ellipse(pos.x + 3, mossY - 1, 3, 1.5)
+        .fill({ color: 0x446633, alpha: 0.15 });
+    }
+
+    // Torch on every 4th wall segment
+    if (seg.col % 4 === 0 && seg.row % 4 === 0) {
+      const ty = pos.y - h * 0.6;
+      // Bracket
+      g.rect(pos.x - 1, ty, 2, 6).fill({ color: 0x554433, alpha: 0.8 });
+      // Flame
+      g.circle(pos.x, ty - 1, 3).fill({ color: 0xff8822, alpha: 0.2 });
+      g.circle(pos.x, ty, 2).fill({ color: 0xffaa33, alpha: 0.3 });
+      g.circle(pos.x, ty + 1, 1).fill({ color: 0xffdd66, alpha: 0.5 });
+      // Light pool on ground
+      g.ellipse(pos.x, pos.y, 12, 5).fill({ color: 0xffaa33, alpha: 0.04 });
     }
 
     g.x = 0;
@@ -90,10 +154,40 @@ export function spawnWalls(
     const g = new Graphics();
     const h = 14 + seededRandom(seg.col * 11 + seg.row * 7) * 6;
 
+    // Small shadow
+    g.ellipse(pos.x + 1, pos.y + 1, 10, 3)
+      .fill({ color: 0x000000, alpha: 0.08 });
+
+    // Side face
+    g.poly([
+      { x: pos.x + 8, y: pos.y },
+      { x: pos.x + 8, y: pos.y - h },
+      { x: pos.x + 15, y: pos.y - h + 3 },
+      { x: pos.x + 15, y: pos.y + 3 },
+    ]).fill({ color: darken(colors.accent, 0.2), alpha: 0.7 });
+
+    // Front face
     g.rect(pos.x - 8, pos.y - h, 16, h)
-      .fill({ color: colors.accent, alpha: 0.7 });
-    g.rect(pos.x - 8, pos.y - h, 8, h)
-      .fill({ color: darken(colors.accent, 0.12), alpha: 0.7 });
+      .fill({ color: colors.accent, alpha: 0.75 });
+
+    // Brick lines
+    for (let br = 0; br < Math.floor(h / 5); br++) {
+      const by = pos.y - h + br * 5;
+      g.moveTo(pos.x - 8, by).lineTo(pos.x + 8, by)
+        .stroke({ color: darken(colors.accent, 0.12), width: 0.3, alpha: 0.2 });
+    }
+
+    // Left edge highlight
+    g.moveTo(pos.x - 8, pos.y - h).lineTo(pos.x - 8, pos.y)
+      .stroke({ color: lighten(colors.accent, 0.12), width: 0.4, alpha: 0.2 });
+
+    // Top face
+    g.poly([
+      { x: pos.x - 9, y: pos.y - h },
+      { x: pos.x, y: pos.y - h - 4 },
+      { x: pos.x + 16, y: pos.y - h - 1 },
+      { x: pos.x + 7, y: pos.y - h + 3 },
+    ]).fill({ color: lighten(colors.accent, 0.08), alpha: 0.65 });
 
     g.zIndex = pos.y;
     worldContainer.addChild(g);
