@@ -68,6 +68,12 @@ export const UPGRADE_COST_BASE: Record<ItemRarity, number> = {
   common: 10, uncommon: 25, rare: 60, epic: 120, legendary: 250, cosmeric: 500,
 };
 
+export const RARITY_ORDER: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'cosmeric'];
+
+export const PROMOTE_COST: Record<ItemRarity, number> = {
+  common: 100, uncommon: 300, rare: 800, epic: 2000, legendary: 5000, cosmeric: 0,
+};
+
 export interface LootEntry {
   itemID: string;
   dropChance: number;
