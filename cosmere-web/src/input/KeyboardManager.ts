@@ -9,7 +9,7 @@ const MOVEMENT_ACTIONS: ReadonlySet<GameAction> = new Set([
 ]);
 
 export class KeyboardManager {
-  private readonly bindings: KeyBindings;
+  readonly bindings: KeyBindings;
   private readonly pressed: Set<string> = new Set();
   private readonly actionCallbacks: Map<GameAction, ActionCallback[]> = new Map();
 
