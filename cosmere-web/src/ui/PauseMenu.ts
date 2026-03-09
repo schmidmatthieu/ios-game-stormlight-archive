@@ -16,6 +16,7 @@ export function showPauseMenu(
   showFloatingText: (x: number, y: number, msg: string, color: number) => void,
   playerPos: { x: number; y: number },
   onWorldMap?: () => void,
+  onControls?: () => void,
 ): Container {
   const layout = getLayoutInfo(screenW, screenH);
   const menu = new Container();
@@ -32,7 +33,7 @@ export function showPauseMenu(
   const panelW = Math.min(scaled(220, layout), screenW - 40);
   const btnH = buttonHeight(layout);
   const btnSpacing = btnH + scaled(12, layout);
-  const buttonCount = (onWorldMap ? 4 : 3) + 2 + (isLoggedIn ? 2 : 0); // +2 export/import, +2 cloud if logged in
+  const buttonCount = (onWorldMap ? 4 : 3) + 2 + (isLoggedIn ? 2 : 0) + (onControls ? 1 : 0); // +2 export/import, +2 cloud if logged in, +1 controls
   const panelH = scaled(60, layout) + buttonCount * btnSpacing;
   const px = (screenW - panelW) / 2;
   const py = (screenH - panelH) / 2;
@@ -147,6 +148,14 @@ export function showPauseMenu(
     buttons.push({
       label: 'Carte du Cosmere', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x1a2840,
       action: onWorldMap,
+    });
+    nextIdx++;
+  }
+
+  if (onControls) {
+    buttons.push({
+      label: 'Contrôles', y: py + scaled(60, layout) + btnSpacing * nextIdx, color: 0x2a4a3a,
+      action: onControls,
     });
     nextIdx++;
   }

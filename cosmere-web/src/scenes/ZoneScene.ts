@@ -76,6 +76,7 @@ import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionCla
 import type { ActionMode } from '../ui/ActionButtons';
 import { KeyBindings } from '../input/KeyBindings';
 import { KeyboardManager } from '../input/KeyboardManager';
+import { showKeyBindingsPanel } from '../ui/KeyBindingsPanel';
 import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize, touchTarget, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import {
@@ -934,6 +935,13 @@ export class ZoneScene extends Container implements GameScene {
         this.pauseMenu = null;
       }
       this.isPaused = false;
+    }, () => {
+      // Open key bindings panel
+      const w = this.app.screen.width;
+      const hh = this.app.screen.height;
+      const bindingsPanel = showKeyBindingsPanel(this.uiContainer, w, hh, this.keyboard, () => {
+        bindingsPanel.destroy({ children: true });
+      });
     });
     this.isPaused = h.isPaused;
   }

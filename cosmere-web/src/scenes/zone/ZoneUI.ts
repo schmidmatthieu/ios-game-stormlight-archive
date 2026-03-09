@@ -131,7 +131,7 @@ export function toggleQuestJournal(host: PanelHost): void {
   );
 }
 
-export function togglePause(host: PanelHost, pauseMenu: Container | null, onResumed: () => void): Container | null {
+export function togglePause(host: PanelHost, pauseMenu: Container | null, onResumed: () => void, onControls?: () => void): Container | null {
   if (pauseMenu) {
     pauseMenu.destroy({ children: true });
     host.isPaused = false;
@@ -151,6 +151,7 @@ export function togglePause(host: PanelHost, pauseMenu: Container | null, onResu
       NPCRelationshipManager.shared.save();
       host.router.goto(WorldMapScene);
     },
+    onControls,
   );
 }
 
