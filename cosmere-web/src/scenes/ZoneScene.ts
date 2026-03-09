@@ -43,6 +43,8 @@ import { createZoneToolbar } from './ZoneToolbar';
 import { createMobileMenu } from '../ui/MobileMenu';
 import { TutorialManager } from '../ui/TutorialSystem';
 import { SaveManager } from '../game/SaveManager';
+import { FastTravelManager } from '../game/FastTravelSystem';
+import { showFastTravelPanel } from '../ui/FastTravelPanel';
 import { Pathfinder, smoothPath } from '../systems/Pathfinding';
 import { createBehaviorState, updateBehavior } from '../systems/EnemyBehaviors';
 import type { BehaviorState } from '../systems/EnemyBehaviors';
@@ -249,6 +251,7 @@ export class ZoneScene extends Container implements GameScene {
 
   // Pause
   private pauseMenu: Container | null = null;
+  private fastTravelPanel: Container | null = null;
   private isPaused = false;
 
   // Quest tracker
@@ -349,6 +352,10 @@ export class ZoneScene extends Container implements GameScene {
     }
 
     this.theme = WORLD_THEMES[this.zone.worldID] ?? WORLD_THEMES.scadrial;
+
+    // Mark zone as discovered for fast travel
+    FastTravelManager.shared.load();
+    const isNewDiscovery = FastTravelManager.shared.discoverZone(this.zone.id);
 
     this.playerGridPos = { ...champ.gridPosition };
     const screenPos = isoToScreen(this.playerGridPos.col, this.playerGridPos.row);
@@ -496,6 +503,7 @@ export class ZoneScene extends Container implements GameScene {
       toggleCompanion: () => this.toggleCompanion(),
       toggleQuestJournal: () => this.toggleQuestJournal(),
       toggleProfessions: () => this.toggleProfessions(),
+      toggleFastTravel: () => this.toggleFastTravel(),
       spawnWave: () => this.spawnEnemyWave(),
     };
     createZoneToolbar(this.uiContainer, w, layout, toolbarCallbacks);
@@ -850,6 +858,25 @@ export class ZoneScene extends Container implements GameScene {
     const h = this.panelHost;
     toggleQuestJournalModule(h);
     this.applyPanelHostState(h);
+  }
+
+  private toggleFastTravel(): void {
+    if (this.fastTravelPanel) {
+      this.uiContainer.removeChild(this.fastTravelPanel);
+      this.fastTravelPanel.destroy({ children: true });
+      this.fastTravelPanel = null;
+      return;
+    }
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+    this.fastTravelPanel = showFastTravelPanel(
+      this.uiContainer, w, h,
+      (_zoneID: string) => {
+        this.fastTravelPanel = null;
+        this.router.goto(ZoneScene);
+      },
+      () => { this.fastTravelPanel = null; },
+    );
   }
 
   private applyCraftResult(recipeID: string): void {
