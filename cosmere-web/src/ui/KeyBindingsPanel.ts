@@ -30,7 +30,12 @@ export function showKeyBindingsPanel(
   const overlay = new Graphics();
   overlay.rect(0, 0, screenW, screenH).fill({ color: 0x000000, alpha: UI_ALPHA.overlay });
   overlay.eventMode = 'static';
-  overlay.on('pointerdown', onClose);
+  overlay.on('pointerdown', () => {
+    // Cancel any active rebind and re-enable input before closing
+    keyboard.cancelRebind();
+    keyboard.setEnabled(true);
+    onClose();
+  });
   root.addChild(overlay);
 
   // --- Panel dimensions ---
@@ -145,22 +150,15 @@ export function showKeyBindingsPanel(
     keyTexts[index].text = '...';
     keyTexts[index].style.fill = UI_COLORS.textGold;
 
+    // Disable normal input while waiting for rebind key
     keyboard.setEnabled(false);
-
-    // Wait for next key press — setEnabled(false) clears pressed but
-    // waitForKey still listens via the rebindResolve path
-    // We need to temporarily re-enable so keydown fires
-    keyboard.setEnabled(true);
     const code = await keyboard.waitForKey();
-    keyboard.setEnabled(false);
 
     // Apply binding (handles swap internally)
     keyboard.bindings.setKey(action, code);
 
-    // Re-enable input
+    // Re-enable input and refresh labels
     keyboard.setEnabled(true);
-
-    // Refresh all labels (swap may have changed another)
     refreshAllLabels();
   }
 

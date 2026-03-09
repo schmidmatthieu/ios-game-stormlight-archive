@@ -93,6 +93,11 @@ export class KeyboardManager {
     });
   }
 
+  /** Cancel an active rebind (e.g. when the panel is closed during "..." state). */
+  cancelRebind(): void {
+    this.rebindResolve = null;
+  }
+
   // --- Enable / disable ---
 
   setEnabled(v: boolean): void {
@@ -117,9 +122,7 @@ export class KeyboardManager {
   // --- Private event handlers ---
 
   private onKeyDown(e: KeyboardEvent): void {
-    if (!this.enabled) return;
-
-    // Rebind mode: capture the next key and return early
+    // Rebind mode: capture the next key regardless of enabled state
     if (this.rebindResolve != null) {
       e.preventDefault();
       const resolve = this.rebindResolve;
@@ -127,6 +130,8 @@ export class KeyboardManager {
       resolve(e.code);
       return;
     }
+
+    if (!this.enabled) return;
 
     // Notify keyboard usage
     if (this.onKeyboardUsedCb != null) {
