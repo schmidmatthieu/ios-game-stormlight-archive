@@ -496,8 +496,8 @@ export class ZoneScene extends Container implements GameScene {
       }
     });
 
-    // Return to touch mode on pointer interaction
-    this.uiContainer.on('pointerdown', () => {
+    // Return to touch mode on any pointer interaction (stage covers full canvas)
+    this.app.stage.on('pointerdown', () => {
       if (this.inputMode !== 'touch') {
         this.inputMode = 'touch';
         this.joystick.visible = true;
@@ -1073,6 +1073,8 @@ export class ZoneScene extends Container implements GameScene {
     }
     // Clear UI layout handles
     UILayoutManager.shared.clear();
+    // Destroy keyboard listeners
+    this.keyboard.destroy();
     // Auto-save
     SaveManager.shared.autoSave();
   }
