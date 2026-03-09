@@ -19,7 +19,6 @@ export function drawEnemySprite(g: Graphics, data: Enemy, size: number): void {
   const headY = -size * 1.8;
   const headSize = size * 0.5;
 
-  // Tier-specific body shapes
   switch (data.tier) {
     case 'boss':
       drawBossEnemy(g, data, size, bodyColor, headY, headSize);
@@ -36,188 +35,351 @@ export function drawEnemySprite(g: Graphics, data: Enemy, size: number): void {
   }
 }
 
+// ─── Helper: draw eyes with glow ────────────────────────────────
+
+function drawEyes(
+  g: Graphics, eyeColor: number, skinColor: number,
+  x1: number, x2: number, y: number, size: number, glowRadius: number,
+): void {
+  // Eye socket shadow
+  g.ellipse(x1, y, size * 1.3, size * 1.1).fill({ color: darken(skinColor, 0.2), alpha: 0.2 });
+  g.ellipse(x2, y, size * 1.3, size * 1.1).fill({ color: darken(skinColor, 0.2), alpha: 0.2 });
+  // Eye body
+  g.circle(x1, y, size).fill({ color: eyeColor, alpha: 0.95 });
+  g.circle(x2, y, size).fill({ color: eyeColor, alpha: 0.95 });
+  // Eye glow
+  if (glowRadius > 0) {
+    g.circle(x1, y, glowRadius).fill({ color: eyeColor, alpha: 0.12 });
+    g.circle(x2, y, glowRadius).fill({ color: eyeColor, alpha: 0.12 });
+  }
+  // Glints
+  g.circle(x1 - size * 0.25, y - size * 0.25, size * 0.25).fill({ color: 0xffffff, alpha: 0.5 });
+  g.circle(x2 - size * 0.25, y - size * 0.25, size * 0.25).fill({ color: 0xffffff, alpha: 0.5 });
+}
+
+// ─── Minion ─────────────────────────────────────────────────────
+
 function drawMinionEnemy(g: Graphics, data: Enemy, size: number, bodyColor: number, headY: number, headSize: number): void {
-  // Small, hunched body
-  g.poly([
+  const skinColor = getEnemySkinColor(data.worldID);
+  const eyeColor = getEyeColor(data.worldID);
+
+  // Body outline for depth
+  const bodyPts = [
+    { x: -size * 0.85, y: 1 }, { x: -size * 0.55, y: headY * 0.7 },
+    { x: 0, y: headY * 0.8 },
+    { x: size * 0.55, y: headY * 0.7 }, { x: size * 0.85, y: 1 },
+  ];
+  g.poly(bodyPts).fill({ color: darken(bodyColor, 0.25), alpha: 0.3 });
+
+  // Body
+  const innerPts = [
     { x: -size * 0.8, y: 0 }, { x: -size * 0.5, y: headY * 0.7 },
     { x: 0, y: headY * 0.8 },
     { x: size * 0.5, y: headY * 0.7 }, { x: size * 0.8, y: 0 },
-  ]).fill({ color: bodyColor, alpha: 0.85 });
+  ];
+  g.poly(innerPts).fill({ color: bodyColor, alpha: 0.88 });
 
-  // World-specific detail
+  // Body highlight (left side)
+  g.poly([
+    { x: -size * 0.6, y: 0 }, { x: -size * 0.4, y: headY * 0.65 },
+    { x: -size * 0.1, y: headY * 0.7 }, { x: -size * 0.2, y: 0 },
+  ]).fill({ color: lighten(bodyColor, 0.18), alpha: 0.25 });
+
+  // Body shadow (right side)
+  g.poly([
+    { x: size * 0.2, y: 0 }, { x: size * 0.3, y: headY * 0.6 },
+    { x: size * 0.5, y: headY * 0.65 }, { x: size * 0.7, y: 0 },
+  ]).fill({ color: darken(bodyColor, 0.15), alpha: 0.2 });
+
   drawWorldDetail(g, data, size, bodyColor);
 
-  // Head
-  g.circle(0, headY * 0.8 - headSize * 0.8, headSize * 0.8)
-    .fill({ color: getEnemySkinColor(data.worldID), alpha: 0.9 });
+  // Head with shading
+  const hy = headY * 0.8 - headSize * 0.8;
+  g.circle(0, hy, headSize * 0.85).fill({ color: darken(skinColor, 0.15), alpha: 0.25 }); // outline
+  g.circle(0, hy, headSize * 0.8).fill({ color: skinColor, alpha: 0.92 });
+  g.ellipse(-headSize * 0.15, hy - headSize * 0.2, headSize * 0.4, headSize * 0.35)
+    .fill({ color: lighten(skinColor, 0.12), alpha: 0.2 }); // highlight
 
-  // Eyes
-  g.circle(-headSize * 0.3, headY * 0.8 - headSize * 0.8, 1).fill(getEyeColor(data.worldID));
-  g.circle(headSize * 0.3, headY * 0.8 - headSize * 0.8, 1).fill(getEyeColor(data.worldID));
+  drawEyes(g, eyeColor, skinColor, -headSize * 0.3, headSize * 0.3, hy, 1, 0);
 }
 
+// ─── Soldier ────────────────────────────────────────────────────
+
 function drawSoldierEnemy(g: Graphics, data: Enemy, size: number, bodyColor: number, headY: number, headSize: number): void {
+  const skinColor = getEnemySkinColor(data.worldID);
+  const eyeColor = getEyeColor(data.worldID);
+
+  // Body outline
+  const bodyPts = [
+    { x: -size * 1.05, y: 1 }, { x: -size * 0.85, y: headY },
+    { x: 0, y: headY * 1.1 },
+    { x: size * 0.85, y: headY }, { x: size * 1.05, y: 1 },
+  ];
+  g.poly(bodyPts).fill({ color: darken(bodyColor, 0.25), alpha: 0.3 });
+
   // Armored body
   g.poly([
     { x: -size, y: 0 }, { x: -size * 0.8, y: headY },
     { x: 0, y: headY * 1.1 },
     { x: size * 0.8, y: headY }, { x: size, y: 0 },
-  ]).fill({ color: bodyColor, alpha: 0.9 });
+  ]).fill({ color: bodyColor, alpha: 0.92 });
 
-  // Armor plate
+  // Armor plate with gradient
   g.poly([
     { x: -size * 0.6, y: -2 }, { x: -size * 0.5, y: headY * 0.7 },
     { x: size * 0.5, y: headY * 0.7 }, { x: size * 0.6, y: -2 },
-  ]).fill({ color: lighten(bodyColor, 0.15), alpha: 0.5 });
+  ]).fill({ color: lighten(bodyColor, 0.18), alpha: 0.5 });
+  // Armor plate edge highlight
+  g.moveTo(-size * 0.5, headY * 0.7).lineTo(size * 0.5, headY * 0.7)
+    .stroke({ color: lighten(bodyColor, 0.3), width: 0.6, alpha: 0.3 });
 
-  // Shoulder guards
+  // Shoulder guards with volume
+  g.ellipse(-size * 0.95, headY * 0.5, size * 0.4, size * 0.25)
+    .fill({ color: darken(bodyColor, 0.1), alpha: 0.3 });
   g.ellipse(-size * 0.9, headY * 0.5, size * 0.35, size * 0.2)
-    .fill({ color: lighten(bodyColor, 0.1), alpha: 0.7 });
+    .fill({ color: lighten(bodyColor, 0.12), alpha: 0.75 });
+  g.ellipse(-size * 0.9, headY * 0.5 - size * 0.05, size * 0.2, size * 0.1)
+    .fill({ color: lighten(bodyColor, 0.25), alpha: 0.3 });
+  g.ellipse(size * 0.95, headY * 0.5, size * 0.4, size * 0.25)
+    .fill({ color: darken(bodyColor, 0.1), alpha: 0.3 });
   g.ellipse(size * 0.9, headY * 0.5, size * 0.35, size * 0.2)
-    .fill({ color: lighten(bodyColor, 0.1), alpha: 0.7 });
+    .fill({ color: lighten(bodyColor, 0.12), alpha: 0.75 });
 
   drawWorldDetail(g, data, size, bodyColor);
 
   // Head with helmet
-  g.circle(0, headY - headSize, headSize).fill({ color: getEnemySkinColor(data.worldID), alpha: 0.9 });
+  const hy = headY - headSize;
+  g.circle(0, hy, headSize * 1.05).fill({ color: darken(skinColor, 0.15), alpha: 0.25 });
+  g.circle(0, hy, headSize).fill({ color: skinColor, alpha: 0.92 });
+  // Helmet
   g.poly([
-    { x: -headSize, y: headY - headSize }, { x: 0, y: headY - headSize * 1.8 },
-    { x: headSize, y: headY - headSize },
-  ]).fill({ color: darken(bodyColor, 0.1), alpha: 0.6 });
+    { x: -headSize, y: hy }, { x: 0, y: headY - headSize * 1.8 },
+    { x: headSize, y: hy },
+  ]).fill({ color: darken(bodyColor, 0.1), alpha: 0.65 });
+  // Helmet highlight
+  g.poly([
+    { x: -headSize * 0.3, y: hy }, { x: 0, y: headY - headSize * 1.6 },
+    { x: headSize * 0.2, y: hy },
+  ]).fill({ color: lighten(bodyColor, 0.15), alpha: 0.2 });
 
-  // Eyes
-  g.circle(-headSize * 0.4, headY - headSize, 1.2).fill(getEyeColor(data.worldID));
-  g.circle(headSize * 0.4, headY - headSize, 1.2).fill(getEyeColor(data.worldID));
+  drawEyes(g, eyeColor, skinColor, -headSize * 0.4, headSize * 0.4, hy, 1.2, 1.8);
 
-  // Weapon
-  g.rect(size + 1, headY * 0.3, 2, size * 1.5).fill({ color: 0x888888, alpha: 0.7 });
+  // Weapon with edge glow
+  g.rect(size + 1, headY * 0.3, 2.5, size * 1.6).fill({ color: 0x888888, alpha: 0.75 });
+  g.rect(size + 1, headY * 0.3, 1, size * 1.6).fill({ color: 0xaaaaaa, alpha: 0.2 }); // highlight
+  g.moveTo(size + 1, headY * 0.3).lineTo(size + 1, headY * 0.3 + size * 1.6)
+    .stroke({ color: 0xcccccc, width: 0.5, alpha: 0.3 }); // edge
 }
 
-function drawEliteEnemy(g: Graphics, data: Enemy, size: number, bodyColor: number, headY: number, headSize: number): void {
-  // Larger, armored body with aura
-  g.circle(0, headY * 0.5, size * 1.5).fill({ color: bodyColor, alpha: 0.06 });
+// ─── Elite ──────────────────────────────────────────────────────
 
+function drawEliteEnemy(g: Graphics, data: Enemy, size: number, bodyColor: number, headY: number, headSize: number): void {
+  const skinColor = getEnemySkinColor(data.worldID);
+  const eyeColor = getEyeColor(data.worldID);
+
+  // Pulsating aura layers
+  g.circle(0, headY * 0.5, size * 2).fill({ color: bodyColor, alpha: 0.03 });
+  g.circle(0, headY * 0.5, size * 1.6).fill({ color: bodyColor, alpha: 0.05 });
+  g.circle(0, headY * 0.5, size * 1.8).stroke({ color: bodyColor, width: 1.2, alpha: 0.12 });
+
+  // Body outline
+  g.poly([
+    { x: -size * 1.15, y: 1 }, { x: -size * 0.95, y: headY * 1.1 },
+    { x: 0, y: headY * 1.2 },
+    { x: size * 0.95, y: headY * 1.1 }, { x: size * 1.15, y: 1 },
+  ]).fill({ color: darken(bodyColor, 0.25), alpha: 0.3 });
+
+  // Body
   g.poly([
     { x: -size * 1.1, y: 0 }, { x: -size * 0.9, y: headY * 1.1 },
     { x: 0, y: headY * 1.2 },
     { x: size * 0.9, y: headY * 1.1 }, { x: size * 1.1, y: 0 },
-  ]).fill({ color: bodyColor, alpha: 0.9 });
+  ]).fill({ color: bodyColor, alpha: 0.92 });
 
-  // Ornate armor
+  // Ornate armor with layered shading
   g.poly([
     { x: -size * 0.7, y: -2 }, { x: -size * 0.6, y: headY * 0.8 },
     { x: size * 0.6, y: headY * 0.8 }, { x: size * 0.7, y: -2 },
-  ]).fill({ color: lighten(bodyColor, 0.2), alpha: 0.5 });
+  ]).fill({ color: lighten(bodyColor, 0.22), alpha: 0.5 });
+  // Armor center gem/detail
+  g.circle(0, headY * 0.4, size * 0.15).fill({ color: eyeColor, alpha: 0.4 });
+  g.circle(0, headY * 0.4, size * 0.25).fill({ color: eyeColor, alpha: 0.08 });
 
-  // Shoulder spikes
+  // Shoulder spikes with volume
   g.poly([
-    { x: -size, y: headY * 0.4 }, { x: -size * 1.4, y: headY * 0.7 },
+    { x: -size, y: headY * 0.4 }, { x: -size * 1.45, y: headY * 0.72 },
     { x: -size * 0.8, y: headY * 0.5 },
-  ]).fill({ color: lighten(bodyColor, 0.15), alpha: 0.7 });
+  ]).fill({ color: lighten(bodyColor, 0.18), alpha: 0.75 });
   g.poly([
-    { x: size, y: headY * 0.4 }, { x: size * 1.4, y: headY * 0.7 },
+    { x: -size, y: headY * 0.4 }, { x: -size * 1.45, y: headY * 0.72 },
+    { x: -size * 0.8, y: headY * 0.5 },
+  ]).stroke({ color: lighten(bodyColor, 0.3), width: 0.5, alpha: 0.3 });
+  g.poly([
+    { x: size, y: headY * 0.4 }, { x: size * 1.45, y: headY * 0.72 },
     { x: size * 0.8, y: headY * 0.5 },
-  ]).fill({ color: lighten(bodyColor, 0.15), alpha: 0.7 });
+  ]).fill({ color: lighten(bodyColor, 0.18), alpha: 0.75 });
+  g.poly([
+    { x: size, y: headY * 0.4 }, { x: size * 1.45, y: headY * 0.72 },
+    { x: size * 0.8, y: headY * 0.5 },
+  ]).stroke({ color: lighten(bodyColor, 0.3), width: 0.5, alpha: 0.3 });
 
   drawWorldDetail(g, data, size, bodyColor);
 
-  // Head
-  g.circle(0, headY - headSize, headSize * 1.1).fill({ color: getEnemySkinColor(data.worldID), alpha: 0.9 });
-  g.circle(-headSize * 0.4, headY - headSize, 1.3).fill(getEyeColor(data.worldID));
-  g.circle(headSize * 0.4, headY - headSize, 1.3).fill(getEyeColor(data.worldID));
+  // Head with volume
+  const hy = headY - headSize;
+  g.circle(0, hy, headSize * 1.2).fill({ color: darken(skinColor, 0.15), alpha: 0.25 });
+  g.circle(0, hy, headSize * 1.1).fill({ color: skinColor, alpha: 0.92 });
+  g.ellipse(-headSize * 0.2, hy - headSize * 0.3, headSize * 0.4, headSize * 0.3)
+    .fill({ color: lighten(skinColor, 0.12), alpha: 0.2 });
 
-  // Elite aura
-  g.circle(0, headY * 0.5, size * 1.8).stroke({ color: bodyColor, width: 1, alpha: 0.15 });
+  drawEyes(g, eyeColor, skinColor, -headSize * 0.4, headSize * 0.4, hy, 1.4, 2.5);
 }
 
+// ─── Boss ───────────────────────────────────────────────────────
+
 function drawBossEnemy(g: Graphics, data: Enemy, size: number, bodyColor: number, headY: number, headSize: number): void {
-  // Large, imposing body with double aura
+  const skinColor = getEnemySkinColor(data.worldID);
+  const eyeColor = getEyeColor(data.worldID);
+
+  // Multi-layered menacing aura
+  g.circle(0, headY * 0.4, size * 3).fill({ color: bodyColor, alpha: 0.02 });
+  g.circle(0, headY * 0.4, size * 2.5).fill({ color: bodyColor, alpha: 0.03 });
   g.circle(0, headY * 0.4, size * 2).fill({ color: bodyColor, alpha: 0.04 });
-  g.circle(0, headY * 0.4, size * 2.5).stroke({ color: bodyColor, width: 1.5, alpha: 0.1 });
+  g.circle(0, headY * 0.4, size * 2.5).stroke({ color: bodyColor, width: 2, alpha: 0.08 });
+  g.circle(0, headY * 0.4, size * 2).stroke({ color: lighten(bodyColor, 0.2), width: 1, alpha: 0.1 });
+
+  // Body outline
+  g.poly([
+    { x: -size * 1.35, y: 3 }, { x: -size * 1.15, y: headY * 1.2 },
+    { x: 0, y: headY * 1.4 },
+    { x: size * 1.15, y: headY * 1.2 }, { x: size * 1.35, y: 3 },
+  ]).fill({ color: darken(bodyColor, 0.3), alpha: 0.3 });
 
   // Massive body
   g.poly([
     { x: -size * 1.3, y: 2 }, { x: -size * 1.1, y: headY * 1.2 },
     { x: 0, y: headY * 1.4 },
     { x: size * 1.1, y: headY * 1.2 }, { x: size * 1.3, y: 2 },
-  ]).fill({ color: bodyColor, alpha: 0.9 });
+  ]).fill({ color: bodyColor, alpha: 0.92 });
 
-  // Armor layers
+  // Armor layers with gradient
   g.poly([
     { x: -size, y: 0 }, { x: -size * 0.8, y: headY },
     { x: size * 0.8, y: headY }, { x: size, y: 0 },
-  ]).fill({ color: lighten(bodyColor, 0.2), alpha: 0.4 });
+  ]).fill({ color: lighten(bodyColor, 0.22), alpha: 0.42 });
+  // Armor highlight
+  g.poly([
+    { x: -size * 0.5, y: -1 }, { x: -size * 0.4, y: headY * 0.8 },
+    { x: size * 0.1, y: headY * 0.8 }, { x: size * 0.2, y: -1 },
+  ]).fill({ color: lighten(bodyColor, 0.3), alpha: 0.15 });
 
-  // Large shoulder plates
+  // Massive shoulder plates with volume
+  g.ellipse(-size * 1.25, headY * 0.5, size * 0.55, size * 0.35)
+    .fill({ color: darken(bodyColor, 0.1), alpha: 0.35 });
   g.ellipse(-size * 1.2, headY * 0.5, size * 0.5, size * 0.3)
-    .fill({ color: lighten(bodyColor, 0.15), alpha: 0.8 });
+    .fill({ color: lighten(bodyColor, 0.15), alpha: 0.82 });
+  g.ellipse(-size * 1.2, headY * 0.5 - size * 0.08, size * 0.3, size * 0.15)
+    .fill({ color: lighten(bodyColor, 0.28), alpha: 0.25 });
+  g.ellipse(size * 1.25, headY * 0.5, size * 0.55, size * 0.35)
+    .fill({ color: darken(bodyColor, 0.1), alpha: 0.35 });
   g.ellipse(size * 1.2, headY * 0.5, size * 0.5, size * 0.3)
-    .fill({ color: lighten(bodyColor, 0.15), alpha: 0.8 });
+    .fill({ color: lighten(bodyColor, 0.15), alpha: 0.82 });
+  g.ellipse(size * 1.2, headY * 0.5 - size * 0.08, size * 0.3, size * 0.15)
+    .fill({ color: lighten(bodyColor, 0.28), alpha: 0.25 });
 
   drawWorldDetail(g, data, size, bodyColor);
 
-  // Head
-  g.circle(0, headY * 1.1 - headSize * 1.2, headSize * 1.2)
-    .fill({ color: getEnemySkinColor(data.worldID), alpha: 0.9 });
+  // Head with volume
+  const hy = headY * 1.1 - headSize * 1.2;
+  g.circle(0, hy, headSize * 1.3).fill({ color: darken(skinColor, 0.2), alpha: 0.25 });
+  g.circle(0, hy, headSize * 1.2).fill({ color: skinColor, alpha: 0.92 });
+  g.ellipse(-headSize * 0.2, hy - headSize * 0.3, headSize * 0.5, headSize * 0.4)
+    .fill({ color: lighten(skinColor, 0.12), alpha: 0.2 });
 
-  // Glowing eyes
-  const eyeY = headY * 1.1 - headSize * 1.2;
-  g.circle(-headSize * 0.4, eyeY, 1.8).fill(getEyeColor(data.worldID));
-  g.circle(headSize * 0.4, eyeY, 1.8).fill(getEyeColor(data.worldID));
-  g.circle(-headSize * 0.4, eyeY, 3).fill({ color: getEyeColor(data.worldID), alpha: 0.15 });
-  g.circle(headSize * 0.4, eyeY, 3).fill({ color: getEyeColor(data.worldID), alpha: 0.15 });
+  // Glowing eyes — larger and more menacing
+  drawEyes(g, eyeColor, skinColor, -headSize * 0.4, headSize * 0.4, hy, 1.8, 3.5);
 
-  // Crown
+  // Crown with gems and glow
+  const crownY = hy - headSize * 0.8;
   g.poly([
-    { x: -6, y: headY * 1.1 - headSize * 2.2 }, { x: -4, y: headY * 1.1 - headSize * 1.6 },
-    { x: -2, y: headY * 1.1 - headSize * 2.1 }, { x: 0, y: headY * 1.1 - headSize * 1.6 },
-    { x: 2, y: headY * 1.1 - headSize * 2.1 }, { x: 4, y: headY * 1.1 - headSize * 1.6 },
-    { x: 6, y: headY * 1.1 - headSize * 2.2 },
-    { x: 6, y: headY * 1.1 - headSize * 1.4 }, { x: -6, y: headY * 1.1 - headSize * 1.4 },
-  ]).fill({ color: 0xeebb33, alpha: 0.8 });
-  // Crown gems
-  g.circle(-2, headY * 1.1 - headSize * 1.8, 1).fill({ color: 0xff3333, alpha: 0.7 });
-  g.circle(2, headY * 1.1 - headSize * 1.8, 1).fill({ color: 0x3333ff, alpha: 0.7 });
+    { x: -7, y: crownY - headSize * 0.6 }, { x: -5, y: crownY },
+    { x: -3, y: crownY - headSize * 0.5 }, { x: 0, y: crownY },
+    { x: 3, y: crownY - headSize * 0.5 }, { x: 5, y: crownY },
+    { x: 7, y: crownY - headSize * 0.6 },
+    { x: 7, y: crownY + headSize * 0.2 }, { x: -7, y: crownY + headSize * 0.2 },
+  ]).fill({ color: 0xeebb33, alpha: 0.82 });
+  // Crown highlight
+  g.poly([
+    { x: -5, y: crownY - headSize * 0.3 }, { x: -3, y: crownY + headSize * 0.1 },
+    { x: 3, y: crownY + headSize * 0.1 }, { x: 5, y: crownY - headSize * 0.3 },
+  ]).fill({ color: 0xffdd66, alpha: 0.2 });
+  // Crown gems with glow
+  g.circle(-2, crownY - headSize * 0.15, 1.2).fill({ color: 0xff3333, alpha: 0.75 });
+  g.circle(-2, crownY - headSize * 0.15, 2).fill({ color: 0xff3333, alpha: 0.08 });
+  g.circle(2, crownY - headSize * 0.15, 1.2).fill({ color: 0x3333ff, alpha: 0.75 });
+  g.circle(2, crownY - headSize * 0.15, 2).fill({ color: 0x3333ff, alpha: 0.08 });
+  g.circle(0, crownY - headSize * 0.35, 0.8).fill({ color: 0xffffff, alpha: 0.5 }); // center diamond
 }
+
+// ─── World Details ──────────────────────────────────────────────
 
 function drawWorldDetail(g: Graphics, data: Enemy, size: number, bodyColor: number): void {
   const worldID = data.worldID;
   switch (worldID) {
     case 'scadrial':
-      // Spike through chest (hemalurgy)
+      // Hemalurgic spike(s)
       if (data.tier !== 'minion') {
-        g.rect(-0.5, -size * 1.2, 1, size * 0.8).fill({ color: 0x888888, alpha: 0.6 });
+        g.rect(-0.6, -size * 1.3, 1.2, size * 0.9).fill({ color: 0x888888, alpha: 0.65 });
+        g.rect(-0.3, -size * 1.3, 0.5, size * 0.9).fill({ color: 0xaaaaaa, alpha: 0.2 }); // highlight
+        // Blood drip at spike point
+        g.circle(0, size * 0.9 - size * 1.3, 0.8).fill({ color: 0x880000, alpha: 0.3 });
       }
       break;
     case 'roshar':
-      // Carapace armor pieces
-      g.ellipse(-size * 0.4, -size * 0.5, size * 0.3, size * 0.4)
-        .fill({ color: 0x334455, alpha: 0.4 });
-      g.ellipse(size * 0.4, -size * 0.5, size * 0.3, size * 0.4)
-        .fill({ color: 0x334455, alpha: 0.4 });
+      // Carapace armor pieces with volume
+      g.ellipse(-size * 0.4, -size * 0.5, size * 0.32, size * 0.42)
+        .fill({ color: 0x334455, alpha: 0.42 });
+      g.ellipse(-size * 0.4, -size * 0.55, size * 0.2, size * 0.25)
+        .fill({ color: 0x445566, alpha: 0.2 }); // highlight
+      g.ellipse(size * 0.4, -size * 0.5, size * 0.32, size * 0.42)
+        .fill({ color: 0x334455, alpha: 0.42 });
       break;
     case 'taldain':
-      // Sand markings
+      // Sand markings with glow
       g.moveTo(-size * 0.3, -size * 0.3)
         .lineTo(size * 0.3, -size * 0.8)
-        .stroke({ color: 0xddcc88, width: 1, alpha: 0.3 });
+        .stroke({ color: 0xddcc88, width: 1.2, alpha: 0.35 });
+      g.moveTo(-size * 0.3, -size * 0.3)
+        .lineTo(size * 0.3, -size * 0.8)
+        .stroke({ color: 0xddcc88, width: 3, alpha: 0.05 });
       break;
     case 'nalthis':
-      // Color aura
-      g.circle(0, -size * 0.5, size * 0.6).fill({ color: 0xaa44ff, alpha: 0.06 });
+      // Multi-color aura (BioChroma)
+      g.circle(0, -size * 0.5, size * 0.7).fill({ color: 0xaa44ff, alpha: 0.05 });
+      g.circle(0, -size * 0.5, size * 0.5).fill({ color: 0x44aaff, alpha: 0.04 });
+      g.circle(0, -size * 0.5, size * 0.3).fill({ color: 0xff44aa, alpha: 0.03 });
       break;
     case 'sel':
-      // Aon glow mark
+      // Aon glow mark — more detail
+      g.circle(0, -size * 0.6, size * 0.3).fill({ color: 0xddaa44, alpha: 0.06 });
       g.circle(0, -size * 0.6, size * 0.25).stroke({ color: 0xddaa44, width: 0.8, alpha: 0.4 });
+      g.moveTo(0, -size * 0.85).lineTo(0, -size * 0.35)
+        .stroke({ color: 0xddaa44, width: 0.4, alpha: 0.2 });
       break;
     case 'komashi':
-      // Ink drip effect
-      g.circle(-size * 0.2, 1, 2).fill({ color: 0x111122, alpha: 0.4 });
-      g.circle(size * 0.3, 2, 1.5).fill({ color: 0x111122, alpha: 0.3 });
+      // Ink drip effect — more organic
+      g.circle(-size * 0.2, 1, 2.2).fill({ color: 0x111122, alpha: 0.42 });
+      g.circle(-size * 0.2, 1, 3).fill({ color: 0x111122, alpha: 0.06 });
+      g.circle(size * 0.3, 2, 1.7).fill({ color: 0x111122, alpha: 0.32 });
+      // Ink trail
+      g.moveTo(-size * 0.2, 1).lineTo(-size * 0.1, 4)
+        .stroke({ color: 0x111122, width: 0.5, alpha: 0.2 });
       break;
     case 'shadesmar':
-      // Cognitive shimmer
-      g.circle(0, -size * 0.5, size).fill({ color: 0x6655aa, alpha: 0.04 });
+      // Cognitive shimmer — layered
+      g.circle(0, -size * 0.5, size * 1.1).fill({ color: 0x4433aa, alpha: 0.03 });
+      g.circle(0, -size * 0.5, size * 0.8).fill({ color: 0x6655aa, alpha: 0.04 });
+      g.circle(0, -size * 0.5, size * 0.5).fill({ color: 0x8877cc, alpha: 0.03 });
       break;
   }
 }

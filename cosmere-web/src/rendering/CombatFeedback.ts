@@ -85,15 +85,23 @@ export function createDirectionalSlash(
 
 // ─── Crit Flash Overlay ──────────────────────────────────────────
 
-/** Full-screen white flash for critical hits */
-export function createCritFlash(uiContainer: Container, w: number, h: number): void {
+/** Full-screen flash for critical hits with color tinting */
+export function createCritFlash(uiContainer: Container, w: number, h: number, color = 0xffffff): void {
   const flash = new Graphics();
-  flash.rect(0, 0, w, h).fill({ color: 0xffffff, alpha: 0.2 });
+  // Main flash
+  flash.rect(0, 0, w, h).fill({ color, alpha: 0.2 });
+  // Vignette highlight — brighter center
+  flash.circle(w / 2, h / 2, Math.max(w, h) * 0.3).fill({ color: 0xffffff, alpha: 0.08 });
+  // Chromatic aberration hint — colored edge strips
+  flash.rect(0, 0, 3, h).fill({ color: 0xff4444, alpha: 0.08 });
+  flash.rect(w - 3, 0, 3, h).fill({ color: 0x4444ff, alpha: 0.08 });
   flash.zIndex = 9999;
   uiContainer.addChild(flash);
 
-  animateEffect(flash, uiContainer, 0.2, (t) => {
-    flash.alpha = Math.max(0, 0.2 - t * 0.2 * 6);
+  animateEffect(flash, uiContainer, 0.25, (t) => {
+    // Sharp flash then rapid decay
+    const intensity = t < 0.1 ? 1 : Math.max(0, 1 - (t - 0.1) / 0.9);
+    flash.alpha = intensity * 0.25;
   });
 }
 
@@ -115,35 +123,77 @@ export function createKillBurst(
 
   container.addChild(g);
 
+  // Store random shard angles for consistent animation
+  const shardAngles: number[] = [];
+  const shardCount = tier === 'boss' ? 16 : tier === 'elite' ? 10 : 6;
+  for (let i = 0; i < shardCount; i++) {
+    shardAngles.push(Math.random() * Math.PI * 2);
+  }
+
   animateEffect(g, container, maxLife, (t) => {
     g.clear();
 
-    // Expanding ring(s)
+    // Outer glow pulse
+    if (t < 0.5) {
+      const glowR = baseRadius * (1 + t * 3);
+      g.circle(x, y, glowR).fill({ color: worldColor, alpha: 0.06 * (1 - t * 2) });
+    }
+
+    // Expanding ring(s) with glow
     for (let i = 0; i < ringCount; i++) {
       const delay = i * 0.1;
       const ringT = Math.max(0, (t - delay) / (1 - delay));
       if (ringT <= 0 || ringT >= 1) continue;
       const radius = baseRadius * (0.3 + ringT * 0.7);
       const alpha = (1 - ringT) * 0.4;
-      g.circle(x, y, radius).stroke({ color: worldColor, width: 2 - ringT, alpha });
+      // Glow ring
+      g.circle(x, y, radius + 2).stroke({ color: worldColor, width: 4, alpha: alpha * 0.2 });
+      // Main ring
+      g.circle(x, y, radius).stroke({ color: worldColor, width: 2.5 - ringT, alpha });
+      // Inner bright ring
+      g.circle(x, y, radius * 0.95).stroke({ color: lighten(worldColor, 0.4), width: 0.8, alpha: alpha * 0.6 });
     }
 
-    // Inner flash
+    // Inner flash — brighter, with starburst
     if (t < 0.3) {
-      const flashAlpha = 0.3 * (1 - t / 0.3);
-      g.circle(x, y, baseRadius * 0.5 * (1 + t * 2)).fill({ color: 0xffffff, alpha: flashAlpha });
+      const flashAlpha = 0.35 * (1 - t / 0.3);
+      const flashR = baseRadius * 0.5 * (1 + t * 2);
+      g.circle(x, y, flashR).fill({ color: 0xffffff, alpha: flashAlpha });
+      // Starburst rays
+      const rayCount = tier === 'boss' ? 8 : 4;
+      for (let i = 0; i < rayCount; i++) {
+        const a = (i / rayCount) * Math.PI * 2;
+        const rLen = flashR * 1.5;
+        g.moveTo(x, y).lineTo(x + Math.cos(a) * rLen, y + Math.sin(a) * rLen * 0.6)
+          .stroke({ color: 0xffffff, width: 1.5, alpha: flashAlpha * 0.5 });
+      }
     }
 
-    // Particle shards
-    if (t < 0.7) {
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + t * maxLife * 2;
-        const dist = baseRadius * t * 1.5;
+    // Particle shards — more numerous with trails
+    if (t < 0.8) {
+      for (let i = 0; i < shardCount; i++) {
+        const angle = shardAngles[i] + t * 0.5;
+        const speed = 1 + (i % 3) * 0.4;
+        const dist = baseRadius * t * 1.8 * speed;
         const px = x + Math.cos(angle) * dist;
         const py = y + Math.sin(angle) * dist * 0.6;
-        const sz = 2 * (1 - t);
-        g.circle(px, py, Math.max(0.3, sz)).fill({ color: lighten(worldColor, 0.3), alpha: 0.5 * (1 - t) });
+        const sz = (2.5 - t * 2) * (1 + (i % 2) * 0.3);
+        const a = 0.6 * (1 - t / 0.8);
+        // Trail
+        const trailDist = dist * 0.7;
+        const trailX = x + Math.cos(angle) * trailDist;
+        const trailY = y + Math.sin(angle) * trailDist * 0.6;
+        g.moveTo(trailX, trailY).lineTo(px, py)
+          .stroke({ color: worldColor, width: sz * 0.4, alpha: a * 0.3 });
+        // Shard
+        g.circle(px, py, Math.max(0.3, sz)).fill({ color: lighten(worldColor, 0.3), alpha: a });
       }
+    }
+
+    // Boss death: screen-edge light burst
+    if (tier === 'boss' && t < 0.4) {
+      const burstAlpha = 0.08 * (1 - t / 0.4);
+      g.circle(x, y, baseRadius * 4 * t).stroke({ color: 0xffffff, width: 3, alpha: burstAlpha });
     }
   });
 }

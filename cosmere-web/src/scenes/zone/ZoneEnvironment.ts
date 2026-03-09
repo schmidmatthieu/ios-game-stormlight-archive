@@ -96,10 +96,12 @@ export function updateNPCSchedules(
 
 // ─── Weather ───────────────────────────────────────────────────
 
+let weatherTime = 0;
+
 export function updateWeather(
   dt: number,
   weatherManager: WeatherManager,
-  weatherOverlay: { update: (config: any, lightning: number) => void } | null,
+  weatherOverlay: { update: (config: any, lightning: number, weatherType: any, time: number) => void } | null,
   ambientAtmosphere: AmbientAtmosphereManager | null,
   worldContainer: Container,
   showFloatingText: (x: number, y: number, msg: string, color: number) => void,
@@ -122,8 +124,9 @@ export function updateWeather(
       AchievementManager.shared.check();
     }
   }
+  weatherTime += dt;
   if (weatherOverlay) {
-    weatherOverlay.update(result.config, weatherManager.lightningFlash);
+    weatherOverlay.update(result.config, weatherManager.lightningFlash, weatherManager.currentWeather, weatherTime);
   }
   if (result.config.screenShake > 0) {
     shakeCamera(result.config.screenShake * 0.5, 0.05);
