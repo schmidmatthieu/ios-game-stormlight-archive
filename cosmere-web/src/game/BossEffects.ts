@@ -15,7 +15,7 @@ export function createBossHPBar(
   const barW = Math.min(280, screenW - 40);
   const barH = 14;
   const x = (screenW - barW) / 2;
-  const y = 50;
+  const y = 100;
 
   const bg = new Graphics();
   bg.roundRect(x - 4, y - 20, barW + 8, barH + 28, 6)
