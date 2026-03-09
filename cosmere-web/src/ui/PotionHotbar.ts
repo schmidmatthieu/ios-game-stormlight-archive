@@ -1,7 +1,6 @@
 // ─── Potion Quick-Use Hotbar ─────────────────────────────────────────
-// Three potion slots displayed near the action buttons for combat use.
-// On mobile: vertical strip to the left of action buttons.
-// On tablet/desktop: horizontal strip above action buttons.
+// Three potion slots displayed below the action buttons for combat use.
+// Horizontal strip at the bottom-right of the screen.
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { PotionManager, POTIONS } from '../game/PotionSystem';
@@ -25,19 +24,21 @@ export function createPotionHotbar(
   const slotSize = isMobile ? scaled(26, layout) : scaled(32, layout);
   const gap = scaled(isMobile ? 4 : 6, layout);
 
-  // Position: mobile → vertical column left of action buttons
-  // tablet/desktop → horizontal row above action buttons
+  // Position: below the action buttons (bottom right)
   let startX: number;
   let startY: number;
 
   if (isMobile) {
-    // Vertical layout, left of action area
-    startX = screenW - scaled(170, layout);
-    startY = screenH - scaled(110, layout);
+    // Horizontal row below action buttons
+    const totalW = slotSize * 3 + gap * 2;
+    const safeBottom = Math.max(layout.safeArea.bottom, scaled(8, layout));
+    startX = screenW - totalW - scaled(20, layout);
+    startY = screenH - safeBottom - slotSize - scaled(6, layout);
   } else {
     const totalW = slotSize * 3 + gap * 2;
-    startX = screenW - totalW - scaled(16, layout);
-    startY = screenH - scaled(130, layout);
+    const safeBottom = Math.max(layout.safeArea.bottom, scaled(8, layout));
+    startX = screenW - totalW - scaled(20, layout);
+    startY = screenH - safeBottom - slotSize - scaled(6, layout);
   }
 
   const slotGraphics: Graphics[] = [];
@@ -48,15 +49,9 @@ export function createPotionHotbar(
   for (let i = 0; i < 3; i++) {
     let x: number;
     let y: number;
-    if (isMobile) {
-      // Vertical stack
-      x = startX;
-      y = startY + i * (slotSize + gap);
-    } else {
-      // Horizontal row
-      x = startX + i * (slotSize + gap);
-      y = startY;
-    }
+    // Always horizontal row below action buttons
+    x = startX + i * (slotSize + gap);
+    y = startY;
     positions.push({ x, y });
 
     // Slot background

@@ -136,7 +136,7 @@ export function createStatusBar(
   container.zIndex = 7000;
 
   const startX = 12;
-  const startY = 70; // Below HUD
+  const startY = 100; // Below HUD panel (panel ends ~90px)
 
   uiContainer.addChild(container);
 

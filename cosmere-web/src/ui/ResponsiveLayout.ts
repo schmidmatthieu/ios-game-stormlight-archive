@@ -283,7 +283,7 @@ export function questTrackerPosition(layout: LayoutInfo): { x: number; y: number
   const panelWidth = Math.min(190, layout.width * 0.4);
   return {
     x: layout.width - safeRight - panelWidth - scaled(8, layout),
-    y: safeTop + scaled(52, layout),
+    y: safeTop + scaled(80, layout),
     panelWidth,
   };
 }

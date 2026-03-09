@@ -120,7 +120,7 @@ export function createReputationBadge(
   const badgeW = 130;
   const badgeH = 28;
   const x = screenW - badgeW - 12;
-  const y = 48;
+  const y = 6;
 
   const bg = new Graphics();
   container.addChild(bg);
