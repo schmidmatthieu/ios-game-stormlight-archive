@@ -1,0 +1,1423 @@
+[
+  {
+    "id": "steel_vial",
+    "name": "Fiole d'Acier",
+    "description": "Une petite fiole contenant des copeaux d'acier en suspension. Essentiel pour tout Allomancien.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_steel_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "iron_vial",
+    "name": "Fiole de Fer",
+    "description": "Fiole contenant des copeaux de fer. Permet de tirer les métaux vers soi.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_iron_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "tin_vial",
+    "name": "Fiole d'Étain",
+    "description": "Amplifie les sens quand brûlée. Révèle les secrets cachés.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "spirit", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_tin_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "pewter_vial",
+    "name": "Fiole de Pewter",
+    "description": "Confère une force et une endurance surhumaines quand brûlée.",
+    "rarity": "uncommon",
+    "slot": "amulet",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_pewter_vial",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "wraith_bone",
+    "name": "Os de Spectre",
+    "description": "Un os récolté sur un spectre des brumes. Étrangement léger et résistant.",
+    "rarity": "uncommon",
+    "slot": "offhand",
+    "requiredLevel": 2,
+    "statBonuses": [{ "stat": "agility", "value": 2 }, { "stat": "luck", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_wraith_bone",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "koloss_blade_shard",
+    "name": "Éclat de Lame Koloss",
+    "description": "Fragment de l'immense épée grossière d'un koloss. Brut mais puissant.",
+    "rarity": "rare",
+    "slot": "mainWeapon",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "vigor", "value": 2 }, { "stat": "agility", "value": -1 }],
+    "traits": [
+      {
+        "id": "trait_koloss_fury",
+        "name": "Fureur Koloss",
+        "description": "+20% dégâts quand PV < 30%",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.2
+      }
+    ],
+    "spriteName": "item_koloss_blade",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "guard_armor_piece",
+    "name": "Plastron de Garde d'Acier",
+    "description": "Armure portée par les gardes de Kredik Shaw. Bien forgée.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "vigor", "value": 3 }, { "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_guard_armor",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "inquisitor_spike",
+    "name": "Pic d'Inquisiteur",
+    "description": "Un pic hémalurgique arraché à un Inquisiteur d'Acier. Pulse d'un pouvoir sinistre.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "spirit", "value": 5 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "investiture", "value": 4 },
+      { "stat": "vigor", "value": 2 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_hemalurgy",
+        "name": "Pouvoir Hémalurgique",
+        "description": "Vole 5% des stats d'un ennemi tué pendant 30s",
+        "effectType": "lifesteal",
+        "effectValue": 0.05
+      }
+    ],
+    "spriteName": "item_inquisitor_spike",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "atium_bead",
+    "name": "Perle d'Atium",
+    "description": "Le métal le plus rare du Cosmere. Permet de voir le futur en combat.",
+    "rarity": "legendary",
+    "slot": "ring1",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "agility", "value": 5 },
+      { "stat": "luck", "value": 5 },
+      { "stat": "spirit", "value": 3 },
+      { "stat": "investiture", "value": 3 },
+      { "stat": "vigor", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_atium_sight",
+        "name": "Vision d'Atium",
+        "description": "+30% esquive, voit les attaques ennemies 1s avant",
+        "effectType": "critChance",
+        "effectValue": 0.3
+      }
+    ],
+    "spriteName": "item_atium_bead",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "stormlight_chip",
+    "name": "Éclat de Lumière d'Orage",
+    "description": "Un petit éclat de gemme infusé de Lumière d'Orage. Alimente le Surgebinding.",
+    "rarity": "common",
+    "slot": "ring2",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_stormlight_chip",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "stormlight_mark",
+    "name": "Marque de Lumière d'Orage",
+    "description": "Une gemme de taille moyenne brillant de Lumière d'Orage captive.",
+    "rarity": "uncommon",
+    "slot": "ring2",
+    "requiredLevel": 2,
+    "statBonuses": [{ "stat": "investiture", "value": 3 }, { "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_stormlight_mark",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "stormlight_broam",
+    "name": "Broam de Lumière d'Orage",
+    "description": "Une grande gemme précieuse, débordante de Lumière d'Orage.",
+    "rarity": "rare",
+    "slot": "ring2",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "investiture", "value": 5 }, { "stat": "spirit", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_stormlight_regen",
+        "name": "Lumière Captive",
+        "description": "Régénère l'Investiture sous la pluie ou pendant un hauteorages",
+        "effectType": "investitureRegen",
+        "effectValue": 5.0
+      }
+    ],
+    "spriteName": "item_stormlight_broam",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "carapace_armor_piece",
+    "name": "Armure de Carapace Parshendi",
+    "description": "Armure naturelle cultivée par les chanteurs. Légère et résistante.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "agility", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_carapace_armor",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "carapace_plate",
+    "name": "Plaque de Carapace de Grandfossoyeur",
+    "description": "Plaque de la carapace d'un Grandfossoyeur. Incroyablement résistante.",
+    "rarity": "epic",
+    "slot": "chest",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "vigor", "value": 6 },
+      { "stat": "strength", "value": 2 },
+      { "stat": "agility", "value": -1 },
+      { "stat": "investiture", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_chasmfiend_hide",
+        "name": "Cuir de Grandfossoyeur",
+        "description": "Réduit les dégâts physiques reçus de 15%",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": -0.15
+      },
+      {
+        "id": "trait_storm_resistant",
+        "name": "Résistance aux Tempêtes",
+        "description": "Immunité aux effets de hauteorages dans les zones météo",
+        "effectType": "investitureRegen",
+        "effectValue": 2.0
+      }
+    ],
+    "spriteName": "item_carapace_plate",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "gemheart_fragment",
+    "name": "Fragment de Cœur-gemme",
+    "description": "Un fragment du précieux cœur-gemme d'un Grandfossoyeur.",
+    "rarity": "rare",
+    "slot": "amulet",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "investiture", "value": 4 }, { "stat": "spirit", "value": 3 }, { "stat": "luck", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_gemheart_power",
+        "name": "Pouvoir du Cœur-gemme",
+        "description": "Les gemmes rechargent 25% plus de Lumière d'Orage",
+        "effectType": "investitureRegen",
+        "effectValue": 0.25
+      }
+    ],
+    "spriteName": "item_gemheart_fragment",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "voidspren_essence",
+    "name": "Essence de Néantispren",
+    "description": "L'essence cristallisée d'un spren du Vide. Pulse d'une énergie sombre.",
+    "rarity": "rare",
+    "slot": "ring1",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "spirit", "value": 4 }, { "stat": "strength", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_void_touch",
+        "name": "Toucher du Vide",
+        "description": "Les attaques magiques ont 10% de chance d'étourdir",
+        "effectType": "critChance",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_voidspren_essence",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "thunderclast_heart",
+    "name": "Cœur de Tonnerreclaste",
+    "description": "Le cœur de pierre animée d'un Tonnerreclaste. Vibre d'un pouvoir ancien d'Odium.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "vigor", "value": 6 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "spirit", "value": 4 },
+      { "stat": "investiture", "value": 3 },
+      { "stat": "agility", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_thunderclast_power",
+        "name": "Puissance Tellurique",
+        "description": "Les attaques AoE font 25% de dégâts supplémentaires",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": 0.25
+      }
+    ],
+    "spriteName": "item_thunderclast_heart",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "honorblade_shard",
+    "name": "Éclat d'Honorlame",
+    "description": "Un fragment d'une véritable Honorlame, forgée par l'Éclat Honneur lui-même.",
+    "rarity": "cosmeric",
+    "slot": "mainWeapon",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "strength", "value": 8 },
+      { "stat": "spirit", "value": 6 },
+      { "stat": "agility", "value": 4 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_honor_radiance",
+        "name": "Radiance d'Honneur",
+        "description": "Débloque temporairement le Surgebinding même sans être Radieux",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": 0.5
+      },
+      {
+        "id": "trait_cosmeric_resonance",
+        "name": "Résonance Cosmérique",
+        "description": "+15% toutes stats dans n'importe quel monde",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.15
+      }
+    ],
+    "spriteName": "item_honorblade_shard",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "desert_water_flask",
+    "name": "Gourde du Désert",
+    "description": "Eau purifiée de Dayside. Essentielle pour la Maîtrise du Sable.",
+    "rarity": "common",
+    "slot": "belt",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_water_flask",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "white_sand_pouch",
+    "name": "Sacoche de Sable Blanc",
+    "description": "Sable blanc de Dayside, infusé par le soleil. Réagit à l'Investiture.",
+    "rarity": "uncommon",
+    "slot": "offhand",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_white_sand",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "wyrm_scale",
+    "name": "Écaille de Ver des Sables",
+    "description": "Écaille iridescente d'un ver des sables. Incroyablement résistante à la chaleur.",
+    "rarity": "rare",
+    "slot": "chest",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "agility", "value": 2 }, { "stat": "strength", "value": 1 }],
+    "traits": [
+      {
+        "id": "trait_sand_resistance",
+        "name": "Résistance du Désert",
+        "description": "Immunité aux effets de sable et réduction de 10% des dégâts physiques",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": -0.10
+      }
+    ],
+    "spriteName": "item_wyrm_scale",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "raider_scimitar",
+    "name": "Cimeterre de Pillard",
+    "description": "Lame courbe des nomades de Dayside. Rapide et tranchante.",
+    "rarity": "uncommon",
+    "slot": "mainWeapon",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "strength", "value": 3 }, { "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_raider_scimitar",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "sandling_carapace",
+    "name": "Carapace de Sablonite",
+    "description": "Carapace cristallisée d'une Sablonite. Le sable blanc s'y est solidifié en armure naturelle.",
+    "rarity": "epic",
+    "slot": "shoulders",
+    "requiredLevel": 5,
+    "statBonuses": [
+      { "stat": "vigor", "value": 5 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "spirit", "value": 2 },
+      { "stat": "investiture", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_sand_shield",
+        "name": "Bouclier de Sable",
+        "description": "15% de chance de bloquer une attaque avec un mur de sable automatique",
+        "effectType": "critChance",
+        "effectValue": 0.15
+      },
+      {
+        "id": "trait_solar_charge",
+        "name": "Charge Solaire",
+        "description": "Régénère l'Investiture en plein soleil (+3/s)",
+        "effectType": "investitureRegen",
+        "effectValue": 3.0
+      }
+    ],
+    "spriteName": "item_sandling_carapace",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "dark_sand_core",
+    "name": "Noyau de Sable Noir",
+    "description": "Cristal de sable noir de Darkside. Absorbe la lumière et l'énergie.",
+    "rarity": "rare",
+    "slot": "ring1",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "spirit", "value": 4 }, { "stat": "investiture", "value": 3 }, { "stat": "luck", "value": 1 }],
+    "traits": [
+      {
+        "id": "trait_dark_absorption",
+        "name": "Absorption Sombre",
+        "description": "Les attaques magiques reçues restaurent 5% d'Investiture",
+        "effectType": "investitureRegen",
+        "effectValue": 0.05
+      }
+    ],
+    "spriteName": "item_dark_sand_core",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "sand_lord_crown",
+    "name": "Couronne du Seigneur des Sables",
+    "description": "La couronne noire du maître de Darkside. Les grains de sable tourbillonnent autour d'elle.",
+    "rarity": "legendary",
+    "slot": "helmet",
+    "requiredLevel": 6,
+    "statBonuses": [
+      { "stat": "spirit", "value": 6 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_sand_lord_command",
+        "name": "Commandement du Sable",
+        "description": "Les compétences de Maîtrise du Sable coûtent 30% moins d'eau",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.3
+      }
+    ],
+    "spriteName": "item_sand_lord_crown",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "darkside_shard",
+    "name": "Éclat de Darkside",
+    "description": "Fragment du pouvoir primordial de Darkside. Pulse entre lumière et ténèbres.",
+    "rarity": "cosmeric",
+    "slot": "offhand",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "spirit", "value": 7 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "investiture", "value": 6 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_duality",
+        "name": "Dualité Lumière-Ombre",
+        "description": "Les attaques alternent entre dégâts de lumière et d'ombre (+40% dégâts)",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.4
+      },
+      {
+        "id": "trait_taldain_resonance",
+        "name": "Résonance de Taldain",
+        "description": "+20% toutes stats sur Taldain, +10% sur les autres mondes",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_darkside_shard",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "nightmare_ink",
+    "name": "Encre de Cauchemar",
+    "description": "Encre noire extraite de cauchemars vaincus. Utilisée par les Peintres pour leurs techniques.",
+    "rarity": "common",
+    "slot": "offhand",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_nightmare_ink",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "hion_shard",
+    "name": "Éclat de Hion",
+    "description": "Fragment d'une ligne de hion. Brille d'une douce lumière protectrice.",
+    "rarity": "uncommon",
+    "slot": "amulet",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "investiture", "value": 3 }, { "stat": "spirit", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_hion_shard",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "shadow_fabric",
+    "name": "Tissu d'Ombre",
+    "description": "Matière sombre arrachée à un Grand Cauchemar. Se fond dans l'obscurité.",
+    "rarity": "rare",
+    "slot": "cape",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "agility", "value": 4 }, { "stat": "luck", "value": 2 }, { "stat": "spirit", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_shadow_cloak",
+        "name": "Cape d'Ombre",
+        "description": "+20% esquive dans les zones sombres",
+        "effectType": "critChance",
+        "effectValue": 0.2
+      }
+    ],
+    "spriteName": "item_shadow_fabric",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "shadow_cloak_piece",
+    "name": "Fragment de Cape des Ombres",
+    "description": "Morceau de la cape d'un Chercheur d'Ombre. Se dissout partiellement à la lumière.",
+    "rarity": "epic",
+    "slot": "cape",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "agility", "value": 5 },
+      { "stat": "spirit", "value": 3 },
+      { "stat": "luck", "value": 3 },
+      { "stat": "investiture", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_phase_shift",
+        "name": "Décalage de Phase",
+        "description": "10% de chance de devenir intangible 1s après avoir été touché",
+        "effectType": "critChance",
+        "effectValue": 0.1
+      },
+      {
+        "id": "trait_nightmare_walker",
+        "name": "Marcheur de Cauchemars",
+        "description": "+25% dégâts contre les cauchemars",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.25
+      }
+    ],
+    "spriteName": "item_shadow_cloak",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "sentinel_core",
+    "name": "Noyau de Sentinelle",
+    "description": "Le cœur cristallisé d'une Sentinelle Cauchemardesque. Pulse d'une énergie sombre mais stable.",
+    "rarity": "rare",
+    "slot": "ring1",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "spirit", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [
+      {
+        "id": "trait_sentinel_ward",
+        "name": "Protection de Sentinelle",
+        "description": "Crée un bouclier absorbant 50 dégâts toutes les 30s",
+        "effectType": "investitureRegen",
+        "effectValue": 50.0
+      }
+    ],
+    "spriteName": "item_sentinel_core",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "nightmare_heart",
+    "name": "Cœur du Père des Cauchemars",
+    "description": "Le cœur-machine du Père des Cauchemars. Entre technologie et magie, il pulse d'une énergie qui défie la réalité.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 7 },
+      { "stat": "investiture", "value": 6 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_reality_painter",
+        "name": "Peintre de Réalité",
+        "description": "Les techniques de peinture coûtent 40% moins d'encre et font +30% de dégâts",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.4
+      }
+    ],
+    "spriteName": "item_nightmare_heart",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "machine_core_fragment",
+    "name": "Fragment du Noyau Machine",
+    "description": "Un fragment de la machine au cœur du Linceul. La technologie d'une civilisation oubliée.",
+    "rarity": "cosmeric",
+    "slot": "chest",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "vigor", "value": 8 },
+      { "stat": "spirit", "value": 6 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_machine_resonance",
+        "name": "Résonance Mécanique",
+        "description": "Les cooldowns de toutes les compétences sont réduits de 20%",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.2
+      },
+      {
+        "id": "trait_komashi_bond",
+        "name": "Lien de Komashi",
+        "description": "Les alliés invoqués (peintures, pierres) ont +50% de durée et de puissance",
+        "effectType": "summonDuration",
+        "effectValue": 0.5
+      }
+    ],
+    "spriteName": "item_machine_core",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "painters_masterwork",
+    "name": "Chef-d'Œuvre du Peintre",
+    "description": "La peinture ultime — un portrait qui capture l'essence même de la réalité. L'œuvre d'une vie.",
+    "rarity": "cosmeric",
+    "slot": "offhand",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 9 },
+      { "stat": "investiture", "value": 7 },
+      { "stat": "agility", "value": 4 },
+      { "stat": "luck", "value": 4 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "strength", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_reality_canvas",
+        "name": "Toile de Réalité",
+        "description": "Peut peindre des objets dans la réalité — crée des consommables aléatoires après chaque combat",
+        "effectType": "lifesteal",
+        "effectValue": 0.1
+      },
+      {
+        "id": "trait_dream_walker",
+        "name": "Marcheur de Rêves",
+        "description": "+20% toutes stats la nuit ou dans les zones sombres, accès au Shadesmar",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.2
+      }
+    ],
+    "spriteName": "item_painters_masterwork",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "breath_essence",
+    "name": "Essence de Souffle",
+    "description": "Un fragment cristallisé de Souffle BioChroma. Vibre doucement de couleurs changeantes.",
+    "rarity": "common",
+    "slot": "ring2",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_breath_essence",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "chromatic_thread",
+    "name": "Fil Chromatique",
+    "description": "Fil tissé avec du Souffle résiduel. Les couleurs se déplacent le long de sa surface.",
+    "rarity": "uncommon",
+    "slot": "offhand",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_chromatic_thread",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "awakened_blade",
+    "name": "Lame Éveillée",
+    "description": "Une épée Éveillée par le Souffle. Elle s'anime à chaque coup, frappant avec une volonté propre.",
+    "rarity": "rare",
+    "slot": "mainWeapon",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "spirit", "value": 3 }],
+    "traits": [
+      {
+        "id": "trait_animate_on_hit",
+        "name": "Animation au Contact",
+        "description": "Chaque coup a 15% de chance d'animer la lame pour une attaque bonus",
+        "effectType": "critChance",
+        "effectValue": 0.15
+      }
+    ],
+    "spriteName": "item_awakened_blade",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "returned_bloom",
+    "name": "Fleur du Retourné",
+    "description": "Une fleur éternelle née du Souffle Divin d'un Retourné. Ses pétales irradient une aura de couleurs divines.",
+    "rarity": "epic",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [
+      { "stat": "spirit", "value": 5 },
+      { "stat": "investiture", "value": 4 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_divine_color_aura",
+        "name": "Aura de Couleur Divine",
+        "description": "Émet une aura qui draine les couleurs ennemies, réduisant leurs dégâts de 10%",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": -0.10
+      },
+      {
+        "id": "trait_returned_vitality",
+        "name": "Vitalité du Retourné",
+        "description": "Régénère 2% PV par seconde hors combat",
+        "effectType": "lifesteal",
+        "effectValue": 0.02
+      }
+    ],
+    "spriteName": "item_returned_bloom",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "god_king_scepter",
+    "name": "Sceptre du Roi-Dieu",
+    "description": "Le sceptre royal de Hallandren, imprégné de milliers de Souffles. Commande les Sans-Vie d'un simple geste.",
+    "rarity": "legendary",
+    "slot": "mainWeapon",
+    "requiredLevel": 8,
+    "statBonuses": [
+      { "stat": "strength", "value": 7 },
+      { "stat": "spirit", "value": 6 },
+      { "stat": "investiture", "value": 5 },
+      { "stat": "vigor", "value": 3 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_command_lifeless",
+        "name": "Commandement des Sans-Vie",
+        "description": "Invoque un Sans-Vie allié temporaire toutes les 45s",
+        "effectType": "summonDuration",
+        "effectValue": 0.3
+      }
+    ],
+    "spriteName": "item_god_king_scepter",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "divine_breath_crystal",
+    "name": "Cristal de Souffle Divin",
+    "description": "Un cristal contenant l'essence pure du Dixième Accroissement. Les couleurs du monde se plient à la volonté de son porteur.",
+    "rarity": "cosmeric",
+    "slot": "ring1",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 8 },
+      { "stat": "investiture", "value": 7 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_tenth_heightening",
+        "name": "Dixième Accroissement",
+        "description": "Commande absolu sur la couleur et le Souffle — +50% dégâts d'Éveil et Investiture infinie pendant 10s (cooldown 60s)",
+        "effectType": "damageBoostAllomancy",
+        "effectValue": 0.5
+      },
+      {
+        "id": "trait_nalthis_resonance",
+        "name": "Résonance de Nalthis",
+        "description": "+20% toutes stats sur Nalthis, +10% sur les autres mondes",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_divine_breath_crystal",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "aon_glyph_stone",
+    "name": "Pierre Glyphique Aon",
+    "description": "Une pierre gravée d'un Aon ancien. Faiblement luminescente, elle conserve un écho du Dor.",
+    "rarity": "common",
+    "slot": "ring2",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_aon_glyph_stone",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "elantrian_robe",
+    "name": "Robe d'Élantrien",
+    "description": "Une robe autrefois portée par un Élantrien. Le tissu conserve des traces de l'ancienne gloire d'Elantris.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }, { "stat": "investiture", "value": 3 }],
+    "traits": [],
+    "spriteName": "item_elantrian_robe",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "dakhor_bone_charm",
+    "name": "Charme d'Os Dakhor",
+    "description": "Un charme taillé dans les os tordus d'un moine Dakhor. Pulse d'une énergie sombre et puissante.",
+    "rarity": "rare",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "vigor", "value": 3 }],
+    "traits": [
+      {
+        "id": "trait_bone_power",
+        "name": "Pouvoir Osseux",
+        "description": "Les attaques de mêlée ont 12% de chance de briser l'armure ennemie",
+        "effectType": "critChance",
+        "effectValue": 0.12
+      }
+    ],
+    "spriteName": "item_dakhor_bone_charm",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "seons_light",
+    "name": "Lumière de Séon",
+    "description": "L'essence lumineuse d'un Séon, spren d'Aon Dor. Guide son porteur et amplifie sa connexion aux Aons.",
+    "rarity": "epic",
+    "slot": "ring2",
+    "requiredLevel": 8,
+    "statBonuses": [
+      { "stat": "spirit", "value": 5 },
+      { "stat": "investiture", "value": 4 },
+      { "stat": "luck", "value": 2 }
+    ],
+    "traits": [
+      {
+        "id": "trait_aon_guidance",
+        "name": "Guide des Aons",
+        "description": "Les compétences basées sur les Aons coûtent 20% moins d'Investiture et ont +15% de précision",
+        "effectType": "aonDorCostReduction",
+        "effectValue": 0.2
+      },
+      {
+        "id": "trait_seon_bond",
+        "name": "Lien de Séon",
+        "description": "Révèle les ennemis et trésors cachés dans un rayon de 10 unités",
+        "effectType": "investitureRegen",
+        "effectValue": 2.0
+      }
+    ],
+    "spriteName": "item_seons_light",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "pool_of_devotion_vial",
+    "name": "Fiole du Pool de Dévotion",
+    "description": "Une fiole contenant l'eau luminescente du Pool de Dévotion. L'essence même du Dor concentrée sous forme liquide.",
+    "rarity": "legendary",
+    "slot": "amulet",
+    "requiredLevel": 9,
+    "statBonuses": [
+      { "stat": "spirit", "value": 7 },
+      { "stat": "investiture", "value": 6 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "strength", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_devotions_blessing",
+        "name": "Bénédiction de Dévotion",
+        "description": "Régénère 5% d'Investiture par seconde et soigne les alliés proches de 2% PV/s",
+        "effectType": "investitureRegen",
+        "effectValue": 5.0
+      }
+    ],
+    "spriteName": "item_pool_devotion_vial",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "splinter_of_devotion",
+    "name": "Éclat de Dévotion",
+    "description": "Un Éclat brisé du Shard Dévotion lui-même. Son pouvoir transcende les royaumes et bénit son porteur d'une connexion divine au Dor.",
+    "rarity": "cosmeric",
+    "slot": "offhand",
+    "requiredLevel": 10,
+    "statBonuses": [
+      { "stat": "spirit", "value": 9 },
+      { "stat": "investiture", "value": 8 },
+      { "stat": "strength", "value": 5 },
+      { "stat": "vigor", "value": 4 },
+      { "stat": "agility", "value": 3 },
+      { "stat": "luck", "value": 3 }
+    ],
+    "traits": [
+      {
+        "id": "trait_devotions_blessing_cosmeric",
+        "name": "Bénédiction de Dévotion",
+        "description": "Tous les Aons sont perfectionés — +40% dégâts et effets des compétences Aon Dor",
+        "effectType": "damageBoostSurgebinding",
+        "effectValue": 0.4
+      },
+      {
+        "id": "trait_sel_resonance",
+        "name": "Résonance de Sel",
+        "description": "+20% toutes stats sur Sel, +10% sur les autres mondes",
+        "effectType": "allStatBoostOffWorld",
+        "effectValue": 0.1
+      }
+    ],
+    "spriteName": "item_splinter_devotion",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "potion_soin",
+    "name": "Potion de Soin",
+    "description": "Une potion à base d'herbes médicinales. Restaure des points de vie.",
+    "rarity": "common",
+    "slot": "consumable",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "vigor", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_potion_soin",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "potion_investiture",
+    "name": "Potion d'Investiture",
+    "description": "Un mélange d'herbes et de racine d'orage. Restaure l'Investiture.",
+    "rarity": "uncommon",
+    "slot": "consumable",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "investiture", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_potion_investiture",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "elixir_vitalite",
+    "name": "Élixir de Vitalité",
+    "description": "Un élixir puissant à base de fleurs de Nalthis. Restaure PV et Investiture.",
+    "rarity": "rare",
+    "slot": "consumable",
+    "requiredLevel": 15,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_elixir_vitalite",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "elixir_supreme",
+    "name": "Élixir Suprême",
+    "description": "L'élixir ultime des herboristes. Combine les essences les plus rares du Cosmere.",
+    "rarity": "epic",
+    "slot": "consumable",
+    "requiredLevel": 40,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "investiture", "value": 4 }],
+    "traits": [],
+    "spriteName": "item_elixir_supreme",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "lingot_acier",
+    "name": "Lingot d'Acier",
+    "description": "Un lingot d'acier forgé à partir de minerai brut. Solide et polyvalent.",
+    "rarity": "common",
+    "slot": "offhand",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "strength", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_lingot_acier",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "lame_pewter",
+    "name": "Lame de Pewter",
+    "description": "Une lame forgée en pewter allomantique. Légère mais tranchante.",
+    "rarity": "uncommon",
+    "slot": "mainWeapon",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "strength", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_lame_pewter",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "bouclier_gemme",
+    "name": "Bouclier de Gemme",
+    "description": "Un bouclier incrusté de gemmes de lumière. Brille d'une lueur protectrice.",
+    "rarity": "rare",
+    "slot": "offhand",
+    "requiredLevel": 25,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "investiture", "value": 3 }],
+    "traits": [{ "id": "trait_gem_shield", "name": "Protection Gemmée", "description": "Réduit les dégâts magiques de 10%", "effectType": "investitureRegen", "effectValue": 0.1 }],
+    "spriteName": "item_bouclier_gemme",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "arme_atium",
+    "name": "Arme d'Atium",
+    "description": "Une arme forgée dans le métal le plus rare. Chaque coup anticipe les mouvements ennemis.",
+    "rarity": "legendary",
+    "slot": "mainWeapon",
+    "requiredLevel": 50,
+    "statBonuses": [{ "stat": "strength", "value": 7 }, { "stat": "agility", "value": 5 }, { "stat": "luck", "value": 4 }],
+    "traits": [{ "id": "trait_atium_foresight", "name": "Préscience d'Atium", "description": "+25% chance de critique", "effectType": "critChance", "effectValue": 0.25 }],
+    "spriteName": "item_arme_atium",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "arc_simple",
+    "name": "Arc Simple",
+    "description": "Un arc taillé dans du bois commun. Simple mais efficace.",
+    "rarity": "common",
+    "slot": "mainWeapon",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "agility", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_arc_simple",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "baton_coquebois",
+    "name": "Bâton de Coquebois",
+    "description": "Un bâton taillé dans le coquebois de Roshar. Résistant comme la pierre.",
+    "rarity": "uncommon",
+    "slot": "mainWeapon",
+    "requiredLevel": 15,
+    "statBonuses": [{ "stat": "strength", "value": 3 }, { "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_baton_coquebois",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "armure_cuir",
+    "name": "Armure de Cuir",
+    "description": "Une armure en cuir brut tanné. Protection basique mais fiable.",
+    "rarity": "common",
+    "slot": "chest",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_armure_cuir",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "plastron_crustace",
+    "name": "Plastron de Crustacé",
+    "description": "Armure façonnée à partir d'écailles de crustacé rosharien. Légère et résistante.",
+    "rarity": "uncommon",
+    "slot": "chest",
+    "requiredLevel": 20,
+    "statBonuses": [{ "stat": "vigor", "value": 3 }, { "stat": "agility", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_plastron_crustace",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "cape_larkin",
+    "name": "Cape de Larkin",
+    "description": "Cape fabriquée en peau de Larkin. Absorbe l'Investiture environnante.",
+    "rarity": "rare",
+    "slot": "cape",
+    "requiredLevel": 35,
+    "statBonuses": [{ "stat": "investiture", "value": 4 }, { "stat": "spirit", "value": 3 }, { "stat": "agility", "value": 2 }],
+    "traits": [{ "id": "trait_larkin_absorb", "name": "Absorption de Larkin", "description": "Absorbe 5% de l'Investiture des ennemis proches", "effectType": "investitureRegen", "effectValue": 0.05 }],
+    "spriteName": "item_cape_larkin",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "enchant_force",
+    "name": "Enchantement de Force",
+    "description": "Un parchemin d'enchantement imprégné de poudre arcane. Augmente la puissance.",
+    "rarity": "uncommon",
+    "slot": "consumable",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "strength", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_enchant_force",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "enchant_cosmos",
+    "name": "Enchantement Cosmérique",
+    "description": "Un enchantement rare combinant cristal d'Investiture et sable blanc. Transcende les mondes.",
+    "rarity": "epic",
+    "slot": "consumable",
+    "requiredLevel": 30,
+    "statBonuses": [{ "stat": "spirit", "value": 3 }, { "stat": "investiture", "value": 3 }],
+    "traits": [{ "id": "trait_cosmic_link", "name": "Lien Cosmérique", "description": "+10% toutes stats", "effectType": "allStatBoostOffWorld", "effectValue": 0.1 }],
+    "spriteName": "item_enchant_cosmos",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "cognitive_bead",
+    "name": "Perle Cognitive",
+    "description": "Une bille de verre représentant un objet du monde physique. Elle pulse doucement dans Shadesmar.",
+    "rarity": "common",
+    "slot": "amulet",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_cognitive_bead",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "spren_essence",
+    "name": "Essence de Spren",
+    "description": "L'essence cristallisée d'un spren vaincu. Irradie d'Investiture pure.",
+    "rarity": "uncommon",
+    "slot": "ring",
+    "requiredLevel": 8,
+    "statBonuses": [{ "stat": "spirit", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_spren_essence",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "voidlight_crystal",
+    "name": "Cristal de Vide-lumière",
+    "description": "Un cristal sombre pulsant de vide-lumière. Sa présence met mal à l'aise.",
+    "rarity": "rare",
+    "slot": "weapon",
+    "requiredLevel": 9,
+    "statBonuses": [{ "stat": "strength", "value": 4 }, { "stat": "spirit", "value": 3 }],
+    "traits": ["void_touch"],
+    "spriteName": "item_voidlight_crystal",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "fused_carapace",
+    "name": "Carapace de Fusionné",
+    "description": "Armure naturelle arrachée à un Fusionné. Incroyablement résistante et légère.",
+    "rarity": "epic",
+    "slot": "chest",
+    "requiredLevel": 9,
+    "statBonuses": [{ "stat": "vigor", "value": 5 }, { "stat": "agility", "value": 3 }],
+    "traits": ["voidbound_resilience"],
+    "spriteName": "item_fused_carapace",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "unmade_fragment",
+    "name": "Fragment de Défait",
+    "description": "Un morceau cristallisé d'un Défait. Pulse d'une énergie corrompue mais puissante.",
+    "rarity": "epic",
+    "slot": "amulet",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "spirit", "value": 6 }, { "stat": "luck", "value": 3 }],
+    "traits": ["corruption_mastery", "fear_aura"],
+    "spriteName": "item_unmade_fragment",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "shard_fragment",
+    "name": "Fragment d'Éclat Divin",
+    "description": "Un fragment de l'Éclat brisé. Contient une parcelle du pouvoir de la Création elle-même.",
+    "rarity": "legendary",
+    "slot": "weapon",
+    "requiredLevel": 12,
+    "statBonuses": [{ "stat": "strength", "value": 8 }, { "stat": "spirit", "value": 6 }, { "stat": "vigor", "value": 4 }],
+    "traits": ["divine_power", "shard_resonance"],
+    "spriteName": "item_shard_fragment",
+    "worldOrigin": "shadesmar"
+  },
+  {
+    "id": "cosmere_nexus_gem",
+    "name": "Gemme du Nexus Cosmérique",
+    "description": "La gemme ultime, forgée par la convergence de tous les pouvoirs du Cosmere. Transcende les limites d'un seul système magique.",
+    "rarity": "cosmeric",
+    "slot": "ring",
+    "requiredLevel": 12,
+    "statBonuses": [{ "stat": "strength", "value": 5 }, { "stat": "spirit", "value": 5 }, { "stat": "vigor", "value": 5 }, { "stat": "agility", "value": 5 }, { "stat": "luck", "value": 5 }],
+    "traits": ["cosmere_transcendence", "worldhopper_mastery"],
+    "spriteName": "item_cosmere_nexus",
+    "worldOrigin": "shadesmar"
+  },
+
+  {
+    "id": "voidspren_essence",
+    "name": "Essence de Néantispren",
+    "description": "Une substance sombre et pulsante, résidu de la corruption cosmérique. Les enquêteurs de T'Telir la recherchent.",
+    "rarity": "uncommon",
+    "slot": "consumable",
+    "requiredLevel": 1,
+    "statBonuses": [],
+    "traits": ["quest_item"],
+    "spriteName": "item_voidspren_essence",
+    "worldOrigin": "nalthis"
+  },
+
+  {
+    "id": "skaa_leather_gloves",
+    "name": "Gants en cuir Skaa",
+    "description": "Des gants simples fabriqués par les Skaa pour protéger leurs mains lors du travail.",
+    "rarity": "common",
+    "slot": "gloves",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_gloves_skaa",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "mistcloak_gloves",
+    "name": "Gants de Brumeux",
+    "description": "Des gants sombres tressés avec les fibres d'un manteau de brumes, offrant dextérité et discrétion.",
+    "rarity": "uncommon",
+    "slot": "gloves",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "agility", "value": 2 }, { "stat": "strength", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_gloves_mist",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "shardplate_gauntlets",
+    "name": "Gantelets d'Armure Esquissée",
+    "description": "Des gantelets forgés à partir de fragments d'Armure Esquissée, vibrant de lumière d'orage.",
+    "rarity": "rare",
+    "slot": "gloves",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "strength", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_gloves_shard",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "awakened_gloves",
+    "name": "Gants Éveillés",
+    "description": "Des gants imprégnés de Souffles, capables de mouvements autonomes subtils.",
+    "rarity": "epic",
+    "slot": "gloves",
+    "requiredLevel": 7,
+    "statBonuses": [{ "stat": "spirit", "value": 3 }, { "stat": "agility", "value": 3 }, { "stat": "strength", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_gloves_awakened",
+    "worldOrigin": "nalthis"
+  },
+  {
+    "id": "aon_inscribed_gloves",
+    "name": "Gants Gravés d'Aons",
+    "description": "Des gants élantiens gravés de glyphes lumineux qui amplifient le pouvoir du Dor.",
+    "rarity": "legendary",
+    "slot": "gloves",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "spirit", "value": 5 }, { "stat": "strength", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_gloves_aon",
+    "worldOrigin": "sel"
+  },
+
+  {
+    "id": "skaa_trousers",
+    "name": "Pantalon de Skaa",
+    "description": "Un pantalon simple et robuste porté par le peuple Skaa dans les mines de Scadrial.",
+    "rarity": "common",
+    "slot": "legs",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "vigor", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_legs_skaa",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "parshendi_warskirt",
+    "name": "Jupe de guerre Parshendi",
+    "description": "Une jupe de combat tissée avec les carapaces des Parshenlis, offrant protection et mobilité.",
+    "rarity": "uncommon",
+    "slot": "legs",
+    "requiredLevel": 4,
+    "statBonuses": [{ "stat": "vigor", "value": 2 }, { "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_legs_parshendi",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "sand_master_leggings",
+    "name": "Jambières du Maître du Sable",
+    "description": "Des jambières taldaines légères permettant de se déplacer aisément sur les dunes.",
+    "rarity": "rare",
+    "slot": "legs",
+    "requiredLevel": 6,
+    "statBonuses": [{ "stat": "agility", "value": 3 }, { "stat": "vigor", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_legs_sand",
+    "worldOrigin": "taldain"
+  },
+  {
+    "id": "nightmare_woven_legs",
+    "name": "Jambières Tissées de Cauchemar",
+    "description": "Des jambières créées à partir de l'encre de cauchemars, absorbant les impacts.",
+    "rarity": "epic",
+    "slot": "legs",
+    "requiredLevel": 8,
+    "statBonuses": [{ "stat": "vigor", "value": 4 }, { "stat": "agility", "value": 2 }, { "stat": "spirit", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_legs_nightmare",
+    "worldOrigin": "komashi"
+  },
+  {
+    "id": "shardplate_greaves",
+    "name": "Jambières d'Armure Esquissée",
+    "description": "Des jambières d'Armure Esquissée complètes, presque indestructibles.",
+    "rarity": "legendary",
+    "slot": "legs",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "vigor", "value": 5 }, { "stat": "strength", "value": 3 }, { "stat": "agility", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_legs_shard",
+    "worldOrigin": "roshar"
+  },
+
+  {
+    "id": "skaa_work_boots",
+    "name": "Bottes de travail Skaa",
+    "description": "Des bottes solides usées par le travail dans les mines de cendres.",
+    "rarity": "common",
+    "slot": "boots",
+    "requiredLevel": 1,
+    "statBonuses": [{ "stat": "agility", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_skaa",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "coinshot_boots",
+    "name": "Bottes de Tire-Monnaie",
+    "description": "Des bottes renforcées pour absorber l'impact des Poussées allomantiques.",
+    "rarity": "uncommon",
+    "slot": "boots",
+    "requiredLevel": 3,
+    "statBonuses": [{ "stat": "agility", "value": 2 }, { "stat": "vigor", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_coinshot",
+    "worldOrigin": "scadrial"
+  },
+  {
+    "id": "windrunner_boots",
+    "name": "Bottes du Coureur des Vents",
+    "description": "Des bottes infusées de Lumière d'Orage permettant des bonds surhumains.",
+    "rarity": "rare",
+    "slot": "boots",
+    "requiredLevel": 5,
+    "statBonuses": [{ "stat": "agility", "value": 4 }, { "stat": "spirit", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_windrunner",
+    "worldOrigin": "roshar"
+  },
+  {
+    "id": "dakhor_monk_sandals",
+    "name": "Sandales du Moine Dakhor",
+    "description": "Des sandales rituelles des moines Dakhor, dont les os transformés confèrent une vitesse surnaturelle.",
+    "rarity": "epic",
+    "slot": "boots",
+    "requiredLevel": 8,
+    "statBonuses": [{ "stat": "agility", "value": 4 }, { "stat": "spirit", "value": 2 }, { "stat": "luck", "value": 1 }],
+    "traits": [],
+    "spriteName": "item_boots_dakhor",
+    "worldOrigin": "sel"
+  },
+  {
+    "id": "cosmere_strider_boots",
+    "name": "Bottes du Salteur Cosmère",
+    "description": "Des bottes légendaires portées par les plus grands Worldhoppers, permettant de marcher entre les mondes.",
+    "rarity": "legendary",
+    "slot": "boots",
+    "requiredLevel": 10,
+    "statBonuses": [{ "stat": "agility", "value": 5 }, { "stat": "luck", "value": 3 }, { "stat": "investiture", "value": 2 }],
+    "traits": [],
+    "spriteName": "item_boots_cosmere",
+    "worldOrigin": "shadesmar"
+  }
+]

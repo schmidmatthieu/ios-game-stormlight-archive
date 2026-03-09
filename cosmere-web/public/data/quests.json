@@ -1,0 +1,4151 @@
+[
+  {
+    "id": "scadrial_main_1",
+    "name": "Les Brumes de la Rébellion",
+    "description": "Vous vous éveillez dans les rues sombres de Luthadel, sans souvenirs. Un contact de Kelsier vous trouve et vous révèle que vous possédez des pouvoirs allomantiques. Mais d'abord, vous devez prouver votre valeur en éliminant les skaa corrompus qui terrorisent le quartier.",
+    "type": "main",
+    "worldID": "scadrial",
+    "requiredLevel": 1,
+    "prerequisites": [],
+    "status": "available",
+    "objectives": [
+      {
+        "id": "scadrial_main_1_obj1",
+        "description": "Parler au contact de Kelsier dans la ruelle",
+        "type": "talkTo",
+        "targetID": "kelsier_contact",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_1_obj2",
+        "description": "Éliminer les skaa corrompus dans le quartier bas",
+        "type": "kill",
+        "targetID": "corrupted_skaa",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_1_obj3",
+        "description": "Récupérer les fioles de métal sur les corps",
+        "type": "collect",
+        "targetID": "steel_vial",
+        "requiredCount": 2,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 100,
+      "gold": 50,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "steel_vial",
+        "iron_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_main_1",
+    "actNumber": 1
+  },
+  {
+    "id": "scadrial_main_2",
+    "name": "Les Cendres du Passé",
+    "description": "Le contact de Kelsier vous envoie dans les Champs de Cendres pour retrouver des documents cachés par le Survivant lui-même. Ces informations sont essentielles pour infiltrer Kredik Shaw, la forteresse du Lord Dirigeant. Méfiez-vous des spectres des brumes et des éclaireurs koloss qui rôdent dans les cendres.",
+    "type": "main",
+    "worldID": "scadrial",
+    "requiredLevel": 3,
+    "prerequisites": [
+      "scadrial_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_main_2_obj1",
+        "description": "Explorer les Champs de Cendres",
+        "type": "explore",
+        "targetID": "scadrial_ashfields",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_2_obj2",
+        "description": "Vaincre les spectres des brumes en chemin",
+        "type": "kill",
+        "targetID": "mist_wraith",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_2_obj3",
+        "description": "Éliminer les éclaireurs koloss",
+        "type": "kill",
+        "targetID": "koloss_scout",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_2_obj4",
+        "description": "Récupérer les documents du Survivant",
+        "type": "collect",
+        "targetID": "wraith_bone",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 200,
+      "gold": 120,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "tin_vial",
+        "pewter_vial",
+        "koloss_blade_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_main_2",
+    "actNumber": 1
+  },
+  {
+    "id": "scadrial_main_3",
+    "name": "Le Cœur de Kredik Shaw",
+    "description": "L'heure est venue d'affronter l'Inquisiteur d'Acier qui règne sur Kredik Shaw. Traversez les couloirs hérissés de pics, affrontez la garde d'acier, et mettez fin à la tyrannie de ce monstre. La rébellion de Scadrial dépend de votre victoire.",
+    "type": "main",
+    "worldID": "scadrial",
+    "requiredLevel": 5,
+    "prerequisites": [
+      "scadrial_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_main_3_obj1",
+        "description": "Infiltrer Kredik Shaw",
+        "type": "explore",
+        "targetID": "scadrial_kredik_shaw",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_3_obj2",
+        "description": "Vaincre les gardes d'acier",
+        "type": "kill",
+        "targetID": "steel_guard",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_main_3_obj3",
+        "description": "Terrasser l'Inquisiteur d'Acier",
+        "type": "defeat",
+        "targetID": "steel_inquisitor",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 500,
+      "gold": 300,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "inquisitor_spike",
+        "atium_bead",
+        "guard_armor_piece"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_main_3",
+    "actNumber": 1
+  },
+  {
+    "id": "scadrial_side_1",
+    "name": "L'Enfant Perdu des Brumes",
+    "description": "Un skaa égaré erre dans les ruelles dangereuses de Luthadel, poursuivi par des corrompus. Retrouvez-le et escortez-le jusqu'au refuge de la rébellion avant qu'il ne soit trop tard.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 2,
+    "prerequisites": [
+      "scadrial_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_1_obj1",
+        "description": "Parler à l'informateur skaa pour localiser le disparu",
+        "type": "talkTo",
+        "targetID": "skaa_informer",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_1_obj2",
+        "description": "Retrouver le skaa perdu",
+        "type": "talkTo",
+        "targetID": "lost_skaa",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_1_obj3",
+        "description": "Escorter le skaa perdu en sécurité",
+        "type": "escort",
+        "targetID": "lost_skaa",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_1_obj4",
+        "description": "Éliminer les skaa corrompus qui vous poursuivent",
+        "type": "kill",
+        "targetID": "corrupted_skaa",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 80,
+      "gold": 40,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "tin_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_1",
+    "actNumber": 1
+  },
+  {
+    "id": "scadrial_side_2",
+    "name": "Le Commerce des Métaux",
+    "description": "Le marchand Yeden a besoin de fioles de métal pour approvisionner la rébellion. Parcourez les champs de cendres et récupérez les métaux rares nécessaires aux allomanciens. Chaque fiole compte dans la lutte contre l'Empire Final.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 2,
+    "prerequisites": [
+      "scadrial_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_2_obj1",
+        "description": "Parler au marchand Yeden",
+        "type": "talkTo",
+        "targetID": "merchant_yeden",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_2_obj2",
+        "description": "Collecter des fioles d'acier",
+        "type": "collect",
+        "targetID": "steel_vial",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_2_obj3",
+        "description": "Collecter des fioles de fer",
+        "type": "collect",
+        "targetID": "iron_vial",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_2_obj4",
+        "description": "Collecter des fioles d'étain",
+        "type": "collect",
+        "targetID": "tin_vial",
+        "requiredCount": 2,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 60,
+      "gold": 100,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 5
+        }
+      ],
+      "itemIDs": [
+        "pewter_vial",
+        "pewter_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_2",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_main_1",
+    "name": "Les Campements de Guerre",
+    "description": "Après avoir traversé le Shadesmar, vous arrivez sur les Plaines Brisées de Roshar. Les camps de guerre sont en effervescence — une nouvelle offensive se prépare contre les Parshendis. Le capitaine des ponts vous accueille et vous demande de prouver votre valeur.",
+    "type": "main",
+    "worldID": "roshar",
+    "requiredLevel": 5,
+    "prerequisites": [
+      "scadrial_main_3"
+    ],
+    "status": "available",
+    "objectives": [
+      {
+        "id": "roshar_main_1_obj1",
+        "description": "Parler au capitaine des ponts aux campements",
+        "type": "talkTo",
+        "targetID": "bridge_captain",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_1_obj2",
+        "description": "Explorer les campements de guerre",
+        "type": "explore",
+        "targetID": "roshar_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_1_obj3",
+        "description": "Repousser les éclaireurs du Néant",
+        "type": "kill",
+        "targetID": "voidbringer_scout",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 250,
+      "gold": 150,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "stormlight_chip",
+        "stormlight_chip",
+        "stormlight_mark"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_main_1",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_main_2",
+    "name": "L'Appel des Plaines Brisées",
+    "description": "Le capitaine des ponts vous envoie en expédition sur les Plaines Brisées. Les guerriers parshendis s'organisent et deviennent de plus en plus agressifs. Explorez les plateaux, affrontez les Parshendis et découvrez ce qui les pousse à intensifier leurs attaques. Le chemin vers Urithiru se dévoile peu à peu.",
+    "type": "main",
+    "worldID": "roshar",
+    "requiredLevel": 7,
+    "prerequisites": [
+      "roshar_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_main_2_obj1",
+        "description": "Explorer les Plaines Brisées",
+        "type": "explore",
+        "targetID": "roshar_shattered_plains",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_2_obj2",
+        "description": "Vaincre les guerriers parshendis",
+        "type": "kill",
+        "targetID": "parshendi_warrior",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_2_obj3",
+        "description": "Éliminer les soldats du Néant",
+        "type": "kill",
+        "targetID": "voidbringer_soldier",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_2_obj4",
+        "description": "Récupérer l'essence de néantspren",
+        "type": "collect",
+        "targetID": "voidspren_essence",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 400,
+      "gold": 250,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "stormlight_mark",
+        "carapace_armor_piece",
+        "voidspren_essence"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_main_2",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_main_3",
+    "name": "Le Siège d'Urithiru",
+    "description": "La cité perdue d'Urithiru est sous la menace d'un Tonnerrefoudre, une créature colossale née du Néant. Vous devez gravir la tour et affronter cette abomination avant qu'elle ne détruise le dernier refuge de l'humanité sur Roshar. C'est le combat le plus périlleux que vous ayez jamais mené.",
+    "type": "main",
+    "worldID": "roshar",
+    "requiredLevel": 9,
+    "prerequisites": [
+      "roshar_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_main_3_obj1",
+        "description": "Pénétrer dans Urithiru",
+        "type": "explore",
+        "targetID": "roshar_urithiru",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_3_obj2",
+        "description": "Vaincre les soldats du Néant dans la tour",
+        "type": "kill",
+        "targetID": "voidbringer_soldier",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_main_3_obj3",
+        "description": "Terrasser le Tonnerrefoudre",
+        "type": "defeat",
+        "targetID": "thunderclast",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 750,
+      "gold": 500,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "thunderclast_heart",
+        "honorblade_shard",
+        "stormlight_broam"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_main_3",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_side_1",
+    "name": "La Chasse au Cœur de Gemme",
+    "description": "Les chasseurs de gemmes ont repéré un gouffréant juvénile dans les crevasses des Plaines Brisées. Son cœur de gemme vaut une fortune. Descendez dans les profondeurs, traquez la bête et rapportez le trophée — si vous survivez.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 6,
+    "prerequisites": [
+      "roshar_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_1_obj1",
+        "description": "Parler au marchand de gemmes",
+        "type": "talkTo",
+        "targetID": "gemstone_merchant",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_1_obj2",
+        "description": "Traquer et vaincre le gouffréant juvénile",
+        "type": "defeat",
+        "targetID": "chasmfiend_juvenile",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_1_obj3",
+        "description": "Récupérer le fragment de cœur de gemme",
+        "type": "collect",
+        "targetID": "gemheart_fragment",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 300,
+      "gold": 350,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "gemheart_fragment",
+        "carapace_plate"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_1",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_side_2",
+    "name": "Les Écrits de l'Érudit",
+    "description": "Un ardent érudit étudie les glyphes anciens trouvés sur les Plaines Brisées. Il pense qu'ils détiennent des secrets sur les Chevaliers Radieux. Aidez-le dans ses recherches en collectant des fragments de carapace gravés et en repoussant les menaces qui rôdent autour des sites de fouilles.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 6,
+    "prerequisites": [
+      "roshar_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_2_obj1",
+        "description": "Parler à l'ardent érudit",
+        "type": "talkTo",
+        "targetID": "ardent_scholar",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_2_obj2",
+        "description": "Collecter des fragments de carapace gravés",
+        "type": "collect",
+        "targetID": "carapace_armor_piece",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_2_obj3",
+        "description": "Repousser les éclaireurs du Néant des sites de fouilles",
+        "type": "kill",
+        "targetID": "voidbringer_scout",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 200,
+      "gold": 150,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "stormlight_mark",
+        "stormlight_chip"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_2",
+    "actNumber": 1
+  },
+  {
+    "id": "taldain_main_1",
+    "name": "Les Sables de Kezare",
+    "description": "Vous arrivez sur Taldain, un monde partagé entre lumière et ténèbres. Dans la cité de Kezare, l'allié de Kenton vous accueille et vous initie aux mystères de la maîtrise du sable. Mais les pillards du désert menacent les routes commerciales, et votre aide est requise.",
+    "type": "main",
+    "worldID": "taldain",
+    "requiredLevel": 10,
+    "prerequisites": [
+      "roshar_main_3"
+    ],
+    "status": "available",
+    "objectives": [
+      {
+        "id": "taldain_main_1_obj1",
+        "description": "Rencontrer l'allié de Kenton à Kezare",
+        "type": "talkTo",
+        "targetID": "kenton_ally",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_1_obj2",
+        "description": "Explorer le comptoir de Taldain",
+        "type": "explore",
+        "targetID": "taldain_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_1_obj3",
+        "description": "Repousser les pillards du désert",
+        "type": "kill",
+        "targetID": "sand_raider",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_1_obj4",
+        "description": "Récupérer les gourdes d'eau volées",
+        "type": "collect",
+        "targetID": "desert_water_flask",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 400,
+      "gold": 250,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "desert_water_flask",
+        "white_sand_pouch",
+        "raider_scimitar"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_main_1",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_main_2",
+    "name": "Les Dunes Blanches",
+    "description": "Kenton vous envoie explorer les Dunes Blanches à la recherche d'une source d'eau cachée et de sable blanc pur, essentiel à la maîtrise du sable. Les vers des sables rôdent sous la surface, et les sandlings protègent jalousement les gisements de sable pur.",
+    "type": "main",
+    "worldID": "taldain",
+    "requiredLevel": 12,
+    "prerequisites": [
+      "taldain_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_main_2_obj1",
+        "description": "Explorer les Dunes Blanches",
+        "type": "explore",
+        "targetID": "taldain_white_dunes",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_2_obj2",
+        "description": "Vaincre les vers des sables",
+        "type": "kill",
+        "targetID": "sand_wyrm",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_2_obj3",
+        "description": "Éliminer les sandlings protecteurs",
+        "type": "kill",
+        "targetID": "sandling",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_2_obj4",
+        "description": "Collecter du sable blanc pur",
+        "type": "collect",
+        "targetID": "white_sand_pouch",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_2_obj5",
+        "description": "Trouver la source d'eau cachée",
+        "type": "collect",
+        "targetID": "desert_water_flask",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 550,
+      "gold": 350,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "wyrm_scale",
+        "sandling_carapace",
+        "white_sand_pouch"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_main_2",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_main_3",
+    "name": "Le Seigneur des Sables Sombres",
+    "description": "Le Côté Obscur de Taldain abrite une menace ancienne : le Seigneur du Sable, un être d'une puissance terrifiante qui contrôle les golems de sable noir. Traversez le Darkside, affrontez ses serviteurs et mettez fin à son règne de terreur pour restaurer l'équilibre de Taldain.",
+    "type": "main",
+    "worldID": "taldain",
+    "requiredLevel": 14,
+    "prerequisites": [
+      "taldain_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_main_3_obj1",
+        "description": "Traverser vers le Darkside",
+        "type": "explore",
+        "targetID": "taldain_darkside",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_3_obj2",
+        "description": "Détruire les golems de sable noir",
+        "type": "kill",
+        "targetID": "dark_sand_golem",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_main_3_obj3",
+        "description": "Terrasser le Seigneur du Sable",
+        "type": "defeat",
+        "targetID": "sand_lord",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 800,
+      "gold": 550,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "sand_lord_crown",
+        "dark_sand_core",
+        "darkside_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_main_3",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_side_1",
+    "name": "Le Voyageur Égaré",
+    "description": "Un voyageur s'est perdu dans les dunes, à court d'eau et de forces. Le marchand d'eau vous demande de le retrouver avant que le désert ne le consume. Le temps est compté — les vers des sables sont attirés par les vibrations des pas.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 11,
+    "prerequisites": [
+      "taldain_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_1_obj1",
+        "description": "Parler au marchand d'eau",
+        "type": "talkTo",
+        "targetID": "water_merchant",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_1_obj2",
+        "description": "Retrouver le voyageur égaré dans les dunes",
+        "type": "talkTo",
+        "targetID": "lost_traveler",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_1_obj3",
+        "description": "Escorter le voyageur jusqu'à la cité",
+        "type": "escort",
+        "targetID": "lost_traveler",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_1_obj4",
+        "description": "Repousser les vers des sables en chemin",
+        "type": "kill",
+        "targetID": "sand_wyrm",
+        "requiredCount": 2,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 300,
+      "gold": 200,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "desert_water_flask",
+        "wyrm_scale"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_1",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_side_2",
+    "name": "L'Art de la Maîtrise du Sable",
+    "description": "Le maître de sable propose un entraînement intensif pour perfectionner vos capacités. Vous devrez collecter du sable blanc pur, vaincre des créatures du désert et prouver votre maîtrise en récupérant des écailles de vers — le test ultime de tout maître de sable.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 11,
+    "prerequisites": [
+      "taldain_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_2_obj1",
+        "description": "Parler au maître de sable",
+        "type": "talkTo",
+        "targetID": "sand_master_trainer",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_2_obj2",
+        "description": "Collecter du sable blanc pour l'entraînement",
+        "type": "collect",
+        "targetID": "white_sand_pouch",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_2_obj3",
+        "description": "Vaincre des sandlings comme épreuve",
+        "type": "kill",
+        "targetID": "sandling",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_2_obj4",
+        "description": "Récupérer des écailles de ver des sables",
+        "type": "collect",
+        "targetID": "wyrm_scale",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 200,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "white_sand_pouch",
+        "sandling_carapace",
+        "sandling_carapace"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_2",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_main_1",
+    "name": "Les Rues de Kilahito",
+    "description": "Vous arrivez à Kilahito, une cité où les cauchemars prennent forme dans les ténèbres. Le peintre Nikaro vous accueille et vous explique la menace du Linceul. Les cauchemars mineurs infestent déjà les rues — il faut agir avant que la nuit ne tombe complètement.",
+    "type": "main",
+    "worldID": "komashi",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "taldain_main_3"
+    ],
+    "status": "available",
+    "objectives": [
+      {
+        "id": "komashi_main_1_obj1",
+        "description": "Rencontrer le peintre Nikaro",
+        "type": "talkTo",
+        "targetID": "painter_nikaro",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_1_obj2",
+        "description": "Explorer les rues de Kilahito",
+        "type": "explore",
+        "targetID": "komashi_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_1_obj3",
+        "description": "Éliminer les cauchemars mineurs",
+        "type": "kill",
+        "targetID": "lesser_nightmare",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_1_obj4",
+        "description": "Collecter de l'encre de cauchemar",
+        "type": "collect",
+        "targetID": "nightmare_ink",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 550,
+      "gold": 350,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "nightmare_ink",
+        "hion_shard",
+        "shadow_fabric"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_main_1",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_main_2",
+    "name": "La Patrouille Nocturne",
+    "description": "La nuit est tombée sur Kilahito et les cauchemars envahissent les rues. Nikaro vous confie la patrouille des quartiers les plus dangereux. Les cauchemars majeurs sont apparus, accompagnés de chercheurs d'ombres. Repoussez la vague de ténèbres et protégez les habitants.",
+    "type": "main",
+    "worldID": "komashi",
+    "requiredLevel": 17,
+    "prerequisites": [
+      "komashi_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_main_2_obj1",
+        "description": "Patrouiller les rues du cauchemar",
+        "type": "explore",
+        "targetID": "komashi_nightmare_streets",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_2_obj2",
+        "description": "Vaincre les cauchemars majeurs",
+        "type": "kill",
+        "targetID": "greater_nightmare",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_2_obj3",
+        "description": "Éliminer les chercheurs d'ombres",
+        "type": "kill",
+        "targetID": "shadow_seeker",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_2_obj4",
+        "description": "Collecter du tissu d'ombre",
+        "type": "collect",
+        "targetID": "shadow_fabric",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 700,
+      "gold": 450,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "shadow_cloak_piece",
+        "shadow_fabric",
+        "nightmare_ink"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_main_2",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_main_3",
+    "name": "Le Père des Cauchemars",
+    "description": "L'heure est venue de pénétrer dans le Linceul et d'affronter le Père des Cauchemars, la source de toute corruption sur Komashi. Traversez les ténèbres, détruisez ses sentinelles, et mettez fin à la menace cauchemardesque. L'avenir de Kilahito repose sur vos épaules.",
+    "type": "main",
+    "worldID": "komashi",
+    "requiredLevel": 19,
+    "prerequisites": [
+      "komashi_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_main_3_obj1",
+        "description": "Pénétrer dans le Linceul",
+        "type": "explore",
+        "targetID": "komashi_shroud",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_3_obj2",
+        "description": "Détruire les sentinelles du cauchemar",
+        "type": "kill",
+        "targetID": "nightmare_sentinel",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_3_obj3",
+        "description": "Collecter les noyaux de sentinelle",
+        "type": "collect",
+        "targetID": "sentinel_core",
+        "requiredCount": 2,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_main_3_obj4",
+        "description": "Terrasser le Père des Cauchemars",
+        "type": "defeat",
+        "targetID": "father_of_nightmares",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1000,
+      "gold": 700,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "nightmare_heart",
+        "sentinel_core",
+        "painters_masterwork"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_main_3",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_side_1",
+    "name": "Le Rituel des Pierres Empilées",
+    "description": "L'ancien Yokihijo vous enseigne un rituel sacré de Komashi : l'empilement des pierres pour apaiser les esprits. Mais les cauchemars perturbent les sites rituels. Protégez les pierres sacrées et complétez le rituel pour renforcer les défenses spirituelles de la cité.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 16,
+    "prerequisites": [
+      "komashi_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_1_obj1",
+        "description": "Parler à l'ancien Yokihijo",
+        "type": "talkTo",
+        "targetID": "yokihijo_elder",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_1_obj2",
+        "description": "Protéger les sites rituels des cauchemars mineurs",
+        "type": "kill",
+        "targetID": "lesser_nightmare",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_1_obj3",
+        "description": "Vaincre le cauchemar majeur au site principal",
+        "type": "defeat",
+        "targetID": "greater_nightmare",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_1_obj4",
+        "description": "Compléter le rituel d'empilement",
+        "type": "collect",
+        "targetID": "hion_shard",
+        "requiredCount": 5,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 450,
+      "gold": 300,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "hion_shard",
+        "hion_shard",
+        "nightmare_ink"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_1",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_side_2",
+    "name": "Les Lignes de Hion Brisées",
+    "description": "Le marchand d'encre signale que les lignes de hion qui alimentent Kilahito en énergie sont endommagées par les cauchemars. Restaurez les connexions en récupérant des fragments de hion et en éliminant les créatures qui parasitent les lignes d'énergie.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 16,
+    "prerequisites": [
+      "komashi_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_2_obj1",
+        "description": "Parler au marchand d'encre",
+        "type": "talkTo",
+        "targetID": "ink_merchant",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_2_obj2",
+        "description": "Collecter des fragments de hion",
+        "type": "collect",
+        "targetID": "hion_shard",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_2_obj3",
+        "description": "Éliminer les chercheurs d'ombres parasitant les lignes",
+        "type": "kill",
+        "targetID": "shadow_seeker",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_2_obj4",
+        "description": "Collecter des fragments de noyau de machine",
+        "type": "collect",
+        "targetID": "machine_core_fragment",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 400,
+      "gold": 350,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "machine_core_fragment",
+        "hion_shard",
+        "shadow_fabric"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_2",
+    "actNumber": 2
+  },
+  {
+    "id": "nalthis_main_1",
+    "name": "Les Couleurs de Nalthis",
+    "description": "Un nouveau monde s'ouvre devant vous : Nalthis, la terre des Souffles et des couleurs vivantes. Les Retournés règnent dans la cour des dieux, mais une corruption insidieuse menace l'équilibre du Biochroma. Explorez T'Telir et découvrez les premiers signes de la menace cosmérique.",
+    "type": "main",
+    "worldID": "nalthis",
+    "requiredLevel": 20,
+    "prerequisites": [
+      "komashi_main_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_main_1_obj1",
+        "description": "Explorer la cité de T'Telir",
+        "type": "explore",
+        "targetID": "nalthis_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_1_obj2",
+        "description": "Enquêter sur les signes de corruption",
+        "type": "collect",
+        "targetID": "voidspren_essence",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 400,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "stormlight_broam"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_main_1",
+    "actNumber": 2
+  },
+  {
+    "id": "sel_main_1",
+    "name": "Les Glyphes de Sel",
+    "description": "Sel, le monde de l'AonDor et du Dakhor, est le prochain sur votre route. La cité d'Elantris, autrefois radieuse, porte encore les cicatrices du Reod. Explorez ses ruines et découvrez comment la menace cosmérique a commencé à s'infiltrer dans le Dor lui-même.",
+    "type": "main",
+    "worldID": "sel",
+    "requiredLevel": 22,
+    "prerequisites": [
+      "nalthis_main_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_main_1_obj1",
+        "description": "Explorer les ruines d'Elantris",
+        "type": "explore",
+        "targetID": "sel_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_1_obj2",
+        "description": "Collecter des fragments de Dor corrompu",
+        "type": "collect",
+        "targetID": "darkside_shard",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 650,
+      "gold": 450,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "darkside_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_main_1",
+    "actNumber": 2
+  },
+  {
+    "id": "cosmere_main_1",
+    "name": "La Menace Révélée",
+    "description": "Les indices récoltés à travers le Cosmère convergent : une force ancienne, antérieure aux Éclats eux-mêmes, s'éveille dans le Shadesmar. Elle corrompt l'Investiture de chaque monde, transformant les créatures et les humains en serviteurs du néant. Traversez le Shadesmar pour comprendre l'ampleur de la menace.",
+    "type": "main",
+    "worldID": "shadesmar",
+    "requiredLevel": 25,
+    "prerequisites": [
+      "sel_main_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "cosmere_main_1_obj1",
+        "description": "Explorer le Shadesmar",
+        "type": "explore",
+        "targetID": "shadesmar_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_1_obj2",
+        "description": "Vaincre les entités corrompues du Shadesmar",
+        "type": "kill",
+        "targetID": "voidbringer_soldier",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_1_obj3",
+        "description": "Collecter les fragments d'Investiture corrompue",
+        "type": "collect",
+        "targetID": "voidspren_essence",
+        "requiredCount": 5,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 900,
+      "gold": 600,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        },
+        {
+          "worldID": "taldain",
+          "amount": 10
+        },
+        {
+          "worldID": "komashi",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "voidspren_essence",
+        "nightmare_ink",
+        "stormlight_broam"
+      ]
+    },
+    "dialogueTreeID": "dialogue_cosmere_main_1",
+    "actNumber": 3
+  },
+  {
+    "id": "cosmere_main_2",
+    "name": "Les Reliques du Cosmère",
+    "description": "Pour forger l'arme capable de vaincre la menace cosmique, vous devez rassembler les reliques les plus puissantes de chaque monde : le Pic d'Inquisiteur de Scadrial, le Fragment de Lame d'Honneur de Roshar, la Couronne du Seigneur du Sable de Taldain, et le Cœur de Cauchemar de Komashi. Retournez sur chaque monde et affrontez les gardiens de ces artefacts.",
+    "type": "main",
+    "worldID": "shadesmar",
+    "requiredLevel": 26,
+    "prerequisites": [
+      "cosmere_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "cosmere_main_2_obj1",
+        "description": "Obtenir le Pic d'Inquisiteur de Scadrial",
+        "type": "collect",
+        "targetID": "inquisitor_spike",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_2_obj2",
+        "description": "Obtenir le Fragment de Lame d'Honneur de Roshar",
+        "type": "collect",
+        "targetID": "honorblade_shard",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_2_obj3",
+        "description": "Obtenir la Couronne du Seigneur du Sable de Taldain",
+        "type": "collect",
+        "targetID": "sand_lord_crown",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_2_obj4",
+        "description": "Obtenir le Cœur de Cauchemar de Komashi",
+        "type": "collect",
+        "targetID": "nightmare_heart",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_2_obj5",
+        "description": "Vaincre les gardiens des reliques",
+        "type": "kill",
+        "targetID": "nightmare_sentinel",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1200,
+      "gold": 800,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 15
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 15
+        },
+        {
+          "worldID": "taldain",
+          "amount": 15
+        },
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "stormlight_broam",
+        "dark_sand_core",
+        "painters_masterwork"
+      ]
+    },
+    "dialogueTreeID": "dialogue_cosmere_main_2",
+    "actNumber": 3
+  },
+  {
+    "id": "cosmere_main_3",
+    "name": "La Confrontation Finale",
+    "description": "L'arme forgée à partir des reliques du Cosmère est prête. Il est temps d'affronter l'entité primordiale au cœur du Shadesmar. Rassemblez vos alliés de chaque monde, traversez les ténèbres ultimes et livrez le combat final pour sauver le Cosmère tout entier. La destinée de tous les mondes repose entre vos mains.",
+    "type": "main",
+    "worldID": "shadesmar",
+    "requiredLevel": 28,
+    "prerequisites": [
+      "cosmere_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "cosmere_main_3_obj1",
+        "description": "Pénétrer au cœur du Shadesmar corrompu",
+        "type": "explore",
+        "targetID": "shadesmar_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_3_obj2",
+        "description": "Vaincre la garde d'élite du néant",
+        "type": "kill",
+        "targetID": "nightmare_sentinel",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_3_obj3",
+        "description": "Détruire les piliers de corruption",
+        "type": "kill",
+        "targetID": "dark_sand_golem",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "cosmere_main_3_obj4",
+        "description": "Terrasser l'Entité Primordiale du Néant",
+        "type": "defeat",
+        "targetID": "father_of_nightmares",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 2000,
+      "gold": 1500,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 25
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 25
+        },
+        {
+          "worldID": "taldain",
+          "amount": 25
+        },
+        {
+          "worldID": "komashi",
+          "amount": 25
+        },
+        {
+          "worldID": "nalthis",
+          "amount": 25
+        },
+        {
+          "worldID": "sel",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "honorblade_shard",
+        "sand_lord_crown",
+        "nightmare_heart",
+        "painters_masterwork"
+      ]
+    },
+    "dialogueTreeID": "dialogue_cosmere_main_3",
+    "actNumber": 3
+  },
+  {
+    "id": "hidden_shadesmar_passage",
+    "name": "Le Passage Secret du Shadesmar",
+    "description": "En explorant les recoins oubliés du monde, vous découvrez une faille vers le Shadesmar — le royaume cognitif qui relie tous les mondes du Cosmère. Des entités étranges y errent, gardant des secrets anciens et des trésors oubliés.",
+    "type": "hidden",
+    "worldID": "shadesmar",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "roshar_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_shadesmar_obj1",
+        "description": "Découvrir l'entrée cachée du Shadesmar",
+        "type": "explore",
+        "targetID": "shadesmar_hub",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_shadesmar_obj2",
+        "description": "Vaincre les gardiens spectraux",
+        "type": "kill",
+        "targetID": "mist_wraith",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_shadesmar_obj3",
+        "description": "Collecter les fragments d'Investiture pure",
+        "type": "collect",
+        "targetID": "stormlight_broam",
+        "requiredCount": 2,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 500,
+      "gold": 400,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "atium_bead"
+      ]
+    },
+    "dialogueTreeID": null,
+    "actNumber": 2
+  },
+  {
+    "id": "hidden_ancient_allomancer",
+    "name": "L'Héritage de l'Allomancien Perdu",
+    "description": "Des rumeurs circulent parmi les rebelles de Luthadel : un allomancien légendaire aurait caché son trésor quelque part dans les Champs de Cendres, protégé par des pièges métalliques et des spectres des brumes. Seul un véritable Fils-des-Brumes pourrait espérer le retrouver.",
+    "type": "hidden",
+    "worldID": "scadrial",
+    "requiredLevel": 4,
+    "prerequisites": [
+      "scadrial_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_allomancer_obj1",
+        "description": "Trouver l'entrée cachée dans les Champs de Cendres",
+        "type": "explore",
+        "targetID": "scadrial_ashfields",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_allomancer_obj2",
+        "description": "Vaincre les spectres gardiens du trésor",
+        "type": "kill",
+        "targetID": "mist_wraith",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_allomancer_obj3",
+        "description": "Récupérer la perle d'atium cachée",
+        "type": "collect",
+        "targetID": "atium_bead",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 500,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "steel_vial",
+        "iron_vial",
+        "tin_vial",
+        "pewter_vial"
+      ]
+    },
+    "dialogueTreeID": null,
+    "actNumber": 1
+  },
+  {
+    "id": "hidden_painters_secret",
+    "name": "Le Secret du Peintre",
+    "description": "En parlant longuement avec Nikaro, vous découvrez qu'il garde un secret : une peinture inachevée capable de repousser définitivement les cauchemars. Mais pour la terminer, il faut des matériaux rares trouvés uniquement dans les profondeurs du Linceul. Oserez-vous y retourner ?",
+    "type": "hidden",
+    "worldID": "komashi",
+    "requiredLevel": 18,
+    "prerequisites": [
+      "komashi_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_painter_obj1",
+        "description": "Parler à Nikaro de sa peinture secrète",
+        "type": "talkTo",
+        "targetID": "painter_nikaro",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_painter_obj2",
+        "description": "Collecter de l'encre de cauchemar pur dans le Linceul",
+        "type": "collect",
+        "targetID": "nightmare_ink",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_painter_obj3",
+        "description": "Vaincre le chercheur d'ombres ancien",
+        "type": "defeat",
+        "targetID": "shadow_seeker",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_painter_obj4",
+        "description": "Récupérer le tissu d'ombre primordial",
+        "type": "collect",
+        "targetID": "shadow_cloak_piece",
+        "requiredCount": 2,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 500,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "painters_masterwork",
+        "shadow_cloak_piece",
+        "nightmare_ink"
+      ]
+    },
+    "dialogueTreeID": "dialogue_hidden_painter",
+    "actNumber": 2
+  },
+  {
+    "id": "nalthis_main_2",
+    "name": "Le Tribunal des Souffles",
+    "description": "Le Roi-Dieu a été corrompu par un fragment d'Éclat. Les Retournés du tribunal sont divisés. Infiltrez la Cour des Dieux et découvrez qui détient le fragment corrupteur.",
+    "type": "main",
+    "worldID": "nalthis",
+    "requiredLevel": 21,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_main_2_obj1",
+        "description": "Infiltrer la Cour des Dieux",
+        "type": "explore",
+        "targetID": "nalthis_god_king_palace",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_2_obj2",
+        "description": "Interroger les Retournés du tribunal",
+        "type": "talkTo",
+        "targetID": "returned_priest",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_2_obj3",
+        "description": "Éliminer les Voleurs de Souffle corrompus",
+        "type": "kill",
+        "targetID": "breath_thief",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_2_obj4",
+        "description": "Récupérer les fils chromatiques volés",
+        "type": "collect",
+        "targetID": "chromatic_thread",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 200,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "awakened_blade",
+        "chromatic_thread"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_main_2"
+  },
+  {
+    "id": "nalthis_main_3",
+    "name": "Le Champion Retourné",
+    "description": "Le fragment d'Éclat a fusionné avec un ancien Champion Retourné, lui conférant un pouvoir divin dévastateur. Affrontez-le dans le Temple du Souffle Divin.",
+    "type": "main",
+    "worldID": "nalthis",
+    "requiredLevel": 22,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_main_3_obj1",
+        "description": "Entrer dans le Temple du Souffle Divin",
+        "type": "explore",
+        "targetID": "nalthis_jungle",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_3_obj2",
+        "description": "Vaincre les Gardes Royaux Sans-Vie",
+        "type": "kill",
+        "targetID": "royal_lifeless_guard",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_main_3_obj3",
+        "description": "Terrasser le Champion Retourné",
+        "type": "defeat",
+        "targetID": "returned_champion",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 700,
+      "gold": 400,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "returned_bloom",
+        "god_king_scepter",
+        "divine_breath_crystal"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_main_3"
+  },
+  {
+    "id": "nalthis_side_1",
+    "name": "Le Tisserand de Couleurs",
+    "description": "Un artisan Éveilleur a perdu ses Souffles après une attaque de Voleurs. Aidez-le à retrouver ses créations Éveillées dispersées dans T'Telir.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 20,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_1_obj1",
+        "description": "Parler au tisserand Éveilleur",
+        "type": "talkTo",
+        "targetID": "color_researcher",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_1_obj2",
+        "description": "Retrouver les créations Éveillées",
+        "type": "collect",
+        "targetID": "breath_essence",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_1_obj3",
+        "description": "Vaincre les Bêtes Éveillées sauvages",
+        "type": "kill",
+        "targetID": "awakened_beast",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 120,
+      "gold": 80,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "chromatic_thread",
+        "breath_essence"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_1"
+  },
+  {
+    "id": "nalthis_side_2",
+    "name": "Les Sans-Vie Déserteurs",
+    "description": "Des Sans-Vie se sont libérés de leur contrôle et terrorisent les quartiers pauvres. Neutralisez-les avant que la panique ne se propage.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 21,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_2_obj1",
+        "description": "Parler à l'Éveilleur paniqué",
+        "type": "talkTo",
+        "targetID": "breath_merchant",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_2_obj2",
+        "description": "Neutraliser les Sans-Vie déserteurs",
+        "type": "kill",
+        "targetID": "lifeless_soldier",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_2_obj3",
+        "description": "Rapporter les preuves",
+        "type": "collect",
+        "targetID": "breath_essence",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 100,
+      "gold": 60,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "breath_essence"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_2"
+  },
+  {
+    "id": "sel_main_2",
+    "name": "Les Moines de Dakhor",
+    "description": "Les Moines Dakhor ont lancé un assaut contre Elantris restaurée. Repoussez leur invasion et découvrez le lien entre leurs rituels et le fragment d'Éclat.",
+    "type": "main",
+    "worldID": "sel",
+    "requiredLevel": 23,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_main_2_obj1",
+        "description": "Défendre les portes d'Elantris",
+        "type": "kill",
+        "targetID": "dakhor_monk",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_2_obj2",
+        "description": "Vaincre les Touchés par les Skazes",
+        "type": "kill",
+        "targetID": "skaze_touched",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_2_obj3",
+        "description": "Récupérer les glyphes d'Aon brisés",
+        "type": "collect",
+        "targetID": "aon_glyph_stone",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_2_obj4",
+        "description": "Parler au sage Élantrien",
+        "type": "talkTo",
+        "targetID": "aon_scholar",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 400,
+      "gold": 250,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "dakhor_bone_charm",
+        "aon_glyph_stone",
+        "elantrian_robe"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_main_2"
+  },
+  {
+    "id": "sel_main_3",
+    "name": "L'Avatar de Domination",
+    "description": "Le fragment d'Éclat de Dominion a pris forme. Les Aons se brisent, le Dor se déchaîne. Affrontez l'Avatar dans les ruines du Pool de Dévotion.",
+    "type": "main",
+    "worldID": "sel",
+    "requiredLevel": 24,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_main_3_obj1",
+        "description": "Traverser les ruines corrompues",
+        "type": "explore",
+        "targetID": "sel_spirit_pool",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_3_obj2",
+        "description": "Vaincre les Élantrien Corrompus",
+        "type": "kill",
+        "targetID": "corrupted_elantrian",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_main_3_obj3",
+        "description": "Terrasser l'Avatar de Domination",
+        "type": "defeat",
+        "targetID": "dominion_avatar",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 900,
+      "gold": 500,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "pool_of_devotion_vial",
+        "splinter_of_devotion",
+        "seons_light"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_main_3"
+  },
+  {
+    "id": "sel_side_1",
+    "name": "Le Séon Perdu",
+    "description": "Un Séon erre sans maître dans les ruines d'Elantris. Retrouvez-le et protégez-le des Skazes.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 22,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_1_obj1",
+        "description": "Parler à l'archiviste d'Elantris",
+        "type": "talkTo",
+        "targetID": "raoden_ally",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_1_obj2",
+        "description": "Retrouver le Séon dans les ruines",
+        "type": "explore",
+        "targetID": "sel_spirit_pool",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_1_obj3",
+        "description": "Protéger le Séon des guerriers Derethi",
+        "type": "kill",
+        "targetID": "derethi_warrior",
+        "requiredCount": 6,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 130,
+      "gold": 80,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "seons_light",
+        "aon_glyph_stone"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_1"
+  },
+  {
+    "id": "sel_side_2",
+    "name": "Les Glyphes Interdits",
+    "description": "Un Élantrien reclus prétend avoir redécouvert des Aons oubliés capables de guérir la corruption.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 23,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_2_obj1",
+        "description": "Rencontrer l'Élantrien reclus",
+        "type": "talkTo",
+        "targetID": "refugee_elantrian",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_2_obj2",
+        "description": "Collecter des pierres de glyphe rares",
+        "type": "collect",
+        "targetID": "aon_glyph_stone",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_2_obj3",
+        "description": "Vaincre les Élantrien Corrompus attirés",
+        "type": "kill",
+        "targetID": "corrupted_elantrian",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 150,
+      "gold": 100,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "elantrian_robe",
+        "pool_of_devotion_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_2"
+  },
+  {
+    "id": "hidden_breath_collector",
+    "name": "Le Collecteur de Souffles",
+    "description": "Dans les souterrains de T'Telir, une légende parle d'un Éveilleur ancien qui a accumulé dix mille Souffles. Son trésor attend celui qui résoudra l'énigme des couleurs.",
+    "type": "hidden",
+    "worldID": "nalthis",
+    "requiredLevel": 21,
+    "actNumber": 2,
+    "prerequisites": [
+      "nalthis_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_breath_obj1",
+        "description": "Découvrir l'entrée secrète du caveau",
+        "type": "explore",
+        "targetID": "nalthis_jungle",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_breath_obj2",
+        "description": "Résoudre l'énigme chromatique",
+        "type": "collect",
+        "targetID": "chromatic_thread",
+        "requiredCount": 7,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_breath_obj3",
+        "description": "Vaincre le gardien Éveillé",
+        "type": "defeat",
+        "targetID": "royal_lifeless_guard",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 500,
+      "gold": 300,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "divine_breath_crystal",
+        "returned_bloom"
+      ]
+    },
+    "dialogueTreeID": "dialogue_hidden_breath"
+  },
+  {
+    "id": "hidden_aon_rao",
+    "name": "Le Véritable Aon Rao",
+    "description": "Les archives cachées d'Elantris mentionnent un Aon Rao parfait — le glyphe originel qui pourrait restaurer le Dor.",
+    "type": "hidden",
+    "worldID": "sel",
+    "requiredLevel": 24,
+    "actNumber": 2,
+    "prerequisites": [
+      "sel_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_aon_obj1",
+        "description": "Déchiffrer les archives secrètes",
+        "type": "talkTo",
+        "targetID": "aon_scholar",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_aon_obj2",
+        "description": "Collecter les fragments d'Aon dispersés",
+        "type": "collect",
+        "targetID": "aon_glyph_stone",
+        "requiredCount": 10,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_aon_obj3",
+        "description": "Activer le glyphe dans les ruines anciennes",
+        "type": "explore",
+        "targetID": "sel_spirit_pool",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 350,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "splinter_of_devotion",
+        "pool_of_devotion_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_hidden_aon"
+  },
+  {
+    "id": "hidden_worldhopper_legacy",
+    "name": "L'Héritage du Salteur",
+    "description": "Des indices disséminés à travers les mondes pointent vers un ancien Salteur qui a caché un artefact cosmique. Trouvez les 3 clés cachées.",
+    "type": "hidden",
+    "worldID": "shadesmar",
+    "requiredLevel": 25,
+    "actNumber": 3,
+    "prerequisites": [
+      "cosmere_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "hidden_hopper_obj1",
+        "description": "Trouver la Clé des Brumes (Scadrial)",
+        "type": "collect",
+        "targetID": "atium_bead",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_hopper_obj2",
+        "description": "Trouver la Clé des Tempêtes (Roshar)",
+        "type": "collect",
+        "targetID": "perfect_gemheart",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_hopper_obj3",
+        "description": "Trouver la Clé des Couleurs (Nalthis)",
+        "type": "collect",
+        "targetID": "divine_breath_crystal",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "hidden_hopper_obj4",
+        "description": "Ouvrir le Coffre du Salteur à Shadesmar",
+        "type": "explore",
+        "targetID": "shadesmar_nexus",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1000,
+      "reputationChanges": [],
+      "itemIDs": [
+        "cosmere_nexus_gem",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_hidden_hopper"
+  },
+  {
+    "id": "scadrial_side_3",
+    "name": "Les Catacombes Oubliées",
+    "description": "Sous les rues de Luthadel, un réseau de catacombes oubliées a été découvert par les rebelles. Des créatures des profondeurs y rôdent, attirées par les résidus d'Investiture. Explorez ces tunnels sombres, éliminez les menaces souterraines et récupérez les caches d'approvisionnement cachées par les anciens rebelles.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "scadrial_main_2"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_3_obj1",
+        "description": "Explorer les catacombes sous Luthadel",
+        "type": "explore",
+        "targetID": "scadrial_catacombs",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_3_obj2",
+        "description": "Éliminer les créatures des profondeurs",
+        "type": "kill",
+        "targetID": "cave_creature",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_3_obj3",
+        "description": "Récupérer les caches d'approvisionnement cachées",
+        "type": "collect",
+        "targetID": "rebel_cache",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 175,
+      "gold": 100,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "steel_vial",
+        "tin_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_3",
+    "actNumber": 1
+  },
+  {
+    "id": "scadrial_side_4",
+    "name": "Les Prisonniers de Hathsin",
+    "description": "Des nouvelles alarmantes arrivent des Fosses de Hathsin : des prisonniers skaa sont retenus dans les anciennes mines d'atium, forcés de travailler sous la surveillance d'un contremaître brutal. Infiltrez les fosses, libérez les captifs et mettez fin à la tyrannie du surveillant.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "scadrial_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_4_obj1",
+        "description": "Libérer les prisonniers skaa dans les fosses",
+        "type": "collect",
+        "targetID": "prisoner_shackle",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_4_obj2",
+        "description": "Vaincre le contremaître des fosses",
+        "type": "defeat",
+        "targetID": "pit_overseer",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 250,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "pewter_vial",
+        "koloss_blade_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_4",
+    "actNumber": 1
+  },
+  {
+    "id": "scadrial_side_5",
+    "name": "L'Atium Perdu",
+    "description": "Les rumeurs parlent d'un gisement d'atium oublié dans les profondeurs des mines de Hathsin. Ce métal divin, capable de prédire l'avenir, est le plus précieux de tout Scadrial. Descendez dans les galeries les plus profondes, affrontez les gardiens des mines et récupérez les perles d'atium avant qu'elles ne tombent entre de mauvaises mains.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 30,
+    "prerequisites": [
+      "scadrial_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_5_obj1",
+        "description": "Collecter des perles d'atium dans les mines profondes",
+        "type": "collect",
+        "targetID": "atium_bead",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_5_obj2",
+        "description": "Éliminer les gardiens des mines",
+        "type": "kill",
+        "targetID": "mine_guardian",
+        "requiredCount": 10,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 900,
+      "gold": 700,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "atium_bead",
+        "inquisitor_spike"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_5",
+    "actNumber": 2
+  },
+  {
+    "id": "scadrial_side_6",
+    "name": "Le Secret des Kandra",
+    "description": "Un ancien kandra, l'un des premiers serviteurs du Lord Dirigeant, cherche à vous transmettre un savoir perdu. Mais un kandra corrompu par Ruine menace de détruire les bénédictions sacrées de leur peuple. Rencontrez l'ancien, récupérez les bénédictions dispersées et affrontez le kandra renégat.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 40,
+    "prerequisites": [
+      "scadrial_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_6_obj1",
+        "description": "Parler à l'ancien kandra",
+        "type": "talkTo",
+        "targetID": "kandra_elder",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_6_obj2",
+        "description": "Récupérer les bénédictions kandra dispersées",
+        "type": "collect",
+        "targetID": "kandra_blessing",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_6_obj3",
+        "description": "Vaincre le kandra corrompu",
+        "type": "defeat",
+        "targetID": "corrupted_kandra",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1300,
+      "gold": 1100,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "kandra_blessing",
+        "atium_bead"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "scadrial_side_7",
+    "name": "La Forge d'Atium",
+    "description": "Au plus profond des entrailles de Scadrial se cache la légendaire Forge d'Atium, là où le métal divin est raffiné par des forces cosmiques. Un gardien immortel protège ce lieu sacré depuis des millénaires. Explorez les mines les plus dangereuses, affrontez le gardien de la forge et récupérez l'atium maître — le plus pur jamais créé.",
+    "type": "side",
+    "worldID": "scadrial",
+    "requiredLevel": 55,
+    "prerequisites": [
+      "scadrial_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "scadrial_side_7_obj1",
+        "description": "Explorer les mines vers la Forge d'Atium",
+        "type": "explore",
+        "targetID": "scadrial_atium_forge",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_7_obj2",
+        "description": "Vaincre le gardien de la Forge d'Atium",
+        "type": "defeat",
+        "targetID": "atium_guardian_boss",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "scadrial_side_7_obj3",
+        "description": "Récupérer l'atium maître",
+        "type": "collect",
+        "targetID": "master_atium",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1500,
+      "reputationChanges": [
+        {
+          "worldID": "scadrial",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "master_atium",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_scadrial_side_7",
+    "actNumber": 3
+  },
+  {
+    "id": "roshar_side_3",
+    "name": "Dans les Chasmes",
+    "description": "Les chasmes des Plaines Brisées abritent des secrets que peu osent découvrir. Des chasmlings affamés rodent dans les profondeurs, mais les chasseurs de gemmes affirment que des cœurs de gemme rares s'y trouvent aussi. Descendez dans les chasmes, affrontez les créatures et rapportez les trésors cachés.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "roshar_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_3_obj1",
+        "description": "Explorer les chasmes des Plaines Brisées",
+        "type": "explore",
+        "targetID": "roshar_chasms",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_3_obj2",
+        "description": "Éliminer les chasmlings",
+        "type": "kill",
+        "targetID": "chasmling",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_3_obj3",
+        "description": "Récupérer les cœurs de gemme des profondeurs",
+        "type": "collect",
+        "targetID": "gemheart_fragment",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 180,
+      "gold": 110,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "gemheart_fragment",
+        "stormlight_chip"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_3",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_side_4",
+    "name": "Les Ruines Oubliées",
+    "description": "Des explorateurs ont découvert des ruines anciennes dans les terres désolées de Natanatan, autrefois un royaume florissant. Des spren corrompus hantent ces lieux, gardant un parchemin ancien qui pourrait révéler des secrets sur les Chevaliers Radieux. Explorez les ruines, purifiez les spren et récupérez le savoir perdu.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "roshar_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_4_obj1",
+        "description": "Explorer les ruines de Natanatan",
+        "type": "explore",
+        "targetID": "roshar_natanatan_ruins",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_4_obj2",
+        "description": "Éliminer les spren corrompus",
+        "type": "kill",
+        "targetID": "corrupted_spren",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_4_obj3",
+        "description": "Récupérer le parchemin ancien",
+        "type": "collect",
+        "targetID": "ancient_scroll",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 220,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "stormlight_mark",
+        "carapace_armor_piece"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_4",
+    "actNumber": 1
+  },
+  {
+    "id": "roshar_side_5",
+    "name": "La Chute de Kholinar",
+    "description": "La cité de Kholinar est tombée aux mains des Fusionnés. Des résistants alézi luttent encore dans les ruines, mais ils sont encerclés. Infiltrez la cité occupée, éliminez les soldats fusionnés qui patrouillent les rues et secourez les captifs avant qu'il ne soit trop tard.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 22,
+    "prerequisites": [
+      "roshar_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_5_obj1",
+        "description": "Infiltrer la cité de Kholinar",
+        "type": "explore",
+        "targetID": "roshar_kholinar",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_5_obj2",
+        "description": "Éliminer les soldats fusionnés",
+        "type": "kill",
+        "targetID": "fused_soldier",
+        "requiredCount": 10,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_5_obj3",
+        "description": "Secourir les captifs alézi",
+        "type": "collect",
+        "targetID": "captive_rescue",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 450,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "carapace_plate",
+        "honorblade_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_5",
+    "actNumber": 2
+  },
+  {
+    "id": "roshar_side_6",
+    "name": "Les Secrets d'Aimia",
+    "description": "L'île mystérieuse d'Aimia, longtemps interdite aux étrangers, recèle des secrets anciens sur la Transfiguration et les origines des lames esquissées. Un gardien aimien protège une relique liée aux Forgelames. Explorez cette terre interdite, affrontez le gardien et récupérez le fragment de forgelame.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 45,
+    "prerequisites": [
+      "roshar_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_6_obj1",
+        "description": "Explorer l'île d'Aimia",
+        "type": "explore",
+        "targetID": "roshar_aimia",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_6_obj2",
+        "description": "Vaincre le gardien aimien",
+        "type": "defeat",
+        "targetID": "aimian_guardian",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_6_obj3",
+        "description": "Récupérer le fragment de forgelame",
+        "type": "collect",
+        "targetID": "soulcaster_fragment",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1400,
+      "gold": 1200,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "soulcaster_fragment",
+        "perfect_gemheart"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "roshar_side_7",
+    "name": "L'Honneur Brisé",
+    "description": "Au sommet d'Urithiru se trouve un sanctuaire oublié dédié à l'Éclat Honneur, brisé il y a des millénaires. Des échos des Non-Faits hantent ce lieu sacré, corrompant les derniers vestiges du pouvoir d'Honneur. Explorez le palais, affrontez les échos des Non-Faits et récupérez un fragment de l'Éclat d'Honneur.",
+    "type": "side",
+    "worldID": "roshar",
+    "requiredLevel": 58,
+    "prerequisites": [
+      "roshar_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "roshar_side_7_obj1",
+        "description": "Explorer le palais d'Honneur",
+        "type": "explore",
+        "targetID": "roshar_honor_palace",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_7_obj2",
+        "description": "Vaincre les échos des Non-Faits",
+        "type": "defeat",
+        "targetID": "unmade_echo",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "roshar_side_7_obj3",
+        "description": "Récupérer le fragment de l'Éclat d'Honneur",
+        "type": "collect",
+        "targetID": "honor_shard_fragment",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1500,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "honor_shard_fragment",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_roshar_side_7",
+    "actNumber": 3
+  },
+  {
+    "id": "taldain_side_3",
+    "name": "Le Désert Maudit",
+    "description": "Le désert de Kerzt, au-delà des dunes connues, est un lieu maudit où les tempêtes de sable ne cessent jamais. Des créatures de sable y survivent en chassant les imprudents. Traversez ce désert hostile, éliminez les créatures qui vous traquent et récupérez les réserves d'eau abandonnées par les caravanes perdues.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "taldain_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_3_obj1",
+        "description": "Survivre au désert de Kerzt",
+        "type": "explore",
+        "targetID": "taldain_kerzt_desert",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_3_obj2",
+        "description": "Éliminer les créatures de sable",
+        "type": "kill",
+        "targetID": "sand_creature",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_3_obj3",
+        "description": "Récupérer les gourdes d'eau abandonnées",
+        "type": "collect",
+        "targetID": "desert_water_flask",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 175,
+      "gold": 100,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "desert_water_flask",
+        "white_sand_pouch"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_3",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_side_4",
+    "name": "Gardiens de l'Oasis",
+    "description": "L'oasis de Lossand est menacée par des gardiens élémentaires de sable qui corrompent la source d'eau. Ces créatures ancestrales, autrefois protectrices, sont devenues hostiles. Détruisez les gardiens corrompus et purifiez la source pour sauver l'oasis dont dépendent des centaines de voyageurs.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "taldain_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_4_obj1",
+        "description": "Vaincre les gardiens de l'oasis corrompus",
+        "type": "kill",
+        "targetID": "oasis_guardian",
+        "requiredCount": 5,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_4_obj2",
+        "description": "Purifier la source d'eau de l'oasis",
+        "type": "collect",
+        "targetID": "purified_water_crystal",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 300,
+      "gold": 250,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "wyrm_scale",
+        "sandling_carapace"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_4",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_side_5",
+    "name": "Les Sables Vivants",
+    "description": "Les maîtres de sable rapportent un phénomène terrifiant : le sable blanc s'anime de lui-même, formant des élémentaires autonomes qui attaquent tout ce qui bouge. Ces anomalies menacent les routes commerciales. Détruisez les élémentaires de sable et collectez des échantillons de sable vivant pour que les chercheurs puissent comprendre ce phénomène.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 30,
+    "prerequisites": [
+      "taldain_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_5_obj1",
+        "description": "Éliminer les élémentaires de sable",
+        "type": "kill",
+        "targetID": "sand_elemental",
+        "requiredCount": 10,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_5_obj2",
+        "description": "Collecter des échantillons de sable vivant",
+        "type": "collect",
+        "targetID": "living_sand_sample",
+        "requiredCount": 5,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 850,
+      "gold": 650,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "dark_sand_core",
+        "sand_lord_crown"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_5",
+    "actNumber": 2
+  },
+  {
+    "id": "taldain_side_6",
+    "name": "Le Temple Enfoui",
+    "description": "Enfoui sous les dunes depuis des millénaires, un temple ancien dédié à Autonomie a été révélé par une tempête de sable. Un prêtre de sable en garde l'entrée, accompagné de pièges mortels et d'énigmes antiques. Explorez le temple, résolvez ses mystères et affrontez le prêtre gardien pour accéder aux trésors sacrés.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 40,
+    "prerequisites": [
+      "taldain_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_6_obj1",
+        "description": "Explorer le temple enfoui sous les sables",
+        "type": "explore",
+        "targetID": "taldain_sand_temple",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_6_obj2",
+        "description": "Résoudre les énigmes du temple",
+        "type": "collect",
+        "targetID": "temple_puzzle_key",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_6_obj3",
+        "description": "Vaincre le prêtre de sable gardien",
+        "type": "defeat",
+        "targetID": "sand_priest",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1300,
+      "gold": 1100,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "darkside_shard",
+        "sand_lord_crown"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "taldain_side_7",
+    "name": "Le Jugement d'Autonomie",
+    "description": "Au cœur du Darkside, un sanctuaire oublié résonne de la puissance d'Autonomie. Un avatar de l'Éclat, un être de sable divin, vous attend pour un ultime test. Atteignez le sanctuaire, affrontez l'avatar d'Autonomie et récupérez le sable divin — la substance la plus pure de Taldain.",
+    "type": "side",
+    "worldID": "taldain",
+    "requiredLevel": 55,
+    "prerequisites": [
+      "taldain_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "taldain_side_7_obj1",
+        "description": "Atteindre le sanctuaire d'Autonomie",
+        "type": "explore",
+        "targetID": "taldain_autonomy_shrine",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_7_obj2",
+        "description": "Vaincre l'avatar d'Autonomie",
+        "type": "defeat",
+        "targetID": "autonomy_avatar",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "taldain_side_7_obj3",
+        "description": "Récupérer le sable divin",
+        "type": "collect",
+        "targetID": "divine_sand",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1400,
+      "reputationChanges": [
+        {
+          "worldID": "taldain",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "divine_sand",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_taldain_side_7",
+    "actNumber": 3
+  },
+  {
+    "id": "komashi_side_3",
+    "name": "Cauchemars Errants",
+    "description": "Les rues extérieures de Kilahito sont envahies par des cauchemars mineurs qui se sont échappés du Linceul. Ces créatures semblent plus agressives que d'habitude, et l'encre de cauchemar qu'elles laissent derrière elles pourrait être utile aux peintres. Nettoyez les rues et récupérez cette précieuse encre de rêve.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "komashi_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_3_obj1",
+        "description": "Éliminer les cauchemars errants dans les rues extérieures",
+        "type": "kill",
+        "targetID": "lesser_nightmare",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_3_obj2",
+        "description": "Collecter de l'encre de rêve",
+        "type": "collect",
+        "targetID": "dream_ink",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 160,
+      "gold": 90,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "nightmare_ink",
+        "hion_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_3",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_side_4",
+    "name": "Le Jardin Corrompu",
+    "description": "Le jardin sacré de Kilahito, autrefois un lieu de méditation paisible, est envahi par une corruption cauchemardesque. Les fleurs de hion se flétrissent et une horreur végétale née du Linceul a élu domicile au centre du jardin. Purifiez les fleurs corrompues et détruisez l'abomination pour restaurer ce havre de paix.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "komashi_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_4_obj1",
+        "description": "Purifier les fleurs de hion corrompues",
+        "type": "collect",
+        "targetID": "purified_hion_flower",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_4_obj2",
+        "description": "Vaincre l'horreur du jardin",
+        "type": "defeat",
+        "targetID": "garden_horror",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 320,
+      "gold": 210,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "hion_shard",
+        "shadow_fabric"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_4",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_side_5",
+    "name": "L'Encre de Minuit",
+    "description": "Les peintres de Kilahito parlent d'une encre légendaire, l'Encre de Minuit, capable de donner vie aux peintures les plus puissantes. Cette encre ne peut être obtenue qu'en détruisant les démons d'encre qui rôdent dans les quartiers les plus sombres de la cité. Collectez cette encre rare et éliminez les démons qui la produisent.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 22,
+    "prerequisites": [
+      "komashi_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_5_obj1",
+        "description": "Collecter de l'encre de minuit",
+        "type": "collect",
+        "targetID": "midnight_ink",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_5_obj2",
+        "description": "Éliminer les démons d'encre",
+        "type": "kill",
+        "targetID": "ink_demon",
+        "requiredCount": 8,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 550,
+      "gold": 420,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "shadow_cloak_piece",
+        "nightmare_ink"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_5",
+    "actNumber": 2
+  },
+  {
+    "id": "komashi_side_6",
+    "name": "Le Cauchemar Primordial",
+    "description": "Au plus profond du Linceul, un cauchemar primordial sommeille — une entité née avant même l'arrivée des Éclats sur Komashi. Nikaro pense que sa destruction pourrait affaiblir définitivement le Linceul. Explorez le noyau cauchemardesque et affrontez cette horreur antique.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 40,
+    "prerequisites": [
+      "komashi_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_6_obj1",
+        "description": "Explorer le noyau du cauchemar",
+        "type": "explore",
+        "targetID": "komashi_nightmare_core",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_6_obj2",
+        "description": "Vaincre le cauchemar primordial",
+        "type": "defeat",
+        "targetID": "primordial_nightmare",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1250,
+      "gold": 1050,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "nightmare_heart",
+        "painters_masterwork"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "komashi_side_7",
+    "name": "La Peinture Éternelle",
+    "description": "La légende parle d'une peinture éternelle, une œuvre si parfaite qu'elle pourrait sceller le Linceul à jamais. Pour la créer, il faut des pigments éternels — des fragments de couleur pure extraits de la nuit elle-même. Collectez ces pigments rares, affrontez l'entité de la nuit et explorez la nuit éternelle pour achever cette œuvre ultime.",
+    "type": "side",
+    "worldID": "komashi",
+    "requiredLevel": 55,
+    "prerequisites": [
+      "komashi_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "komashi_side_7_obj1",
+        "description": "Collecter les pigments éternels",
+        "type": "collect",
+        "targetID": "eternal_pigment",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_7_obj2",
+        "description": "Vaincre l'entité de la nuit",
+        "type": "defeat",
+        "targetID": "night_entity",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "komashi_side_7_obj3",
+        "description": "Explorer la nuit éternelle",
+        "type": "explore",
+        "targetID": "komashi_eternal_night",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1400,
+      "reputationChanges": [
+        {
+          "worldID": "komashi",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "eternal_pigment",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_komashi_side_7",
+    "actNumber": 3
+  },
+  {
+    "id": "nalthis_side_3",
+    "name": "Les Voleurs de Souffles",
+    "description": "Un réseau de voleurs de Souffles opère dans les bas-fonds de T'Telir, drainant les habitants de leur BioChroma. Traquez ces criminels à travers les ruelles de la cité, éliminez-les et récupérez les Souffles volés pour les restituer à leurs propriétaires légitimes.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "nalthis_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_3_obj1",
+        "description": "Traquer les voleurs de Souffles",
+        "type": "explore",
+        "targetID": "nalthis_undercity",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_3_obj2",
+        "description": "Éliminer les voleurs de Souffles",
+        "type": "kill",
+        "targetID": "breath_thief",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_3_obj3",
+        "description": "Récupérer les Souffles volés",
+        "type": "collect",
+        "targetID": "stolen_breath",
+        "requiredCount": 5,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 190,
+      "gold": 100,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "breath_essence",
+        "chromatic_thread"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_3",
+    "actNumber": 2
+  },
+  {
+    "id": "nalthis_side_4",
+    "name": "La Cour des Intrigues",
+    "description": "La Cour des Dieux de T'Telir est un nid d'intrigues politiques. Plusieurs Retournés cherchent à manipuler le cours des événements. Rencontrez trois dieux Retournés, écoutez leurs propositions et collectez les Souffles divins qu'ils vous offrent en échange de vos services diplomatiques.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "nalthis_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_4_obj1",
+        "description": "Parler aux dieux Retournés de la Cour",
+        "type": "talkTo",
+        "targetID": "returned_god",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_4_obj2",
+        "description": "Collecter les Souffles divins",
+        "type": "collect",
+        "targetID": "divine_breath",
+        "requiredCount": 2,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 350,
+      "gold": 280,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "divine_breath_crystal",
+        "chromatic_thread"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_4",
+    "actNumber": 2
+  },
+  {
+    "id": "nalthis_side_5",
+    "name": "L'Épée Noire",
+    "description": "Des rumeurs parlent d'une arme terrible cachée quelque part en Idris — une épée qui dévore tout ce qu'elle touche. Des Sans-Vie rôdent sur la route d'Idris, et un indice sur l'emplacement de Sanglenuit pourrait se trouver parmi les ruines. Éliminez les Sans-Vie et découvrez ce que vous pouvez sur cette arme légendaire.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 22,
+    "prerequisites": [
+      "nalthis_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_5_obj1",
+        "description": "Voyager vers les terres d'Idris",
+        "type": "explore",
+        "targetID": "nalthis_idris",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_5_obj2",
+        "description": "Éliminer les Sans-Vie sur la route",
+        "type": "kill",
+        "targetID": "lifeless_soldier",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_5_obj3",
+        "description": "Trouver l'indice sur Sanglenuit",
+        "type": "collect",
+        "targetID": "nightblood_clue",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 480,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "awakened_blade",
+        "breath_essence"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_5",
+    "actNumber": 2
+  },
+  {
+    "id": "nalthis_side_6",
+    "name": "Les Larmes d'Edgli",
+    "description": "Dans les jungles au-delà de T'Telir, une zone mystérieuse pleure des larmes divines — des fragments du pouvoir d'Édgli, l'Éclat de Dotation. Ces larmes attirent des gardiens divins qui protègent jalousement ce lieu sacré. Explorez la zone des larmes, collectez les fragments divins et affrontez le gardien d'Édgli.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 40,
+    "prerequisites": [
+      "nalthis_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_6_obj1",
+        "description": "Explorer la zone des larmes d'Édgli",
+        "type": "explore",
+        "targetID": "nalthis_edgli_tears",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_6_obj2",
+        "description": "Collecter les larmes divines",
+        "type": "collect",
+        "targetID": "divine_tear",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_6_obj3",
+        "description": "Vaincre le gardien d'Édgli",
+        "type": "defeat",
+        "targetID": "edgli_guardian",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1200,
+      "gold": 1100,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "returned_bloom",
+        "divine_breath_crystal"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "nalthis_side_7",
+    "name": "Le Don Suprême",
+    "description": "Au sommet du pic sacré de Dotation, un passage s'ouvre vers le royaume spirituel de l'Éclat. Un avatar divin de Dotation vous attend pour une épreuve ultime. Atteignez le sommet, affrontez l'avatar et récupérez l'essence de Dotation — le pouvoir brut de l'Éclat qui règne sur Nalthis.",
+    "type": "side",
+    "worldID": "nalthis",
+    "requiredLevel": 55,
+    "prerequisites": [
+      "nalthis_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "nalthis_side_7_obj1",
+        "description": "Atteindre le pic de Dotation",
+        "type": "explore",
+        "targetID": "nalthis_endowment_peak",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_7_obj2",
+        "description": "Récupérer l'essence de Dotation",
+        "type": "collect",
+        "targetID": "endowment_essence",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "nalthis_side_7_obj3",
+        "description": "Vaincre l'avatar divin de Dotation",
+        "type": "defeat",
+        "targetID": "divine_avatar_endowment",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1400,
+      "reputationChanges": [
+        {
+          "worldID": "nalthis",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "endowment_essence",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_nalthis_side_7",
+    "actNumber": 3
+  },
+  {
+    "id": "sel_side_3",
+    "name": "L'Hérésie de Hrathen",
+    "description": "Une forteresse Derethi secrète a été découverte près d'Elantris, où des moines fanatiques poursuivent l'œuvre du gyorn Hrathen. Ils préparent une nouvelle croisade contre les Élantriens. Explorez la forteresse, éliminez les moines Derethi et récupérez les textes sacrés qui révèlent leurs plans.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 8,
+    "prerequisites": [
+      "sel_main_1"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_3_obj1",
+        "description": "Explorer la forteresse Derethi",
+        "type": "explore",
+        "targetID": "sel_derethi_fortress",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_3_obj2",
+        "description": "Éliminer les moines Derethi",
+        "type": "kill",
+        "targetID": "derethi_monk",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_3_obj3",
+        "description": "Récupérer les textes sacrés Derethi",
+        "type": "collect",
+        "targetID": "sacred_text",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 180,
+      "gold": 95,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "aon_glyph_stone",
+        "dakhor_bone_charm"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_3",
+    "actNumber": 2
+  },
+  {
+    "id": "sel_side_4",
+    "name": "Les Profondeurs du Pool",
+    "description": "Le Pool de Dévotion, autrefois source du Dor sur Sel, cache des profondeurs inexplorées. Des horreurs nées de la corruption du Dor y rôdent, mais des fragments de Dor pur — l'énergie brute de l'Investiture — s'y trouvent aussi. Plongez dans les profondeurs, éliminez les horreurs et récupérez les fragments de Dor.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 15,
+    "prerequisites": [
+      "sel_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_4_obj1",
+        "description": "Plonger dans les profondeurs du Pool",
+        "type": "explore",
+        "targetID": "sel_pool_depths",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_4_obj2",
+        "description": "Collecter des fragments de Dor",
+        "type": "collect",
+        "targetID": "dor_fragment",
+        "requiredCount": 4,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_4_obj3",
+        "description": "Éliminer les horreurs du Pool",
+        "type": "kill",
+        "targetID": "pool_horror",
+        "requiredCount": 5,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 340,
+      "gold": 230,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "pool_of_devotion_vial",
+        "seons_light"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_4",
+    "actNumber": 2
+  },
+  {
+    "id": "sel_side_5",
+    "name": "Les Moines Dakhor",
+    "description": "Le monastère Dakhor, caché dans les montagnes de Fjorden, est un lieu de pouvoir sinistre où les moines transforment leurs os en armes vivantes. Infiltrez le monastère, affrontez les moines Dakhor et vainquez leur maître — un guerrier dont les os sont devenus des lames mortelles.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 22,
+    "prerequisites": [
+      "sel_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_5_obj1",
+        "description": "Infiltrer le monastère Dakhor",
+        "type": "explore",
+        "targetID": "sel_dakhor_monastery",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_5_obj2",
+        "description": "Éliminer les moines Dakhor",
+        "type": "kill",
+        "targetID": "dakhor_monk",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_5_obj3",
+        "description": "Vaincre le maître Dakhor",
+        "type": "defeat",
+        "targetID": "dakhor_master",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 650,
+      "gold": 480,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "dakhor_bone_charm",
+        "elantrian_robe"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_5",
+    "actNumber": 2
+  },
+  {
+    "id": "sel_side_6",
+    "name": "La Faille Dimensionnelle",
+    "description": "Le Dor, l'énergie d'Investiture de Sel, s'échappe par des failles dimensionnelles qui menacent de déchirer la réalité. Trois failles majeures doivent être scellées avant qu'une entité du Dor ne s'en échappe. Explorez les zones de faille, scellez les brèches et affrontez l'entité qui tente de traverser.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 40,
+    "prerequisites": [
+      "sel_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_6_obj1",
+        "description": "Sceller les failles du Dor",
+        "type": "explore",
+        "targetID": "sel_dor_rift",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_6_obj2",
+        "description": "Vaincre l'entité de la faille",
+        "type": "defeat",
+        "targetID": "rift_entity",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1250,
+      "gold": 1050,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "splinter_of_devotion",
+        "pool_of_devotion_vial"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "sel_side_7",
+    "name": "Le Trône de Domination",
+    "description": "Dans les profondeurs du royaume spirituel de Sel, le trône de l'Éclat Domination attend. Un avatar de Domination, un être d'une puissance effroyable, siège sur ce trône corrompu. Atteignez le trône, affrontez l'avatar et récupérez un fragment de l'Éclat divin — une relique d'un pouvoir incommensurable.",
+    "type": "side",
+    "worldID": "sel",
+    "requiredLevel": 55,
+    "prerequisites": [
+      "sel_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "sel_side_7_obj1",
+        "description": "Atteindre le trône de Domination",
+        "type": "explore",
+        "targetID": "sel_dominion_throne",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_7_obj2",
+        "description": "Vaincre l'avatar de Domination",
+        "type": "defeat",
+        "targetID": "dominion_avatar",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "sel_side_7_obj3",
+        "description": "Récupérer le fragment de l'Éclat divin",
+        "type": "collect",
+        "targetID": "divine_shard_fragment",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1500,
+      "reputationChanges": [
+        {
+          "worldID": "sel",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "divine_shard_fragment",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_sel_side_7",
+    "actNumber": 3
+  },
+  {
+    "id": "shadesmar_side_3",
+    "name": "L'Océan de Billes",
+    "description": "L'océan de billes du Shadesmar est un lieu étrange où chaque bille représente un objet du monde physique. Naviguer sur cet océan est périlleux — des horreurs marines cognitives rôdent sous la surface. Traversez l'océan, collectez des billes cognitives rares et éliminez les créatures qui menacent les routes commerciales des spren.",
+    "type": "side",
+    "worldID": "shadesmar",
+    "requiredLevel": 10,
+    "prerequisites": [
+      "hidden_shadesmar_passage"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "shadesmar_side_3_obj1",
+        "description": "Naviguer sur l'océan de billes",
+        "type": "explore",
+        "targetID": "shadesmar_bead_ocean",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_3_obj2",
+        "description": "Collecter des billes cognitives rares",
+        "type": "collect",
+        "targetID": "cognitive_bead",
+        "requiredCount": 6,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_3_obj3",
+        "description": "Éliminer les horreurs marines cognitives",
+        "type": "kill",
+        "targetID": "sea_horror",
+        "requiredCount": 4,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 200,
+      "gold": 120,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 10
+        }
+      ],
+      "itemIDs": [
+        "stormlight_chip",
+        "voidspren_essence"
+      ]
+    },
+    "dialogueTreeID": "dialogue_shadesmar_side_3",
+    "actNumber": 2
+  },
+  {
+    "id": "shadesmar_side_4",
+    "name": "Les Marchands Spren",
+    "description": "La cité de Durabilité, dans le Shadesmar, est un carrefour commercial où les spren échangent des essences rares. Trois marchands spren détiennent des informations cruciales sur les mouvements de la corruption cosmique. Négociez avec eux et collectez les essences rares qu'ils proposent en échange de vos services.",
+    "type": "side",
+    "worldID": "shadesmar",
+    "requiredLevel": 25,
+    "prerequisites": [
+      "shadesmar_side_3"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "shadesmar_side_4_obj1",
+        "description": "Parler aux marchands spren de Durabilité",
+        "type": "talkTo",
+        "targetID": "spren_trader",
+        "requiredCount": 3,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_4_obj2",
+        "description": "Collecter des essences rares",
+        "type": "collect",
+        "targetID": "rare_essence",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 500,
+      "gold": 400,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 15
+        }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "voidspren_essence"
+      ]
+    },
+    "dialogueTreeID": "dialogue_shadesmar_side_4",
+    "actNumber": 2
+  },
+  {
+    "id": "shadesmar_side_5",
+    "name": "La Voie Interdite",
+    "description": "Les Elsecallers empruntaient autrefois un chemin secret à travers le Shadesmar — la Voie Interdite. Ce passage est désormais infesté de créatures du Néant qui se nourrissent d'Investiture. Explorez ce chemin oublié, affrontez les créatures du Néant et récupérez les fragments de la Voie pour restaurer le passage.",
+    "type": "side",
+    "worldID": "shadesmar",
+    "requiredLevel": 35,
+    "prerequisites": [
+      "shadesmar_side_4"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "shadesmar_side_5_obj1",
+        "description": "Explorer la Voie Interdite des Elsecallers",
+        "type": "explore",
+        "targetID": "shadesmar_elsecaller_path",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_5_obj2",
+        "description": "Éliminer les créatures du Néant",
+        "type": "kill",
+        "targetID": "void_creature",
+        "requiredCount": 8,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_5_obj3",
+        "description": "Récupérer les fragments de la Voie",
+        "type": "collect",
+        "targetID": "path_fragment",
+        "requiredCount": 3,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 800,
+      "gold": 650,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 20
+        }
+      ],
+      "itemIDs": [
+        "stormlight_broam",
+        "honorblade_shard"
+      ]
+    },
+    "dialogueTreeID": "dialogue_shadesmar_side_5",
+    "actNumber": 3
+  },
+  {
+    "id": "shadesmar_side_6",
+    "name": "La Faille Spirituelle",
+    "description": "Une faille entre le Royaume Cognitif et le Royaume Spirituel s'est ouverte dans le Shadesmar. Des entités spirituelles s'en échappent, menaçant l'équilibre même du Cosmère. Scellez la faille, affrontez les entités spirituelles et récupérez le noyau de la faille — un artefact d'une puissance terrifiante.",
+    "type": "side",
+    "worldID": "shadesmar",
+    "requiredLevel": 45,
+    "prerequisites": [
+      "shadesmar_side_5"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "shadesmar_side_6_obj1",
+        "description": "Sceller la faille spirituelle",
+        "type": "explore",
+        "targetID": "shadesmar_spiritual_rift",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_6_obj2",
+        "description": "Vaincre les entités spirituelles",
+        "type": "defeat",
+        "targetID": "spiritual_entity",
+        "requiredCount": 2,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_6_obj3",
+        "description": "Récupérer le noyau de la faille",
+        "type": "collect",
+        "targetID": "rift_core",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1400,
+      "gold": 1200,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 25
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 25
+        }
+      ],
+      "itemIDs": [
+        "cosmere_nexus_gem",
+        "shard_fragment"
+      ]
+    },
+    "dialogueTreeID": "dialogue_shadesmar_side_6",
+    "actNumber": 3
+  },
+  {
+    "id": "shadesmar_side_7",
+    "name": "Le Vestige d'Adonalsium",
+    "description": "Au-delà des limites connues du Shadesmar, une zone interdite abrite le vestige d'Adonalsium — le dieu originel brisé en seize Éclats. Un écho de cette puissance cosmique persiste, gardé par une entité d'une force inimaginable. Explorez cette zone, affrontez l'écho d'Adonalsium et récupérez un fragment cosmique — la relique la plus puissante du Cosmère.",
+    "type": "side",
+    "worldID": "shadesmar",
+    "requiredLevel": 60,
+    "prerequisites": [
+      "shadesmar_side_6"
+    ],
+    "status": "locked",
+    "objectives": [
+      {
+        "id": "shadesmar_side_7_obj1",
+        "description": "Explorer la zone d'Adonalsium",
+        "type": "explore",
+        "targetID": "shadesmar_adonalsium_zone",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_7_obj2",
+        "description": "Vaincre l'écho d'Adonalsium",
+        "type": "defeat",
+        "targetID": "adonalsium_echo",
+        "requiredCount": 1,
+        "currentCount": 0
+      },
+      {
+        "id": "shadesmar_side_7_obj3",
+        "description": "Récupérer le fragment cosmique",
+        "type": "collect",
+        "targetID": "cosmic_shard",
+        "requiredCount": 1,
+        "currentCount": 0
+      }
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 1500,
+      "reputationChanges": [
+        {
+          "worldID": "roshar",
+          "amount": 30
+        },
+        {
+          "worldID": "scadrial",
+          "amount": 30
+        },
+        {
+          "worldID": "taldain",
+          "amount": 30
+        },
+        {
+          "worldID": "komashi",
+          "amount": 30
+        },
+        {
+          "worldID": "nalthis",
+          "amount": 30
+        },
+        {
+          "worldID": "sel",
+          "amount": 30
+        }
+      ],
+      "itemIDs": [
+        "cosmic_shard",
+        "cosmere_nexus_gem"
+      ]
+    },
+    "dialogueTreeID": "dialogue_shadesmar_side_7",
+    "actNumber": 3
+  }
+]

@@ -1,0 +1,2411 @@
+[
+  {
+    "id": "corrupted_skaa",
+    "name": "Skaa Corrompu",
+    "description": "Un skaa rendu fou par l'exposition prolongée aux brumes. Attaque aveuglément.",
+    "worldID": "scadrial",
+    "tier": "minion",
+    "level": 1,
+    "maxHP": 30,
+    "damage": 5,
+    "defense": 2,
+    "speed": 1.2,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_corrupted_skaa",
+    "spriteScale": 1.0,
+    "xpReward": 15,
+    "goldMin": 1,
+    "goldMax": 5,
+    "lootTable": [
+      {
+        "itemID": "tin_vial",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "mist_wraith",
+    "name": "Spectre des Brumes",
+    "description": "Créature amorphe qui imite les ossements de ses victimes. Se cache dans la brume.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 3,
+    "maxHP": 60,
+    "damage": 12,
+    "defense": 5,
+    "speed": 1.5,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "ambush",
+    "abilities": [],
+    "spriteName": "enemy_mist_wraith",
+    "spriteScale": 1.2,
+    "xpReward": 35,
+    "goldMin": 5,
+    "goldMax": 15,
+    "lootTable": [
+      {
+        "itemID": "pewter_vial",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "wraith_bone",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "koloss_scout",
+    "name": "Koloss Éclaireur",
+    "description": "Un petit koloss envoyé en reconnaissance. Dangereux malgré sa taille.",
+    "worldID": "scadrial",
+    "tier": "elite",
+    "level": 4,
+    "maxHP": 120,
+    "damage": 20,
+    "defense": 8,
+    "speed": 0.8,
+    "detectionRange": 6.0,
+    "attackRange": 2.5,
+    "behavior": "berserk",
+    "abilities": [],
+    "spriteName": "enemy_koloss_scout",
+    "spriteScale": 1.5,
+    "xpReward": 75,
+    "goldMin": 10,
+    "goldMax": 30,
+    "lootTable": [
+      {
+        "itemID": "koloss_blade_shard",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "steel_vial",
+        "dropChance": 0.6,
+        "minQuantity": 2,
+        "maxQuantity": 4
+      }
+    ]
+  },
+  {
+    "id": "steel_guard",
+    "name": "Garde d'Acier",
+    "description": "Garde d'élite de Kredik Shaw, entraîné et bien équipé.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 80,
+    "damage": 15,
+    "defense": 12,
+    "speed": 1.0,
+    "detectionRange": 8.0,
+    "attackRange": 2.0,
+    "behavior": "guard",
+    "abilities": [],
+    "spriteName": "enemy_steel_guard",
+    "spriteScale": 1.0,
+    "xpReward": 45,
+    "goldMin": 8,
+    "goldMax": 20,
+    "lootTable": [
+      {
+        "itemID": "guard_armor_piece",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "steel_inquisitor",
+    "name": "Inquisiteur d'Acier",
+    "description": "Un monstre créé par l'Hémalurgie. Des pics d'acier à la place des yeux. Boss de Scadrial.",
+    "worldID": "scadrial",
+    "tier": "boss",
+    "level": 6,
+    "maxHP": 500,
+    "damage": 35,
+    "defense": 20,
+    "speed": 2.0,
+    "detectionRange": 15.0,
+    "attackRange": 3.0,
+    "behavior": "berserk",
+    "abilities": [
+      "steel_push_boss",
+      "iron_pull_boss",
+      "pewter_rage"
+    ],
+    "spriteName": "enemy_steel_inquisitor",
+    "spriteScale": 1.3,
+    "xpReward": 500,
+    "goldMin": 50,
+    "goldMax": 100,
+    "lootTable": [
+      {
+        "itemID": "inquisitor_spike",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "atium_bead",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "parshendi_warrior",
+    "name": "Guerrier Parshendi",
+    "description": "Un chanteur en forme de guerre. Chante le Rythme de la Destruction en combattant.",
+    "worldID": "roshar",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 70,
+    "damage": 14,
+    "defense": 8,
+    "speed": 1.3,
+    "detectionRange": 6.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": [],
+    "spriteName": "enemy_parshendi_warrior",
+    "spriteScale": 1.0,
+    "xpReward": 40,
+    "goldMin": 5,
+    "goldMax": 15,
+    "lootTable": [
+      {
+        "itemID": "stormlight_chip",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 3
+      },
+      {
+        "itemID": "carapace_armor_piece",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "chasmfiend_juvenile",
+    "name": "Jeune Grandfossoyeur",
+    "description": "Un jeune spécimen de la terrible créature des chasmes. Déjà immense et dangereux.",
+    "worldID": "roshar",
+    "tier": "elite",
+    "level": 5,
+    "maxHP": 200,
+    "damage": 30,
+    "defense": 15,
+    "speed": 0.6,
+    "detectionRange": 8.0,
+    "attackRange": 4.0,
+    "behavior": "guard",
+    "abilities": [
+      "tail_sweep",
+      "carapace_shield"
+    ],
+    "spriteName": "enemy_chasmfiend_juvenile",
+    "spriteScale": 2.0,
+    "xpReward": 120,
+    "goldMin": 20,
+    "goldMax": 50,
+    "lootTable": [
+      {
+        "itemID": "gemheart_fragment",
+        "dropChance": 0.8,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "carapace_plate",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "voidbringer_scout",
+    "name": "Néantifère Éclaireur",
+    "description": "Un Fusionné de bas rang, possédant le corps d'un chanteur. Agressif et rapide.",
+    "worldID": "roshar",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 85,
+    "damage": 18,
+    "defense": 10,
+    "speed": 1.8,
+    "detectionRange": 7.0,
+    "attackRange": 2.5,
+    "behavior": "ranged",
+    "abilities": [
+      "void_bolt"
+    ],
+    "spriteName": "enemy_voidbringer_scout",
+    "spriteScale": 1.1,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 20,
+    "lootTable": [
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "voidbringer_soldier",
+    "name": "Néantifère Soldat",
+    "description": "Un Fusionné expérimenté en forme de guerre. Utilise la Lumière du vide.",
+    "worldID": "roshar",
+    "tier": "elite",
+    "level": 6,
+    "maxHP": 150,
+    "damage": 22,
+    "defense": 14,
+    "speed": 1.4,
+    "detectionRange": 8.0,
+    "attackRange": 3.0,
+    "behavior": "patrol",
+    "abilities": [
+      "void_lashing",
+      "gravitation_surge"
+    ],
+    "spriteName": "enemy_voidbringer_soldier",
+    "spriteScale": 1.2,
+    "xpReward": 85,
+    "goldMin": 15,
+    "goldMax": 35,
+    "lootTable": [
+      {
+        "itemID": "voidlight_gem",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "fused_armor_shard",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "thunderclast",
+    "name": "Tonnerreclaste",
+    "description": "Un gigantesque spren de pierre animé par Odium. Boss de Roshar. Fait trembler la terre.",
+    "worldID": "roshar",
+    "tier": "boss",
+    "level": 8,
+    "maxHP": 800,
+    "damage": 45,
+    "defense": 30,
+    "speed": 0.5,
+    "detectionRange": 12.0,
+    "attackRange": 5.0,
+    "behavior": "berserk",
+    "abilities": [
+      "stone_slam",
+      "earthquake",
+      "rock_throw"
+    ],
+    "spriteName": "enemy_thunderclast",
+    "spriteScale": 3.0,
+    "xpReward": 800,
+    "goldMin": 80,
+    "goldMax": 150,
+    "lootTable": [
+      {
+        "itemID": "thunderclast_heart",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "perfect_gemheart",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "honorblade_shard",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "sand_wyrm",
+    "name": "Ver des Sables",
+    "description": "Créature massive qui nage sous le sable blanc de Dayside. Surgit pour attaquer.",
+    "worldID": "taldain",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 75,
+    "damage": 16,
+    "defense": 6,
+    "speed": 1.6,
+    "detectionRange": 8.0,
+    "attackRange": 3.0,
+    "behavior": "ambush",
+    "abilities": [
+      "burrow_strike"
+    ],
+    "spriteName": "enemy_sand_wyrm",
+    "spriteScale": 1.4,
+    "xpReward": 45,
+    "goldMin": 6,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "white_sand_pouch",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "wyrm_scale",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "sand_raider",
+    "name": "Pillard du Désert",
+    "description": "Bandit nomade de Dayside. Attaque les voyageurs pour voler leur eau.",
+    "worldID": "taldain",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 40,
+    "damage": 9,
+    "defense": 4,
+    "speed": 1.4,
+    "detectionRange": 6.0,
+    "attackRange": 1.5,
+    "behavior": "patrol",
+    "abilities": [],
+    "spriteName": "enemy_sand_raider",
+    "spriteScale": 1.0,
+    "xpReward": 20,
+    "goldMin": 3,
+    "goldMax": 10,
+    "lootTable": [
+      {
+        "itemID": "desert_water_flask",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "raider_scimitar",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "sandling",
+    "name": "Sablonite",
+    "description": "Créature crustacée des sables. Sa carapace est faite de sable cristallisé.",
+    "worldID": "taldain",
+    "tier": "elite",
+    "level": 5,
+    "maxHP": 130,
+    "damage": 18,
+    "defense": 15,
+    "speed": 0.7,
+    "detectionRange": 5.0,
+    "attackRange": 2.0,
+    "behavior": "guard",
+    "abilities": [
+      "sand_armor",
+      "crystal_burst"
+    ],
+    "spriteName": "enemy_sandling",
+    "spriteScale": 1.6,
+    "xpReward": 80,
+    "goldMin": 12,
+    "goldMax": 35,
+    "lootTable": [
+      {
+        "itemID": "sandling_carapace",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "white_sand_pouch",
+        "dropChance": 0.7,
+        "minQuantity": 2,
+        "maxQuantity": 5
+      }
+    ]
+  },
+  {
+    "id": "dark_sand_golem",
+    "name": "Golem de Sable Noir",
+    "description": "Construction animée de Darkside. Le sable noir absorbe la lumière et les attaques.",
+    "worldID": "taldain",
+    "tier": "elite",
+    "level": 5,
+    "maxHP": 160,
+    "damage": 20,
+    "defense": 18,
+    "speed": 0.6,
+    "detectionRange": 6.0,
+    "attackRange": 2.5,
+    "behavior": "guard",
+    "abilities": [
+      "dark_absorption",
+      "sand_slam"
+    ],
+    "spriteName": "enemy_dark_golem",
+    "spriteScale": 1.8,
+    "xpReward": 90,
+    "goldMin": 15,
+    "goldMax": 40,
+    "lootTable": [
+      {
+        "itemID": "dark_sand_core",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "sand_lord",
+    "name": "Seigneur des Sables",
+    "description": "Le maître de Darkside. Il commande le sable noir et veut éteindre le soleil de Dayside. Boss de Taldain.",
+    "worldID": "taldain",
+    "tier": "boss",
+    "level": 7,
+    "maxHP": 600,
+    "damage": 38,
+    "defense": 22,
+    "speed": 1.2,
+    "detectionRange": 15.0,
+    "attackRange": 5.0,
+    "behavior": "ranged",
+    "abilities": [
+      "dark_sand_storm",
+      "shadow_tendrils",
+      "eclipse"
+    ],
+    "spriteName": "enemy_sand_lord",
+    "spriteScale": 2.0,
+    "xpReward": 650,
+    "goldMin": 60,
+    "goldMax": 120,
+    "lootTable": [
+      {
+        "itemID": "sand_lord_crown",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "darkside_shard",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "lesser_nightmare",
+    "name": "Petit Cauchemar",
+    "description": "Forme sombre et indistincte qui se matérialise dans les ombres. Prend l'apparence des peurs de sa victime.",
+    "worldID": "komashi",
+    "tier": "minion",
+    "level": 5,
+    "maxHP": 35,
+    "damage": 10,
+    "defense": 3,
+    "speed": 1.8,
+    "detectionRange": 7.0,
+    "attackRange": 1.5,
+    "behavior": "ambush",
+    "abilities": [
+      "fear_touch"
+    ],
+    "spriteName": "enemy_lesser_nightmare",
+    "spriteScale": 1.0,
+    "xpReward": 25,
+    "goldMin": 3,
+    "goldMax": 8,
+    "lootTable": [
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "greater_nightmare",
+    "name": "Grand Cauchemar",
+    "description": "Un cauchemar qui a eu le temps de mûrir et de gagner en substance. Sa forme est plus définie et terrifiante.",
+    "worldID": "komashi",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 90,
+    "damage": 20,
+    "defense": 8,
+    "speed": 1.3,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "berserk",
+    "abilities": [
+      "nightmare_scream",
+      "shadow_clone"
+    ],
+    "spriteName": "enemy_greater_nightmare",
+    "spriteScale": 1.3,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 22,
+    "lootTable": [
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "shadow_fabric",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "shadow_seeker",
+    "name": "Chercheur d'Ombre",
+    "description": "Un cauchemar intelligent qui traque les lignes de hion pour les éteindre. Rapide et insaisissable.",
+    "worldID": "komashi",
+    "tier": "elite",
+    "level": 7,
+    "maxHP": 140,
+    "damage": 24,
+    "defense": 10,
+    "speed": 2.0,
+    "detectionRange": 10.0,
+    "attackRange": 3.0,
+    "behavior": "ranged",
+    "abilities": [
+      "hion_drain",
+      "shadow_step",
+      "terror_gaze"
+    ],
+    "spriteName": "enemy_shadow_seeker",
+    "spriteScale": 1.2,
+    "xpReward": 95,
+    "goldMin": 15,
+    "goldMax": 40,
+    "lootTable": [
+      {
+        "itemID": "hion_shard",
+        "dropChance": 0.6,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "shadow_cloak_piece",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "nightmare_sentinel",
+    "name": "Sentinelle Cauchemardesque",
+    "description": "Gardien du Linceul. Un cauchemar ancien, presque physique, qui protège le passage vers le cœur des ténèbres.",
+    "worldID": "komashi",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 180,
+    "damage": 28,
+    "defense": 16,
+    "speed": 1.0,
+    "detectionRange": 9.0,
+    "attackRange": 3.5,
+    "behavior": "guard",
+    "abilities": [
+      "void_barrier",
+      "nightmare_chains"
+    ],
+    "spriteName": "enemy_nightmare_sentinel",
+    "spriteScale": 1.5,
+    "xpReward": 110,
+    "goldMin": 20,
+    "goldMax": 50,
+    "lootTable": [
+      {
+        "itemID": "sentinel_core",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.8,
+        "minQuantity": 2,
+        "maxQuantity": 4
+      }
+    ]
+  },
+  {
+    "id": "father_of_nightmares",
+    "name": "Père des Cauchemars",
+    "description": "L'entité primordiale d'où naissent tous les cauchemars de Komashi. La machine à son cœur pulse d'une énergie corrompue. Boss de Komashi.",
+    "worldID": "komashi",
+    "tier": "boss",
+    "level": 10,
+    "maxHP": 1000,
+    "damage": 50,
+    "defense": 25,
+    "speed": 0.8,
+    "detectionRange": 20.0,
+    "attackRange": 6.0,
+    "behavior": "support",
+    "abilities": [
+      "spawn_nightmares",
+      "reality_warp",
+      "total_darkness",
+      "machine_pulse"
+    ],
+    "spriteName": "enemy_father_nightmares",
+    "spriteScale": 3.5,
+    "xpReward": 1200,
+    "goldMin": 100,
+    "goldMax": 200,
+    "lootTable": [
+      {
+        "itemID": "nightmare_heart",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "machine_core_fragment",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "painters_masterwork",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "lifeless_soldier",
+    "name": "Soldat Sans-Vie",
+    "description": "Un cadavre réanimé par le Souffle. Obéit aveuglément aux ordres de son maître Éveilleur.",
+    "worldID": "nalthis",
+    "tier": "minion",
+    "level": 5,
+    "maxHP": 45,
+    "damage": 11,
+    "defense": 4,
+    "speed": 1.0,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "patrol",
+    "abilities": [],
+    "spriteName": "enemy_lifeless_soldier",
+    "spriteScale": 1.0,
+    "xpReward": 20,
+    "goldMin": 2,
+    "goldMax": 8,
+    "lootTable": [
+      {
+        "itemID": "breath_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "awakened_beast",
+    "name": "Bête Éveillée",
+    "description": "Un animal dont l'enveloppe a été Éveillée par le Souffle. Féroce et imprévisible, ses mouvements sont teintés de couleurs surnaturelles.",
+    "worldID": "nalthis",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 95,
+    "damage": 19,
+    "defense": 7,
+    "speed": 1.6,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "berserk",
+    "abilities": [],
+    "spriteName": "enemy_awakened_beast",
+    "spriteScale": 1.3,
+    "xpReward": 50,
+    "goldMin": 6,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "breath_essence",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "chromatic_thread",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "breath_thief",
+    "name": "Voleur de Souffle",
+    "description": "Un Éveilleur renégat qui draine le Souffle de ses victimes. Attaque depuis les ombres et utilise la couleur comme arme.",
+    "worldID": "nalthis",
+    "tier": "elite",
+    "level": 7,
+    "maxHP": 150,
+    "damage": 23,
+    "defense": 10,
+    "speed": 1.7,
+    "detectionRange": 9.0,
+    "attackRange": 3.0,
+    "behavior": "ambush",
+    "abilities": [
+      "breath_drain",
+      "color_blast"
+    ],
+    "spriteName": "enemy_breath_thief",
+    "spriteScale": 1.1,
+    "xpReward": 85,
+    "goldMin": 12,
+    "goldMax": 35,
+    "lootTable": [
+      {
+        "itemID": "chromatic_thread",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "awakened_blade",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "royal_lifeless_guard",
+    "name": "Garde Royal Sans-Vie",
+    "description": "Un Sans-Vie d'élite au service du Roi-Dieu. Perfectionné par des centaines de Souffles, ses mouvements sont précis et mortels.",
+    "worldID": "nalthis",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 170,
+    "damage": 26,
+    "defense": 14,
+    "speed": 1.2,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "guard",
+    "abilities": [
+      "perfected_strike"
+    ],
+    "spriteName": "enemy_royal_lifeless",
+    "spriteScale": 1.2,
+    "xpReward": 100,
+    "goldMin": 18,
+    "goldMax": 45,
+    "lootTable": [
+      {
+        "itemID": "chromatic_thread",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "returned_bloom",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "returned_champion",
+    "name": "Champion Retourné",
+    "description": "Un Retourné guerrier, revenu d'entre les morts avec un Souffle Divin. Sa présence draine les couleurs environnantes. Boss de Nalthis.",
+    "worldID": "nalthis",
+    "tier": "boss",
+    "level": 9,
+    "maxHP": 700,
+    "damage": 42,
+    "defense": 22,
+    "speed": 1.5,
+    "detectionRange": 15.0,
+    "attackRange": 4.0,
+    "behavior": "berserk",
+    "abilities": [
+      "divine_breath_blast",
+      "color_storm",
+      "lifeless_army"
+    ],
+    "spriteName": "enemy_returned_champion",
+    "spriteScale": 1.8,
+    "xpReward": 700,
+    "goldMin": 60,
+    "goldMax": 130,
+    "lootTable": [
+      {
+        "itemID": "returned_bloom",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "god_king_scepter",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "divine_breath_crystal",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "derethi_warrior",
+    "name": "Guerrier Derethi",
+    "description": "Un soldat fanatique du Shu-Dereth. Combat avec une ferveur religieuse implacable.",
+    "worldID": "sel",
+    "tier": "minion",
+    "level": 6,
+    "maxHP": 50,
+    "damage": 13,
+    "defense": 5,
+    "speed": 1.2,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "patrol",
+    "abilities": [],
+    "spriteName": "enemy_derethi_warrior",
+    "spriteScale": 1.0,
+    "xpReward": 25,
+    "goldMin": 3,
+    "goldMax": 10,
+    "lootTable": [
+      {
+        "itemID": "aon_glyph_stone",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "dakhor_monk",
+    "name": "Moine Dakhor",
+    "description": "Un moine dont les os ont été tordus et renforcés par les rituels Dakhor. Sa force surhumaine brise les armures.",
+    "worldID": "sel",
+    "tier": "soldier",
+    "level": 7,
+    "maxHP": 110,
+    "damage": 21,
+    "defense": 9,
+    "speed": 1.5,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "berserk",
+    "abilities": [
+      "bone_twist"
+    ],
+    "spriteName": "enemy_dakhor_monk",
+    "spriteScale": 1.2,
+    "xpReward": 60,
+    "goldMin": 8,
+    "goldMax": 22,
+    "lootTable": [
+      {
+        "itemID": "aon_glyph_stone",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "dakhor_bone_charm",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "skaze_touched",
+    "name": "Touché par les Skazes",
+    "description": "Un être corrompu par le contact des Skazes, les spren sombres de Sel. Projette des éclairs d'énergie corrompue.",
+    "worldID": "sel",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 160,
+    "damage": 25,
+    "defense": 11,
+    "speed": 1.3,
+    "detectionRange": 9.0,
+    "attackRange": 4.0,
+    "behavior": "ranged",
+    "abilities": [
+      "skaze_bolt",
+      "corruption_aura"
+    ],
+    "spriteName": "enemy_skaze_touched",
+    "spriteScale": 1.2,
+    "xpReward": 90,
+    "goldMin": 14,
+    "goldMax": 38,
+    "lootTable": [
+      {
+        "itemID": "elantrian_robe",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "seons_light",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "corrupted_elantrian",
+    "name": "Élantrien Corrompu",
+    "description": "Un ancien Élantrien dont la connexion aux Aons s'est brisée et tordue. Ses glyphes ratés explosent en énergie chaotique.",
+    "worldID": "sel",
+    "tier": "elite",
+    "level": 9,
+    "maxHP": 190,
+    "damage": 29,
+    "defense": 13,
+    "speed": 1.0,
+    "detectionRange": 8.0,
+    "attackRange": 3.5,
+    "behavior": "support",
+    "abilities": [
+      "failed_aon",
+      "slime_burst"
+    ],
+    "spriteName": "enemy_corrupted_elantrian",
+    "spriteScale": 1.3,
+    "xpReward": 110,
+    "goldMin": 18,
+    "goldMax": 48,
+    "lootTable": [
+      {
+        "itemID": "elantrian_robe",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "pool_of_devotion_vial",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "dominion_avatar",
+    "name": "Avatar de Domination",
+    "description": "Une manifestation du pouvoir de l'Éclat Domination. Il commande les Aons brisés et déchire le voile entre les Royaumes. Boss de Sel.",
+    "worldID": "sel",
+    "tier": "boss",
+    "level": 10,
+    "maxHP": 750,
+    "damage": 48,
+    "defense": 26,
+    "speed": 1.1,
+    "detectionRange": 18.0,
+    "attackRange": 5.5,
+    "behavior": "ranged",
+    "abilities": [
+      "dominion_decree",
+      "aon_shatter",
+      "divine_wrath",
+      "realm_tear"
+    ],
+    "spriteName": "enemy_dominion_avatar",
+    "spriteScale": 2.5,
+    "xpReward": 900,
+    "goldMin": 80,
+    "goldMax": 160,
+    "lootTable": [
+      {
+        "itemID": "pool_of_devotion_vial",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "splinter_of_devotion",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "seons_light",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "cognitive_shade",
+    "name": "Ombre Cognitive",
+    "description": "Un vestige de conscience piégé dans Shadesmar. Attaque par réflexe plus que par volonté.",
+    "worldID": "shadesmar",
+    "tier": "minion",
+    "level": 7,
+    "maxHP": 55,
+    "damage": 12,
+    "defense": 4,
+    "speed": 1.4,
+    "detectionRange": 6.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_cognitive_shade",
+    "spriteScale": 1.0,
+    "xpReward": 30,
+    "goldMin": 5,
+    "goldMax": 12,
+    "lootTable": [
+      {
+        "itemID": "cognitive_bead",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "hostile_spren",
+    "name": "Spren Hostile",
+    "description": "Un spren devenu agressif après avoir été corrompu par Odium. Sa forme fluctue sans cesse.",
+    "worldID": "shadesmar",
+    "tier": "soldier",
+    "level": 8,
+    "maxHP": 80,
+    "damage": 16,
+    "defense": 6,
+    "speed": 1.6,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": [
+      "phase_shift"
+    ],
+    "spriteName": "enemy_hostile_spren",
+    "spriteScale": 1.0,
+    "xpReward": 45,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "spren_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "fused_errant",
+    "name": "Fusionné Errant",
+    "description": "Un ancien chanteur fusionné avec un pouvoir voidique, perdu et enragé dans le royaume cognitif.",
+    "worldID": "shadesmar",
+    "tier": "elite",
+    "level": 9,
+    "maxHP": 140,
+    "damage": 22,
+    "defense": 10,
+    "speed": 1.3,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "guard",
+    "abilities": [
+      "voidlight_blast",
+      "gravity_shift"
+    ],
+    "spriteName": "enemy_fused_errant",
+    "spriteScale": 1.2,
+    "xpReward": 75,
+    "goldMin": 15,
+    "goldMax": 30,
+    "lootTable": [
+      {
+        "itemID": "voidlight_crystal",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "fused_carapace",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "unmade_shard",
+    "name": "Éclat d'Inami",
+    "description": "Un fragment d'un Défait (Unmade), force primordiale corrompue par Odium.",
+    "worldID": "shadesmar",
+    "tier": "elite",
+    "level": 10,
+    "maxHP": 180,
+    "damage": 28,
+    "defense": 12,
+    "speed": 1.1,
+    "detectionRange": 9.0,
+    "attackRange": 3.0,
+    "behavior": "guard",
+    "abilities": [
+      "corruption_aura",
+      "fear_pulse"
+    ],
+    "spriteName": "enemy_unmade_shard",
+    "spriteScale": 1.5,
+    "xpReward": 100,
+    "goldMin": 20,
+    "goldMax": 40,
+    "lootTable": [
+      {
+        "itemID": "unmade_fragment",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "shattered_shard_avatar",
+    "name": "Avatar de l'Éclat Brisé",
+    "description": "La manifestation physique de l'Éclat fragmenté qui corrompt le Cosmere. Son pouvoir est immense et ses formes multiples.",
+    "worldID": "shadesmar",
+    "tier": "boss",
+    "level": 12,
+    "maxHP": 1500,
+    "damage": 55,
+    "defense": 30,
+    "speed": 1.2,
+    "detectionRange": 14.0,
+    "attackRange": 5.0,
+    "behavior": "boss",
+    "abilities": [
+      "shard_beam",
+      "reality_tear",
+      "summon_shades",
+      "phase_ultimate"
+    ],
+    "spriteName": "enemy_shattered_shard",
+    "spriteScale": 2.0,
+    "xpReward": 1500,
+    "goldMin": 200,
+    "goldMax": 400,
+    "lootTable": [
+      {
+        "itemID": "shard_fragment",
+        "dropChance": 1.0,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "cosmere_nexus_gem",
+        "dropChance": 0.5,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "ash_scavenger",
+    "name": "Charognard des Cendres",
+    "description": "Une créature famélique qui fouille les dépôts de cendres à la recherche de nourriture. Attaque en meute.",
+    "worldID": "scadrial",
+    "tier": "minion",
+    "level": 2,
+    "maxHP": 25,
+    "damage": 4,
+    "defense": 1,
+    "speed": 1.6,
+    "detectionRange": 6.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_ash_scavenger",
+    "spriteScale": 0.9,
+    "xpReward": 12,
+    "goldMin": 1,
+    "goldMax": 4,
+    "lootTable": [
+      {
+        "itemID": "skaa_leather_gloves",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "skaa_work_boots",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "pewter_thug",
+    "name": "Brute au Pewter",
+    "description": "Un allomancien renégat qui brûle du pewter pour obtenir une force brutale. Ses coups sont dévastateurs.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 3,
+    "maxHP": 75,
+    "damage": 14,
+    "defense": 6,
+    "speed": 1.0,
+    "detectionRange": 5.0,
+    "attackRange": 2.0,
+    "behavior": "berserk",
+    "abilities": [
+      "pewter_rage"
+    ],
+    "spriteName": "enemy_pewter_thug",
+    "spriteScale": 1.3,
+    "xpReward": 40,
+    "goldMin": 5,
+    "goldMax": 12,
+    "lootTable": [
+      {
+        "itemID": "pewter_vial",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      },
+      {
+        "itemID": "skaa_trousers",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "coinshot_bandit",
+    "name": "Bandit Tire-Monnaie",
+    "description": "Un allomancien qui propulse des pièces de monnaie comme des projectiles mortels. Attaque à distance.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 55,
+    "damage": 18,
+    "defense": 3,
+    "speed": 1.5,
+    "detectionRange": 8.0,
+    "attackRange": 6.0,
+    "behavior": "ranged",
+    "abilities": [
+      "coin_push"
+    ],
+    "spriteName": "enemy_coinshot",
+    "spriteScale": 1.0,
+    "xpReward": 45,
+    "goldMin": 10,
+    "goldMax": 25,
+    "lootTable": [
+      {
+        "itemID": "steel_vial",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "coinshot_boots",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "crab_spren",
+    "name": "Cremlin Géant",
+    "description": "Un crustacé rocharin agressif de taille inhabituelle. Sa carapace dure comme la pierre le protège.",
+    "worldID": "roshar",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 40,
+    "damage": 7,
+    "defense": 8,
+    "speed": 0.8,
+    "detectionRange": 4.0,
+    "attackRange": 1.5,
+    "behavior": "guard",
+    "abilities": [],
+    "spriteName": "enemy_crab_spren",
+    "spriteScale": 1.0,
+    "xpReward": 18,
+    "goldMin": 2,
+    "goldMax": 6,
+    "lootTable": [
+      {
+        "itemID": "parshendi_warskirt",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "stormform_listener",
+    "name": "Auditeur Forme-Tempête",
+    "description": "Un Auditeur ayant adopté la Forme de la Tempête, canalisant la foudre de l'Éternorage.",
+    "worldID": "roshar",
+    "tier": "elite",
+    "level": 6,
+    "maxHP": 140,
+    "damage": 25,
+    "defense": 10,
+    "speed": 1.4,
+    "detectionRange": 8.0,
+    "attackRange": 4.0,
+    "behavior": "ranged",
+    "abilities": [
+      "storm_bolt",
+      "thunder_clap"
+    ],
+    "spriteName": "enemy_stormform",
+    "spriteScale": 1.2,
+    "xpReward": 90,
+    "goldMin": 12,
+    "goldMax": 28,
+    "lootTable": [
+      {
+        "itemID": "shardplate_gauntlets",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "windrunner_boots",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "skybreaker_squire",
+    "name": "Écuyer Brise-Ciel",
+    "description": "Un écuyer de l'ordre des Brise-Ciels, armé de la loi et d'un Lien Nahel.",
+    "worldID": "roshar",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 90,
+    "damage": 16,
+    "defense": 12,
+    "speed": 1.3,
+    "detectionRange": 7.0,
+    "attackRange": 2.5,
+    "behavior": "patrol",
+    "abilities": [
+      "gravitational_surge"
+    ],
+    "spriteName": "enemy_skybreaker",
+    "spriteScale": 1.1,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "shardplate_greaves",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "sand_scorpion",
+    "name": "Scorpion des Sables",
+    "description": "Un arthropode géant du Côté Jour de Taldain, dont le dard empoisonné paralyse ses proies.",
+    "worldID": "taldain",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 35,
+    "damage": 10,
+    "defense": 4,
+    "speed": 1.8,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "ambush",
+    "abilities": [
+      "poison_sting"
+    ],
+    "spriteName": "enemy_sand_scorpion",
+    "spriteScale": 0.9,
+    "xpReward": 22,
+    "goldMin": 3,
+    "goldMax": 8,
+    "lootTable": [
+      {
+        "itemID": "sand_master_leggings",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "dayside_nomad",
+    "name": "Nomade du Côté Jour",
+    "description": "Un guerrier nomade qui a appris à maîtriser le sable blanc mais qui en abuse, devenant hostile.",
+    "worldID": "taldain",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 70,
+    "damage": 15,
+    "defense": 5,
+    "speed": 1.4,
+    "detectionRange": 6.0,
+    "attackRange": 3.0,
+    "behavior": "ranged",
+    "abilities": [
+      "sand_whip"
+    ],
+    "spriteName": "enemy_dayside_nomad",
+    "spriteScale": 1.0,
+    "xpReward": 48,
+    "goldMin": 6,
+    "goldMax": 15,
+    "lootTable": [
+      {
+        "itemID": "sand_master_leggings",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "ink_tendril",
+    "name": "Vrille d'Encre",
+    "description": "Un cauchemar mineur qui se manifeste sous forme de tentacules d'encre noire. Rapide et insaisissable.",
+    "worldID": "komashi",
+    "tier": "minion",
+    "level": 4,
+    "maxHP": 28,
+    "damage": 8,
+    "defense": 2,
+    "speed": 2.0,
+    "detectionRange": 5.0,
+    "attackRange": 2.0,
+    "behavior": "ambush",
+    "abilities": [],
+    "spriteName": "enemy_ink_tendril",
+    "spriteScale": 0.8,
+    "xpReward": 20,
+    "goldMin": 2,
+    "goldMax": 6,
+    "lootTable": [
+      {
+        "itemID": "nightmare_woven_legs",
+        "dropChance": 0.08,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "nightmare_beast",
+    "name": "Bête Cauchemardesque",
+    "description": "Un cauchemar ayant pris la forme d'une bête sauvage. Ses griffes d'encre déchirent la réalité.",
+    "worldID": "komashi",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 100,
+    "damage": 22,
+    "defense": 7,
+    "speed": 1.5,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "berserk",
+    "abilities": [
+      "ink_slash",
+      "nightmare_howl"
+    ],
+    "spriteName": "enemy_nightmare_beast",
+    "spriteScale": 1.3,
+    "xpReward": 60,
+    "goldMin": 8,
+    "goldMax": 20,
+    "lootTable": [
+      {
+        "itemID": "nightmare_woven_legs",
+        "dropChance": 0.12,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "drab_thief",
+    "name": "Voleur de Souffle Terne",
+    "description": "Un individu ayant perdu tous ses Souffles, devenu Terne. Désespéré, il attaque pour voler des Souffles.",
+    "worldID": "nalthis",
+    "tier": "minion",
+    "level": 4,
+    "maxHP": 35,
+    "damage": 8,
+    "defense": 3,
+    "speed": 1.3,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_drab_thief",
+    "spriteScale": 1.0,
+    "xpReward": 18,
+    "goldMin": 2,
+    "goldMax": 7,
+    "lootTable": [
+      {
+        "itemID": "awakened_gloves",
+        "dropChance": 0.06,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "awakened_construct",
+    "name": "Construction Éveillée",
+    "description": "Un objet animé par l'Éveil, devenu incontrôlable. Ses mouvements sont mécaniques mais puissants.",
+    "worldID": "nalthis",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 110,
+    "damage": 20,
+    "defense": 12,
+    "speed": 0.9,
+    "detectionRange": 4.0,
+    "attackRange": 2.0,
+    "behavior": "guard",
+    "abilities": [
+      "cloth_bind"
+    ],
+    "spriteName": "enemy_awakened_construct",
+    "spriteScale": 1.4,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "awakened_gloves",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "pahn_kahl_rebel",
+    "name": "Rebelle Pahn Kahl",
+    "description": "Un guerrier Pahn Kahl qui lutte contre la domination de Hallandren. Armé de lames éveillées.",
+    "worldID": "nalthis",
+    "tier": "elite",
+    "level": 7,
+    "maxHP": 145,
+    "damage": 24,
+    "defense": 9,
+    "speed": 1.5,
+    "detectionRange": 7.0,
+    "attackRange": 2.5,
+    "behavior": "patrol",
+    "abilities": [
+      "awakened_blade",
+      "color_drain"
+    ],
+    "spriteName": "enemy_pahn_kahl",
+    "spriteScale": 1.1,
+    "xpReward": 80,
+    "goldMin": 12,
+    "goldMax": 25,
+    "lootTable": [
+      {
+        "itemID": "awakened_gloves",
+        "dropChance": 0.12,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "voidspren_essence",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "elantris_revenant",
+    "name": "Revenant d'Elantris",
+    "description": "Un ancien Élantrien dont la transformation a échoué, errant dans les ruines, toujours animé par le Dor.",
+    "worldID": "sel",
+    "tier": "minion",
+    "level": 5,
+    "maxHP": 45,
+    "damage": 10,
+    "defense": 4,
+    "speed": 0.9,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [],
+    "spriteName": "enemy_elantris_revenant",
+    "spriteScale": 1.0,
+    "xpReward": 25,
+    "goldMin": 3,
+    "goldMax": 10,
+    "lootTable": [
+      {
+        "itemID": "aon_inscribed_gloves",
+        "dropChance": 0.06,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      },
+      {
+        "itemID": "dakhor_monk_sandals",
+        "dropChance": 0.06,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "fjordell_templar",
+    "name": "Templier Fjordell",
+    "description": "Un guerrier-prêtre fanatique du Shu-Dereth. Sa foi lui confère une résistance à la douleur.",
+    "worldID": "sel",
+    "tier": "soldier",
+    "level": 7,
+    "maxHP": 120,
+    "damage": 22,
+    "defense": 11,
+    "speed": 1.1,
+    "detectionRange": 6.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": [
+      "zealous_strike"
+    ],
+    "spriteName": "enemy_fjordell_templar",
+    "spriteScale": 1.2,
+    "xpReward": 65,
+    "goldMin": 10,
+    "goldMax": 22,
+    "lootTable": [
+      {
+        "itemID": "dakhor_monk_sandals",
+        "dropChance": 0.1,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "shadesmar_lurker",
+    "name": "Rôdeur du Shadesmar",
+    "description": "Une entité cognitive qui se cache dans les profondeurs du royaume des esprits, aspirant la conscience.",
+    "worldID": "shadesmar",
+    "tier": "soldier",
+    "level": 8,
+    "maxHP": 95,
+    "damage": 20,
+    "defense": 5,
+    "speed": 1.8,
+    "detectionRange": 8.0,
+    "attackRange": 3.0,
+    "behavior": "ambush",
+    "abilities": [
+      "mind_drain"
+    ],
+    "spriteName": "enemy_shadesmar_lurker",
+    "spriteScale": 1.0,
+    "xpReward": 50,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "cosmere_strider_boots",
+        "dropChance": 0.05,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "steel_inquisitor_shade",
+    "name": "Ombre d'Inquisiteur",
+    "description": "Un écho spectral d'un ancien Inquisiteur d'Acier, les pointes encore visibles dans ses orbites.",
+    "worldID": "scadrial",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 180,
+    "damage": 28,
+    "defense": 14,
+    "speed": 2.0,
+    "detectionRange": 9.0,
+    "attackRange": 2.5,
+    "behavior": "ambush",
+    "abilities": [
+      "steel_push_boss",
+      "iron_pull_boss"
+    ],
+    "spriteName": "enemy_inquisitor_shade",
+    "spriteScale": 1.3,
+    "xpReward": 120,
+    "goldMin": 20,
+    "goldMax": 45,
+    "lootTable": [
+      {
+        "itemID": "steel_shard",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "ash_wraith",
+    "name": "Fantôme de Cendres",
+    "description": "Créature née des cendres accumulées d'Ati, qui se reforme après chaque attaque.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 75,
+    "damage": 14,
+    "defense": 4,
+    "speed": 1.4,
+    "detectionRange": 6.0,
+    "attackRange": 2.0,
+    "behavior": "wander",
+    "abilities": [
+      "shadow_step"
+    ],
+    "spriteName": "enemy_ash_wraith",
+    "spriteScale": 1.1,
+    "xpReward": 40,
+    "goldMin": 5,
+    "goldMax": 12,
+    "lootTable": [
+      {
+        "itemID": "ash_essence",
+        "dropChance": 0.35,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "kandra_mimic",
+    "name": "Kandra Mimique",
+    "description": "Un kandra sauvage qui imite les formes humaines. Change de comportement en combat.",
+    "worldID": "scadrial",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 90,
+    "damage": 16,
+    "defense": 8,
+    "speed": 1.3,
+    "detectionRange": 7.0,
+    "attackRange": 1.8,
+    "behavior": "guard",
+    "abilities": [
+      "shadow_clone",
+      "phase_shift"
+    ],
+    "spriteName": "enemy_kandra",
+    "spriteScale": 1.0,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 20,
+    "lootTable": [
+      {
+        "itemID": "kandra_blessing",
+        "dropChance": 0.15,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "voidspren",
+    "name": "Spren du Vide",
+    "description": "Manifestation de l'Odium, un spren corrompu qui affaiblit ceux qu'il touche.",
+    "worldID": "roshar",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 50,
+    "damage": 10,
+    "defense": 3,
+    "speed": 2.2,
+    "detectionRange": 10.0,
+    "attackRange": 3.0,
+    "behavior": "ranged",
+    "abilities": [
+      "void_bolt",
+      "corruption_aura"
+    ],
+    "spriteName": "enemy_voidspren",
+    "spriteScale": 0.8,
+    "xpReward": 35,
+    "goldMin": 3,
+    "goldMax": 8,
+    "lootTable": [
+      {
+        "itemID": "void_essence",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "fused_soldier",
+    "name": "Fusionné Combattant",
+    "description": "Un ancien chanteur possédé par un spren ancien, maîtrisant les Surges de base.",
+    "worldID": "roshar",
+    "tier": "soldier",
+    "level": 6,
+    "maxHP": 100,
+    "damage": 20,
+    "defense": 10,
+    "speed": 1.6,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": [
+      "gravitation_surge",
+      "void_lashing"
+    ],
+    "spriteName": "enemy_fused",
+    "spriteScale": 1.2,
+    "xpReward": 65,
+    "goldMin": 10,
+    "goldMax": 25,
+    "lootTable": [
+      {
+        "itemID": "stormlight_gem",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "sand_stalker",
+    "name": "Traqueur de Sable",
+    "description": "Prédateur du désert qui se cache sous le sable et frappe par surprise.",
+    "worldID": "taldain",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 65,
+    "damage": 18,
+    "defense": 5,
+    "speed": 1.8,
+    "detectionRange": 5.0,
+    "attackRange": 2.0,
+    "behavior": "ambush",
+    "abilities": [
+      "burrow_strike"
+    ],
+    "spriteName": "enemy_sand_stalker",
+    "spriteScale": 1.1,
+    "xpReward": 40,
+    "goldMin": 5,
+    "goldMax": 12,
+    "lootTable": [
+      {
+        "itemID": "sand_pearl",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "darkside_shade",
+    "name": "Ombre du Côté Sombre",
+    "description": "Créature spectrale venue du Darkside, craignant la lumière du soleil.",
+    "worldID": "taldain",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 160,
+    "damage": 26,
+    "defense": 12,
+    "speed": 1.5,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "ranged",
+    "abilities": [
+      "dark_sand_storm",
+      "shadow_tendrils"
+    ],
+    "spriteName": "enemy_darkside_shade",
+    "spriteScale": 1.3,
+    "xpReward": 100,
+    "goldMin": 15,
+    "goldMax": 35,
+    "lootTable": [
+      {
+        "itemID": "darkside_crystal",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "nightmare_stalker",
+    "name": "Traqueur de Cauchemars",
+    "description": "Un cauchemar qui prend une forme humanoïde distordue, rôdant dans les ombres.",
+    "worldID": "komashi",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 80,
+    "damage": 18,
+    "defense": 6,
+    "speed": 1.7,
+    "detectionRange": 6.0,
+    "attackRange": 2.0,
+    "behavior": "ambush",
+    "abilities": [
+      "fear_touch",
+      "shadow_step"
+    ],
+    "spriteName": "enemy_nightmare_stalker",
+    "spriteScale": 1.1,
+    "xpReward": 50,
+    "goldMin": 6,
+    "goldMax": 15,
+    "lootTable": [
+      {
+        "itemID": "nightmare_ink",
+        "dropChance": 0.35,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "ink_golem",
+    "name": "Golem d'Encre",
+    "description": "Masse d'encre animée par un cauchemar. Résistant mais lent, il absorbe les coups.",
+    "worldID": "komashi",
+    "tier": "elite",
+    "level": 7,
+    "maxHP": 200,
+    "damage": 22,
+    "defense": 16,
+    "speed": 0.9,
+    "detectionRange": 5.0,
+    "attackRange": 2.5,
+    "behavior": "guard",
+    "abilities": [
+      "ink_slash",
+      "dark_absorption",
+      "slime_burst"
+    ],
+    "spriteName": "enemy_ink_golem",
+    "spriteScale": 1.4,
+    "xpReward": 90,
+    "goldMin": 12,
+    "goldMax": 30,
+    "lootTable": [
+      {
+        "itemID": "pure_ink",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "dream_wisp",
+    "name": "Lueur Onirique",
+    "description": "Petite entité lumineuse qui charme ses victimes dans un sommeil éternel.",
+    "worldID": "komashi",
+    "tier": "minion",
+    "level": 2,
+    "maxHP": 25,
+    "damage": 8,
+    "defense": 2,
+    "speed": 2.0,
+    "detectionRange": 8.0,
+    "attackRange": 3.0,
+    "behavior": "ranged",
+    "abilities": [
+      "fear_pulse"
+    ],
+    "spriteName": "enemy_dream_wisp",
+    "spriteScale": 0.6,
+    "xpReward": 12,
+    "goldMin": 2,
+    "goldMax": 5,
+    "lootTable": [
+      {
+        "itemID": "dream_dust",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "lifeless_berserker",
+    "name": "Sans-Vie Berserker",
+    "description": "Un Sans-Vie ancien dont le Commandement s'est corrompu, le rendant enragé et imprévisible.",
+    "worldID": "nalthis",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 95,
+    "damage": 20,
+    "defense": 8,
+    "speed": 1.5,
+    "detectionRange": 6.0,
+    "attackRange": 1.8,
+    "behavior": "berserk",
+    "abilities": [
+      "perfected_strike"
+    ],
+    "spriteName": "enemy_lifeless_berserk",
+    "spriteScale": 1.1,
+    "xpReward": 55,
+    "goldMin": 8,
+    "goldMax": 18,
+    "lootTable": [
+      {
+        "itemID": "breath_remnant",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "returned_shade",
+    "name": "Ombre du Retourné",
+    "description": "L'écho d'un Retourné déchu, drainant les couleurs autour de lui.",
+    "worldID": "nalthis",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 175,
+    "damage": 24,
+    "defense": 12,
+    "speed": 1.3,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "support",
+    "abilities": [
+      "color_drain",
+      "breath_drain",
+      "color_storm"
+    ],
+    "spriteName": "enemy_returned_shade",
+    "spriteScale": 1.3,
+    "xpReward": 110,
+    "goldMin": 18,
+    "goldMax": 40,
+    "lootTable": [
+      {
+        "itemID": "divine_breath_shard",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "chromatic_beast",
+    "name": "Bête Chromatique",
+    "description": "Animal sauvage mutée par une surdose de BioChroma, rayonnant des couleurs instables.",
+    "worldID": "nalthis",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 40,
+    "damage": 10,
+    "defense": 4,
+    "speed": 1.8,
+    "detectionRange": 5.0,
+    "attackRange": 1.5,
+    "behavior": "wander",
+    "abilities": [
+      "color_blast"
+    ],
+    "spriteName": "enemy_chromatic_beast",
+    "spriteScale": 1.0,
+    "xpReward": 20,
+    "goldMin": 3,
+    "goldMax": 8,
+    "lootTable": [
+      {
+        "itemID": "chromatic_scale",
+        "dropChance": 0.4,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  },
+  {
+    "id": "seon_corrupted",
+    "name": "Séon Corrompu",
+    "description": "Un séon dont le lien Aon a été brisé, devenu une sphère de lumière hostile.",
+    "worldID": "sel",
+    "tier": "minion",
+    "level": 3,
+    "maxHP": 35,
+    "damage": 12,
+    "defense": 2,
+    "speed": 2.2,
+    "detectionRange": 9.0,
+    "attackRange": 3.5,
+    "behavior": "ranged",
+    "abilities": [
+      "hion_drain",
+      "failed_aon"
+    ],
+    "spriteName": "enemy_seon_corrupted",
+    "spriteScale": 0.7,
+    "xpReward": 25,
+    "goldMin": 4,
+    "goldMax": 10,
+    "lootTable": [
+      {
+        "itemID": "seon_fragment",
+        "dropChance": 0.3,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "forger_sentinel",
+    "name": "Sentinelle Forgeur",
+    "description": "Automate forgé par un Forgeur impérial, patrouillant sans relâche les halls anciens.",
+    "worldID": "sel",
+    "tier": "elite",
+    "level": 8,
+    "maxHP": 190,
+    "damage": 26,
+    "defense": 16,
+    "speed": 1.1,
+    "detectionRange": 6.0,
+    "attackRange": 2.0,
+    "behavior": "guard",
+    "abilities": [
+      "machine_pulse",
+      "aon_shatter"
+    ],
+    "spriteName": "enemy_forger_sentinel",
+    "spriteScale": 1.4,
+    "xpReward": 105,
+    "goldMin": 15,
+    "goldMax": 35,
+    "lootTable": [
+      {
+        "itemID": "forged_core",
+        "dropChance": 0.2,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "cognitive_horror",
+    "name": "Horreur Cognitive",
+    "description": "Amalgame de pensées oubliées prenant forme monstrueuse dans le Royaume Cognitif.",
+    "worldID": "shadesmar",
+    "tier": "elite",
+    "level": 9,
+    "maxHP": 200,
+    "damage": 28,
+    "defense": 14,
+    "speed": 1.4,
+    "detectionRange": 8.0,
+    "attackRange": 2.5,
+    "behavior": "berserk",
+    "abilities": [
+      "mind_drain",
+      "reality_tear",
+      "phase_shift"
+    ],
+    "spriteName": "enemy_cognitive_horror",
+    "spriteScale": 1.5,
+    "xpReward": 130,
+    "goldMin": 20,
+    "goldMax": 50,
+    "lootTable": [
+      {
+        "itemID": "cognitive_shard",
+        "dropChance": 0.25,
+        "minQuantity": 1,
+        "maxQuantity": 1
+      }
+    ]
+  },
+  {
+    "id": "bead_swarm",
+    "name": "Essaim de Billes",
+    "description": "Des milliers de billes cognitives animées par une intention commune, formant une marée vivante.",
+    "worldID": "shadesmar",
+    "tier": "soldier",
+    "level": 4,
+    "maxHP": 60,
+    "damage": 14,
+    "defense": 3,
+    "speed": 1.6,
+    "detectionRange": 7.0,
+    "attackRange": 2.0,
+    "behavior": "patrol",
+    "abilities": [
+      "slime_burst"
+    ],
+    "spriteName": "enemy_bead_swarm",
+    "spriteScale": 1.0,
+    "xpReward": 35,
+    "goldMin": 5,
+    "goldMax": 15,
+    "lootTable": [
+      {
+        "itemID": "cognition_bead",
+        "dropChance": 0.5,
+        "minQuantity": 2,
+        "maxQuantity": 5
+      }
+    ]
+  },
+  {
+    "id": "spren_hunter",
+    "name": "Chasseur de Sprens",
+    "description": "Entité prédatrice qui se nourrit des sprens errants, particulièrement attirée par l'Investiture.",
+    "worldID": "shadesmar",
+    "tier": "soldier",
+    "level": 5,
+    "maxHP": 70,
+    "damage": 16,
+    "defense": 6,
+    "speed": 2.0,
+    "detectionRange": 10.0,
+    "attackRange": 2.5,
+    "behavior": "ranged",
+    "abilities": [
+      "void_bolt",
+      "phase_shift"
+    ],
+    "spriteName": "enemy_spren_hunter",
+    "spriteScale": 1.0,
+    "xpReward": 45,
+    "goldMin": 6,
+    "goldMax": 14,
+    "lootTable": [
+      {
+        "itemID": "spren_essence",
+        "dropChance": 0.35,
+        "minQuantity": 1,
+        "maxQuantity": 2
+      }
+    ]
+  }
+]
