@@ -14,7 +14,7 @@ import { WorldEventManager } from '../../game/WorldEvents';
 import type { WorldEventEffect } from '../../game/WorldEvents';
 import { NPCScheduleManager } from '../../game/NPCScheduleSystem';
 import { ObjectPool } from '../../systems/ObjectPool';
-import { spawnClassAmbientParticle } from '../../rendering/SpellEffects';
+import { spawnClassAmbientParticle, releaseSpellParticle } from '../../rendering/SpellEffects';
 import { moveNPCTo, updateNPCAnimation, showActivityIndicator, setNPCSleeping, teleportNPC } from '../../rendering/NPCAnimator';
 import type { NPCInstance, Particle, WorldTheme } from './ZoneTypes';
 
@@ -275,7 +275,9 @@ export function spawnAmbientParticles(
     });
   }
 
-  for (let i = particles.length - 1; i >= 0; i--) {
+  // Update all particles — swap-and-pop for O(1) removal
+  let i = particles.length;
+  while (i-- > 0) {
     const p = particles[i];
     p.life -= dt;
     p.x += p.vx * dt;
@@ -285,8 +287,15 @@ export function spawnAmbientParticles(
     p.sprite.alpha = Math.min(1, p.life / p.maxLife) * 0.6;
 
     if (p.life <= 0) {
-      particlePool.release(p.sprite);
-      particles.splice(i, 1);
+      // Class ambient particles use SpellParticles pool; weather uses ObjectPool
+      if ((p as any)._classAmbient) {
+        releaseSpellParticle(p as any);
+      } else {
+        particlePool.release(p.sprite);
+      }
+      // Swap-and-pop: O(1) instead of splice O(n)
+      particles[i] = particles[particles.length - 1];
+      particles.pop();
     }
   }
 

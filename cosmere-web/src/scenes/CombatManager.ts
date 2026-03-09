@@ -38,8 +38,24 @@ export class CombatManager {
     this.enemyAI = ai;
   }
 
-  update(dt: number): void {
+  update(dt: number, enemies?: EnemyInstance[]): void {
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
+
+    // Process hit tint timers (replaces setTimeout-based tint resets)
+    if (enemies) {
+      for (const enemy of enemies) {
+        if (enemy.hitTintTimer && enemy.hitTintTimer > 0) {
+          enemy.hitTintTimer -= dt;
+          if (enemy.hitTintTimer <= 0) {
+            enemy.hitTintTimer = 0;
+            if (!enemy.isDead) {
+              const innerSprite = enemy.sprite.children[1] as Graphics;
+              if (innerSprite) innerSprite.tint = 0xffffff;
+            }
+          }
+        }
+      }
+    }
   }
 
   handleAttack(
@@ -101,8 +117,8 @@ export class CombatManager {
     const innerSprite = closest.sprite.children[1] as Graphics;
     if (innerSprite) {
       innerSprite.tint = 0xff4444;
-      const ref = closest;
-      setTimeout(() => { if (!ref.isDead && innerSprite) innerSprite.tint = 0xffffff; }, 120);
+      // Ticker-based tint reset (resolved in update loop via hitTintTimer)
+      closest.hitTintTimer = 0.12;
     }
 
     if (closest.hp <= 0) {

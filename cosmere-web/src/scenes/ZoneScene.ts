@@ -74,6 +74,8 @@ import { StatusEffectManager, createStatusBar, spawnStatusParticle } from '../ga
 import type { ActiveStatusEffect } from '../game/StatusEffects';
 import type { Zone, Enemy, EnemySpawn, GridPosition, ZoneConnection, ChampionClass } from '../data/types';
 import type { ActionMode } from '../ui/ActionButtons';
+import { KeyBindings } from '../input/KeyBindings';
+import { KeyboardManager } from '../input/KeyboardManager';
 import { getLayoutInfo, joystickPosition, actionButtonsPosition, minimapPosition, hudMargin, toolbarY, toolbarButtonSize, scaled, fontSize, touchTarget, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import {
@@ -105,6 +107,9 @@ import {
   getEventXPBonus, getEventGoldBonus,
   spawnAmbientParticles as spawnAmbientParticlesModule,
 } from './zone/ZoneEnvironment';
+import { updateAnimations as updateAnimationsModule } from './zone/ZoneAnimations';
+import type { AnimationHost } from './zone/ZoneAnimations';
+import { updateStatusEffects as updateStatusEffectsModuleNew } from './zone/ZoneStatusEffects';
 import {
   toggleInventory as toggleInventoryModule,
   toggleProfessions as toggleProfessionsModule,
@@ -248,6 +253,11 @@ export class ZoneScene extends Container implements GameScene {
   // Dialogue
   private dialoguePanel: Container | null = null;
   private dialogueTexts: Text[] = [];
+
+  // Keyboard input
+  private keyBindings = new KeyBindings();
+  private keyboard = new KeyboardManager(this.keyBindings);
+  private inputMode: 'touch' | 'keyboard' = 'touch';
 
   // Pause
   private pauseMenu: Container | null = null;
@@ -476,6 +486,38 @@ export class ZoneScene extends Container implements GameScene {
     this.actionButtons.onInteract = (mode) => this.handleInteraction(mode);
     this.actionButtons.onUltimate = () => this.handleUltimate();
     this.uiContainer.addChild(this.actionButtons);
+
+    // Keyboard input mode detection
+    this.keyboard.setOnKeyboardUsed(() => {
+      if (this.inputMode !== 'keyboard') {
+        this.inputMode = 'keyboard';
+        this.joystick.visible = false;
+        this.actionButtons.visible = false;
+      }
+    });
+
+    // Return to touch mode on pointer interaction
+    this.uiContainer.on('pointerdown', () => {
+      if (this.inputMode !== 'touch') {
+        this.inputMode = 'touch';
+        this.joystick.visible = true;
+        this.actionButtons.visible = true;
+      }
+    });
+
+    // Keyboard action callbacks
+    this.keyboard.onAction('attack', () => this.handleAttack());
+    this.keyboard.onAction('skill1', () => this.handleSkill(0));
+    this.keyboard.onAction('skill2', () => this.handleSkill(1));
+    this.keyboard.onAction('skill3', () => this.handleSkill(2));
+    this.keyboard.onAction('skill4', () => this.handleSkill(3));
+    this.keyboard.onAction('ultimate', () => this.handleUltimate());
+    this.keyboard.onAction('potion1', () => this.usePotion(0));
+    this.keyboard.onAction('potion2', () => this.usePotion(1));
+    this.keyboard.onAction('potion3', () => this.usePotion(2));
+    this.keyboard.onAction('interact', () => this.handleInteraction(this.actionButtons.currentMode));
+    this.keyboard.onAction('inventory', () => this.toggleInventory());
+    this.keyboard.onAction('pause', () => this.togglePause());
 
     // Auto-equip skills for class
     GameManager.shared.autoEquipSkills(gameData.skills);
@@ -1047,6 +1089,7 @@ export class ZoneScene extends Container implements GameScene {
       this.killStreakTimer -= delta;
       if (this.killStreakTimer <= 0) this.killStreak = 0;
     }
+    this.joystick.update();
     this.handleMovement(delta);
     this.updateEnemyAI(delta);
     this.updateCombat(delta);
@@ -1077,109 +1120,67 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Movement ────────────────────────────────────────────────
 
   private handleMovement(dt: number): void {
-    if (!this.joystick.active || this.joystick.magnitude === 0) return;
+    let dirX = 0;
+    let dirY = 0;
+    let magnitude = 0;
+
+    // Keyboard takes priority if any movement key is pressed
+    if (this.keyboard.isMoving()) {
+      const dir = this.keyboard.getDirection();
+      dirX = dir.x;
+      dirY = dir.y;
+      magnitude = 1;
+    } else if (this.joystick.active && this.joystick.magnitude > 0) {
+      dirX = this.joystick.direction.x;
+      dirY = this.joystick.direction.y;
+      magnitude = this.joystick.magnitude;
+    }
+
+    if (magnitude === 0) return;
 
     const speedMult = this.playerStatusEffects.getSpeedMultiplier() * getCompanionSpeedBonus();
-    const dx = this.joystick.direction.x * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
-    const dy = this.joystick.direction.y * this.playerSpeed * dt * this.joystick.magnitude * speedMult;
+    const dx = dirX * this.playerSpeed * dt * magnitude * speedMult;
+    const dy = dirY * this.playerSpeed * dt * magnitude * speedMult;
 
-    // Track facing
     if (dx > 0.5) this.playerFacing = 'right';
     else if (dx < -0.5) this.playerFacing = 'left';
 
     const newX = this.playerScreenPos.x + dx;
     const newY = this.playerScreenPos.y + dy;
-
-    // Convert to iso and clamp within grid bounds
     const iso = screenToIso(newX, newY);
     const clampedCol = Math.max(0.5, Math.min(this.zone.gridWidth - 1.5, iso.col));
     const clampedRow = Math.max(0.5, Math.min(this.zone.gridHeight - 1.5, iso.row));
-
-    // Convert clamped iso back to screen
     const clamped = isoToScreen(clampedCol, clampedRow);
     this.playerScreenPos.x = clamped.x;
     this.playerScreenPos.y = clamped.y;
-
-    this.playerGridPos = {
-      col: Math.round(clampedCol),
-      row: Math.round(clampedRow),
-    };
-
+    this.playerGridPos = { col: Math.round(clampedCol), row: Math.round(clampedRow) };
     this.playerContainer.x = this.playerScreenPos.x;
     this.playerContainer.y = this.playerScreenPos.y;
   }
 
+  getKeyboard(): KeyboardManager { return this.keyboard; }
+
   // ─── Animations ──────────────────────────────────────────────
 
   private updateAnimations(dt: number): void {
-    this.playerAnimTimer += dt * 4;
-
-    // Update character animator state based on movement
-    const isMoving = this.joystick.active && this.joystick.magnitude > 0;
-    if (this.playerAnimator.state !== 'attack' && this.playerAnimator.state !== 'hurt'
-        && this.playerAnimator.state !== 'cast' && this.playerAnimator.state !== 'death') {
-      this.playerAnimator.setState(isMoving ? 'walk' : 'idle');
-    }
-    this.playerAnimator.facing = this.playerFacing;
-    this.playerAnimator.update(dt);
-
-    // Apply animator transforms (with multi-part limb animation)
-    applyAnimationToPlayer(this.playerContainer, this.playerSprite, this.playerShadow, this.playerAnimator, this.playerBodyParts);
-
-    // Hurt flash tint - apply to all body part Graphics
-    const hurtTint = this.playerAnimator.hurtFlash > 0 ? 0xff4444 : 0xffffff;
-    for (const child of this.playerSprite.children) {
-      if (child instanceof Graphics) {
-        child.tint = hurtTint;
-      }
-    }
-
-    // Class aura effect — reuse existing Graphics via clear() to avoid per-frame allocation
-    const champ = GameManager.shared.champion;
-    if (champ) {
-      const aura = drawClassAura(
-        this.worldContainer,
-        this.playerScreenPos.x, this.playerScreenPos.y,
-        champ.championClass, this.playerAnimator,
-        this.playerAuraSprite,
-      );
-      if (aura && !this.playerAuraSprite) {
-        aura.zIndex = this.playerContainer.zIndex - 1;
-        this.worldContainer.addChild(aura);
-        this.playerAuraSprite = aura;
-      }
-      if (this.playerAuraSprite) {
-        this.playerAuraSprite.zIndex = this.playerContainer.zIndex - 1;
-      }
-    }
-
-    // Enemy idle bob
-    for (const enemy of this.enemies) {
-      if (enemy.isDead) continue;
-      enemy.animTimer += dt * 2;
-      const innerSprite = enemy.sprite.children[1]; // The Graphics sprite
-      if (innerSprite) {
-        innerSprite.y = Math.sin(enemy.animTimer) * 1;
-      }
-    }
-
-    // NPC idle animation
-    for (const npc of this.npcs) {
-      // Subtle scale pulse for quest NPCs
-      const t = performance.now() / 1000;
-      const questBang = npc.sprite.children.find(c => c instanceof Text && (c as Text).text === '!');
-      if (questBang) {
-        questBang.scale.set(1 + Math.sin(t * 3) * 0.15);
-      }
-    }
-
-    // Loot sparkle
-    for (const loot of this.lootPoints) {
-      if (loot.collected || loot.isHidden) continue;
-      const t = performance.now() / 1000;
-      // Gentle pulse
-      loot.sprite.alpha = 0.85 + Math.sin(t * 2) * 0.15;
-    }
+    this.playerAuraSprite = updateAnimationsModule(dt, {
+      worldContainer: this.worldContainer,
+      playerContainer: this.playerContainer,
+      playerSprite: this.playerSprite,
+      playerShadow: this.playerShadow,
+      playerAnimator: this.playerAnimator,
+      playerBodyParts: this.playerBodyParts,
+      playerAuraSprite: this.playerAuraSprite,
+      playerScreenPos: this.playerScreenPos,
+      playerFacing: this.playerFacing,
+      playerAnimTimer: this.playerAnimTimer,
+      joystickActive: this.joystick.active,
+      joystickMagnitude: this.joystick.magnitude,
+      keyboardMoving: this.keyboard.isMoving(),
+      enemies: this.enemies,
+      npcs: this.npcs,
+      lootPoints: this.lootPoints,
+    });
   }
 
   // ─── Enemy AI ────────────────────────────────────────────────
@@ -1368,61 +1369,33 @@ export class ZoneScene extends Container implements GameScene {
       );
     }
     if (this.comboDisplay) this.comboDisplay.update();
-  }
 
-  private updateStatusEffects(dt: number): void {
-    const champ = GameManager.shared.champion;
-    if (!champ) return;
-
-    const result = this.playerStatusEffects.update(dt);
-
-    // ── Passive Regeneration (base + talents) ──
-    const talents = GameManager.shared.talentSystem;
-    const baseInvRegen = 1.5; // Base passive investiture regen per second
-    const baseHPRegen = 0.5;  // Base passive HP regen per second
-    const talentInvRegen = talents?.getBonus('investitureRegenPerSecond') ?? 0;
-    const talentHPRegen = talents?.getBonus('hpRegenPerSecond') ?? 0;
-    const totalInvRegen = (baseInvRegen + talentInvRegen) * dt;
-    const totalHPRegen = (baseHPRegen + talentHPRegen) * dt;
-
-    if (champ.currentInvestiture < GameManager.shared.maxInvestiture) {
-      champ.currentInvestiture = Math.min(GameManager.shared.maxInvestiture, champ.currentInvestiture + totalInvRegen);
-    }
-    if (champ.currentHP < GameManager.shared.maxHP && champ.currentHP > 0) {
-      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + totalHPRegen);
-    }
-
-    // Apply periodic damage/heal from status effects
-    if (result.damagePerTick > 0) {
-      champ.currentHP -= result.damagePerTick;
-      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.damagePerTick), false, 0x44cc44);
-      if (champ.currentHP <= 0) { champ.currentHP = 0; this.handlePlayerDeath(); }
-    }
-    if (result.healPerTick > 0) {
-      champ.currentHP = Math.min(GameManager.shared.maxHP, champ.currentHP + result.healPerTick);
-      this.showDamageNumber(this.playerScreenPos.x, this.playerScreenPos.y - 30, Math.ceil(result.healPerTick), false, 0x44ff66);
-    }
-
-    // Show expired messages
-    for (const type of result.expired) {
-      this.showFloatingText(this.playerScreenPos.x, this.playerScreenPos.y - 40, `${type} dissipé`, 0x999999);
-    }
-
-    // Spawn visual particles for active effects
-    this.statusParticleTimer += dt;
-    if (this.statusParticleTimer > 0.3) {
-      this.statusParticleTimer = 0;
-      for (const effect of this.playerStatusEffects.effects) {
-        if (Math.random() < 0.5) {
-          spawnStatusParticle(this.worldContainer, this.playerScreenPos.x, this.playerScreenPos.y - 15, effect.type);
+    // Process hit tint timers (replaces setTimeout-based tint resets)
+    for (const enemy of this.enemies) {
+      if (enemy.hitTintTimer && enemy.hitTintTimer > 0) {
+        enemy.hitTintTimer -= dt;
+        if (enemy.hitTintTimer <= 0) {
+          enemy.hitTintTimer = 0;
+          if (!enemy.isDead) {
+            const innerSprite = enemy.sprite.children[1] as Graphics | undefined;
+            if (innerSprite) innerSprite.tint = 0xffffff;
+          }
         }
       }
     }
+  }
 
-    // Update HUD status bar
-    if (this.statusBar) {
-      this.statusBar.update(this.playerStatusEffects.effects);
-    }
+  private updateStatusEffects(dt: number): void {
+    this.statusParticleTimer = updateStatusEffectsModuleNew(dt, {
+      worldContainer: this.worldContainer,
+      playerScreenPos: this.playerScreenPos,
+      playerStatusEffects: this.playerStatusEffects,
+      statusParticleTimer: this.statusParticleTimer,
+      statusBar: this.statusBar,
+      showDamageNumber: (x, y, amt, crit, col, style) => this.showDamageNumber(x, y, amt, crit, col, style),
+      showFloatingText: (x, y, msg, c) => this.showFloatingText(x, y, msg, c),
+      handlePlayerDeath: () => this.handlePlayerDeath(),
+    });
   }
 
   // ─── Visual Effects ──────────────────────────────────────────

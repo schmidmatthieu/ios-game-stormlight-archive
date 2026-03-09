@@ -322,6 +322,7 @@ export function updateCombat(
   comboDisplay: { update: () => void } | null,
   showFloatingText: (x: number, y: number, msg: string, color: number) => void,
   playerScreenPos: { x: number; y: number },
+  enemies?: EnemyInstance[],
 ): void {
   attackCooldownRef.value = Math.max(0, attackCooldownRef.value - dt);
   const comboBroke = ComboManager.shared.update(dt);
@@ -332,4 +333,20 @@ export function updateCombat(
     );
   }
   if (comboDisplay) comboDisplay.update();
+
+  // Process hit tint timers (replaces setTimeout-based tint resets)
+  if (enemies) {
+    for (const enemy of enemies) {
+      if (enemy.hitTintTimer && enemy.hitTintTimer > 0) {
+        enemy.hitTintTimer -= dt;
+        if (enemy.hitTintTimer <= 0) {
+          enemy.hitTintTimer = 0;
+          if (!enemy.isDead) {
+            const innerSprite = enemy.sprite.children[1] as Graphics | undefined;
+            if (innerSprite) innerSprite.tint = 0xffffff;
+          }
+        }
+      }
+    }
+  }
 }

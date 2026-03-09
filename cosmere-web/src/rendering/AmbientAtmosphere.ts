@@ -335,10 +335,12 @@ const ATMOSPHERE_CONFIGS: Record<string, AtmosphereConfig> = {
 
 export class AmbientAtmosphereManager {
   private motes: AmbientMote[] = [];
+  private motePool: Graphics[] = [];
   private fogLayer: Graphics;
   private moteContainer: Container;
   private config: AtmosphereConfig;
   private timer = 0;
+  private lastFogRedraw = -1;
   private viewW: number;
   private viewH: number;
 
@@ -358,7 +360,7 @@ export class AmbientAtmosphereManager {
 
     // Mote container
     this.moteContainer = new Container();
-    this.moteContainer.zIndex = 99000; // Above world, below UI
+    this.moteContainer.zIndex = 99000;
     parentContainer.addChild(this.moteContainer);
 
     // Pre-spawn motes with random ages
@@ -367,11 +369,29 @@ export class AmbientAtmosphereManager {
     }
   }
 
+  private acquireMoteGraphics(size: number): Graphics {
+    let g: Graphics;
+    if (this.motePool.length > 0) {
+      g = this.motePool.pop()!;
+      g.clear();
+      g.visible = true;
+    } else {
+      g = new Graphics();
+    }
+    this.config.drawMote(g, size);
+    return g;
+  }
+
+  private releaseMoteGraphics(g: Graphics): void {
+    this.moteContainer.removeChild(g);
+    g.visible = false;
+    this.motePool.push(g);
+  }
+
   private spawnMote(randomAge = false): void {
     const cfg = this.config;
     const size = rng(cfg.sizeRange[0], cfg.sizeRange[1]);
-    const g = new Graphics();
-    cfg.drawMote(g, size);
+    const g = this.acquireMoteGraphics(size);
 
     const x = (Math.random() - 0.5) * this.viewW * 2;
     const y = (Math.random() - 0.5) * this.viewH * 2;
@@ -400,16 +420,25 @@ export class AmbientAtmosphereManager {
     this.moteContainer.x = cameraX;
     this.moteContainer.y = cameraY;
 
-    // Update fog layer
+    // Update fog layer — throttle redraws to ~20fps (every 0.05s)
     if (this.config.drawFogLayer) {
-      this.fogLayer.clear();
-      this.fogLayer.x = cameraX;
-      this.fogLayer.y = cameraY;
-      this.config.drawFogLayer(this.fogLayer, this.viewW, this.viewH, this.timer);
+      const fogInterval = 0.05;
+      if (this.timer - this.lastFogRedraw >= fogInterval) {
+        this.lastFogRedraw = this.timer;
+        this.fogLayer.clear();
+        this.fogLayer.x = cameraX;
+        this.fogLayer.y = cameraY;
+        this.config.drawFogLayer(this.fogLayer, this.viewW, this.viewH, this.timer);
+      } else {
+        // Just update position between redraws
+        this.fogLayer.x = cameraX;
+        this.fogLayer.y = cameraY;
+      }
     }
 
-    // Update motes
-    for (let i = this.motes.length - 1; i >= 0; i--) {
+    // Update motes — swap-and-pop for O(1) removal
+    let i = this.motes.length;
+    while (i-- > 0) {
       const m = this.motes[i];
       m.life += dt;
       m.x += m.vx * dt;
@@ -422,16 +451,15 @@ export class AmbientAtmosphereManager {
 
       // Fade in/out
       const lifeRatio = m.life / m.maxLife;
-      const fadeIn = Math.min(1, lifeRatio * 5);   // Fade in first 20%
-      const fadeOut = Math.max(0, 1 - (lifeRatio - 0.7) / 0.3); // Fade out last 30%
+      const fadeIn = Math.min(1, lifeRatio * 5);
+      const fadeOut = Math.max(0, 1 - (lifeRatio - 0.7) / 0.3);
       m.g.alpha = m.baseAlpha * fadeIn * fadeOut;
 
-      // Remove dead motes
+      // Remove dead motes — pool + swap-and-pop
       if (m.life >= m.maxLife) {
-        this.moteContainer.removeChild(m.g);
-        m.g.destroy();
-        this.motes.splice(i, 1);
-        // Respawn
+        this.releaseMoteGraphics(m.g);
+        this.motes[i] = this.motes[this.motes.length - 1];
+        this.motes.pop();
         this.spawnMote(false);
       }
     }
@@ -441,7 +469,11 @@ export class AmbientAtmosphereManager {
     for (const m of this.motes) {
       m.g.destroy();
     }
+    for (const g of this.motePool) {
+      g.destroy();
+    }
     this.motes = [];
+    this.motePool = [];
     this.fogLayer.destroy();
     this.moteContainer.destroy();
   }

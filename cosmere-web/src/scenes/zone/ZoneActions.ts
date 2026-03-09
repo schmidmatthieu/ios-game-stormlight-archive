@@ -130,8 +130,8 @@ export function handleAttack(host: ActionHost): number {
   const innerSprite = closest.sprite.children[1] as Graphics;
   if (innerSprite) {
     innerSprite.tint = 0xff4444;
-    const ref = closest;
-    setTimeout(() => { if (!ref.isDead && innerSprite) innerSprite.tint = 0xffffff; }, 120);
+    // Ticker-based tint reset (resolved in combat update loop via hitTintTimer)
+    closest.hitTintTimer = 0.12;
   }
 
   if (closest.hp <= 0) host.killEnemy(closest);

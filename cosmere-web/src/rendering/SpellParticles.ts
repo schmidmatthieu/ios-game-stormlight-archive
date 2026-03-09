@@ -23,9 +23,39 @@ export const ATTACK_COLORS: Record<string, number> = {
   elantrian: 0xffcc44, sandMaster: 0xddcc88, nightmarePainter: 0x8866cc,
 };
 
+// ─── Graphics Pool for Ambient Particles ────────────────────────
+
+const POOL_INITIAL_SIZE = 30;
+const particlePool: Graphics[] = [];
+
+function acquireGraphics(): Graphics {
+  if (particlePool.length > 0) {
+    const g = particlePool.pop()!;
+    g.visible = true;
+    g.alpha = 1;
+    return g;
+  }
+  return new Graphics();
+}
+
+function releaseGraphics(g: Graphics): void {
+  g.removeFromParent();
+  g.clear();
+  g.visible = false;
+  particlePool.push(g);
+}
+
+// Pre-fill pool
+for (let i = 0; i < POOL_INITIAL_SIZE; i++) {
+  const g = new Graphics();
+  g.visible = false;
+  particlePool.push(g);
+}
+
 /**
  * Creates lingering magic ambient particles around the player
  * based on their class. Called periodically for passive visual flavor.
+ * Uses an object pool to avoid per-frame allocations.
  */
 export function spawnClassAmbientParticle(
   worldContainer: Container,
@@ -35,7 +65,7 @@ export function spawnClassAmbientParticle(
 ): void {
   const cfg = SKILL_COLORS[cls] ?? SKILL_COLORS.mistborn;
 
-  const p = new Graphics();
+  const p = acquireGraphics();
   let size = 1;
   let color = cfg.particleColor;
   let vx = 0;
@@ -44,7 +74,6 @@ export function spawnClassAmbientParticle(
 
   switch (cls) {
     case 'mistborn':
-      // Metallic sparkle drifting upward
       size = 0.8 + Math.random() * 0.8;
       color = Math.random() > 0.5 ? 0x88aacc : 0xaabbdd;
       vx = (Math.random() - 0.5) * 8;
@@ -52,7 +81,6 @@ export function spawnClassAmbientParticle(
       life = 1.5 + Math.random();
       break;
     case 'radiant':
-      // Stormlight wisps floating upward
       size = 1 + Math.random();
       color = Math.random() > 0.5 ? 0x88ccff : 0xaaddff;
       vx = (Math.random() - 0.5) * 12;
@@ -60,7 +88,6 @@ export function spawnClassAmbientParticle(
       life = 1 + Math.random() * 0.8;
       break;
     case 'awakener': {
-      // Color motes drifting
       const colorPool = [0xff4466, 0x44aaff, 0xffaa22, 0x44ff66, 0xaa44ff];
       color = colorPool[Math.floor(Math.random() * colorPool.length)];
       size = 0.8 + Math.random();
@@ -70,7 +97,6 @@ export function spawnClassAmbientParticle(
       break;
     }
     case 'elantrian': {
-      // Golden Aon glow dots
       size = 0.6 + Math.random() * 0.6;
       color = Math.random() > 0.5 ? 0xffcc44 : 0xffdd88;
       const aonAngle = Math.random() * Math.PI * 2;
@@ -83,7 +109,6 @@ export function spawnClassAmbientParticle(
       break;
     }
     case 'sandMaster': {
-      // Sand grains swirling
       size = 0.5 + Math.random() * 0.5;
       color = Math.random() > 0.5 ? 0xddcc88 : 0xccbb77;
       const sandAngle = Math.random() * Math.PI * 2;
@@ -93,7 +118,6 @@ export function spawnClassAmbientParticle(
       break;
     }
     case 'nightmarePainter':
-      // Dark ink droplets rising
       size = 1 + Math.random() * 1.5;
       color = Math.random() > 0.6 ? 0x8855cc : 0x332244;
       vx = (Math.random() - 0.5) * 6;
@@ -108,11 +132,22 @@ export function spawnClassAmbientParticle(
   p.zIndex = 99999;
   worldContainer.addChild(p);
 
-  particles.push({
+  const particle: SpellParticle = {
     sprite: p,
     x: p.x, y: p.y,
     vx, vy,
     life, maxLife: life,
     size,
-  });
+  };
+  // Tag for correct pool release when mixed with weather particles
+  (particle as any)._classAmbient = true;
+  particles.push(particle);
+}
+
+/**
+ * Release a spell particle back to the pool instead of destroying it.
+ * Call this when removing dead particles from the particles array.
+ */
+export function releaseSpellParticle(particle: SpellParticle): void {
+  releaseGraphics(particle.sprite);
 }

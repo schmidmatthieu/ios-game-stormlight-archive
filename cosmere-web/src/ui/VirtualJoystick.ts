@@ -98,6 +98,15 @@ export class VirtualJoystick extends Container {
     this.on('pointerupoutside', this.onUp, this);
   }
 
+  /** Remove event listeners to prevent memory leaks on scene change. */
+  override destroy(): void {
+    this.off('pointerdown', this.onDown, this);
+    this.off('globalpointermove', this.onMove, this);
+    this.off('pointerup', this.onUp, this);
+    this.off('pointerupoutside', this.onUp, this);
+    super.destroy({ children: true });
+  }
+
   private onDown(e: FederatedPointerEvent): void {
     this.pointerId = e.pointerId;
     this.active = true;
@@ -121,18 +130,25 @@ export class VirtualJoystick extends Container {
     this.magnitude = 0;
   }
 
+  private returning = false;
+
   private animateThumbReturn(): void {
-    const ease = () => {
-      this.thumb.x += (0 - this.thumb.x) * 0.35;
-      this.thumb.y += (0 - this.thumb.y) * 0.35;
-      if (Math.abs(this.thumb.x) > 0.5 || Math.abs(this.thumb.y) > 0.5) {
-        requestAnimationFrame(ease);
-      } else {
-        this.thumb.x = 0;
-        this.thumb.y = 0;
-      }
-    };
-    requestAnimationFrame(ease);
+    this.returning = true;
+  }
+
+  /**
+   * Call from game loop ticker each frame to animate thumb return.
+   * Replaces recursive requestAnimationFrame for synchronization.
+   */
+  update(): void {
+    if (!this.returning) return;
+    this.thumb.x += (0 - this.thumb.x) * 0.35;
+    this.thumb.y += (0 - this.thumb.y) * 0.35;
+    if (Math.abs(this.thumb.x) <= 0.5 && Math.abs(this.thumb.y) <= 0.5) {
+      this.thumb.x = 0;
+      this.thumb.y = 0;
+      this.returning = false;
+    }
   }
 
   private updateThumb(e: FederatedPointerEvent): void {

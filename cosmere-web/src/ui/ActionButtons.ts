@@ -84,6 +84,15 @@ export class ActionButtons extends Container {
     this.addChild(this.ultButton);
   }
 
+  private springScale(target: Container, speed: number): void {
+    if (Math.abs(1 - target.scale.x) > 0.005) {
+      target.scale.x += (1 - target.scale.x) * speed;
+      target.scale.y += (1 - target.scale.y) * speed;
+    } else if (target.scale.x !== 1) {
+      target.scale.set(1);
+    }
+  }
+
   private skillPositions(): Array<{ x: number; y: number }> {
     // Positions scaled for better spacing and larger buttons
     return [
@@ -129,15 +138,8 @@ export class ActionButtons extends Container {
       this.atkBg.ellipse(0, -radius * 0.25, radius * 0.65, radius * 0.35).fill({ color: 0xffffff, alpha: 0.14 });
     }
 
-    // Smooth bounce animation using Ticker-compatible approach
+    // Bounce animation — resolved in update() via ticker
     this.atkButton.scale.set(1.2);
-    const bounceBack = () => {
-      this.atkButton.scale.x += (1 - this.atkButton.scale.x) * 0.25;
-      this.atkButton.scale.y += (1 - this.atkButton.scale.y) * 0.25;
-      if (Math.abs(1 - this.atkButton.scale.x) > 0.005) requestAnimationFrame(bounceBack);
-      else this.atkButton.scale.set(1);
-    };
-    requestAnimationFrame(bounceBack);
   }
 
   private createCircleBtn(
@@ -218,6 +220,12 @@ export class ActionButtons extends Container {
   }
 
   update(dt: number): void {
+    // Spring-animate any button scales back to 1.0 (replaces RAF loops)
+    this.springScale(this.atkButton, 0.25);
+    for (const btn of this.skillButtons) {
+      this.springScale(btn, 0.3);
+    }
+
     const sp = this.skillPositions();
     for (let i = 0; i < this.slots.length; i++) {
       const slot = this.slots[i];
@@ -237,15 +245,8 @@ export class ActionButtons extends Container {
         this.cooldownOverlays[i].alpha = 0;
         this.cooldownTexts[i].alpha = 0;
 
-        // Flash ready effect
+        // Flash ready effect — spring resolved in ticker loop below
         this.skillButtons[i].scale.set(1.15);
-        const snapBack = () => {
-          this.skillButtons[i].scale.x += (1 - this.skillButtons[i].scale.x) * 0.3;
-          this.skillButtons[i].scale.y += (1 - this.skillButtons[i].scale.y) * 0.3;
-          if (Math.abs(1 - this.skillButtons[i].scale.x) > 0.01) requestAnimationFrame(snapBack);
-          else this.skillButtons[i].scale.set(1);
-        };
-        requestAnimationFrame(snapBack);
       } else {
         // Visual cooldown: darken + pie overlay
         this.skillButtons[i].alpha = 0.5;

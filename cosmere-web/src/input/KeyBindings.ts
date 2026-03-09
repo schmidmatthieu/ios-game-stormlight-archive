@@ -99,16 +99,18 @@ export class KeyBindings {
 
     this.bindings[action] = code;
     this.rebuildReverseMap();
+    this.save();
   }
 
   /** Restores all bindings to their defaults. */
   resetDefaults(): void {
     this.bindings = { ...DEFAULT_BINDINGS };
     this.rebuildReverseMap();
+    this.save();
   }
 
   /** Persists current bindings to LocalStorage. */
-  save(): void {
+  private save(): void {
     try {
       const data = JSON.stringify(this.bindings);
       localStorage.setItem(STORAGE_KEY, data);
@@ -118,7 +120,7 @@ export class KeyBindings {
   }
 
   /** Loads bindings from LocalStorage. Falls back to defaults on failure. */
-  load(): void {
+  private load(): void {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw == null) return;

@@ -99,7 +99,8 @@ export class ParticleSystem {
   }
 
   update(dt: number): void {
-    for (let i = this.particles.length - 1; i >= 0; i--) {
+    let i = this.particles.length;
+    while (i-- > 0) {
       const p = this.particles[i];
       p.life -= dt;
       p.x += p.vx * dt;
@@ -111,7 +112,9 @@ export class ParticleSystem {
       if (p.life <= 0) {
         this.container.removeChild(p.sprite);
         this.graphicsPool.release(p.sprite);
-        this.particles.splice(i, 1);
+        // Swap-and-pop: O(1) instead of splice O(n)
+        this.particles[i] = this.particles[this.particles.length - 1];
+        this.particles.pop();
       }
     }
   }

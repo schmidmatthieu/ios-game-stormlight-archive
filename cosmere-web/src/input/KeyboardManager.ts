@@ -8,10 +8,6 @@ const MOVEMENT_ACTIONS: ReadonlySet<GameAction> = new Set([
   'moveUp', 'moveDown', 'moveLeft', 'moveRight',
 ]);
 
-const PREVENT_DEFAULT_KEYS: ReadonlySet<string> = new Set([
-  'Tab', 'Space', 'Escape',
-]);
-
 export class KeyboardManager {
   private readonly bindings: KeyBindings;
   private readonly pressed: Set<string> = new Set();
@@ -140,8 +136,8 @@ export class KeyboardManager {
     const code = e.code;
     const action = this.bindings.getAction(code);
 
-    // Prevent browser defaults for game-bound keys
-    if (action != null && PREVENT_DEFAULT_KEYS.has(code)) {
+    // Prevent browser defaults for all game-bound keys (arrows, Tab, Space, etc.)
+    if (action != null) {
       e.preventDefault();
     }
 

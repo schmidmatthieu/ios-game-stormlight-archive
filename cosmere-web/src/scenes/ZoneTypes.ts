@@ -19,6 +19,8 @@ export interface EnemyInstance {
   state: 'idle' | 'chasing' | 'attacking' | 'dead';
   respawnTimer: number;
   animTimer: number;
+  /** Ticker-based hit tint timer — counts down to 0 then resets tint */
+  hitTintTimer?: number;
 }
 
 export interface NPCInstance {

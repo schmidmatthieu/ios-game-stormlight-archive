@@ -58,12 +58,6 @@ export function showAuthPanel(
   usernameInput.style.cssText = inputStyle;
   usernameInput.autocomplete = 'username';
 
-  const emailInput = document.createElement('input');
-  emailInput.placeholder = 'Email';
-  emailInput.type = 'email';
-  emailInput.style.cssText = inputStyle;
-  emailInput.autocomplete = 'email';
-
   const passwordInput = document.createElement('input');
   passwordInput.placeholder = 'Mot de passe';
   passwordInput.type = 'password';
@@ -89,14 +83,11 @@ export function showAuthPanel(
 
   function updateFormMode(): void {
     if (mode === 'login') {
-      emailInput.style.display = 'none';
-      usernameInput.placeholder = 'Pseudo ou email';
-      usernameInput.autocomplete = 'username';
+      usernameInput.placeholder = 'Pseudo';
       submitBtn.textContent = 'Se connecter';
       toggleLink.textContent = 'Pas encore de compte ? S\'inscrire';
     } else {
-      emailInput.style.display = '';
-      usernameInput.placeholder = 'Pseudo';
+      usernameInput.placeholder = 'Pseudo (3-32 caractères)';
       submitBtn.textContent = 'Créer un compte';
       toggleLink.textContent = 'Déjà un compte ? Se connecter';
     }
@@ -120,7 +111,7 @@ export function showAuthPanel(
       if (mode === 'login') {
         result = await cloud.login(usernameInput.value, passwordInput.value);
       } else {
-        result = await cloud.register(usernameInput.value, emailInput.value, passwordInput.value);
+        result = await cloud.register(usernameInput.value, passwordInput.value);
       }
 
       if (result.ok) {
@@ -138,7 +129,6 @@ export function showAuthPanel(
   });
 
   formContainer.appendChild(usernameInput);
-  formContainer.appendChild(emailInput);
   formContainer.appendChild(passwordInput);
   formContainer.appendChild(errorDiv);
   formContainer.appendChild(submitBtn);

@@ -190,7 +190,8 @@ export class FloatingDamageManager {
   }
 
   update(dt: number): void {
-    for (let i = this.numbers.length - 1; i >= 0; i--) {
+    let i = this.numbers.length;
+    while (i-- > 0) {
       const n = this.numbers[i];
       n.elapsed += dt;
 
@@ -214,7 +215,6 @@ export class FloatingDamageManager {
       // Scale animation — bounce for crit
       if (n.style === 'crit') {
         if (progress < 0.15) {
-          // Pop-in: overshoot then settle
           const popT = progress / 0.15;
           n.scale = 2.0 - Math.sin(popT * Math.PI) * 0.6;
         } else {
@@ -244,10 +244,11 @@ export class FloatingDamageManager {
         n.container.alpha = Math.max(0, 1 - (progress - 0.75) / 0.25);
       }
 
-      // Release back to pool when done
+      // Release back to pool when done — swap-and-pop O(1)
       if (progress >= 1) {
         this.releaseNumber(n);
-        this.numbers.splice(i, 1);
+        this.numbers[i] = this.numbers[this.numbers.length - 1];
+        this.numbers.pop();
       }
     }
   }

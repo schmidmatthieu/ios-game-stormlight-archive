@@ -26,7 +26,6 @@ const FOG_KEY_PREFIX = 'minimap_fog_';
 export interface CloudUser {
   id: number;
   username: string;
-  email: string;
 }
 
 export interface CloudSlotInfo {
@@ -59,8 +58,8 @@ export class CloudSaveManager {
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
       return 'http://localhost:4000';
     }
-    // Production — adjust to your deployed API URL
-    return '/api';
+    // Production — Caddy proxies /auth/* and /saves/* to the backend
+    return '';
   }
 
   private loadStoredUser(): CloudUser | null {
@@ -106,10 +105,10 @@ export class CloudSaveManager {
 
   // ─── Auth ──────────────────────────────────────────────────────
 
-  async register(username: string, email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+  async register(username: string, password: string): Promise<{ ok: boolean; error?: string }> {
     const resp = await this.request<{ token?: string; user?: CloudUser; error?: string }>(
       '/auth/register',
-      { method: 'POST', body: JSON.stringify({ username, email, password }) },
+      { method: 'POST', body: JSON.stringify({ username, password }) },
     );
 
     if (resp.ok && resp.data.token && resp.data.user) {

@@ -54,6 +54,8 @@ export interface EnemyInstance {
   enemyAnim?: EnemyAnimState;
   bossAuraGfx?: Graphics;
   statusGfx?: Graphics;
+  /** Ticker-based hit tint timer — counts down to 0 then resets tint */
+  hitTintTimer?: number;
 }
 
 export interface NPCInstance {
