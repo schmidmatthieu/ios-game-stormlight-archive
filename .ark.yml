@@ -1,0 +1,12 @@
+checks:
+  build:
+    enabled: true
+    command: "cd cosmere-web && npm run build"
+  typecheck-backend:
+    enabled: true
+    command: "cd cosmere-web/backend && npx tsc --noEmit"
+
+audit:
+  enabled: true
+  schedule: "weekly"
+  packageManager: "npm"

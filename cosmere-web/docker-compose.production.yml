@@ -1,0 +1,95 @@
+# ===============================================
+# Cosmere Chronicles — Production Docker Compose
+# ===============================================
+# Deployment for cosmere.ark.swiss
+#
+# Caddy runs on the host (shared with other projects).
+#
+# Ports:
+#   - Frontend (nginx): 3016 (host) -> 80 (container)
+#   - Backend (API):    8086 (host) -> 4000 (container)
+#   - PostgreSQL: internal only
+#
+# Usage:
+#   docker compose -f docker-compose.production.yml up -d
+
+services:
+  # -- PostgreSQL ------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: cosmere-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-cosmere}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-cosmere}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cosmere
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-cosmere} -d ${DB_NAME:-cosmere}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -- Backend API (Express + TypeScript) ------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cosmere-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-cosmere}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-cosmere}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://cosmere.ark.swiss}
+    ports:
+      - "8086:4000"
+    networks:
+      - cosmere
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # -- Frontend (Vite build served by nginx) --------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cosmere-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3016:80"
+    networks:
+      - cosmere
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    name: cosmere_postgres_data
+
+networks:
+  cosmere:
+    name: cosmere-network
+    driver: bridge

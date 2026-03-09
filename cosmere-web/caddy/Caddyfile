@@ -1,0 +1,49 @@
+# cosmere.caddy — Cosmere Chronicles Game
+# Import this from the main Caddyfile:
+#   import /home/ubuntu/cosmere/caddy/Caddyfile
+cosmere.ark.swiss {
+    import ark_optimized_tls
+
+    # Cache static assets (PixiJS bundles, textures, sprites)
+    @static {
+        path /_assets/*
+        path /assets/*
+        path *.js *.css *.svg *.png *.jpg *.jpeg *.webp *.avif *.woff *.woff2
+    }
+    header @static {
+        Cache-Control "public, max-age=31536000, immutable"
+    }
+
+    # API routes -> Express backend
+    handle /auth/* {
+        reverse_proxy 172.17.0.1:8086 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    handle /saves/* {
+        reverse_proxy 172.17.0.1:8086 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    handle /health {
+        reverse_proxy 172.17.0.1:8086
+    }
+
+    # Frontend -> nginx container
+    handle {
+        reverse_proxy 172.17.0.1:3016 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+}
