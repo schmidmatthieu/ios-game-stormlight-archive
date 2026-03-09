@@ -291,7 +291,7 @@ export function createWeatherOverlay(
           }
         }
 
-        // Draw and update splashes
+        // Draw and update splashes with ripple rings
         for (let i = rainSplashes.length - 1; i >= 0; i--) {
           const s = rainSplashes[i];
           s.life += 1 / 60;
@@ -299,12 +299,28 @@ export function createWeatherOverlay(
           if (t >= 1) { rainSplashes.splice(i, 1); continue; }
           const r = s.radius * (0.5 + t);
           const alpha = 0.2 * (1 - t);
+
+          // Expanding ripple rings (water surface effect)
           overlay.circle(s.x, s.y, r).stroke({ color: 0x88aacc, width: 0.5, alpha });
+          if (t < 0.7) {
+            overlay.circle(s.x, s.y, r * 1.5).stroke({ color: 0x88aacc, width: 0.3, alpha: alpha * 0.4 });
+          }
+          if (t < 0.4) {
+            overlay.circle(s.x, s.y, r * 2).stroke({ color: 0x88aacc, width: 0.2, alpha: alpha * 0.2 });
+          }
+
           // Small droplet bounce
           if (t < 0.4) {
             const bounceH = s.radius * 2 * (1 - t / 0.4);
             overlay.circle(s.x - 2, s.y - bounceH, 0.8).fill({ color: 0x88aacc, alpha: alpha * 0.6 });
             overlay.circle(s.x + 2, s.y - bounceH * 0.7, 0.6).fill({ color: 0x88aacc, alpha: alpha * 0.4 });
+          }
+
+          // Ground wet spot (fades slowly)
+          if (t > 0.3) {
+            const wetAlpha = alpha * 0.3 * (1 - (t - 0.3) / 0.7);
+            overlay.ellipse(s.x, s.y + 1, r * 0.8, r * 0.3)
+              .fill({ color: 0x445566, alpha: wetAlpha });
           }
         }
       } else {
@@ -312,17 +328,29 @@ export function createWeatherOverlay(
         rainSplashes.length = 0;
       }
 
-      // ── Lightning bolt ──
+      // ── Lightning bolt with glow halo ──
       if (lightning > 0.01) {
         overlay.rect(0, 0, screenW, screenH)
           .fill({ color: 0xeeeeff, alpha: lightning * 0.25 });
-        // Draw procedural lightning bolt
+        // Draw procedural lightning bolt with glow
         if (lightning > 0.5) {
           const boltX = screenW * (0.2 + Math.random() * 0.6);
-          drawLightningBolt(overlay, boltX, 0, boltX + (Math.random() - 0.5) * 80, screenH * 0.6,
+          const boltEndX = boltX + (Math.random() - 0.5) * 80;
+          const boltEndY = screenH * 0.6;
+          // Wide glow halo behind bolt
+          drawLightningBolt(overlay, boltX, 0, boltEndX, boltEndY,
+            6, lightning * 0.08, 3);
+          // Main bolt
+          drawLightningBolt(overlay, boltX, 0, boltEndX, boltEndY,
             2.5, lightning * 0.6, 4);
-          // Glow around bolt origin
-          overlay.circle(boltX, screenH * 0.3, 30).fill({ color: 0xccddff, alpha: lightning * 0.08 });
+          // Core bright center
+          drawLightningBolt(overlay, boltX, 0, boltEndX, boltEndY,
+            1, lightning * 0.9, 3);
+          // Large glow at bolt origin
+          overlay.circle(boltX, 20, 60).fill({ color: 0xccddff, alpha: lightning * 0.06 });
+          overlay.circle(boltX, 20, 30).fill({ color: 0xeeeeff, alpha: lightning * 0.1 });
+          // Glow at impact point
+          overlay.circle(boltEndX, boltEndY, 40).fill({ color: 0xccddff, alpha: lightning * 0.08 });
         }
       }
 

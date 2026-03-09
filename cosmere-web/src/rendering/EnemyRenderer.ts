@@ -1,6 +1,7 @@
-import { Graphics } from 'pixi.js';
+import { Graphics, Container } from 'pixi.js';
 import type { Enemy } from '../data/types';
 import { lighten, darken } from '../utils/ColorUtils';
+import { drawEntityOutline } from './OutlineRenderer';
 
 // World-specific enemy body colors
 export const WORLD_ENEMY_COLORS: Record<string, Record<string, number>> = {
@@ -407,5 +408,110 @@ function getEyeColor(worldID: string): number {
     case 'komashi': return 0xff33aa;
     case 'shadesmar': return 0x4488ff;
     default: return 0xff3333;
+  }
+}
+
+// ─── Outlined Enemy Drawing ────────────────────────────────────
+
+/**
+ * Draw enemy with a 1px dark outline for improved readability.
+ * Renders the enemy 4 times offset by 1px in each direction
+ * with a dark tint, then the normal sprite on top.
+ */
+export function drawOutlinedEnemy(
+  g: Graphics, data: Enemy, size: number,
+  outlineColor: number = 0x000000,
+  outlineAlpha: number = 0.5,
+): void {
+  const offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+  // Draw outline copies (shifted in each cardinal direction)
+  for (const [dx, dy] of offsets) {
+    g.setTransform(dx, dy);
+    drawEnemySilhouette(g, data, size, outlineColor, outlineAlpha);
+  }
+
+  // Draw normal sprite on top
+  g.setTransform(0, 0);
+  drawEnemySprite(g, data, size);
+}
+
+/** Simplified silhouette for outline pass */
+function drawEnemySilhouette(
+  g: Graphics, data: Enemy, size: number,
+  color: number, alpha: number,
+): void {
+  const headY = -size * 1.8;
+  const bodyScale = data.tier === 'boss' ? 1.3 : data.tier === 'elite' ? 1.1 : 1;
+  const w = size * bodyScale;
+  const h = -headY * bodyScale;
+
+  // Simple body ellipse silhouette
+  g.ellipse(0, headY * 0.4, w, h * 0.5).fill({ color, alpha });
+  // Head circle
+  g.circle(0, headY * 0.85, size * 0.5 * bodyScale).fill({ color, alpha });
+}
+
+// ─── Hit Flash Effect ──────────────────────────────────────────
+
+/**
+ * Apply a bright white flash to an enemy Graphics.
+ * Call this on hit, then restore after ~50ms.
+ */
+export function applyHitFlash(g: Graphics): void {
+  // Store original tint
+  const origTint = g.tint;
+  g.tint = 0xffffff;
+  g.alpha = 1.5; // Overexpose briefly
+
+  setTimeout(() => {
+    g.tint = origTint;
+    g.alpha = 1;
+  }, 60);
+}
+
+/**
+ * Draw hit impact sparks at a point.
+ * Returns spark data for animation.
+ */
+export function createHitSparks(
+  parent: Container,
+  x: number, y: number,
+  color: number = 0xffffff,
+  count: number = 5,
+): void {
+  for (let i = 0; i < count; i++) {
+    const spark = new Graphics();
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 30 + Math.random() * 40;
+    const size = 0.5 + Math.random() * 1;
+
+    spark.circle(0, 0, size).fill({ color, alpha: 0.8 });
+    spark.circle(0, 0, size * 2).fill({ color, alpha: 0.15 });
+    spark.x = x;
+    spark.y = y;
+    spark.zIndex = 100000;
+    parent.addChild(spark);
+
+    let life = 0;
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed - 20;
+    let lastT = performance.now();
+
+    const anim = () => {
+      if (spark.destroyed) return;
+      const now = performance.now();
+      const dt = (now - lastT) / 1000;
+      lastT = now;
+      life += dt;
+
+      spark.x += vx * dt;
+      spark.y += vy * dt + 60 * dt * life; // Gravity
+      spark.alpha = Math.max(0, 1 - life / 0.3);
+
+      if (life < 0.3) requestAnimationFrame(anim);
+      else { parent.removeChild(spark); spark.destroy(); }
+    };
+    requestAnimationFrame(anim);
   }
 }

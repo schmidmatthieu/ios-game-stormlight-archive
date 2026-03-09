@@ -90,6 +90,9 @@ export class MainMenuScene extends Container implements GameScene {
     const glow = new Graphics();
     glow.circle(glowX, glowY, glowR1).fill({ color: 0x332200, alpha: 0.15 });
     glow.circle(glowX, glowY, glowR2).fill({ color: 0x443300, alpha: 0.1 });
+    // Pulsing outer ring
+    glow.circle(glowX, glowY, glowR1 * 1.3).stroke({ color: 0x443300, width: 1, alpha: 0.04 });
+    glow.name = 'ambientGlow';
     this.addChild(glow);
 
     // Mist/particle effects — multi-layered with varied sizes and glow
@@ -396,19 +399,36 @@ export class MainMenuScene extends Container implements GameScene {
       if (p.sprite.x > w + 10) p.sprite.x = -10;
     }
 
-    // Pulsate title glow
+    // Pulsate title with breathing glow
     const title = this.children.find(c => c.name === 'mainTitle') as Text | undefined;
     if (title) {
-      const pulse = 1 + Math.sin(this.animTime * 1.2) * 0.02;
+      const pulse = 1 + Math.sin(this.animTime * 1.2) * 0.025;
       title.scale.set(pulse);
+      // Golden glow intensity oscillation
+      title.alpha = 0.85 + Math.sin(this.animTime * 0.8) * 0.15;
     }
 
-    // Rotate showcase character every 3 seconds
+    // Rotate showcase character every 3s with crossfade
     this.showcaseTimer += dt / 60;
     if (this.showcaseTimer > 3) {
       this.showcaseTimer = 0;
       this.showcaseIndex = (this.showcaseIndex + 1) % SHOWCASE_CLASSES.length;
-      this.updateShowcase();
+      if (this.showcaseContainer) {
+        const sc = this.showcaseContainer;
+        sc.alpha = 0.2;
+        this.updateShowcase();
+        // Quick fade-in
+        let ft = 0;
+        const fi = () => {
+          if (sc.destroyed) return;
+          ft += 1 / 60;
+          sc.alpha = Math.min(1, 0.2 + ft / 0.25 * 0.8);
+          if (ft < 0.25) requestAnimationFrame(fi);
+        };
+        requestAnimationFrame(fi);
+      } else {
+        this.updateShowcase();
+      }
     }
   }
 }

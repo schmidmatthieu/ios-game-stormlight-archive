@@ -1,7 +1,8 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, BlurFilter } from 'pixi.js';
 import type { ChampionClass } from '../data/types';
 import { SKILL_COLORS } from './SpellParticles';
 import type { SpellParticle } from './SpellParticles';
+import { lighten } from '../utils/ColorUtils';
 
 export function createSkillEffect(
   worldContainer: Container,
@@ -26,18 +27,37 @@ export function createSkillEffect(
   burst.x = px; burst.y = py; burst.zIndex = 100001;
   worldContainer.addChild(burst);
 
-  // Particle burst
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.3;
-    const speed = 40 + Math.random() * 30;
+  // Shockwave distortion ring
+  const shockwave = new Graphics();
+  shockwave.x = px; shockwave.y = py; shockwave.zIndex = 100003;
+  shockwave.circle(0, 0, range * 0.3).stroke({ color: 0xffffff, width: 3, alpha: 0.15 });
+  shockwave.circle(0, 0, range * 0.2).fill({ color: cfg.color1, alpha: 0.08 });
+  worldContainer.addChild(shockwave);
+
+  // Screen flash effect
+  const flash = new Graphics();
+  flash.rect(-5000, -5000, 10000, 10000).fill({ color: cfg.color1, alpha: 0.06 });
+  flash.x = 0; flash.y = 0; flash.zIndex = 100004;
+  worldContainer.addChild(flash);
+
+  // Particle burst — increased count with trails
+  for (let i = 0; i < 18; i++) {
+    const angle = (i / 18) * Math.PI * 2 + Math.random() * 0.3;
+    const speed = 40 + Math.random() * 40;
     const p = new Graphics();
-    p.circle(0, 0, 1.5 + Math.random()).fill({ color: cfg.particleColor, alpha: 0.6 });
+    const pSize = 1.5 + Math.random() * 1.2;
+    // Glow halo
+    p.circle(0, 0, pSize * 2.5).fill({ color: cfg.particleColor, alpha: 0.1 });
+    // Core particle
+    p.circle(0, 0, pSize).fill({ color: cfg.particleColor, alpha: 0.6 });
+    // Bright center
+    p.circle(0, 0, pSize * 0.4).fill({ color: 0xffffff, alpha: 0.3 });
     p.x = px; p.y = py; p.zIndex = 100002;
     worldContainer.addChild(p);
     particles.push({
       sprite: p, x: px, y: py,
-      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 10,
-      life: 0.5 + Math.random() * 0.3, maxLife: 0.8, size: 2,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 15,
+      life: 0.5 + Math.random() * 0.4, maxLife: 0.9, size: pSize,
     });
   }
 
@@ -55,8 +75,18 @@ export function createSkillEffect(
     burst.alpha = Math.max(0, 1 - progress * 1.2);
     burst.scale.set(0.5 + progress * 0.6);
     burst.rotation = elapsed * 2;
+    // Shockwave expands fast and fades
+    shockwave.alpha = Math.max(0, 1 - progress * 1.5);
+    shockwave.scale.set(0.5 + progress * 2);
+
+    // Screen flash fades quickly
+    flash.alpha = Math.max(0, (1 - progress * 2) * 0.06);
+
     if (elapsed < 0.5) requestAnimationFrame(anim);
-    else { g.destroy(); burst.destroy(); }
+    else {
+      g.destroy(); burst.destroy();
+      shockwave.destroy(); flash.destroy();
+    }
   };
   requestAnimationFrame(anim);
 }

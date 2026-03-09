@@ -2,7 +2,7 @@
 // World-specific terrain textures with rich procedural detail,
 // noise-based color variation, gradients, and ambient occlusion.
 
-import { Graphics } from 'pixi.js';
+import { Application, Graphics, RenderTexture, Sprite, Container } from 'pixi.js';
 import { lighten, darken } from '../utils/ColorUtils';
 import type { WorldTheme } from '../scenes/WorldThemes';
 import { simplex2D, fbm2D, lerpColor, terrainNoiseColor } from './ProceduralTextures';
@@ -478,4 +478,81 @@ export function renderEnhancedTilemap(
   }
 
   return g;
+}
+
+// ─── Cached Tile Renderer (RenderTexture) ──────────────────────
+
+let _cachedTileTexture: RenderTexture | null = null;
+let _cachedTileSprite: Sprite | null = null;
+let _cachedKey = '';
+
+/**
+ * Render tilemap to a RenderTexture for performance.
+ * The heavy procedural drawing only happens once on zone load;
+ * subsequent frames display a cheap single Sprite.
+ */
+export function renderCachedTilemap(
+  app: Application,
+  gridWidth: number, gridHeight: number,
+  worldID: string, theme: WorldTheme,
+  isoToScreen: (col: number, row: number) => { x: number; y: number },
+  darkenColor: (base: number, amount: number) => number,
+  parentContainer: Container,
+): Sprite {
+  const key = `${worldID}_${gridWidth}_${gridHeight}`;
+
+  // Return cached if same zone
+  if (_cachedTileSprite && _cachedKey === key && !_cachedTileSprite.destroyed) {
+    return _cachedTileSprite;
+  }
+
+  // Generate the Graphics tilemap
+  const g = renderEnhancedTilemap(gridWidth, gridHeight, worldID, theme, isoToScreen, darkenColor);
+
+  // Measure bounds
+  const bounds = g.getLocalBounds();
+  const w = Math.ceil(bounds.width + 20);
+  const h = Math.ceil(bounds.height + 20);
+
+  if (w <= 0 || h <= 0) return new Sprite();
+
+  // Create or resize RenderTexture
+  if (_cachedTileTexture) {
+    _cachedTileTexture.resize(w, h);
+  } else {
+    _cachedTileTexture = RenderTexture.create({ width: w, height: h, antialias: false });
+  }
+
+  // Position graphics for rendering
+  g.x = -bounds.x + 10;
+  g.y = -bounds.y + 10;
+
+  const tempContainer = new Container();
+  tempContainer.addChild(g);
+
+  app.renderer.render({
+    container: tempContainer,
+    target: _cachedTileTexture,
+    clear: true,
+  });
+
+  // Create sprite from texture
+  if (_cachedTileSprite) _cachedTileSprite.destroy();
+  _cachedTileSprite = new Sprite(_cachedTileTexture);
+  _cachedTileSprite.x = bounds.x - 10;
+  _cachedTileSprite.y = bounds.y - 10;
+  _cachedTileSprite.zIndex = -1000;
+
+  _cachedKey = key;
+
+  // Cleanup
+  tempContainer.removeChildren();
+  g.destroy();
+
+  return _cachedTileSprite;
+}
+
+/** Invalidate tile cache (call on zone change) */
+export function invalidateTileCache(): void {
+  _cachedKey = '';
 }
