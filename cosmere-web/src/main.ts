@@ -15,9 +15,10 @@ async function boot() {
   const app = new Application();
   await app.init({
     resizeTo: window,
-    backgroundColor: 0x0a0a1a,
-    antialias: false, // Pixel art: nearest-neighbor, no smoothing
-    resolution: Math.min(window.devicePixelRatio || 1, 2), // Cap at 2x to avoid huge framebuffers
+    backgroundColor: 0x06060f,
+    antialias: true,
+    preference: 'webgpu',
+    resolution: Math.min(window.devicePixelRatio || 1, 2),
     autoDensity: true,
   });
 

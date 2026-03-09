@@ -34,18 +34,18 @@ interface FloatingNumber {
 
 const STYLE_CONFIG: Record<DamageStyle, {
   color: number; fontSize: number; prefix: string; suffix: string;
-  duration: number; gravity: number; fontFamily: string;
+  duration: number; gravity: number; fontFamily: string; strokeColor?: number;
 }> = {
-  normal:       { color: 0xffffff, fontSize: 12, prefix: '', suffix: '', duration: 0.8, gravity: -60, fontFamily: 'sans-serif' },
-  crit:         { color: 0xffee44, fontSize: 20, prefix: '', suffix: '!', duration: 1.2, gravity: -80, fontFamily: 'Georgia, serif' },
-  combo:        { color: 0xcc77ff, fontSize: 14, prefix: '', suffix: '', duration: 0.9, gravity: -40, fontFamily: 'sans-serif' },
-  heal:         { color: 0x44ff66, fontSize: 12, prefix: '+', suffix: '', duration: 0.9, gravity: -50, fontFamily: 'sans-serif' },
-  xp:           { color: 0x66cc44, fontSize: 10, prefix: '+', suffix: ' XP', duration: 1.0, gravity: -30, fontFamily: 'sans-serif' },
-  gold:         { color: 0xeedd33, fontSize: 10, prefix: '+', suffix: ' ⚜', duration: 1.0, gravity: -20, fontFamily: 'sans-serif' },
-  poison:       { color: 0x88cc22, fontSize: 11, prefix: '', suffix: '', duration: 0.7, gravity: -30, fontFamily: 'sans-serif' },
-  block:        { color: 0x888888, fontSize: 10, prefix: '', suffix: '', duration: 0.5, gravity: -40, fontFamily: 'sans-serif' },
-  bonus:        { color: 0x44ddff, fontSize: 13, prefix: '+', suffix: '', duration: 1.0, gravity: -50, fontFamily: 'sans-serif' },
-  investiture:  { color: 0x8866ff, fontSize: 12, prefix: '+', suffix: '', duration: 1.0, gravity: -45, fontFamily: 'sans-serif' },
+  normal:       { color: 0xffffff, fontSize: 13, prefix: '', suffix: '', duration: 0.8, gravity: -60, fontFamily: 'sans-serif' },
+  crit:         { color: 0xffee44, fontSize: 22, prefix: '', suffix: '!', duration: 1.3, gravity: -80, fontFamily: "'Cinzel', Georgia, serif", strokeColor: 0xff8800 },
+  combo:        { color: 0xcc77ff, fontSize: 15, prefix: '', suffix: '', duration: 0.9, gravity: -40, fontFamily: 'sans-serif' },
+  heal:         { color: 0x44ff88, fontSize: 13, prefix: '+', suffix: '', duration: 0.9, gravity: -50, fontFamily: 'sans-serif' },
+  xp:           { color: 0x66cc44, fontSize: 11, prefix: '+', suffix: ' XP', duration: 1.0, gravity: -30, fontFamily: 'sans-serif' },
+  gold:         { color: 0xeedd33, fontSize: 11, prefix: '+', suffix: ' ⚜', duration: 1.0, gravity: -20, fontFamily: 'sans-serif' },
+  poison:       { color: 0x88cc22, fontSize: 12, prefix: '', suffix: '', duration: 0.7, gravity: -30, fontFamily: 'sans-serif' },
+  block:        { color: 0x999999, fontSize: 11, prefix: '', suffix: '', duration: 0.5, gravity: -40, fontFamily: 'sans-serif' },
+  bonus:        { color: 0x44ddff, fontSize: 14, prefix: '+', suffix: '', duration: 1.0, gravity: -50, fontFamily: 'sans-serif' },
+  investiture:  { color: 0x9977ff, fontSize: 13, prefix: '+', suffix: '', duration: 1.0, gravity: -45, fontFamily: 'sans-serif', strokeColor: 0x5533aa },
 };
 
 // Pre-create TextStyle objects to avoid per-spawn allocations
@@ -211,9 +211,26 @@ export class FloatingDamageManager {
         n.rotation += n.rotSpeed * dt;
       }
 
-      // Scale animation
+      // Scale animation — bounce for crit
       if (n.style === 'crit') {
-        n.scale = n.scale + (n.targetScale - n.scale) * 0.15;
+        if (progress < 0.15) {
+          // Pop-in: overshoot then settle
+          const popT = progress / 0.15;
+          n.scale = 2.0 - Math.sin(popT * Math.PI) * 0.6;
+        } else {
+          n.scale = n.scale + (n.targetScale - n.scale) * 0.12;
+        }
+      }
+
+      // Bounce animation for normal/heal/bonus
+      if (n.style === 'normal' || n.style === 'heal' || n.style === 'bonus') {
+        if (progress < 0.1) {
+          const bounceT = progress / 0.1;
+          n.scale = 0.5 + bounceT * 0.7;
+        } else if (progress < 0.2) {
+          const settleT = (progress - 0.1) / 0.1;
+          n.scale = 1.2 - settleT * 0.2;
+        }
       }
 
       // Apply
@@ -222,9 +239,9 @@ export class FloatingDamageManager {
       n.container.rotation = n.rotation;
       n.container.scale.set(n.scale);
 
-      // Fade out in last 30%
-      if (progress > 0.7) {
-        n.container.alpha = Math.max(0, 1 - (progress - 0.7) / 0.3);
+      // Fade out in last 25%
+      if (progress > 0.75) {
+        n.container.alpha = Math.max(0, 1 - (progress - 0.75) / 0.25);
       }
 
       // Release back to pool when done

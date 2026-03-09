@@ -1,7 +1,8 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, BlurFilter } from 'pixi.js';
 import type { ChampionClass } from '../data/types';
 import { SKILL_COLORS } from './SpellParticles';
 import type { SpellParticle } from './SpellParticles';
+import { lighten } from '../utils/ColorUtils';
 
 export function createSkillEffect(
   worldContainer: Container,
@@ -26,18 +27,37 @@ export function createSkillEffect(
   burst.x = px; burst.y = py; burst.zIndex = 100001;
   worldContainer.addChild(burst);
 
-  // Particle burst
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.3;
-    const speed = 40 + Math.random() * 30;
+  // Shockwave distortion ring
+  const shockwave = new Graphics();
+  shockwave.x = px; shockwave.y = py; shockwave.zIndex = 100003;
+  shockwave.circle(0, 0, range * 0.3).stroke({ color: 0xffffff, width: 3, alpha: 0.15 });
+  shockwave.circle(0, 0, range * 0.2).fill({ color: cfg.color1, alpha: 0.08 });
+  worldContainer.addChild(shockwave);
+
+  // Screen flash effect
+  const flash = new Graphics();
+  flash.rect(-5000, -5000, 10000, 10000).fill({ color: cfg.color1, alpha: 0.06 });
+  flash.x = 0; flash.y = 0; flash.zIndex = 100004;
+  worldContainer.addChild(flash);
+
+  // Particle burst — increased count with trails
+  for (let i = 0; i < 18; i++) {
+    const angle = (i / 18) * Math.PI * 2 + Math.random() * 0.3;
+    const speed = 40 + Math.random() * 40;
     const p = new Graphics();
-    p.circle(0, 0, 1.5 + Math.random()).fill({ color: cfg.particleColor, alpha: 0.6 });
+    const pSize = 1.5 + Math.random() * 1.2;
+    // Glow halo
+    p.circle(0, 0, pSize * 2.5).fill({ color: cfg.particleColor, alpha: 0.1 });
+    // Core particle
+    p.circle(0, 0, pSize).fill({ color: cfg.particleColor, alpha: 0.6 });
+    // Bright center
+    p.circle(0, 0, pSize * 0.4).fill({ color: 0xffffff, alpha: 0.3 });
     p.x = px; p.y = py; p.zIndex = 100002;
     worldContainer.addChild(p);
     particles.push({
       sprite: p, x: px, y: py,
-      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 10,
-      life: 0.5 + Math.random() * 0.3, maxLife: 0.8, size: 2,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 15,
+      life: 0.5 + Math.random() * 0.4, maxLife: 0.9, size: pSize,
     });
   }
 
@@ -55,8 +75,18 @@ export function createSkillEffect(
     burst.alpha = Math.max(0, 1 - progress * 1.2);
     burst.scale.set(0.5 + progress * 0.6);
     burst.rotation = elapsed * 2;
+    // Shockwave expands fast and fades
+    shockwave.alpha = Math.max(0, 1 - progress * 1.5);
+    shockwave.scale.set(0.5 + progress * 2);
+
+    // Screen flash fades quickly
+    flash.alpha = Math.max(0, (1 - progress * 2) * 0.06);
+
     if (elapsed < 0.5) requestAnimationFrame(anim);
-    else { g.destroy(); burst.destroy(); }
+    else {
+      g.destroy(); burst.destroy();
+      shockwave.destroy(); flash.destroy();
+    }
   };
   requestAnimationFrame(anim);
 }
@@ -203,42 +233,91 @@ export function createSkillGroundMark(
   g.x = px; g.y = py;
   g.zIndex = py - 100; // Under entities
 
-  // Class-specific ground pattern
+  // Class-specific ground pattern — enhanced with glow layers
   switch (cls) {
     case 'mistborn':
-      // Metal flake scatter
-      for (let i = 0; i < 15; i++) {
+      // Metal flake scatter with micro-reflections
+      for (let i = 0; i < 20; i++) {
         const a = Math.random() * Math.PI * 2;
         const r = Math.random() * range * 0.7;
-        g.circle(Math.cos(a) * r, Math.sin(a) * r, 0.5 + Math.random())
-          .fill({ color: 0x6688aa, alpha: 0.2 });
+        const cx = Math.cos(a) * r;
+        const cy = Math.sin(a) * r;
+        g.circle(cx, cy, 0.5 + Math.random()).fill({ color: 0x6688aa, alpha: 0.2 });
+        // Metal reflection glint
+        if (Math.random() > 0.6) {
+          g.circle(cx, cy, 2).fill({ color: 0x88aacc, alpha: 0.06 });
+        }
       }
+      // Central scorch mark
+      g.circle(0, 0, range * 0.15).fill({ color: 0x334455, alpha: 0.08 });
       break;
     case 'radiant':
-      // Glowing cracks in ground
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2;
-        const len = range * 0.4 * (0.5 + Math.random() * 0.5);
+      // Glowing cracks radiating outward with branching
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const len = range * 0.45 * (0.5 + Math.random() * 0.5);
+        // Main crack
         g.moveTo(0, 0).lineTo(Math.cos(a) * len, Math.sin(a) * len * 0.5)
-          .stroke({ color: 0x88ccff, width: 1, alpha: 0.15 });
+          .stroke({ color: 0x88ccff, width: 1.2, alpha: 0.18 });
+        // Glow around crack
+        g.moveTo(0, 0).lineTo(Math.cos(a) * len, Math.sin(a) * len * 0.5)
+          .stroke({ color: 0x88ccff, width: 3, alpha: 0.04 });
+        // Branch
+        if (Math.random() > 0.5) {
+          const bLen = len * 0.4;
+          const bAngle = a + (Math.random() - 0.5) * 0.8;
+          const bx = Math.cos(a) * len * 0.6;
+          const by = Math.sin(a) * len * 0.6 * 0.5;
+          g.moveTo(bx, by).lineTo(bx + Math.cos(bAngle) * bLen, by + Math.sin(bAngle) * bLen * 0.5)
+            .stroke({ color: 0x66aadd, width: 0.8, alpha: 0.12 });
+        }
       }
+      // Central glow
+      g.circle(0, 0, range * 0.12).fill({ color: 0x88ccff, alpha: 0.06 });
       break;
     case 'elantrian':
-      // Fading Aon circle
-      g.circle(0, 0, range * 0.4).stroke({ color: 0xffcc44, width: 0.8, alpha: 0.12 });
+      // Aon glyph — circle with internal pattern
+      g.circle(0, 0, range * 0.42).stroke({ color: 0xffcc44, width: 1, alpha: 0.14 });
+      g.circle(0, 0, range * 0.25).stroke({ color: 0xffdd66, width: 0.5, alpha: 0.1 });
+      // Cross pattern inside
+      const cr = range * 0.35;
+      g.moveTo(-cr, 0).lineTo(cr, 0).stroke({ color: 0xffcc44, width: 0.5, alpha: 0.08 });
+      g.moveTo(0, -cr * 0.5).lineTo(0, cr * 0.5).stroke({ color: 0xffcc44, width: 0.5, alpha: 0.08 });
+      // Corner dots
+      for (let i = 0; i < 4; i++) {
+        const da = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        g.circle(Math.cos(da) * cr * 0.7, Math.sin(da) * cr * 0.35, 1.5)
+          .fill({ color: 0xffdd66, alpha: 0.1 });
+      }
       break;
     case 'awakener':
-      // Color stain
-      g.circle(-3, 2, range * 0.25).fill({ color: 0xcc66ff, alpha: 0.06 });
-      g.circle(4, -1, range * 0.2).fill({ color: 0xff6688, alpha: 0.05 });
+      // Multi-color stain puddles
+      const stainColors = [0xcc66ff, 0xff6688, 0x44aaff, 0x44ff66];
+      for (let i = 0; i < 4; i++) {
+        const sx = (Math.random() - 0.5) * range * 0.5;
+        const sy = (Math.random() - 0.5) * range * 0.3;
+        g.circle(sx, sy, range * (0.1 + Math.random() * 0.12))
+          .fill({ color: stainColors[i], alpha: 0.04 + Math.random() * 0.03 });
+      }
       break;
     case 'sandMaster':
-      // Disturbed sand
+      // Disturbed sand with ripple pattern
       g.ellipse(0, 0, range * 0.4, range * 0.2).fill({ color: 0xddcc88, alpha: 0.08 });
+      for (let i = 1; i <= 3; i++) {
+        g.ellipse(0, 0, range * 0.4 * (1 + i * 0.15), range * 0.2 * (1 + i * 0.15))
+          .stroke({ color: 0xccbb77, width: 0.5, alpha: 0.04 - i * 0.01 });
+      }
       break;
     default:
-      // Ink stain
+      // Ink stain — organic shape
       g.ellipse(0, 1, range * 0.3, range * 0.15).fill({ color: 0x111122, alpha: 0.1 });
+      g.ellipse(3, -1, range * 0.2, range * 0.1).fill({ color: 0x0a0a1a, alpha: 0.07 });
+      // Ink splatter dots
+      for (let i = 0; i < 5; i++) {
+        const ix = (Math.random() - 0.5) * range * 0.6;
+        const iy = (Math.random() - 0.5) * range * 0.3;
+        g.circle(ix, iy, 1 + Math.random()).fill({ color: 0x111122, alpha: 0.05 });
+      }
       break;
   }
 

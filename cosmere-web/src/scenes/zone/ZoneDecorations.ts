@@ -53,58 +53,131 @@ function createBuilding(
                     worldID === 'nalthis' ? 0x338844 : worldID === 'taldain' ? 0x887755 :
                     worldID === 'shadesmar' ? 0x443366 : 0x554455;
 
+  // Ground shadow for all buildings
+  g.ellipse(pos.x, pos.y + 2, 20, 6).fill({ color: 0x000000, alpha: 0.15 });
+
   switch (type) {
-    case 0:
+    case 0: {
+      // House — right face (lit)
       g.poly([
-        { x: pos.x - 16, y: pos.y }, { x: pos.x, y: pos.y - 8 },
-        { x: pos.x + 16, y: pos.y }, { x: pos.x + 16, y: pos.y - 24 },
-        { x: pos.x, y: pos.y - 32 }, { x: pos.x - 16, y: pos.y - 24 },
+        { x: pos.x, y: pos.y - 8 }, { x: pos.x + 16, y: pos.y },
+        { x: pos.x + 16, y: pos.y - 24 }, { x: pos.x, y: pos.y - 32 },
       ]).fill({ color: wallColor, alpha: 0.85 });
+      // Left face (shadowed)
       g.poly([
         { x: pos.x - 16, y: pos.y }, { x: pos.x, y: pos.y - 8 },
         { x: pos.x, y: pos.y - 32 }, { x: pos.x - 16, y: pos.y - 24 },
-      ]).fill({ color: darken(wallColor, 0.15), alpha: 0.85 });
+      ]).fill({ color: darken(wallColor, 0.18), alpha: 0.85 });
+      // Roof with highlight
       g.poly([
         { x: pos.x - 18, y: pos.y - 24 }, { x: pos.x, y: pos.y - 38 },
-        { x: pos.x + 18, y: pos.y - 24 }, { x: pos.x, y: pos.y - 32 },
+        { x: pos.x + 18, y: pos.y - 24 },
       ]).fill({ color: roofColor, alpha: 0.9 });
-      g.roundRect(pos.x - 10, pos.y - 12, 5, 8, 1).fill({ color: 0x332211, alpha: 0.8 });
-      g.rect(pos.x + 2, pos.y - 24, 4, 4).fill({ color: 0xeebb44, alpha: 0.4 });
+      // Roof highlight ridge
+      g.moveTo(pos.x - 18, pos.y - 24).lineTo(pos.x, pos.y - 38)
+        .stroke({ color: lighten(roofColor, 0.2), width: 0.8, alpha: 0.5 });
+      // Door
+      g.roundRect(pos.x - 10, pos.y - 12, 5, 10, 1).fill({ color: 0x332211, alpha: 0.8 });
+      g.circle(pos.x - 7, pos.y - 7, 0.5).fill({ color: 0xeebb44, alpha: 0.5 }); // Doorknob
+      // Window with warm glow
+      g.rect(pos.x + 2, pos.y - 24, 5, 5).fill({ color: 0x221100, alpha: 0.8 });
+      g.rect(pos.x + 2.5, pos.y - 23.5, 4, 4).fill({ color: 0xeebb44, alpha: 0.4 });
+      g.rect(pos.x + 2.5, pos.y - 23.5, 4, 4).fill({ color: 0xffcc44, alpha: 0.15 }); // inner glow
+      g.circle(pos.x + 4.5, pos.y - 21.5, 6).fill({ color: 0xeebb44, alpha: 0.04 }); // window light spill
+      // Second window
+      g.rect(pos.x - 14, pos.y - 18, 4, 4).fill({ color: 0x221100, alpha: 0.7 });
+      g.rect(pos.x - 13.5, pos.y - 17.5, 3, 3).fill({ color: 0xeebb44, alpha: 0.3 });
+      // Chimney
+      g.rect(pos.x + 10, pos.y - 34, 3, 8).fill({ color: darken(wallColor, 0.1), alpha: 0.8 });
+      g.rect(pos.x + 9, pos.y - 35, 5, 2).fill({ color: darken(wallColor, 0.05), alpha: 0.8 });
       break;
+    }
 
-    case 1:
+    case 1: {
+      // Tower with enhanced detail
       g.rect(pos.x - 8, pos.y - 40, 16, 40).fill({ color: wallColor, alpha: 0.85 });
-      g.rect(pos.x - 8, pos.y - 40, 8, 40).fill({ color: darken(wallColor, 0.1), alpha: 0.85 });
+      // Shaded left half
+      g.rect(pos.x - 8, pos.y - 40, 8, 40).fill({ color: darken(wallColor, 0.12), alpha: 0.85 });
+      // Battlements
       for (let b = 0; b < 4; b++) {
         g.rect(pos.x - 9 + b * 5, pos.y - 46, 4, 6).fill({ color: wallColor, alpha: 0.8 });
       }
-      g.rect(pos.x - 2, pos.y - 30, 2, 5).fill({ color: 0xeebb44, alpha: 0.3 });
-      g.rect(pos.x - 2, pos.y - 18, 2, 5).fill({ color: 0xeebb44, alpha: 0.3 });
+      // Windows with glow
+      const windowYs = [pos.y - 32, pos.y - 22, pos.y - 12];
+      for (const wy of windowYs) {
+        g.rect(pos.x - 2, wy, 3, 5).fill({ color: 0x221100, alpha: 0.7 });
+        g.rect(pos.x - 1.5, wy + 0.5, 2, 4).fill({ color: 0xeebb44, alpha: 0.3 });
+        g.circle(pos.x - 0.5, wy + 2.5, 4).fill({ color: 0xeebb44, alpha: 0.03 });
+      }
+      // Stone texture lines
+      for (let s = 0; s < 5; s++) {
+        const sy = pos.y - 8 - s * 8;
+        g.moveTo(pos.x - 8, sy).lineTo(pos.x + 8, sy)
+          .stroke({ color: darken(wallColor, 0.1), width: 0.5, alpha: 0.25 });
+      }
+      // Flag on top
+      g.rect(pos.x + 6, pos.y - 52, 1, 10).fill({ color: 0x554433, alpha: 0.7 });
+      g.poly([
+        { x: pos.x + 7, y: pos.y - 52 },
+        { x: pos.x + 15, y: pos.y - 49 },
+        { x: pos.x + 7, y: pos.y - 46 },
+      ]).fill({ color: worldID === 'roshar' ? 0x3355aa : 0x883322, alpha: 0.6 });
       break;
+    }
 
-    case 2:
+    case 2: {
+      // Market stall with more detail
+      // Posts
       g.rect(pos.x - 14, pos.y - 16, 2, 16).fill({ color: 0x553322, alpha: 0.8 });
       g.rect(pos.x + 12, pos.y - 16, 2, 16).fill({ color: 0x553322, alpha: 0.8 });
+      // Canopy with gradient stripe
       g.poly([
         { x: pos.x - 16, y: pos.y - 16 }, { x: pos.x, y: pos.y - 22 },
         { x: pos.x + 16, y: pos.y - 16 },
       ]).fill({ color: 0xcc7733, alpha: 0.7 });
+      // Canopy edge highlight
+      g.moveTo(pos.x - 16, pos.y - 16).lineTo(pos.x, pos.y - 22).lineTo(pos.x + 16, pos.y - 16)
+        .stroke({ color: lighten(0xcc7733, 0.2), width: 0.5, alpha: 0.4 });
+      // Counter
       g.rect(pos.x - 10, pos.y - 6, 20, 4).fill({ color: 0x664422, alpha: 0.8 });
-      g.circle(pos.x - 4, pos.y - 8, 2).fill({ color: 0xee4444, alpha: 0.6 });
-      g.circle(pos.x + 2, pos.y - 8, 2).fill({ color: 0x44ee44, alpha: 0.6 });
-      g.circle(pos.x + 6, pos.y - 8, 1.5).fill({ color: 0xeeee44, alpha: 0.6 });
+      g.rect(pos.x - 10, pos.y - 6, 20, 1).fill({ color: lighten(0x664422, 0.15), alpha: 0.5 }); // highlight
+      // Goods on display
+      g.circle(pos.x - 5, pos.y - 8, 2).fill({ color: 0xee4444, alpha: 0.6 });
+      g.circle(pos.x - 2, pos.y - 9, 2.5).fill({ color: 0x44ee44, alpha: 0.55 });
+      g.circle(pos.x + 2, pos.y - 8, 2).fill({ color: 0xeeee44, alpha: 0.6 });
+      g.circle(pos.x + 5, pos.y - 9, 1.8).fill({ color: 0x44aaee, alpha: 0.5 });
+      // Hanging lantern
+      g.rect(pos.x + 13, pos.y - 14, 1, 3).fill({ color: 0x443322, alpha: 0.6 });
+      g.circle(pos.x + 13.5, pos.y - 10, 2).fill({ color: 0xffaa33, alpha: 0.5 });
+      g.circle(pos.x + 13.5, pos.y - 10, 5).fill({ color: 0xffaa33, alpha: 0.06 }); // glow
       break;
+    }
 
-    case 3:
+    case 3: {
+      // Ruins — enhanced with cracks and moss
       g.poly([
         { x: pos.x - 18, y: pos.y }, { x: pos.x - 18, y: pos.y - 20 },
         { x: pos.x - 12, y: pos.y - 26 }, { x: pos.x - 6, y: pos.y - 18 },
         { x: pos.x, y: pos.y - 22 }, { x: pos.x + 6, y: pos.y - 14 },
         { x: pos.x + 10, y: pos.y },
       ]).fill({ color: darken(wallColor, 0.2), alpha: 0.7 });
+      // Rubble with volume
       g.circle(pos.x + 8, pos.y - 2, 3).fill({ color: darken(wallColor, 0.3), alpha: 0.5 });
+      g.circle(pos.x + 8, pos.y - 3, 2.5).fill({ color: darken(wallColor, 0.15), alpha: 0.3 }); // highlight
       g.circle(pos.x + 12, pos.y - 1, 2).fill({ color: darken(wallColor, 0.25), alpha: 0.5 });
+      g.circle(pos.x + 14, pos.y, 1.5).fill({ color: darken(wallColor, 0.2), alpha: 0.4 });
+      // Crack lines
+      g.moveTo(pos.x - 15, pos.y - 12).lineTo(pos.x - 12, pos.y - 18).lineTo(pos.x - 10, pos.y - 15)
+        .stroke({ color: 0x222222, width: 0.5, alpha: 0.3 });
+      g.moveTo(pos.x - 3, pos.y - 16).lineTo(pos.x + 1, pos.y - 20).lineTo(pos.x + 3, pos.y - 17)
+        .stroke({ color: 0x222222, width: 0.5, alpha: 0.25 });
+      // Moss/lichen on ruins
+      if (worldID === 'nalthis' || worldID === 'roshar') {
+        g.circle(pos.x - 14, pos.y - 10, 2).fill({ color: 0x446633, alpha: 0.3 });
+        g.circle(pos.x - 8, pos.y - 20, 1.5).fill({ color: 0x557744, alpha: 0.25 });
+      }
       break;
+    }
   }
 
   return g;

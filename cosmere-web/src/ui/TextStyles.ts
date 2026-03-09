@@ -2,23 +2,27 @@
 
 import { TextStyle } from 'pixi.js';
 
-/** Common font families used throughout the game */
-export const FONT_SERIF = 'Georgia, serif';
+/** Common font families — uses Cinzel for fantasy headings, EB Garamond for body */
+export const FONT_TITLE = "'Cinzel', 'Copperplate', 'Georgia', serif";
+export const FONT_SERIF = "'EB Garamond', 'Georgia', serif";
 export const FONT_SANS = 'sans-serif';
 
 /** Reusable text styles for consistent UI across the game */
 export const TEXT_STYLES = {
   // ─── Headings ─────────────────────────────────────────
   titleGold: new TextStyle({
-    fontFamily: FONT_SERIF, fontSize: 16, fill: 0xe6cc66, fontWeight: 'bold',
+    fontFamily: FONT_TITLE, fontSize: 16, fill: 0xe6cc66, fontWeight: 'bold',
+    letterSpacing: 1,
   }),
   titleLarge: new TextStyle({
-    fontFamily: FONT_SERIF, fontSize: 28, fill: 0xe6cc66, fontWeight: 'bold',
-    dropShadow: { color: 0x000000, blur: 4, distance: 2 },
+    fontFamily: FONT_TITLE, fontSize: 28, fill: 0xe6cc66, fontWeight: 'bold',
+    dropShadow: { color: 0x000000, blur: 6, distance: 2 },
+    letterSpacing: 2,
   }),
   titleRed: new TextStyle({
-    fontFamily: FONT_SERIF, fontSize: 28, fill: 0xcc2222, fontWeight: 'bold',
-    dropShadow: { color: 0x000000, blur: 4, distance: 2 },
+    fontFamily: FONT_TITLE, fontSize: 28, fill: 0xcc2222, fontWeight: 'bold',
+    dropShadow: { color: 0x000000, blur: 6, distance: 2 },
+    letterSpacing: 2,
   }),
 
   // ─── Body / Labels ────────────────────────────────────
@@ -59,7 +63,8 @@ export const TEXT_STYLES = {
 
   // ─── Menu / Buttons ───────────────────────────────────
   buttonLabel: new TextStyle({
-    fontFamily: FONT_SERIF, fontSize: 14, fill: 0xffcccc, fontWeight: 'bold',
+    fontFamily: FONT_TITLE, fontSize: 14, fill: 0xffcccc, fontWeight: 'bold',
+    letterSpacing: 1,
   }),
   menuItem: new TextStyle({
     fontFamily: FONT_SANS, fontSize: 11, fill: 0xeeddcc,

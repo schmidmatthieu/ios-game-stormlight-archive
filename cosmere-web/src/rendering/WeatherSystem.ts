@@ -157,12 +157,48 @@ export class WeatherManager {
   }
 }
 
+// ─── Rain Drops ─────────────────────────────────────────────────
+
+interface RainDrop {
+  x: number; y: number;
+  speed: number; length: number;
+  windOffset: number;
+}
+
+interface RainSplash {
+  x: number; y: number;
+  life: number; maxLife: number;
+  radius: number;
+}
+
+// ─── Lightning Bolt Generator ────────────────────────────────────
+
+function drawLightningBolt(
+  g: Graphics, x1: number, y1: number, x2: number, y2: number,
+  width: number, alpha: number, depth: number,
+): void {
+  if (depth <= 0) {
+    g.moveTo(x1, y1).lineTo(x2, y2).stroke({ color: 0xccddff, width, alpha });
+    return;
+  }
+  const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * 40;
+  const my = (y1 + y2) / 2 + (Math.random() - 0.5) * 20;
+  drawLightningBolt(g, x1, y1, mx, my, width, alpha, depth - 1);
+  drawLightningBolt(g, mx, my, x2, y2, width * 0.9, alpha * 0.9, depth - 1);
+  // Branch
+  if (Math.random() > 0.5 && depth > 1) {
+    const bx = mx + (Math.random() - 0.5) * 60;
+    const by = my + Math.random() * 40 + 10;
+    drawLightningBolt(g, mx, my, bx, by, width * 0.5, alpha * 0.4, depth - 2);
+  }
+}
+
 // ─── Weather Overlay Renderer ────────────────────────────────────
 
 export function createWeatherOverlay(
   uiContainer: Container,
   screenW: number, screenH: number,
-): { overlay: Graphics; label: Text; update: (config: WeatherConfig, lightning: number) => void } {
+): { overlay: Graphics; label: Text; update: (config: WeatherConfig, lightning: number, weatherType?: WeatherType, time?: number) => void } {
   const overlay = new Graphics();
   overlay.zIndex = 500;
   overlay.eventMode = 'none';
@@ -178,26 +214,236 @@ export function createWeatherOverlay(
   label.zIndex = 501;
   uiContainer.addChild(label);
 
+  // Rain state
+  const rainDrops: RainDrop[] = [];
+  const rainSplashes: RainSplash[] = [];
+  const MAX_RAIN = 80;
+  const MAX_SPLASH = 30;
+
+  // Sand particles for sandstorm
+  const sandParticles: { x: number; y: number; speed: number; size: number; alpha: number }[] = [];
+  const MAX_SAND = 60;
+
+  // Fog wisps
+  const fogWisps: { x: number; y: number; radius: number; phase: number; speed: number }[] = [];
+  for (let i = 0; i < 6; i++) {
+    fogWisps.push({
+      x: Math.random() * screenW,
+      y: screenH * 0.3 + Math.random() * screenH * 0.5,
+      radius: 40 + Math.random() * 60,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.4,
+    });
+  }
+
   return {
     overlay,
     label,
-    update(config: WeatherConfig, lightning: number) {
+    update(config: WeatherConfig, lightning: number, weatherType?: WeatherType, time?: number) {
       overlay.clear();
+      const wType = weatherType ?? 'clear';
+      const gt = time ?? 0;
+
+      // Base weather overlay
       if (config.overlayAlpha > 0.001) {
         overlay.rect(0, 0, screenW, screenH)
           .fill({ color: config.overlayColor, alpha: config.overlayAlpha });
       }
-      // Lightning flash
+
+      // ── Rain with splash ──
+      if (wType === 'rain' || wType === 'highstorm') {
+        const windAngle = wType === 'highstorm' ? 0.4 : 0.15;
+        const intensity = wType === 'highstorm' ? 1.5 : 1;
+
+        // Spawn new drops
+        while (rainDrops.length < MAX_RAIN) {
+          rainDrops.push({
+            x: Math.random() * (screenW + 100) - 50,
+            y: -Math.random() * screenH * 0.5,
+            speed: (300 + Math.random() * 200) * intensity,
+            length: (8 + Math.random() * 12) * intensity,
+            windOffset: windAngle * (0.8 + Math.random() * 0.4),
+          });
+        }
+
+        // Draw and update drops
+        for (let i = rainDrops.length - 1; i >= 0; i--) {
+          const d = rainDrops[i];
+          const dt = 1 / 60;
+          d.y += d.speed * dt;
+          d.x += d.windOffset * d.speed * dt;
+
+          const alpha = 0.15 + Math.random() * 0.1;
+          overlay.moveTo(d.x, d.y)
+            .lineTo(d.x + d.windOffset * d.length, d.y + d.length)
+            .stroke({ color: 0x88aacc, width: 1, alpha });
+
+          if (d.y > screenH) {
+            // Create splash
+            if (rainSplashes.length < MAX_SPLASH) {
+              rainSplashes.push({
+                x: d.x, y: screenH - 2 - Math.random() * 20,
+                life: 0, maxLife: 0.2 + Math.random() * 0.1,
+                radius: 2 + Math.random() * 3,
+              });
+            }
+            rainDrops.splice(i, 1);
+          }
+        }
+
+        // Draw and update splashes with ripple rings
+        for (let i = rainSplashes.length - 1; i >= 0; i--) {
+          const s = rainSplashes[i];
+          s.life += 1 / 60;
+          const t = s.life / s.maxLife;
+          if (t >= 1) { rainSplashes.splice(i, 1); continue; }
+          const r = s.radius * (0.5 + t);
+          const alpha = 0.2 * (1 - t);
+
+          // Expanding ripple rings (water surface effect)
+          overlay.circle(s.x, s.y, r).stroke({ color: 0x88aacc, width: 0.5, alpha });
+          if (t < 0.7) {
+            overlay.circle(s.x, s.y, r * 1.5).stroke({ color: 0x88aacc, width: 0.3, alpha: alpha * 0.4 });
+          }
+          if (t < 0.4) {
+            overlay.circle(s.x, s.y, r * 2).stroke({ color: 0x88aacc, width: 0.2, alpha: alpha * 0.2 });
+          }
+
+          // Small droplet bounce
+          if (t < 0.4) {
+            const bounceH = s.radius * 2 * (1 - t / 0.4);
+            overlay.circle(s.x - 2, s.y - bounceH, 0.8).fill({ color: 0x88aacc, alpha: alpha * 0.6 });
+            overlay.circle(s.x + 2, s.y - bounceH * 0.7, 0.6).fill({ color: 0x88aacc, alpha: alpha * 0.4 });
+          }
+
+          // Ground wet spot (fades slowly)
+          if (t > 0.3) {
+            const wetAlpha = alpha * 0.3 * (1 - (t - 0.3) / 0.7);
+            overlay.ellipse(s.x, s.y + 1, r * 0.8, r * 0.3)
+              .fill({ color: 0x445566, alpha: wetAlpha });
+          }
+        }
+      } else {
+        rainDrops.length = 0;
+        rainSplashes.length = 0;
+      }
+
+      // ── Lightning bolt with glow halo ──
       if (lightning > 0.01) {
         overlay.rect(0, 0, screenW, screenH)
-          .fill({ color: 0xffffff, alpha: lightning * 0.3 });
+          .fill({ color: 0xeeeeff, alpha: lightning * 0.25 });
+        // Draw procedural lightning bolt with glow
+        if (lightning > 0.5) {
+          const boltX = screenW * (0.2 + Math.random() * 0.6);
+          const boltEndX = boltX + (Math.random() - 0.5) * 80;
+          const boltEndY = screenH * 0.6;
+          // Wide glow halo behind bolt
+          drawLightningBolt(overlay, boltX, 0, boltEndX, boltEndY,
+            6, lightning * 0.08, 3);
+          // Main bolt
+          drawLightningBolt(overlay, boltX, 0, boltEndX, boltEndY,
+            2.5, lightning * 0.6, 4);
+          // Core bright center
+          drawLightningBolt(overlay, boltX, 0, boltEndX, boltEndY,
+            1, lightning * 0.9, 3);
+          // Large glow at bolt origin
+          overlay.circle(boltX, 20, 60).fill({ color: 0xccddff, alpha: lightning * 0.06 });
+          overlay.circle(boltX, 20, 30).fill({ color: 0xeeeeff, alpha: lightning * 0.1 });
+          // Glow at impact point
+          overlay.circle(boltEndX, boltEndY, 40).fill({ color: 0xccddff, alpha: lightning * 0.08 });
+        }
       }
+
+      // ── Sandstorm particles ──
+      if (wType === 'sandstorm') {
+        while (sandParticles.length < MAX_SAND) {
+          sandParticles.push({
+            x: -10, y: Math.random() * screenH,
+            speed: 200 + Math.random() * 300,
+            size: 1 + Math.random() * 3,
+            alpha: 0.1 + Math.random() * 0.2,
+          });
+        }
+        for (let i = sandParticles.length - 1; i >= 0; i--) {
+          const p = sandParticles[i];
+          p.x += p.speed / 60;
+          p.y += (Math.sin(gt * 3 + p.x * 0.01) * 2);
+          if (p.x > screenW + 10) { sandParticles.splice(i, 1); continue; }
+          overlay.circle(p.x, p.y, p.size).fill({ color: 0xccbb88, alpha: p.alpha });
+        }
+        // Directional streaks
+        for (let i = 0; i < 8; i++) {
+          const sy = Math.random() * screenH;
+          const sx = Math.random() * screenW;
+          overlay.moveTo(sx, sy).lineTo(sx + 30 + Math.random() * 40, sy + (Math.random() - 0.5) * 4)
+            .stroke({ color: 0xccbb88, width: 0.5, alpha: 0.06 });
+        }
+      } else {
+        sandParticles.length = 0;
+      }
+
+      // ── Volumetric fog for mist ──
+      if (wType === 'mist') {
+        for (const wisp of fogWisps) {
+          wisp.x += Math.sin(gt * wisp.speed + wisp.phase) * 0.5;
+          wisp.y += Math.cos(gt * wisp.speed * 0.7 + wisp.phase) * 0.3;
+          // Wrap around
+          if (wisp.x > screenW + wisp.radius) wisp.x = -wisp.radius;
+          if (wisp.x < -wisp.radius) wisp.x = screenW + wisp.radius;
+
+          const pulsate = 1 + Math.sin(gt * 0.8 + wisp.phase) * 0.15;
+          const r = wisp.radius * pulsate;
+          // Multi-layer soft fog
+          overlay.circle(wisp.x, wisp.y, r).fill({ color: 0xaaaaaa, alpha: 0.02 });
+          overlay.circle(wisp.x, wisp.y, r * 0.7).fill({ color: 0xbbbbbb, alpha: 0.025 });
+          overlay.circle(wisp.x, wisp.y, r * 0.4).fill({ color: 0xcccccc, alpha: 0.015 });
+        }
+      }
+
+      // ── Nightmare aura distortion ──
+      if (wType === 'nightmareAura') {
+        for (let i = 0; i < 4; i++) {
+          const ax = screenW * (0.15 + i * 0.25) + Math.sin(gt * 0.6 + i * 2) * 30;
+          const ay = screenH * 0.5 + Math.cos(gt * 0.4 + i * 1.5) * 40;
+          const ar = 30 + Math.sin(gt + i) * 10;
+          overlay.circle(ax, ay, ar).fill({ color: 0x220033, alpha: 0.04 });
+          overlay.circle(ax, ay, ar * 0.5).fill({ color: 0x330044, alpha: 0.03 });
+        }
+      }
+
+      // ── Cognitive flux ripples ──
+      if (wType === 'cognitiveFlux') {
+        for (let i = 0; i < 3; i++) {
+          const cx = screenW * (0.2 + i * 0.3);
+          const cy = screenH * 0.5;
+          const phase = gt * 0.5 + i * 2;
+          const rBase = 20 + Math.sin(phase) * 10;
+          for (let r = 0; r < 3; r++) {
+            const radius = rBase + r * 15 + Math.sin(phase + r) * 5;
+            overlay.circle(cx, cy, radius).stroke({ color: 0x6644aa, width: 0.5, alpha: 0.04 - r * 0.01 });
+          }
+        }
+      }
+
       // Darkness
       if (config.lightLevel < 0.9) {
         const darkAlpha = (1 - config.lightLevel) * 0.3;
         overlay.rect(0, 0, screenW, screenH)
           .fill({ color: 0x000000, alpha: darkAlpha });
       }
+
+      // Vignette effect during storms
+      if (wType === 'highstorm' || wType === 'sandstorm' || wType === 'nightmareAura') {
+        const vigStrength = wType === 'highstorm' ? 0.15 : 0.1;
+        const vigColor = wType === 'sandstorm' ? 0x332200 : 0x000000;
+        // Corner shadows
+        const cr = Math.max(screenW, screenH) * 0.6;
+        overlay.circle(0, 0, cr).fill({ color: vigColor, alpha: vigStrength * 0.5 });
+        overlay.circle(screenW, 0, cr).fill({ color: vigColor, alpha: vigStrength * 0.5 });
+        overlay.circle(0, screenH, cr).fill({ color: vigColor, alpha: vigStrength * 0.5 });
+        overlay.circle(screenW, screenH, cr).fill({ color: vigColor, alpha: vigStrength * 0.5 });
+      }
+
       label.text = config.name !== 'Clair' ? config.name : '';
     },
   };

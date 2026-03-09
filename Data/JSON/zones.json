@@ -262,6 +262,78 @@
           }
         ],
         "respawnTime": 150
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 12,
+          "row": 6
+        },
+        "patrolPath": [
+          {
+            "col": 12,
+            "row": 6
+          },
+          {
+            "col": 20,
+            "row": 19
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 52,
+          "row": 11
+        },
+        "patrolPath": [
+          {
+            "col": 52,
+            "row": 11
+          },
+          {
+            "col": 39,
+            "row": 10
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "kandra_mimic",
+        "position": {
+          "col": 32,
+          "row": 7
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 19,
+          "row": 37
+        },
+        "patrolPath": [
+          {
+            "col": 19,
+            "row": 37
+          },
+          {
+            "col": 40,
+            "row": 17
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 31,
+          "row": 19
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -377,6 +449,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 5,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -612,6 +693,78 @@
           }
         ],
         "respawnTime": 240
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 32,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 53,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 11,
+          "row": 27
+        },
+        "patrolPath": [
+          {
+            "col": 11,
+            "row": 27
+          },
+          {
+            "col": 43,
+            "row": 21
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 51,
+          "row": 34
+        },
+        "patrolPath": [
+          {
+            "col": 51,
+            "row": 34
+          },
+          {
+            "col": 64,
+            "row": 29
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 40,
+          "row": 23
+        },
+        "patrolPath": [
+          {
+            "col": 40,
+            "row": 23
+          },
+          {
+            "col": 44,
+            "row": 61
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -718,6 +871,24 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 41,
+          "row": 17
+        },
+        "patrolPath": null,
+        "respawnTime": 300
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 50,
+          "row": 9
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -971,6 +1142,42 @@
           }
         ],
         "respawnTime": 150
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 47,
+          "row": 19
+        },
+        "patrolPath": [
+          {
+            "col": 47,
+            "row": 19
+          },
+          {
+            "col": 10,
+            "row": 59
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 60,
+          "row": 11
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 45,
+          "row": 58
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -1077,6 +1284,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 27,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -1303,6 +1519,87 @@
           }
         ],
         "respawnTime": 180
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 22,
+          "row": 49
+        },
+        "patrolPath": [
+          {
+            "col": 22,
+            "row": 49
+          },
+          {
+            "col": 46,
+            "row": 9
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 45,
+          "row": 15
+        },
+        "patrolPath": [
+          {
+            "col": 45,
+            "row": 15
+          },
+          {
+            "col": 20,
+            "row": 15
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 29,
+          "row": 22
+        },
+        "patrolPath": [
+          {
+            "col": 29,
+            "row": 22
+          },
+          {
+            "col": 45,
+            "row": 49
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 19,
+          "row": 48
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 19,
+          "row": 7
+        },
+        "patrolPath": [
+          {
+            "col": 19,
+            "row": 7
+          },
+          {
+            "col": 30,
+            "row": 22
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -1409,6 +1706,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 18,
+          "row": 41
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -1662,6 +1968,78 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 25,
+          "row": 18
+        },
+        "patrolPath": [
+          {
+            "col": 25,
+            "row": 18
+          },
+          {
+            "col": 30,
+            "row": 46
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 14,
+          "row": 21
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 39,
+          "row": 21
+        },
+        "patrolPath": [
+          {
+            "col": 39,
+            "row": 21
+          },
+          {
+            "col": 32,
+            "row": 42
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 28,
+          "row": 19
+        },
+        "patrolPath": [
+          {
+            "col": 28,
+            "row": 19
+          },
+          {
+            "col": 13,
+            "row": 37
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 10,
+          "row": 53
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -1768,6 +2146,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 14,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -2012,6 +2399,51 @@
           }
         ],
         "respawnTime": 180
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 55,
+          "row": 48
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 29,
+          "row": 29
+        },
+        "patrolPath": [
+          {
+            "col": 29,
+            "row": 29
+          },
+          {
+            "col": 34,
+            "row": 38
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 40,
+          "row": 5
+        },
+        "patrolPath": [
+          {
+            "col": 40,
+            "row": 5
+          },
+          {
+            "col": 12,
+            "row": 48
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -2118,6 +2550,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 22,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -2390,6 +2831,42 @@
           }
         ],
         "respawnTime": 150
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 23,
+          "row": 32
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 51,
+          "row": 51
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 53,
+          "row": 16
+        },
+        "patrolPath": [
+          {
+            "col": 53,
+            "row": 16
+          },
+          {
+            "col": 11,
+            "row": 60
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -2505,6 +2982,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 45,
+          "row": 37
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -2628,6 +3114,78 @@
           }
         ],
         "respawnTime": 90
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 17,
+          "row": 14
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 39,
+          "row": 38
+        },
+        "patrolPath": [
+          {
+            "col": 39,
+            "row": 38
+          },
+          {
+            "col": 43,
+            "row": 25
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "kandra_mimic",
+        "position": {
+          "col": 6,
+          "row": 12
+        },
+        "patrolPath": [
+          {
+            "col": 6,
+            "row": 12
+          },
+          {
+            "col": 24,
+            "row": 20
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 20,
+          "row": 41
+        },
+        "patrolPath": [
+          {
+            "col": 20,
+            "row": 41
+          },
+          {
+            "col": 10,
+            "row": 36
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 39,
+          "row": 13
+        },
+        "patrolPath": null,
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -2757,6 +3315,87 @@
         },
         "patrolPath": null,
         "respawnTime": 150
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 15,
+          "row": 21
+        },
+        "patrolPath": [
+          {
+            "col": 15,
+            "row": 21
+          },
+          {
+            "col": 43,
+            "row": 32
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 39,
+          "row": 53
+        },
+        "patrolPath": [
+          {
+            "col": 39,
+            "row": 53
+          },
+          {
+            "col": 17,
+            "row": 50
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "kandra_mimic",
+        "position": {
+          "col": 30,
+          "row": 47
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 47
+          },
+          {
+            "col": 33,
+            "row": 38
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 12,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 6,
+          "row": 42
+        },
+        "patrolPath": [
+          {
+            "col": 6,
+            "row": 42
+          },
+          {
+            "col": 42,
+            "row": 19
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -2904,6 +3543,33 @@
         },
         "patrolPath": null,
         "respawnTime": 90
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 50,
+          "row": 45
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 7,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "kandra_mimic",
+        "position": {
+          "col": 22,
+          "row": 47
+        },
+        "patrolPath": null,
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -3014,6 +3680,51 @@
         },
         "patrolPath": null,
         "respawnTime": 210
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 35,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 35,
+            "row": 20
+          },
+          {
+            "col": 31,
+            "row": 17
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 11,
+          "row": 32
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "kandra_mimic",
+        "position": {
+          "col": 34,
+          "row": 8
+        },
+        "patrolPath": [
+          {
+            "col": 34,
+            "row": 8
+          },
+          {
+            "col": 11,
+            "row": 8
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -3106,6 +3817,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 28,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -3202,6 +3922,42 @@
         },
         "patrolPath": null,
         "respawnTime": 270
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 20,
+          "row": 17
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "ash_wraith",
+        "position": {
+          "col": 13,
+          "row": 32
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "kandra_mimic",
+        "position": {
+          "col": 20,
+          "row": 60
+        },
+        "patrolPath": [
+          {
+            "col": 20,
+            "row": 60
+          },
+          {
+            "col": 33,
+            "row": 56
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -3285,6 +4041,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "steel_inquisitor_shade",
+        "position": {
+          "col": 11,
+          "row": 8
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -3399,6 +4164,69 @@
           }
         ],
         "respawnTime": 180
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 39,
+          "row": 5
+        },
+        "patrolPath": [
+          {
+            "col": 39,
+            "row": 5
+          },
+          {
+            "col": 20,
+            "row": 15
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 36,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 8,
+          "row": 15
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 21,
+          "row": 55
+        },
+        "patrolPath": [
+          {
+            "col": 21,
+            "row": 55
+          },
+          {
+            "col": 23,
+            "row": 32
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 36,
+          "row": 14
+        },
+        "patrolPath": null,
+        "respawnTime": 120
       }
     ],
     "lootPoints": [
@@ -3510,6 +4338,51 @@
         },
         "patrolPath": null,
         "respawnTime": 165
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 42,
+          "row": 52
+        },
+        "patrolPath": [
+          {
+            "col": 42,
+            "row": 52
+          },
+          {
+            "col": 52,
+            "row": 25
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 8,
+          "row": 42
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 15,
+          "row": 8
+        },
+        "patrolPath": [
+          {
+            "col": 15,
+            "row": 8
+          },
+          {
+            "col": 10,
+            "row": 16
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -3666,6 +4539,96 @@
           }
         ],
         "respawnTime": 180
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 9,
+          "row": 48
+        },
+        "patrolPath": [
+          {
+            "col": 9,
+            "row": 48
+          },
+          {
+            "col": 30,
+            "row": 12
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 20,
+          "row": 42
+        },
+        "patrolPath": [
+          {
+            "col": 20,
+            "row": 42
+          },
+          {
+            "col": 44,
+            "row": 10
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 47,
+          "row": 42
+        },
+        "patrolPath": [
+          {
+            "col": 47,
+            "row": 42
+          },
+          {
+            "col": 25,
+            "row": 64
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 18,
+          "row": 47
+        },
+        "patrolPath": [
+          {
+            "col": 18,
+            "row": 47
+          },
+          {
+            "col": 20,
+            "row": 21
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 13,
+          "row": 47
+        },
+        "patrolPath": [
+          {
+            "col": 13,
+            "row": 47
+          },
+          {
+            "col": 34,
+            "row": 25
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -3776,6 +4739,42 @@
         },
         "patrolPath": null,
         "respawnTime": 210
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 34,
+          "row": 44
+        },
+        "patrolPath": [
+          {
+            "col": 34,
+            "row": 44
+          },
+          {
+            "col": 11,
+            "row": 9
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 18,
+          "row": 37
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 9,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 120
       }
     ],
     "lootPoints": [
@@ -3887,6 +4886,69 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 39,
+          "row": 24
+        },
+        "patrolPath": [
+          {
+            "col": 39,
+            "row": 24
+          },
+          {
+            "col": 38,
+            "row": 5
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 24,
+          "row": 11
+        },
+        "patrolPath": [
+          {
+            "col": 24,
+            "row": 11
+          },
+          {
+            "col": 13,
+            "row": 21
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 11,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 43,
+          "row": 18
+        },
+        "patrolPath": [
+          {
+            "col": 43,
+            "row": 18
+          },
+          {
+            "col": 18,
+            "row": 45
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -4007,6 +5069,69 @@
         },
         "patrolPath": null,
         "respawnTime": 270
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 36,
+          "row": 21
+        },
+        "patrolPath": [
+          {
+            "col": 36,
+            "row": 21
+          },
+          {
+            "col": 8,
+            "row": 10
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "voidspren",
+        "position": {
+          "col": 22,
+          "row": 7
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "fused_soldier",
+        "position": {
+          "col": 45,
+          "row": 21
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 40,
+          "row": 50
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 12,
+          "row": 9
+        },
+        "patrolPath": [
+          {
+            "col": 12,
+            "row": 9
+          },
+          {
+            "col": 49,
+            "row": 14
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -4090,6 +5215,24 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "chasmfiend_juvenile",
+        "position": {
+          "col": 7,
+          "row": 28
+        },
+        "patrolPath": null,
+        "respawnTime": 300
+      },
+      {
+        "enemyID": "thunderclast",
+        "position": {
+          "col": 40,
+          "row": 14
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -4195,6 +5338,69 @@
         },
         "patrolPath": null,
         "respawnTime": 150
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 13,
+          "row": 7
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 27,
+          "row": 18
+        },
+        "patrolPath": [
+          {
+            "col": 27,
+            "row": 18
+          },
+          {
+            "col": 47,
+            "row": 11
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 54,
+          "row": 40
+        },
+        "patrolPath": [
+          {
+            "col": 54,
+            "row": 40
+          },
+          {
+            "col": 31,
+            "row": 44
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 20,
+          "row": 15
+        },
+        "patrolPath": [
+          {
+            "col": 20,
+            "row": 15
+          },
+          {
+            "col": 16,
+            "row": 31
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -4297,6 +5503,51 @@
         },
         "patrolPath": null,
         "respawnTime": 165
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 28,
+          "row": 34
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 30,
+          "row": 26
+        },
+        "patrolPath": [
+          {
+            "col": 30,
+            "row": 26
+          },
+          {
+            "col": 30,
+            "row": 12
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 10,
+          "row": 30
+        },
+        "patrolPath": [
+          {
+            "col": 10,
+            "row": 30
+          },
+          {
+            "col": 17,
+            "row": 32
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -4417,6 +5668,60 @@
         },
         "patrolPath": null,
         "respawnTime": 186
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 19,
+          "row": 17
+        },
+        "patrolPath": [
+          {
+            "col": 19,
+            "row": 17
+          },
+          {
+            "col": 34,
+            "row": 27
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 19,
+          "row": 19
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 30,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 22,
+          "row": 27
+        },
+        "patrolPath": [
+          {
+            "col": 22,
+            "row": 27
+          },
+          {
+            "col": 30,
+            "row": 48
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -4527,6 +5832,69 @@
         },
         "patrolPath": null,
         "respawnTime": 210
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 6,
+          "row": 12
+        },
+        "patrolPath": [
+          {
+            "col": 6,
+            "row": 12
+          },
+          {
+            "col": 21,
+            "row": 16
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 21,
+          "row": 7
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 27,
+          "row": 51
+        },
+        "patrolPath": [
+          {
+            "col": 27,
+            "row": 51
+          },
+          {
+            "col": 32,
+            "row": 43
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 12,
+          "row": 29
+        },
+        "patrolPath": [
+          {
+            "col": 12,
+            "row": 29
+          },
+          {
+            "col": 17,
+            "row": 21
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -4638,6 +6006,87 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 32,
+          "row": 5
+        },
+        "patrolPath": [
+          {
+            "col": 32,
+            "row": 5
+          },
+          {
+            "col": 39,
+            "row": 17
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 32,
+          "row": 9
+        },
+        "patrolPath": [
+          {
+            "col": 32,
+            "row": 9
+          },
+          {
+            "col": 26,
+            "row": 25
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 24,
+          "row": 37
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 25,
+          "row": 30
+        },
+        "patrolPath": [
+          {
+            "col": 25,
+            "row": 30
+          },
+          {
+            "col": 40,
+            "row": 13
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 31,
+          "row": 29
+        },
+        "patrolPath": [
+          {
+            "col": 31,
+            "row": 29
+          },
+          {
+            "col": 16,
+            "row": 24
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -4748,6 +6197,78 @@
         },
         "patrolPath": null,
         "respawnTime": 270
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 5,
+          "row": 24
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 42,
+          "row": 43
+        },
+        "patrolPath": [
+          {
+            "col": 42,
+            "row": 43
+          },
+          {
+            "col": 34,
+            "row": 33
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "sandling",
+        "position": {
+          "col": 18,
+          "row": 37
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "sand_stalker",
+        "position": {
+          "col": 10,
+          "row": 23
+        },
+        "patrolPath": [
+          {
+            "col": 10,
+            "row": 23
+          },
+          {
+            "col": 45,
+            "row": 44
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 10,
+          "row": 20
+        },
+        "patrolPath": [
+          {
+            "col": 10,
+            "row": 20
+          },
+          {
+            "col": 19,
+            "row": 17
+          }
+        ],
+        "respawnTime": 120
       }
     ],
     "lootPoints": [
@@ -4831,6 +6352,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "darkside_shade",
+        "position": {
+          "col": 5,
+          "row": 6
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -4936,6 +6466,42 @@
         },
         "patrolPath": null,
         "respawnTime": 180
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 35,
+          "row": 44
+        },
+        "patrolPath": [
+          {
+            "col": 35,
+            "row": 44
+          },
+          {
+            "col": 9,
+            "row": 34
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 45,
+          "row": 41
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 36,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -5047,6 +6613,51 @@
         },
         "patrolPath": null,
         "respawnTime": 165
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 32,
+          "row": 19
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 34,
+          "row": 8
+        },
+        "patrolPath": [
+          {
+            "col": 34,
+            "row": 8
+          },
+          {
+            "col": 12,
+            "row": 34
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 34,
+          "row": 38
+        },
+        "patrolPath": [
+          {
+            "col": 34,
+            "row": 38
+          },
+          {
+            "col": 25,
+            "row": 33
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -5203,6 +6814,69 @@
           }
         ],
         "respawnTime": 180
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 37,
+          "row": 32
+        },
+        "patrolPath": [
+          {
+            "col": 37,
+            "row": 32
+          },
+          {
+            "col": 40,
+            "row": 33
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 35,
+          "row": 33
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 45,
+          "row": 22
+        },
+        "patrolPath": [
+          {
+            "col": 45,
+            "row": 22
+          },
+          {
+            "col": 38,
+            "row": 36
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 22,
+          "row": 33
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 20,
+          "row": 22
+        },
+        "patrolPath": null,
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -5313,6 +6987,33 @@
         },
         "patrolPath": null,
         "respawnTime": 210
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 13,
+          "row": 14
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 50,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 26,
+          "row": 39
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -5414,6 +7115,51 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 31,
+          "row": 29
+        },
+        "patrolPath": [
+          {
+            "col": 31,
+            "row": 29
+          },
+          {
+            "col": 6,
+            "row": 29
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 5,
+          "row": 27
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 31,
+          "row": 39
+        },
+        "patrolPath": [
+          {
+            "col": 31,
+            "row": 39
+          },
+          {
+            "col": 39,
+            "row": 19
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -5534,6 +7280,51 @@
         },
         "patrolPath": null,
         "respawnTime": 270
+      },
+      {
+        "enemyID": "nightmare_stalker",
+        "position": {
+          "col": 22,
+          "row": 32
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 26,
+          "row": 47
+        },
+        "patrolPath": [
+          {
+            "col": 26,
+            "row": 47
+          },
+          {
+            "col": 30,
+            "row": 15
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "dream_wisp",
+        "position": {
+          "col": 13,
+          "row": 44
+        },
+        "patrolPath": [
+          {
+            "col": 13,
+            "row": 44
+          },
+          {
+            "col": 30,
+            "row": 42
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -5617,6 +7408,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "ink_golem",
+        "position": {
+          "col": 6,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -5740,6 +7540,60 @@
           }
         ],
         "respawnTime": 240
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 32,
+          "row": 13
+        },
+        "patrolPath": [
+          {
+            "col": 32,
+            "row": 13
+          },
+          {
+            "col": 16,
+            "row": 8
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 29,
+          "row": 25
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 26,
+          "row": 29
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 21,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 8,
+          "row": 27
+        },
+        "patrolPath": null,
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -5875,6 +7729,69 @@
         "position": {
           "col": 38,
           "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 7,
+          "row": 6
+        },
+        "patrolPath": [
+          {
+            "col": 7,
+            "row": 6
+          },
+          {
+            "col": 17,
+            "row": 6
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 14,
+          "row": 20
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 41,
+          "row": 18
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 28,
+          "row": 15
+        },
+        "patrolPath": [
+          {
+            "col": 28,
+            "row": 15
+          },
+          {
+            "col": 12,
+            "row": 15
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 11,
+          "row": 42
         },
         "patrolPath": null,
         "respawnTime": 150
@@ -6025,6 +7942,78 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 48,
+          "row": 29
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 9,
+          "row": 42
+        },
+        "patrolPath": [
+          {
+            "col": 9,
+            "row": 42
+          },
+          {
+            "col": 45,
+            "row": 20
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 49,
+          "row": 24
+        },
+        "patrolPath": [
+          {
+            "col": 49,
+            "row": 24
+          },
+          {
+            "col": 43,
+            "row": 12
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 7,
+          "row": 27
+        },
+        "patrolPath": [
+          {
+            "col": 7,
+            "row": 27
+          },
+          {
+            "col": 47,
+            "row": 28
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 37,
+          "row": 46
+        },
+        "patrolPath": null,
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -6135,6 +8124,60 @@
         },
         "patrolPath": null,
         "respawnTime": 210
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 11,
+          "row": 32
+        },
+        "patrolPath": [
+          {
+            "col": 11,
+            "row": 32
+          },
+          {
+            "col": 45,
+            "row": 34
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 32,
+          "row": 16
+        },
+        "patrolPath": [
+          {
+            "col": 32,
+            "row": 16
+          },
+          {
+            "col": 46,
+            "row": 22
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 39,
+          "row": 54
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 51,
+          "row": 42
+        },
+        "patrolPath": null,
+        "respawnTime": 120
       }
     ],
     "lootPoints": [
@@ -6246,6 +8289,33 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 22,
+          "row": 33
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 29,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 16,
+          "row": 36
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -6356,6 +8426,60 @@
         },
         "patrolPath": null,
         "respawnTime": 270
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 22,
+          "row": 43
+        },
+        "patrolPath": [
+          {
+            "col": 22,
+            "row": 43
+          },
+          {
+            "col": 22,
+            "row": 40
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 38,
+          "row": 17
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "chromatic_beast",
+        "position": {
+          "col": 36,
+          "row": 40
+        },
+        "patrolPath": [
+          {
+            "col": 36,
+            "row": 40
+          },
+          {
+            "col": 35,
+            "row": 36
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "lifeless_berserker",
+        "position": {
+          "col": 6,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -6439,6 +8563,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "returned_shade",
+        "position": {
+          "col": 27,
+          "row": 12
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -6544,6 +8677,51 @@
         },
         "patrolPath": null,
         "respawnTime": 90
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 42,
+          "row": 28
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 27,
+          "row": 32
+        },
+        "patrolPath": [
+          {
+            "col": 27,
+            "row": 32
+          },
+          {
+            "col": 40,
+            "row": 26
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 34,
+          "row": 22
+        },
+        "patrolPath": null,
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 12,
+          "row": 17
+        },
+        "patrolPath": null,
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -6655,6 +8833,69 @@
         },
         "patrolPath": null,
         "respawnTime": 165
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 16,
+          "row": 17
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 22,
+          "row": 38
+        },
+        "patrolPath": [
+          {
+            "col": 22,
+            "row": 38
+          },
+          {
+            "col": 11,
+            "row": 17
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 19,
+          "row": 28
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 39,
+          "row": 13
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 40,
+          "row": 23
+        },
+        "patrolPath": [
+          {
+            "col": 40,
+            "row": 23
+          },
+          {
+            "col": 13,
+            "row": 36
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -6802,6 +9043,42 @@
         },
         "patrolPath": null,
         "respawnTime": 90
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 41,
+          "row": 23
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 26,
+          "row": 16
+        },
+        "patrolPath": [
+          {
+            "col": 26,
+            "row": 16
+          },
+          {
+            "col": 21,
+            "row": 35
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 9,
+          "row": 30
+        },
+        "patrolPath": null,
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -6931,6 +9208,78 @@
         },
         "patrolPath": null,
         "respawnTime": 210
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 8,
+          "row": 14
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 24,
+          "row": 10
+        },
+        "patrolPath": [
+          {
+            "col": 24,
+            "row": 10
+          },
+          {
+            "col": 12,
+            "row": 40
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 43,
+          "row": 43
+        },
+        "patrolPath": [
+          {
+            "col": 43,
+            "row": 43
+          },
+          {
+            "col": 19,
+            "row": 38
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 33,
+          "row": 33
+        },
+        "patrolPath": null,
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 32,
+          "row": 24
+        },
+        "patrolPath": [
+          {
+            "col": 32,
+            "row": 24
+          },
+          {
+            "col": 8,
+            "row": 44
+          }
+        ],
+        "respawnTime": 90
       }
     ],
     "lootPoints": [
@@ -7032,6 +9381,42 @@
         },
         "patrolPath": null,
         "respawnTime": 240
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 18,
+          "row": 21
+        },
+        "patrolPath": [
+          {
+            "col": 18,
+            "row": 21
+          },
+          {
+            "col": 15,
+            "row": 20
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 40,
+          "row": 9
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 33,
+          "row": 35
+        },
+        "patrolPath": null,
+        "respawnTime": 120
       }
     ],
     "lootPoints": [
@@ -7152,6 +9537,78 @@
         },
         "patrolPath": null,
         "respawnTime": 270
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 50,
+          "row": 23
+        },
+        "patrolPath": [
+          {
+            "col": 50,
+            "row": 23
+          },
+          {
+            "col": 34,
+            "row": 9
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "seon_corrupted",
+        "position": {
+          "col": 21,
+          "row": 45
+        },
+        "patrolPath": [
+          {
+            "col": 21,
+            "row": 45
+          },
+          {
+            "col": 17,
+            "row": 32
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 39,
+          "row": 19
+        },
+        "patrolPath": [
+          {
+            "col": 39,
+            "row": 19
+          },
+          {
+            "col": 22,
+            "row": 14
+          }
+        ],
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "dakhor_monk",
+        "position": {
+          "col": 8,
+          "row": 15
+        },
+        "patrolPath": [
+          {
+            "col": 8,
+            "row": 15
+          },
+          {
+            "col": 43,
+            "row": 41
+          }
+        ],
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -7235,6 +9692,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "forger_sentinel",
+        "position": {
+          "col": 33,
+          "row": 12
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],
@@ -7331,6 +9797,51 @@
         },
         "patrolPath": null,
         "respawnTime": 150
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 49,
+          "row": 24
+        },
+        "patrolPath": [
+          {
+            "col": 49,
+            "row": 24
+          },
+          {
+            "col": 22,
+            "row": 37
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 36,
+          "row": 33
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 32,
+          "row": 52
+        },
+        "patrolPath": null,
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 6,
+          "row": 10
+        },
+        "patrolPath": null,
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -7469,6 +9980,78 @@
           }
         ],
         "respawnTime": 150
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 6,
+          "row": 48
+        },
+        "patrolPath": [
+          {
+            "col": 6,
+            "row": 48
+          },
+          {
+            "col": 41,
+            "row": 7
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 35,
+          "row": 38
+        },
+        "patrolPath": [
+          {
+            "col": 35,
+            "row": 38
+          },
+          {
+            "col": 22,
+            "row": 16
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 32,
+          "row": 45
+        },
+        "patrolPath": [
+          {
+            "col": 32,
+            "row": 45
+          },
+          {
+            "col": 10,
+            "row": 35
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 31,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 15,
+          "row": 26
+        },
+        "patrolPath": null,
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -7589,6 +10172,60 @@
         },
         "patrolPath": null,
         "respawnTime": 195
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 30,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 25,
+          "row": 21
+        },
+        "patrolPath": null,
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 37,
+          "row": 5
+        },
+        "patrolPath": [
+          {
+            "col": 37,
+            "row": 5
+          },
+          {
+            "col": 39,
+            "row": 34
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 8,
+          "row": 17
+        },
+        "patrolPath": [
+          {
+            "col": 8,
+            "row": 17
+          },
+          {
+            "col": 44,
+            "row": 36
+          }
+        ],
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -7699,6 +10336,51 @@
         },
         "patrolPath": null,
         "respawnTime": 225
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 18,
+          "row": 22
+        },
+        "patrolPath": [
+          {
+            "col": 18,
+            "row": 22
+          },
+          {
+            "col": 23,
+            "row": 33
+          }
+        ],
+        "respawnTime": 180
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 12,
+          "row": 6
+        },
+        "patrolPath": [
+          {
+            "col": 12,
+            "row": 6
+          },
+          {
+            "col": 43,
+            "row": 20
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 24,
+          "row": 40
+        },
+        "patrolPath": null,
+        "respawnTime": 180
       }
     ],
     "lootPoints": [
@@ -7800,6 +10482,51 @@
         },
         "patrolPath": null,
         "respawnTime": 255
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 19,
+          "row": 12
+        },
+        "patrolPath": null,
+        "respawnTime": 90
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 14,
+          "row": 36
+        },
+        "patrolPath": [
+          {
+            "col": 14,
+            "row": 36
+          },
+          {
+            "col": 23,
+            "row": 37
+          }
+        ],
+        "respawnTime": 150
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 31,
+          "row": 35
+        },
+        "patrolPath": [
+          {
+            "col": 31,
+            "row": 35
+          },
+          {
+            "col": 20,
+            "row": 34
+          }
+        ],
+        "respawnTime": 240
       }
     ],
     "lootPoints": [
@@ -7920,6 +10647,51 @@
         },
         "patrolPath": null,
         "respawnTime": 285
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 29,
+          "row": 17
+        },
+        "patrolPath": [
+          {
+            "col": 29,
+            "row": 17
+          },
+          {
+            "col": 37,
+            "row": 52
+          }
+        ],
+        "respawnTime": 120
+      },
+      {
+        "enemyID": "bead_swarm",
+        "position": {
+          "col": 9,
+          "row": 22
+        },
+        "patrolPath": [
+          {
+            "col": 9,
+            "row": 22
+          },
+          {
+            "col": 31,
+            "row": 26
+          }
+        ],
+        "respawnTime": 240
+      },
+      {
+        "enemyID": "spren_hunter",
+        "position": {
+          "col": 22,
+          "row": 5
+        },
+        "patrolPath": null,
+        "respawnTime": 150
       }
     ],
     "lootPoints": [
@@ -8003,6 +10775,15 @@
         },
         "patrolPath": null,
         "respawnTime": null
+      },
+      {
+        "enemyID": "cognitive_horror",
+        "position": {
+          "col": 42,
+          "row": 42
+        },
+        "patrolPath": null,
+        "respawnTime": 300
       }
     ],
     "lootPoints": [],

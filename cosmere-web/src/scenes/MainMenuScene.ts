@@ -52,19 +52,29 @@ export class MainMenuScene extends Container implements GameScene {
     const layout = getLayoutInfo(w, h);
     const isLandscape = layout.orientation === 'landscape';
 
-    // Dark background with gradient effect
+    // Dark background with rich gradient
     const bg = new Graphics();
-    bg.rect(0, 0, w, h).fill(0x060612);
+    bg.rect(0, 0, w, h).fill(0x04040c);
+    // Gradient overlay — darker at top, slightly lighter center
+    const gradientSteps = 8;
+    for (let i = 0; i < gradientSteps; i++) {
+      const t = i / gradientSteps;
+      const gy = h * t;
+      const gh = h / gradientSteps + 1;
+      const brightness = Math.sin(t * Math.PI) * 0.04; // Brightest in center
+      const alpha = brightness;
+      bg.rect(0, gy, w, gh).fill({ color: 0x1a1a3a, alpha });
+    }
     this.addChild(bg);
 
-    // Subtle grid pattern
+    // Subtle grid pattern with softer appearance
     const gridSpacing = scaled(40, layout);
     const grid = new Graphics();
     for (let x = 0; x < w; x += gridSpacing) {
-      grid.moveTo(x, 0).lineTo(x, h).stroke({ color: 0x111122, width: 0.5 });
+      grid.moveTo(x, 0).lineTo(x, h).stroke({ color: 0x0e0e1e, width: 0.5 });
     }
     for (let y = 0; y < h; y += gridSpacing) {
-      grid.moveTo(0, y).lineTo(w, y).stroke({ color: 0x111122, width: 0.5 });
+      grid.moveTo(0, y).lineTo(w, y).stroke({ color: 0x0e0e1e, width: 0.5 });
     }
     this.addChild(grid);
 
@@ -80,15 +90,25 @@ export class MainMenuScene extends Container implements GameScene {
     const glow = new Graphics();
     glow.circle(glowX, glowY, glowR1).fill({ color: 0x332200, alpha: 0.15 });
     glow.circle(glowX, glowY, glowR2).fill({ color: 0x443300, alpha: 0.1 });
+    // Pulsing outer ring
+    glow.circle(glowX, glowY, glowR1 * 1.3).stroke({ color: 0x443300, width: 1, alpha: 0.04 });
+    glow.name = 'ambientGlow';
     this.addChild(glow);
 
-    // Mist/particle effects
-    const particleCount = layout.device === 'mobile' ? 40 : 60;
+    // Mist/particle effects — multi-layered with varied sizes and glow
+    const particleCount = layout.device === 'mobile' ? 50 : 80;
     for (let i = 0; i < particleCount; i++) {
       const dot = new Graphics();
-      const size = Math.random() * 2 + 0.5;
-      const alpha = Math.random() * 0.12 + 0.03;
+      const size = Math.random() * 2.5 + 0.5;
+      const alpha = Math.random() * 0.15 + 0.03;
+      // Some particles have glow halos
+      if (size > 1.8) {
+        dot.circle(0, 0, size * 2.5).fill({ color: 0x6688aa, alpha: alpha * 0.2 });
+      }
       dot.circle(0, 0, size).fill({ color: 0xaabbcc, alpha });
+      if (size > 2) {
+        dot.circle(0, 0, size * 0.4).fill({ color: 0xddeeff, alpha: alpha * 0.5 });
+      }
       dot.x = Math.random() * w;
       dot.y = Math.random() * h;
       this.addChild(dot);
@@ -99,6 +119,18 @@ export class MainMenuScene extends Container implements GameScene {
       });
     }
 
+    // Distant background stars for depth
+    const starLayer = new Graphics();
+    const starCount = layout.device === 'mobile' ? 30 : 50;
+    for (let i = 0; i < starCount; i++) {
+      const sx = Math.random() * w;
+      const sy = Math.random() * h * 0.6;
+      const ss = Math.random() * 1.2 + 0.3;
+      const sa = Math.random() * 0.08 + 0.02;
+      starLayer.circle(sx, sy, ss).fill({ color: 0xffffff, alpha: sa });
+    }
+    this.addChildAt(starLayer, 2); // Behind particles, above grid
+
     // Decorative line above title
     const lineHalfW = scaled(100, layout);
     const lineY1 = isLandscape ? h * 0.16 : h * 0.22;
@@ -107,21 +139,23 @@ export class MainMenuScene extends Container implements GameScene {
       .stroke({ color: 0x665522, width: 1, alpha: 0.5 });
     this.addChild(line);
 
-    // Title
+    // Title with enhanced styling
     const titleSize = fontSize(30, layout);
     const title = new Text({
       text: 'Cosmere Chronicles',
       style: new TextStyle({
-        fontFamily: 'Georgia, Copperplate, serif',
+        fontFamily: "'Cinzel', 'Copperplate', Georgia, serif",
         fontSize: titleSize,
         fill: 0xe6cc66,
         fontWeight: 'bold',
-        dropShadow: { color: 0x000000, blur: 6, distance: 2, alpha: 0.8 },
+        letterSpacing: 2,
+        dropShadow: { color: 0x000000, blur: 8, distance: 3, alpha: 0.85 },
       }),
     });
     title.anchor.set(0.5);
     title.x = leftCenterX;
     title.y = isLandscape ? h * 0.22 : h * 0.27;
+    title.name = 'mainTitle';
     this.addChild(title);
 
     // Subtitle
@@ -129,7 +163,8 @@ export class MainMenuScene extends Container implements GameScene {
     const subtitle = new Text({
       text: 'Les Chroniques du Cosmere',
       style: new TextStyle({
-        fontFamily: 'Georgia, serif', fontSize: subtitleSize, fill: 0x776644, fontStyle: 'italic',
+        fontFamily: "'EB Garamond', Georgia, serif", fontSize: subtitleSize, fill: 0x887755, fontStyle: 'italic',
+        letterSpacing: 1,
       }),
     });
     subtitle.anchor.set(0.5);
@@ -342,14 +377,20 @@ export class MainMenuScene extends Container implements GameScene {
     this.addChild(btn);
   }
 
+  private animTime = 0;
+
   update(dt: number): void {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
+    this.animTime += dt / 60;
 
-    // Animate particles
-    for (const p of this.particles) {
-      p.sprite.x += p.vx;
+    // Animate particles with gentle sine-wave drift
+    for (let i = 0; i < this.particles.length; i++) {
+      const p = this.particles[i];
+      p.sprite.x += p.vx + Math.sin(this.animTime * 0.5 + i * 0.3) * 0.05;
       p.sprite.y += p.vy;
+      // Subtle alpha pulsation
+      p.sprite.alpha = 0.5 + Math.sin(this.animTime * 1.5 + i * 0.7) * 0.3;
       if (p.sprite.y < -10) {
         p.sprite.y = h + 10;
         p.sprite.x = Math.random() * w;
@@ -358,12 +399,36 @@ export class MainMenuScene extends Container implements GameScene {
       if (p.sprite.x > w + 10) p.sprite.x = -10;
     }
 
-    // Rotate showcase character every 3 seconds
+    // Pulsate title with breathing glow
+    const title = this.children.find(c => c.name === 'mainTitle') as Text | undefined;
+    if (title) {
+      const pulse = 1 + Math.sin(this.animTime * 1.2) * 0.025;
+      title.scale.set(pulse);
+      // Golden glow intensity oscillation
+      title.alpha = 0.85 + Math.sin(this.animTime * 0.8) * 0.15;
+    }
+
+    // Rotate showcase character every 3s with crossfade
     this.showcaseTimer += dt / 60;
     if (this.showcaseTimer > 3) {
       this.showcaseTimer = 0;
       this.showcaseIndex = (this.showcaseIndex + 1) % SHOWCASE_CLASSES.length;
-      this.updateShowcase();
+      if (this.showcaseContainer) {
+        const sc = this.showcaseContainer;
+        sc.alpha = 0.2;
+        this.updateShowcase();
+        // Quick fade-in
+        let ft = 0;
+        const fi = () => {
+          if (sc.destroyed) return;
+          ft += 1 / 60;
+          sc.alpha = Math.min(1, 0.2 + ft / 0.25 * 0.8);
+          if (ft < 0.25) requestAnimationFrame(fi);
+        };
+        requestAnimationFrame(fi);
+      } else {
+        this.updateShowcase();
+      }
     }
   }
 }

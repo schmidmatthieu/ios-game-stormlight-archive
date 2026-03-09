@@ -12,22 +12,47 @@ export function createAttackEffect(
   const dir = facing === 'right' ? 1 : -1;
   const slashColor = ATTACK_COLORS[cls] ?? 0xaabbcc;
 
-  // Main slash arc
+  // Main slash arc — triple-layered for depth
   const g = new Graphics();
   const startAngle = dir > 0 ? -Math.PI * 0.6 : Math.PI * 0.4;
   const endAngle = dir > 0 ? Math.PI * 0.3 : Math.PI * 1.3;
-  g.arc(0, 0, 28, startAngle, endAngle).stroke({ color: slashColor, width: 3, alpha: 0.7 });
-  g.arc(0, 0, 22, startAngle, endAngle).stroke({ color: 0xffffff, width: 1.5, alpha: 0.4 });
-  // Secondary inner arc for depth
-  g.arc(0, 0, 16, startAngle + 0.2, endAngle - 0.2).stroke({ color: slashColor, width: 1, alpha: 0.3 });
 
-  // Trailing sparks along arc
-  for (let i = 0; i < 8; i++) {
-    const angle = startAngle + (endAngle - startAngle) * (i / 8);
-    const r = 22 + Math.random() * 8;
-    const sz = 0.8 + Math.random() * 1.2;
+  // Outer glow arc
+  g.arc(0, 0, 32, startAngle, endAngle).stroke({ color: slashColor, width: 5, alpha: 0.15 });
+  // Main arc
+  g.arc(0, 0, 28, startAngle, endAngle).stroke({ color: slashColor, width: 3, alpha: 0.7 });
+  // White highlight core
+  g.arc(0, 0, 26, startAngle + 0.05, endAngle - 0.05).stroke({ color: 0xffffff, width: 1.5, alpha: 0.5 });
+  // Inner arc for depth
+  g.arc(0, 0, 20, startAngle + 0.15, endAngle - 0.15).stroke({ color: slashColor, width: 1.5, alpha: 0.35 });
+  // Innermost thin arc
+  g.arc(0, 0, 14, startAngle + 0.3, endAngle - 0.3).stroke({ color: slashColor, width: 0.8, alpha: 0.2 });
+
+  // Trailing sparks along arc with trails
+  for (let i = 0; i < 12; i++) {
+    const angle = startAngle + (endAngle - startAngle) * (i / 12);
+    const r = 20 + Math.random() * 14;
+    const sz = 0.8 + Math.random() * 1.5;
     g.circle(Math.cos(angle) * r, Math.sin(angle) * r, sz)
       .fill({ color: slashColor, alpha: 0.4 + Math.random() * 0.3 });
+    // Spark trail
+    if (i % 2 === 0) {
+      const tr = r - 4;
+      g.moveTo(Math.cos(angle) * r, Math.sin(angle) * r)
+        .lineTo(Math.cos(angle) * tr, Math.sin(angle) * tr)
+        .stroke({ color: 0xffffff, width: 0.5, alpha: 0.2 });
+    }
+  }
+
+  // Motion blur fill between arcs
+  const midAngle = (startAngle + endAngle) * 0.5;
+  for (let i = 0; i < 4; i++) {
+    const a = startAngle + (endAngle - startAngle) * (i / 4 + 0.1);
+    const rI = 16 + Math.random() * 4;
+    const rO = 28 + Math.random() * 4;
+    g.moveTo(Math.cos(a) * rI, Math.sin(a) * rI)
+      .lineTo(Math.cos(a) * rO, Math.sin(a) * rO)
+      .stroke({ color: slashColor, width: 0.5, alpha: 0.12 });
   }
 
   g.x = px + dir * 18;

@@ -15,6 +15,7 @@ export interface ToolbarCallbacks {
   toggleCompanion: () => void;
   toggleQuestJournal: () => void;
   toggleProfessions?: () => void;
+  toggleFastTravel?: () => void;
   spawnWave?: () => void;
 }
 
@@ -106,6 +107,10 @@ export function createZoneToolbar(
     { icon: '⚒', label: 'CRAFT', color: 0x8888aa, action: cb.toggleCrafting },
     { icon: '📖', label: 'BESTIAIRE', color: 0x77aa66, action: cb.toggleBestiary },
   ];
+
+  if (cb.toggleFastTravel) {
+    entries.push({ icon: '🗺', label: 'VOYAGE', color: 0x66aacc, action: cb.toggleFastTravel });
+  }
 
   if (cb.toggleProfessions) {
     entries.push({ icon: '⛏', label: 'MÉTIERS', color: 0xaa8855, action: cb.toggleProfessions });

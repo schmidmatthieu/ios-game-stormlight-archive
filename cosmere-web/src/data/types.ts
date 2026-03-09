@@ -10,7 +10,7 @@ export type RadiantOrder = 'windrunner' | 'lightweaver' | 'bondsmith' | 'edgedan
 
 export type EnemyTier = 'minion' | 'soldier' | 'elite' | 'boss';
 
-export type AIBehavior = 'patrol' | 'wander' | 'guard' | 'ambush' | 'ranged' | 'berserk' | 'support';
+export type AIBehavior = 'patrol' | 'wander' | 'guard' | 'ambush' | 'ranged' | 'berserk' | 'support' | 'summoner' | 'teleporter' | 'charger';
 
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'cosmeric';
 

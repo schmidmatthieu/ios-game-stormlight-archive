@@ -3,6 +3,8 @@ import { GameManager } from '../game/GameManager';
 import { getLayoutInfo, fontSize, scaled, hudMargin, hudBarWidth, panelRadius, UI_COLORS, UI_ALPHA } from '../ui/ResponsiveLayout';
 import type { LayoutInfo } from '../ui/ResponsiveLayout';
 import { lighten } from '../utils/ColorUtils';
+import { createBarDrain, updateBarDrain, spawnBarSparkles, updateSparkles, pulseGlow } from './UIAnimations';
+import type { BarDrainState, Sparkle } from './UIAnimations';
 
 // ─── World-Themed HUD Colors ─────────────────────────────────────
 
@@ -56,6 +58,15 @@ export class HUD extends Container {
   private currentWorldID = '';
   private worldTheme: WorldHUDTheme = WORLD_HUD_THEMES.scadrial;
   private borderGlow: Graphics;
+
+  // Drain effect state
+  private hpDrain: BarDrainState = createBarDrain(1);
+  private invDrain: BarDrainState = createBarDrain(1);
+
+  // Sparkle effects
+  private sparkles: Sparkle[] = [];
+  private sparkleGraphics: Graphics;
+  private prevXP = 0;
 
   constructor(screenWidth: number, screenHeight: number) {
     super();
@@ -156,6 +167,11 @@ export class HUD extends Container {
     });
     this.goldText.anchor.set(1, 0);
     this.addChild(this.goldText);
+
+    // Sparkle effect overlay
+    this.sparkleGraphics = new Graphics();
+    this.sparkleGraphics.zIndex = 10;
+    this.addChild(this.sparkleGraphics);
 
     // Position everything
     this.relayout(screenWidth, screenHeight);
@@ -298,20 +314,33 @@ export class HUD extends Container {
 
     this.levelText.text = `Nv.${c.level}`;
 
+    // Update drain effects (dt ≈ 1/60)
+    const dt = 1 / 60;
+    updateBarDrain(this.hpDrain, this.targetHP, dt);
+    updateBarDrain(this.invDrain, this.targetInv, dt);
+
     // HP — gradient color based on percentage, accessible
     const hpPct = this.animHP;
     this.hpBar.clear();
-    if (hpPct > 0) {
+    if (hpPct > 0 || this.hpDrain.trail > 0.002) {
       // Color transitions: green > yellow > orange > red
       let hpColor: number;
       if (hpPct > 0.6) {
         hpColor = UI_COLORS.hpHigh;
       } else if (hpPct > 0.3) {
-        hpColor = UI_COLORS.hpCritical; // Orange — visible for colorblind
+        hpColor = UI_COLORS.hpCritical;
       } else {
         hpColor = UI_COLORS.hpLow;
       }
 
+      // Draw drain trail bar first (darker red, shows damage taken)
+      if (this.hpDrain.trail > this.animHP + 0.005) {
+        const trailWidth = Math.max(cornerRadius * 2, this.barWidth * this.hpDrain.trail);
+        this.hpBar.roundRect(barStartX, hpY, trailWidth, this.barHeight, cornerRadius)
+          .fill({ color: 0x882222, alpha: 0.6 });
+      }
+
+      // Main HP bar on top
       const fillWidth = Math.max(cornerRadius * 2, this.barWidth * hpPct);
       this.hpBar.roundRect(barStartX, hpY, fillWidth, this.barHeight, cornerRadius)
         .fill(hpColor);
@@ -337,12 +366,19 @@ export class HUD extends Container {
       this.updateWorldBorder();
     }
 
-    // Investiture — world-themed color
+    // Investiture — world-themed color with drain effect
     const invPct = this.animInv;
     const invY = hpY + barSpacing;
     const invColor = this.worldTheme.investitureColor;
     this.invBar.clear();
-    if (invPct > 0) {
+    if (invPct > 0 || this.invDrain.trail > 0.002) {
+      // Drain trail bar (dimmed version of investiture color)
+      if (this.invDrain.trail > this.animInv + 0.005) {
+        const trailWidth = Math.max(cornerRadius * 2, this.barWidth * this.invDrain.trail);
+        this.invBar.roundRect(barStartX, invY, trailWidth, this.barHeight, cornerRadius)
+          .fill({ color: invColor, alpha: 0.25 });
+      }
+
       const fillWidth = Math.max(cornerRadius * 2, this.barWidth * invPct);
       this.invBar.roundRect(barStartX, invY, fillWidth, this.barHeight, cornerRadius)
         .fill(invColor);
@@ -362,7 +398,7 @@ export class HUD extends Container {
     }
     this.invText.text = `${Math.ceil(c.currentInvestiture)}/${gm.maxInvestiture}`;
 
-    // XP
+    // XP with sparkles on gain
     const xpPct = this.animXP;
     const xpY = invY + barSpacing;
     const xpBarHeight = scaled(5, this.layout);
@@ -371,11 +407,31 @@ export class HUD extends Container {
       const fillWidth = Math.max(scaled(3, this.layout), this.barWidth * xpPct);
       this.xpBar.roundRect(barStartX, xpY, fillWidth, xpBarHeight, scaled(3, this.layout))
         .fill(UI_COLORS.xp);
+
+      // Spawn sparkles when XP increases
+      if (xpPct > this.prevXP + 0.01) {
+        const newSparkles = spawnBarSparkles(
+          barStartX, xpY, this.barWidth, xpBarHeight,
+          xpPct, UI_COLORS.xp, 2,
+        );
+        this.sparkles.push(...newSparkles);
+      }
+    }
+    this.prevXP = xpPct;
+
+    // Update sparkle particles
+    this.sparkleGraphics.clear();
+    if (this.sparkles.length > 0) {
+      updateSparkles(this.sparkles, this.sparkleGraphics, dt);
     }
 
     // Zone + Gold
     this.zoneText.text = zoneName;
     this.goldText.text = `${c.gold} or`;
+
+    // Animated border glow pulse
+    const glowAlpha = pulseGlow(performance.now() / 1000, 3, 0.2, 0.45);
+    this.borderGlow.alpha = glowAlpha;
 
     // Decay level up glow
     if (this.levelUpGlow.alpha > 0) {

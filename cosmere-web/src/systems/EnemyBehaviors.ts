@@ -24,6 +24,18 @@ export interface BehaviorState {
   healCooldown: number;
   // Flee threshold
   fleeTimer: number;
+  // Summoner: spawn cooldown
+  summonCooldown: number;
+  summonCount: number;
+  // Teleporter: blink cooldown + tracking
+  teleportCooldown: number;
+  teleportPhase: 'idle' | 'vanishing' | 'appearing';
+  teleportTimer: number;
+  // Charger: charge state
+  chargeState: 'idle' | 'winding' | 'charging' | 'recovering';
+  chargeTimer: number;
+  chargeTargetX: number;
+  chargeTargetY: number;
 }
 
 export function createBehaviorState(
@@ -45,6 +57,15 @@ export function createBehaviorState(
     enrageTimer: 0,
     healCooldown: 0,
     fleeTimer: 0,
+    summonCooldown: 8,
+    summonCount: 0,
+    teleportCooldown: 0,
+    teleportPhase: 'idle',
+    teleportTimer: 0,
+    chargeState: 'idle',
+    chargeTimer: 0,
+    chargeTargetX: 0,
+    chargeTargetY: 0,
   };
 }
 
@@ -110,6 +131,15 @@ export function updateBehavior(
       break;
     case 'support':
       updateSupport(state, dt, result, enemies, enemyIndex, enemyX, enemyY, dist, detRange);
+      break;
+    case 'summoner':
+      updateSummoner(state, dt, result, dist, detRange, hpPct);
+      break;
+    case 'teleporter':
+      updateTeleporter(state, dt, result, enemyX, enemyY, playerX, playerY, dist, detRange);
+      break;
+    case 'charger':
+      updateCharger(state, dt, result, enemyX, enemyY, playerX, playerY, dist, detRange);
       break;
   }
 
@@ -328,4 +358,154 @@ function updateSupport(
   // Support enemies are weaker in direct combat
   result.damageMult = 0.5;
   result.attackSpeedMult = 0.7;
+}
+
+// ─── Summoner ────────────────────────────────────────────────────
+function updateSummoner(
+  state: BehaviorState,
+  dt: number,
+  result: BehaviorResult,
+  dist: number,
+  detRange: number,
+  hpPct: number,
+): void {
+  state.summonCooldown = Math.max(0, state.summonCooldown - dt);
+
+  // Summoners try to stay back and summon allies
+  if (dist < detRange && state.summonCooldown <= 0 && state.summonCount < 3) {
+    result.shouldHealAlly = true; // Reuse heal flag to signal "summon" event
+    result.healTargetIndex = -2; // Special marker for summoning
+    state.summonCooldown = hpPct < 0.5 ? 5 : 8; // Summon faster when hurt
+    state.summonCount++;
+  }
+
+  // Stay at medium range, back away if player gets close
+  if (dist < detRange * 0.4) {
+    const safeDist = detRange * 0.5;
+    result.moveX = -1; // Move away (simplified)
+    result.moveY = 0;
+    result.shouldMove = true;
+  }
+
+  result.detectionMult = 1.3;
+  result.damageMult = 0.6;
+  result.attackSpeedMult = 0.8;
+}
+
+// ─── Teleporter ─────────────────────────────────────────────────
+function updateTeleporter(
+  state: BehaviorState,
+  dt: number,
+  result: BehaviorResult,
+  enemyX: number,
+  enemyY: number,
+  playerX: number,
+  playerY: number,
+  dist: number,
+  detRange: number,
+): void {
+  state.teleportCooldown = Math.max(0, state.teleportCooldown - dt);
+
+  if (state.teleportPhase === 'vanishing') {
+    state.teleportTimer += dt;
+    if (state.teleportTimer > 0.3) {
+      state.teleportPhase = 'appearing';
+      state.teleportTimer = 0;
+      // Teleport behind the player
+      const angle = Math.atan2(playerY - enemyY, playerX - enemyX);
+      const behindDist = 40;
+      result.moveX = playerX + Math.cos(angle) * behindDist - enemyX;
+      result.moveY = playerY + Math.sin(angle) * behindDist - enemyY;
+      result.shouldMove = true;
+    }
+    return;
+  }
+
+  if (state.teleportPhase === 'appearing') {
+    state.teleportTimer += dt;
+    if (state.teleportTimer > 0.2) {
+      state.teleportPhase = 'idle';
+      state.teleportCooldown = 4;
+    }
+    // Strike immediately after appearing
+    result.damageMult = 1.8;
+    result.attackSpeedMult = 2.0;
+    return;
+  }
+
+  // Idle: decide when to teleport
+  if (dist < detRange && state.teleportCooldown <= 0 && dist > 30) {
+    state.teleportPhase = 'vanishing';
+    state.teleportTimer = 0;
+  }
+
+  result.detectionMult = 1.2;
+}
+
+// ─── Charger ────────────────────────────────────────────────────
+function updateCharger(
+  state: BehaviorState,
+  dt: number,
+  result: BehaviorResult,
+  enemyX: number,
+  enemyY: number,
+  playerX: number,
+  playerY: number,
+  dist: number,
+  detRange: number,
+): void {
+  switch (state.chargeState) {
+    case 'idle':
+      // Normal movement, but wind up for charge at medium range
+      if (dist < detRange * 0.8 && dist > 60) {
+        state.chargeState = 'winding';
+        state.chargeTimer = 0;
+        state.chargeTargetX = playerX;
+        state.chargeTargetY = playerY;
+      }
+      break;
+
+    case 'winding':
+      // Pause and telegraph the charge (visual: shaking)
+      state.chargeTimer += dt;
+      result.shouldMove = false;
+      result.attackSpeedMult = 0; // Can't attack while winding
+      if (state.chargeTimer > 0.8) {
+        state.chargeState = 'charging';
+        state.chargeTimer = 0;
+        // Lock in target direction
+        state.chargeTargetX = playerX;
+        state.chargeTargetY = playerY;
+      }
+      break;
+
+    case 'charging': {
+      state.chargeTimer += dt;
+      const dx = state.chargeTargetX - enemyX;
+      const dy = state.chargeTargetY - enemyY;
+      const d = Math.hypot(dx, dy);
+      if (d > 5) {
+        result.moveX = (dx / d) * 3; // Triple speed charge
+        result.moveY = (dy / d) * 3;
+        result.shouldMove = true;
+      }
+      result.damageMult = 2.5; // Devastating on contact
+      result.attackSpeedMult = 1.5;
+      // Stop charging after time or reaching target
+      if (state.chargeTimer > 1.0 || d < 20) {
+        state.chargeState = 'recovering';
+        state.chargeTimer = 0;
+      }
+      break;
+    }
+
+    case 'recovering':
+      state.chargeTimer += dt;
+      result.shouldMove = false;
+      result.attackSpeedMult = 0.3; // Stunned briefly
+      if (state.chargeTimer > 1.5) {
+        state.chargeState = 'idle';
+      }
+      break;
+  }
 }

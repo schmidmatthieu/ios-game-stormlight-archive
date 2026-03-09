@@ -154,20 +154,34 @@ export function createDayNightOverlay(
   timeLabel: Text;
   update: (config: BlendedTimeConfig) => void;
 } {
-  // Stars layer
+  // Stars layer — more stars, varied sizes, colored
   const stars = new Container();
   stars.zIndex = 900;
   const starGraphics: { g: Graphics; baseAlpha: number; speed: number }[] = [];
 
-  for (let i = 0; i < 40; i++) {
+  // Star colors for variety
+  const starColors = [0xffffff, 0xffeedd, 0xddddff, 0xffddcc, 0xccddff];
+
+  for (let i = 0; i < 80; i++) {
     const star = new Graphics();
-    const size = 0.5 + Math.random() * 1.5;
-    star.circle(0, 0, size).fill({ color: 0xffffff, alpha: 0.8 });
+    const size = 0.3 + Math.random() * 1.8;
+    const starColor = starColors[Math.floor(Math.random() * starColors.length)];
+    // Main star body
+    star.circle(0, 0, size).fill({ color: starColor, alpha: 0.85 });
+    // Small glow halo for brighter stars
+    if (size > 1) {
+      star.circle(0, 0, size * 2).fill({ color: starColor, alpha: 0.08 });
+    }
+    // Twinkle cross for the biggest stars
+    if (size > 1.4) {
+      star.moveTo(-size * 1.5, 0).lineTo(size * 1.5, 0).stroke({ color: starColor, width: 0.3, alpha: 0.2 });
+      star.moveTo(0, -size * 1.5).lineTo(0, size * 1.5).stroke({ color: starColor, width: 0.3, alpha: 0.2 });
+    }
     star.x = Math.random() * screenW;
-    star.y = Math.random() * screenH * 0.6;
+    star.y = Math.random() * screenH * 0.65;
     star.alpha = 0;
     stars.addChild(star);
-    starGraphics.push({ g: star, baseAlpha: 0.3 + Math.random() * 0.7, speed: 0.5 + Math.random() * 2 });
+    starGraphics.push({ g: star, baseAlpha: 0.25 + Math.random() * 0.75, speed: 0.3 + Math.random() * 2.5 });
   }
   uiContainer.addChild(stars);
 

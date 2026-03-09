@@ -19,7 +19,8 @@ import type { PlayerBodyParts } from '../rendering/PlayerRenderer';
 import { drawEquipmentOverlay, drawEquipmentOnParts } from '../rendering/EquipmentVisuals';
 import { lighten, darken } from '../utils/ColorUtils';
 import { CharacterAnimator, applyAnimationToPlayer, drawClassAura, animateEnemyHit, animateEnemyDeath, animateLevelUpBurst } from '../rendering/CharacterAnimations';
-import { drawEnemySprite, WORLD_ENEMY_COLORS } from '../rendering/EnemyRenderer';
+import { drawEnemySprite, drawOutlinedEnemy, WORLD_ENEMY_COLORS, applyHitFlash, createHitSparks } from '../rendering/EnemyRenderer';
+import { ShadowCasterManager } from '../rendering/ShadowCaster';
 import { createEnemyAnimState, updateEnemyIdle, triggerEnemyHurt, triggerEnemyDeath, drawBossAura, drawAlertIndicator, setEnemyAlert } from '../rendering/EnemyAnimations';
 import type { EnemyAnimState } from '../rendering/EnemyAnimations';
 import { createAttackEffect, createSkillEffect, createHitImpact, createSkillGroundMark } from '../rendering/SpellEffects';
@@ -42,6 +43,8 @@ import { createZoneToolbar } from './ZoneToolbar';
 import { createMobileMenu } from '../ui/MobileMenu';
 import { TutorialManager } from '../ui/TutorialSystem';
 import { SaveManager } from '../game/SaveManager';
+import { FastTravelManager } from '../game/FastTravelSystem';
+import { showFastTravelPanel } from '../ui/FastTravelPanel';
 import { Pathfinder, smoothPath } from '../systems/Pathfinding';
 import { createBehaviorState, updateBehavior } from '../systems/EnemyBehaviors';
 import type { BehaviorState } from '../systems/EnemyBehaviors';
@@ -63,7 +66,7 @@ import { WorldMapScene } from './WorldMapScene';
 import { PotionManager } from '../game/PotionSystem';
 import { createPotionHotbar } from '../ui/PotionHotbar';
 import { spawnWalls, spawnEnterableBuildings, spawnSecretAreas, revealSecret } from '../rendering/MapStructures';
-import { renderEnhancedTilemap } from '../rendering/TileRenderer';
+import { renderEnhancedTilemap, renderCachedTilemap, invalidateTileCache } from '../rendering/TileRenderer';
 import type { WallSegment, EnterableBuilding, SecretArea } from '../rendering/MapStructures';
 import type { SpellParticle } from '../rendering/SpellEffects';
 import { createReputationBadge } from '../game/ReputationSystem';
@@ -248,6 +251,7 @@ export class ZoneScene extends Container implements GameScene {
 
   // Pause
   private pauseMenu: Container | null = null;
+  private fastTravelPanel: Container | null = null;
   private isPaused = false;
 
   // Quest tracker
@@ -322,6 +326,9 @@ export class ZoneScene extends Container implements GameScene {
   // Potion hotbar
   private potionHotbar: { container: Container; refresh: () => void } | null = null;
 
+  // Shadow caster system
+  private shadowCaster: ShadowCasterManager | null = null;
+
   constructor(app: Application, router: SceneRouter) {
     super();
     this.app = app;
@@ -345,6 +352,10 @@ export class ZoneScene extends Container implements GameScene {
     }
 
     this.theme = WORLD_THEMES[this.zone.worldID] ?? WORLD_THEMES.scadrial;
+
+    // Mark zone as discovered for fast travel
+    FastTravelManager.shared.load();
+    const isNewDiscovery = FastTravelManager.shared.discoverZone(this.zone.id);
 
     this.playerGridPos = { ...champ.gridPosition };
     const screenPos = isoToScreen(this.playerGridPos.col, this.playerGridPos.row);
@@ -420,6 +431,9 @@ export class ZoneScene extends Container implements GameScene {
     // Zone exits
     this.renderExits();
 
+    // Shadow caster system
+    this.shadowCaster = new ShadowCasterManager(this.worldContainer);
+
     // Particle layer
     this.worldContainer.addChild(this.particleContainer);
 
@@ -489,6 +503,7 @@ export class ZoneScene extends Container implements GameScene {
       toggleCompanion: () => this.toggleCompanion(),
       toggleQuestJournal: () => this.toggleQuestJournal(),
       toggleProfessions: () => this.toggleProfessions(),
+      toggleFastTravel: () => this.toggleFastTravel(),
       spawnWave: () => this.spawnEnemyWave(),
     };
     createZoneToolbar(this.uiContainer, w, layout, toolbarCallbacks);
@@ -612,12 +627,16 @@ export class ZoneScene extends Container implements GameScene {
   // ─── Tilemap ─────────────────────────────────────────────────
 
   private renderTilemap(): void {
-    const tileGraphics = renderEnhancedTilemap(
+    // Use RenderTexture-cached tilemap for performance
+    invalidateTileCache();
+    const tileSprite = renderCachedTilemap(
+      this.app,
       this.zone.gridWidth, this.zone.gridHeight,
       this.zone.worldID, this.theme,
       isoToScreen, darken,
+      this.worldContainer,
     );
-    this.worldContainer.addChild(tileGraphics);
+    this.worldContainer.addChild(tileSprite);
   }
 
   private renderMapEdge(): void {
@@ -841,6 +860,25 @@ export class ZoneScene extends Container implements GameScene {
     this.applyPanelHostState(h);
   }
 
+  private toggleFastTravel(): void {
+    if (this.fastTravelPanel) {
+      this.uiContainer.removeChild(this.fastTravelPanel);
+      this.fastTravelPanel.destroy({ children: true });
+      this.fastTravelPanel = null;
+      return;
+    }
+    const w = this.app.screen.width;
+    const h = this.app.screen.height;
+    this.fastTravelPanel = showFastTravelPanel(
+      this.uiContainer, w, h,
+      (_zoneID: string) => {
+        this.fastTravelPanel = null;
+        this.router.goto(ZoneScene);
+      },
+      () => { this.fastTravelPanel = null; },
+    );
+  }
+
   private applyCraftResult(recipeID: string): void {
     applyCraftResultModule(recipeID, this.playerStatusEffects, (x, y, msg, c) => this.showFloatingText(x, y, msg, c), this.playerScreenPos);
   }
@@ -1018,6 +1056,7 @@ export class ZoneScene extends Container implements GameScene {
     this.spawnAmbientParticles(delta);
     this.updateWorldMechanics(delta);
     this.updateDayNight(delta);
+    this.updateShadows(delta);
     this.updateWeather(delta);
     this.updateAchievements(delta);
     updateCompanionModule(delta, this.companionState, this.playerScreenPos);
@@ -1430,6 +1469,43 @@ export class ZoneScene extends Container implements GameScene {
 
   private updateNPCSchedules(): void {
     updateNPCSchedulesModule(this.npcs, this.dayNightManager.currentTime);
+  }
+
+  private updateShadows(_dt: number): void {
+    if (!this.shadowCaster) return;
+    // Sync shadow caster with day/night cycle (map time-of-day to progress)
+    const timeMap: Record<string, number> = {
+      dawn: 0.25, morning: 0.35, midday: 0.5, afternoon: 0.6,
+      evening: 0.75, night: 0.85, lateNight: 0.05,
+    };
+    const progress = timeMap[this.dayNightManager.currentTime] ?? 0.5;
+    this.shadowCaster.setSunState(progress);
+
+    // Gather entities for shadow rendering
+    const entities: Array<{ x: number; y: number; width: number; height: number; type: 'player' | 'enemy' | 'npc' | 'object' }> = [];
+
+    // Player shadow
+    entities.push({
+      x: this.playerScreenPos.x, y: this.playerScreenPos.y,
+      width: 24, height: 48, type: 'player',
+    });
+
+    // Enemy shadows
+    for (const e of this.enemies) {
+      if (e.isDead) continue;
+      entities.push({
+        x: e.position.x, y: e.position.y,
+        width: 16 * (e.data.spriteScale ?? 1), height: 24 * (e.data.spriteScale ?? 1),
+        type: 'enemy',
+      });
+    }
+
+    const cameraX = this.worldContainer.x;
+    const cameraY = this.worldContainer.y;
+    this.shadowCaster.renderShadows(
+      entities, cameraX, cameraY,
+      this.app.screen.width, this.app.screen.height,
+    );
   }
 
   private updateWeather(dt: number): void {
